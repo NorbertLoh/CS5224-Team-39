@@ -1,0 +1,46 @@
+{
+  "fixture_kind": "synthetic_contract_examples",
+  "me": {
+    "subject_id": "00000000-0000-4000-8000-000000000003",
+    "cognito_sub": "synthetic-patient-sub",
+    "display_name": "Demo Patient",
+    "global_roles": ["patient"],
+    "memberships": []
+  },
+  "public_clinic": {
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "slug": "demo-clinic-a",
+    "name": "Demo Clinic A",
+    "status": "active",
+    "branding": {"primary_color": "#156B63", "logo_url": null, "description": "Synthetic clinic for prototype walkthroughs."},
+    "consultation_price": {"amount_minor": 2500, "currency": "SGD"},
+    "created_at": "2026-10-12T01:00:00.000Z",
+    "updated_at": "2026-10-12T02:00:00.000Z"
+  },
+  "doctor_membership": {
+    "membership_id": "00000000-0000-4000-8000-000000000005",
+    "subject_id": "00000000-0000-4000-8000-000000000004",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "roles": ["doctor"],
+    "status": "active",
+    "created_at": "2026-10-12T01:00:00.000Z",
+    "updated_at": "2026-10-12T01:00:00.000Z"
+  },
+  "appointment_context": {
+    "appointment_id": "00000000-0000-4000-8000-000000000010",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "patient_id": "00000000-0000-4000-8000-000000000003",
+    "doctor_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "access_cases": [
+    {"case": "patient_owns_appointment", "caller": "patient", "action": "clinical.read", "allowed": true, "reason": "own_appointment", "public_http_status": 200},
+    {"case": "assigned_active_doctor", "caller": "doctor", "action": "clinical.write", "allowed": true, "reason": "assigned_doctor", "public_http_status": 200},
+    {"case": "clinic_b_admin_requests_clinic_a_appointment", "caller": "clinic_admin_other_tenant", "action": "appointment.read", "allowed": false, "reason": "not_authorized", "public_http_status": 404},
+    {"case": "unrelated_patient", "caller": "other_patient", "action": "appointment.read", "allowed": false, "reason": "not_authorized", "public_http_status": 404},
+    {"case": "revoked_assigned_doctor", "caller": "revoked_doctor", "action": "clinical.read", "allowed": false, "reason": "not_authorized", "public_http_status": 404},
+    {"case": "same_clinic_admin_clinical_read", "caller": "clinic_admin", "action": "clinical.read", "allowed": false, "reason": "not_authorized", "public_http_status": 404},
+    {"case": "platform_admin_clinical_read", "caller": "platform_admin", "action": "clinical.read", "allowed": false, "reason": "not_authorized", "public_http_status": 404}
+  ],
+  "not_found": {"error": {"code": "not_found", "message": "Resource not found.", "request_id": "synthetic-access-001", "details": []}},
+  "empty_memberships": {"items": [], "next_cursor": null}
+}
