@@ -24,7 +24,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [ ] | F06 | Scaffold React/TypeScript/Vite; build succeeds. Assignee: NorbertLoh; in progress, issue #8, draft PR #11. | F02 | S |
 | [ ] | F07 | Add router, role layouts and feature route registration. Assignee: NorbertLoh; in progress, issue #9, draft PR #12; depends on draft PR #11. | F06 | M |
 | [ ] | F08 | Add query client, typed API client and loading/error components. Assignee: NorbertLoh; in progress, issue #13, PR #16. | F06, C01 | M |
-| [ ] | F09 | Create Compose PostgreSQL/Redis/Floci services and environment examples. | F02 | M |
+| [ ] | F09 | Create Compose PostgreSQL/Redis/Floci services and environment examples. Assignee: NorbertLoh; in progress, issue #19. | F02 | M |
 | [ ] | F10 | Add reverse proxy and template API to Compose; documented startup works. | F05, F09 | M |
 | [ ] | F11 | Bootstrap Floci S3 and synthetic secrets; repeated bootstrap is safe. | F09 | S |
 | [ ] | F12 | Bootstrap event bus, consumer queues/rules and DLQs; deliver one message. | F09, C05 | M |
