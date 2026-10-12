@@ -1,6 +1,6 @@
 # Local development setup
 
-Status: the [F03 service template](../services/template/README.md) runs locally without external dependencies. Full local stack setup remains a placeholder until Compose/bootstrap tasks are implemented.
+Status: the [service template](../services/template/README.md) runs locally, optionally with the [F04 PostgreSQL/migration example](../services/template/docs/database.md). Full local stack setup remains a placeholder until Compose/bootstrap tasks are implemented.
 
 ## Setup tasks
 

@@ -1,6 +1,6 @@
 # FastAPI service template
 
-F03 provides environment settings, JSON logs, request correlation, lifecycle health probes and OpenAPI. Copy this directory into a business-service directory when its task is claimed; do not import another service's `app` package. Database access/migrations belong to F04 and Dockerfiles to F05.
+F03 provides environment settings, JSON logs, request correlation, lifecycle health probes and OpenAPI. F04 adds the optional [SQLAlchemy/Alembic database example](docs/database.md). Copy this directory into a business-service directory when its task is claimed; do not import another service's `app` package. Dockerfiles belong to F05.
 
 ## Install and run (PowerShell)
 
@@ -22,7 +22,7 @@ Default URLs:
 - `http://127.0.0.1:8000/health/ready`: HTTP 200 after startup; HTTP 503 before startup/after teardown.
 - `http://127.0.0.1:8000/docs`, `/redoc`, `/openapi.json`: interactive docs and schema.
 
-The template has no external dependencies, so readiness only reflects lifecycle startup. Services adding a database or other essential resources must initialise them before becoming ready and extend the readiness check appropriately. It is not currently a database/connectivity check.
+With database mode disabled, readiness reflects lifecycle startup. When `SERVICE_DATABASE_URL` is configured, readiness also checks PostgreSQL and the migration-created example table. Replace that table check with the owning service's essential-resource check when adding business models.
 
 ## Configuration
 
@@ -37,6 +37,8 @@ Environment variables override `.env`. The `.env` is loaded relative to the work
 | `SERVICE_LOG_LEVEL` | `INFO` | Standard uppercase logging level |
 | `SERVICE_DOCS_ENABLED` | automatic | Defaults off for production, on otherwise; explicit true/false overrides |
 | `SERVICE_ROOT_PATH` | empty | Proxy-stripped path prefix for generated URLs, not a router prefix |
+| `SERVICE_DATABASE_URL` | unset | Optional `postgresql+psycopg` URL; held as a secret setting |
+| `SERVICE_DATABASE_TIMEOUT_SECONDS` | `3` | Connection and statement timeout, 1-30 seconds |
 
 Invalid settings fail startup. Do not place provider credentials in frontend configuration. Authentication is not implemented by this template.
 
@@ -62,8 +64,8 @@ The direct Uvicorn command uses its own logging configuration rather than the JS
 .venv\Scripts\python.exe -m ruff format --check app tests
 ```
 
-The focused tests cover environment validation, readiness lifecycle, production docs, request correlation and omission of sensitive request/exception text. No PostgreSQL, Floci, AWS or credentials are needed.
+The default checks cover configuration, health, logging and missing database configuration without external services. PostgreSQL integration is explicitly skipped unless `TEST_DATABASE_URL` is set; see [database instructions](docs/database.md) for migration, transaction and readiness checks against a disposable database. Floci and AWS are not needed.
 
 ## Copying into a service
 
-Copy source, project metadata, lockfile, `.env.example` and tests; exclude `.venv`, `.env`, caches and egg-info. Change the project package name/description and `SERVICE_NAME`, add domain routers, and keep its environment/virtualenv isolated. The `app` package name assumes one service per interpreter/process, matching the planned independent containers.
+Copy source, project metadata, lockfile, `.env.example`, tests, Alembic configuration, migrations and setup documentation/scripts; exclude `.venv`, `.env`, caches and egg-info. Change the project package name/description, `SERVICE_NAME` and database schema as described in the [database guide](docs/database.md), add domain routers, and keep its environment/virtualenv isolated. The `app` package name assumes one service per interpreter/process, matching the planned independent containers.
