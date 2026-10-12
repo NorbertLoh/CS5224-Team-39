@@ -56,6 +56,9 @@ services:
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-southeast-1}
       AWS_EC2_METADATA_DISABLED: "true"
       AWS_PAGER: ""
+      COGNITO_BASE_URL: http://localhost:${FLOCI_PORT:-4566}
+      COGNITO_CALLBACK_URL: ${COGNITO_CALLBACK_URL:-http://localhost:5173/auth/callback}
+      COGNITO_LOGOUT_URL: ${COGNITO_LOGOUT_URL:-http://localhost:5173/}
     volumes:
       - ./dev/floci:/bootstrap:ro
 

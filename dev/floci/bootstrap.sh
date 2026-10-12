@@ -39,3 +39,4 @@ seed_secret telelink/local/lalamove \
   '{"api_key":"synthetic-lalamove-key","api_secret":"synthetic-lalamove-secret"}'
 
 /bin/sh /bootstrap/events.sh
+/bin/sh /bootstrap/cognito.sh
