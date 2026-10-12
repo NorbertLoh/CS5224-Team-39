@@ -68,4 +68,4 @@ The default checks cover configuration, health, logging and missing database con
 
 ## Copying into a service
 
-Copy source, project metadata, lockfile, `.env.example` and tests; exclude `.venv`, `.env`, caches and egg-info. Change the project package name/description and `SERVICE_NAME`, add domain routers, and keep its environment/virtualenv isolated. The `app` package name assumes one service per interpreter/process, matching the planned independent containers.
+Copy source, project metadata, lockfile, `.env.example`, tests, Alembic configuration, migrations and setup documentation/scripts; exclude `.venv`, `.env`, caches and egg-info. Change the project package name/description, `SERVICE_NAME` and database schema as described in the [database guide](docs/database.md), add domain routers, and keep its environment/virtualenv isolated. The `app` package name assumes one service per interpreter/process, matching the planned independent containers.

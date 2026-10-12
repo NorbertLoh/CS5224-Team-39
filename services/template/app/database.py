@@ -19,7 +19,12 @@ def create_database_engine(settings: Settings, **kwargs) -> Engine:
         pool_pre_ping=True,
         connect_args={
             "connect_timeout": settings.database_timeout_seconds,
-            "options": f"-c statement_timeout={settings.database_timeout_seconds * 1000}",
+            # Explicit model schemas own tables; avoid PostgreSQL's $user search_path
+            # making a same-named role/schema appear as the default during reflection.
+            "options": (
+                "-c search_path=public "
+                f"-c statement_timeout={settings.database_timeout_seconds * 1000}"
+            ),
         },
         hide_parameters=True,
         **kwargs,

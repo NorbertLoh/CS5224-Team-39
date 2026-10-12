@@ -1,6 +1,6 @@
 # SQLAlchemy and Alembic example
 
-The template uses synchronous SQLAlchemy 2 sessions and psycopg 3 with PostgreSQL. `app/models.py` owns schema `template`; Alembic stores its revision in `template.alembic_version`. The schema is a service boundary, not one schema per clinic. Business tasks must add tenant IDs and access policies to their own models.
+The template uses synchronous SQLAlchemy 2 sessions and psycopg 3 with PostgreSQL. `app/models.py` owns schema `template`; Alembic stores its revision in `template.alembic_version`. Models explicitly qualify their schema and connections use `search_path=public` so same-named roles/schemas do not confuse migration reflection. The schema is a service boundary, not one schema per clinic. Business tasks must add tenant IDs and access policies to their own models.
 
 Database mode is optional. With `SERVICE_DATABASE_URL` unset, the F03 health-only server still runs. With it configured, `/health/ready` checks the migrated example table and returns 503 if the database/table is unavailable. `/health/live` remains independent of PostgreSQL. Startup never creates tables or runs migrations.
 

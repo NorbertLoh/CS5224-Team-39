@@ -9,7 +9,10 @@ from sqlalchemy.engine import make_url
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="SERVICE_", env_file=".env", env_file_encoding="utf-8", extra="ignore",
+        env_prefix="SERVICE_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
         hide_input_in_errors=True,
     )
 
