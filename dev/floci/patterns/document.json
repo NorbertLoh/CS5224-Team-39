@@ -1,0 +1,4 @@
+{
+  "source": ["telelink.clinical-records"],
+  "detail-type": ["prescription_issued.v1"]
+}

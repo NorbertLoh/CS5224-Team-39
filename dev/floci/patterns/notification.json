@@ -1,0 +1,7 @@
+{
+  "$or": [
+    { "source": ["telelink.scheduling"], "detail-type": ["appointment_confirmed.v1"] },
+    { "source": ["telelink.document"], "detail-type": ["document_ready.v1"] },
+    { "source": ["telelink.fulfilment"], "detail-type": ["delivery_status_changed.v1"] }
+  ]
+}
