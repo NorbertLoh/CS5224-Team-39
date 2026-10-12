@@ -12,6 +12,13 @@ UI work can start against the agreed API fixtures after its listed contract depe
 
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
+Completion audit, 13 October 2026: checked all 127 task rows against merged PRs,
+closed issues and repository contents. F02-F14 and C01-C05 are complete (18 tasks);
+F01 is skipped by user decision. F15 is partially complete, and F16's initial
+released-image pin does not complete its API/restart checks. The remaining 108
+tasks stay unchecked; contract documentation, shared fixtures and route previews
+do not count as implemented services, authentication, feature pages or integrations.
+
 ## Week 1: setup and contracts
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
@@ -28,10 +35,10 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [x] | F10 | Add template API to Compose and Vite API forwarding; documented startup works. Completed in merged PR #23; four healthy containers, dev/preview API forwarding and Swagger verified. Separate proxy container deferred by user decision. | F05, F09 | M |
 | [x] | F11 | Bootstrap Floci S3 and synthetic secrets; repeated bootstrap is safe. Completed in merged PR #25; resource settings, safe reruns and object/secret preservation verified. | F09 | S |
 | [x] | F12 | Bootstrap event bus, consumer queues/rules and DLQs; deliver one message. Completed in merged PR #29; all six routes and queued-message preservation verified. | F09, C05 | M |
-| [ ] | F13 | Bootstrap Floci Cognito pool/public client and four-role synthetic users. Assignee: NorbertLoh; in progress, issue #30, PR #31. | F09 | M |
+| [x] | F13 | Bootstrap Floci Cognito pool/public client and four-role synthetic users. Completed in merged PR #31; stable IDs/passwords/disabled-state reruns, four PKCE logins, signed access tokens and redirect/Compose configuration verified. Issue #30 closed. | F09 | M |
 | [x] | F14 | Create shared fixtures for two clinics, doctors and workflow entities. Completed in merged PR #40; linked two-clinic dataset, validator, 12 integrity tests, lint and CI passed. | C01-C05 | M |
 | [ ] | F15 | Add minimal frontend build/type and backend lint checks in CI. Frontend ESLint completed in merged PR #18 (issue #17 closed); frontend build/type and backend lint checks remain deferred. | F03, F06 | S |
-| [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. | F11-F13, A01-A03 | M |
+| [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. Floci 2.2.0 is initially pinned; full required-API and restart-persistence verification, including A01-A03, remains pending. | F11-F13, A01-A03 | M |
 | [x] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. Completed in merged PR #15; examples verified. | none | S |
 | [x] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. Completed in merged PR #36; resource links, access-denial examples and C01/C05 consistency verified. | C01 | M |
 | [x] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. Completed in merged PR #37; amount splits, expiry boundary, late-payment recovery and C05 consistency verified. | C01 | M |
