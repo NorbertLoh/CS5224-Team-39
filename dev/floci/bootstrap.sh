@@ -37,3 +37,5 @@ seed_secret telelink/local/stripe \
   '{"api_key":"synthetic-stripe-key","webhook_secret":"synthetic-stripe-webhook-secret"}'
 seed_secret telelink/local/lalamove \
   '{"api_key":"synthetic-lalamove-key","api_secret":"synthetic-lalamove-secret"}'
+
+/bin/sh /bootstrap/events.sh

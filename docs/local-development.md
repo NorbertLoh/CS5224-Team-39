@@ -2,8 +2,8 @@
 
 Compose runs the FastAPI template alongside PostgreSQL, Redis and optional
 Floci. Run the frontend on the host; Vite forwards `/api/v1/template` to the
-API container. F11 supplies the S3/secrets bootstrap below; F12-F14 add messaging,
-Cognito and synthetic workflow fixtures.
+API container. Bootstrap supplies S3, synthetic secrets and messaging below;
+F13-F14 add Cognito and synthetic workflow fixtures.
 
 ## Start
 
@@ -58,7 +58,7 @@ Compose and Vite. Keep `VITE_API_BASE_URL=/api/v1` for same-origin requests.
 The template runs the production image locally with docs enabled, without hot
 reload. For API reload, use the [standalone development override](../services/template/docs/containers.md).
 
-## Bootstrap S3 and synthetic secrets
+## Bootstrap local resources
 
 From the repository root, after starting the offline stack:
 
@@ -73,10 +73,16 @@ The runner waits for healthy Floci and creates these resources:
 | S3 bucket | `telelink-local-documents` | Empty; public access block enabled |
 | Secrets Manager secret | `telelink/local/stripe` | JSON: `api_key`, `webhook_secret` |
 | Secrets Manager secret | `telelink/local/lalamove` | JSON: `api_key`, `api_secret` |
+| EventBridge bus | `telelink-local` | Four enabled consumer rules |
+| SQS consumer queues | `telelink-local-{scheduling,fulfilment,document,notification}` | Empty; one queue per consumer |
+| SQS processing DLQs | Each consumer queue name plus `-dlq` | Empty; redrive after three receives |
+| SQS delivery DLQ | `telelink-local-event-delivery-dlq` | Empty; captures EventBridge delivery failures |
 
 All secret values are clearly synthetic and cannot call the real providers.
 Bootstrap creates missing resources, preserves existing objects and secret
-values, and reapplies the bucket's public access block. Errors stop the script
+values and queue messages. It reapplies the bucket public access block and
+managed queue/rule/target settings without publishing or consuming events.
+Errors stop the script
 with a nonzero exit code. Run it again after resetting the Floci volume.
 
 The separate `bootstrap` profile keeps this one-shot job out of ordinary `up`
@@ -98,6 +104,32 @@ Emulator settings do not establish AWS authorization or privacy guarantees.
 Real private S3/IAM configuration belongs to W08; restart/API coverage remains
 F16. Business services must configure these resource names and read secrets
 server-side; never copy provider secrets into frontend `VITE_*` variables.
+
+### Event routes and queue access
+
+The [C05 event contract](../contracts/events.md) defines exact source/type pairs,
+payloads, queue names and retry settings. `events.sh` applies those routes using
+the committed `dev/floci/patterns/` files. Consumer queues retain messages for
+four days, use a 30-second visibility timeout and redrive after three receives.
+DLQs retain messages for 14 days. EventBridge targets retry three times within
+one hour and send delivery failures to the shared delivery DLQ. These settings
+are local defaults; worker acknowledgement, idempotency and operator replay
+remain M03/M04, and full emulator compatibility remains F16.
+
+Inspect the bus and queues without publishing workflow events:
+
+```powershell
+docker compose --profile offline run --rm --entrypoint aws bootstrap --endpoint-url http://floci:4566 events list-rules --event-bus-name telelink-local
+docker compose --profile offline run --rm --entrypoint aws bootstrap --endpoint-url http://floci:4566 sqs list-queues --queue-name-prefix telelink-local-
+```
+
+Floci returns host-facing queue URLs using `FLOCI_BASE_URL`. Container tools
+must replace only that URL's origin with `http://floci:4566`, preserving its
+account/queue path; host tools keep the original URL (adjusted by `FLOCI_PORT`).
+The bootstrap runner does this when configuring queues. Use matching region and
+dummy credentials. Production SDKs use AWS queue URLs without this local rewrite.
+The synthetic contract fixtures are for isolated routing checks with workers
+stopped; bootstrap never sends them automatically.
 
 ## Endpoints
 

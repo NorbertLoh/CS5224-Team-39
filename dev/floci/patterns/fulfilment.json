@@ -1,0 +1,4 @@
+{
+  "source": ["telelink.billing"],
+  "detail-type": ["medication_payment_succeeded.v1"]
+}
