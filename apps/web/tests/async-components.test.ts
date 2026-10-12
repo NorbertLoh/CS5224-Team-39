@@ -5,8 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { ErrorState } from '../src/components/ErrorState'
 import { LoadingState } from '../src/components/LoadingState'
-import { ApiError } from '../src/lib/api-client'
-import { createQueryClient } from '../src/lib/query-client'
+import { queryClient } from '../src/lib/query-client'
 
 test('loading state announces progress and honors reduced motion', () => {
   const markup = renderToStaticMarkup(createElement(LoadingState, { message: 'Loading appointments…' }))
@@ -16,25 +15,24 @@ test('loading state announces progress and honors reduced motion', () => {
   assert.match(markup, /motion-reduce:animate-none/)
 })
 
-test('error state hides arbitrary exception text and cancellation; retry is optional', () => {
-  const markup = renderToStaticMarkup(createElement(ErrorState, { error: new Error('SECRET stack trace') }))
+test('error state has a safe default message; retry is optional', () => {
+  const markup = renderToStaticMarkup(createElement(ErrorState))
   assert.match(markup, /role="alert"/)
   assert.doesNotMatch(markup, /SECRET|<button/)
-  assert.equal(renderToStaticMarkup(createElement(ErrorState, { error: new DOMException('Cancelled', 'AbortError') })), '')
 })
 
-test('structured error displays safe correlation and disables a running retry', () => {
+test('error state displays a supplied message and disables a running retry', () => {
   const markup = renderToStaticMarkup(createElement(ErrorState, {
-    error: new ApiError('Please try again.', { kind: 'http', method: 'GET', code: 'unavailable', status: 503, requestId: 'synthetic-ref' }),
+    message: 'Could not load appointments.',
     onRetry: () => {}, retrying: true,
   }))
-  assert.match(markup, /Reference: synthetic-ref/)
+  assert.match(markup, /Could not load appointments/)
   assert.match(markup, /disabled=""/)
   assert.match(markup, /Retrying/)
 })
 
 test('provider makes the shared client available to feature components', () => {
-  const client = createQueryClient()
+  const client = queryClient
   function Consumer() {
     assert.equal(useQueryClient(), client)
     return createElement(LoadingState)
