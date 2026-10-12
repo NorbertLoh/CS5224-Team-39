@@ -1,0 +1,47 @@
+{
+  "fixture_kind": "synthetic_contract_examples",
+  "appointment": {
+    "appointment_id": "00000000-0000-4000-8000-000000000010",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "patient_id": "00000000-0000-4000-8000-000000000003",
+    "doctor_id": "00000000-0000-4000-8000-000000000004",
+    "slot_id": "00000000-0000-4000-8000-000000000006",
+    "status": "confirmed",
+    "starts_at": "2026-10-12T04:00:00.000Z",
+    "ends_at": "2026-10-12T04:30:00.000Z",
+    "hold_expires_at": null,
+    "consultation_price": {"amount_minor": 2500, "currency": "SGD"},
+    "payment_id": "00000000-0000-4000-8000-000000000011",
+    "payment_resolution": "confirmed",
+    "created_at": "2026-10-12T02:55:00.000Z",
+    "updated_at": "2026-10-12T03:00:00.000Z"
+  },
+  "payment": {
+    "payment_id": "00000000-0000-4000-8000-000000000011",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "patient_id": "00000000-0000-4000-8000-000000000003",
+    "purpose": "consultation",
+    "appointment_id": "00000000-0000-4000-8000-000000000010",
+    "order_id": null,
+    "quote_id": null,
+    "status": "succeeded",
+    "amount": {"amount_minor": 2500, "currency": "SGD"},
+    "commission_bps": 1000,
+    "commission_amount": {"amount_minor": 250, "currency": "SGD"},
+    "clinic_amount": {"amount_minor": 2250, "currency": "SGD"},
+    "resolution": "none",
+    "created_at": "2026-10-12T02:56:00.000Z",
+    "updated_at": "2026-10-12T03:00:00.000Z"
+  },
+  "expiry_cases": [
+    {"case": "before_deadline", "server_now": "2026-10-12T03:04:59.999Z", "hold_expires_at": "2026-10-12T03:05:00.000Z", "hold_valid": true},
+    {"case": "exact_deadline", "server_now": "2026-10-12T03:05:00.000Z", "hold_expires_at": "2026-10-12T03:05:00.000Z", "hold_valid": false}
+  ],
+  "late_success_cases": [
+    {"case": "slot_still_available", "slot_available": true, "clinic_active": true, "doctor_active": true, "starts_in_future": true, "cancelled": false, "appointment_status": "confirmed", "payment_resolution": "confirmed", "payment_status": "succeeded"},
+    {"case": "slot_reallocated", "slot_available": false, "clinic_active": true, "doctor_active": true, "starts_in_future": true, "cancelled": false, "appointment_status": "expired", "payment_resolution": "refund_required", "payment_status": "succeeded"},
+    {"case": "patient_cancelled", "slot_available": true, "clinic_active": true, "doctor_active": true, "starts_in_future": true, "cancelled": true, "appointment_status": "cancelled", "payment_resolution": "refund_required", "payment_status": "succeeded"}
+  ],
+  "hold_expired": {"error": {"code": "hold_expired", "message": "The booking hold has expired.", "request_id": "synthetic-booking-001", "details": []}},
+  "empty_appointments": {"items": [], "next_cursor": null}
+}
