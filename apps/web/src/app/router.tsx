@@ -25,6 +25,6 @@ export const router = createBrowserRouter([{
     { index: true, element: <App /> },
     { path: 'clinics/:clinicSlug', element: <ClinicStorefront /> },
     ...portalRoutes,
-    { path: '*', element: <main id="main-content" className="content"><NotFound /></main> },
+    { path: '*', element: <main id="main-content" className="px-5 py-12 sm:px-8"><NotFound /></main> },
   ],
 }])
