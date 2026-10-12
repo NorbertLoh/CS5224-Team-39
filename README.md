@@ -4,7 +4,7 @@ CS5224 Team 39's multi-tenant teleconsultation prototype. Planned stack: React +
 
 ## Current status
 
-This repository contains plans, a directory scaffold and a runnable [FastAPI service template](services/template/README.md). The frontend, business features, Dockerfiles, Compose configuration and AWS infrastructure are not implemented yet. The template runs independently without AWS or a database.
+This repository contains a [React frontend](apps/web/README.md), a runnable [FastAPI service template](services/template/README.md), and [local Compose dependencies](docs/local-development.md). Business-service integration and AWS infrastructure remain planned work. The template can run independently without AWS or a database.
 
 ## Repository layout
 
