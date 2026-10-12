@@ -1,0 +1,18 @@
+:root { font-family: Inter, system-ui, sans-serif; color: #193c37; background: #f3f7f5; font-synthesis: none; line-height: 1.6; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+a { color: #145b52; text-underline-offset: 4px; }
+a:focus-visible { outline: 3px solid #b67335; outline-offset: 4px; }
+.site-shell { max-width: 1200px; margin: auto; }
+.site-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 32px; border-bottom: 1px solid #d5e3dc; flex-wrap: wrap; }
+.brand { font-weight: 750; font-size: 1.25rem; text-decoration: none; }
+.badge { font-size: .8rem; background: #e3ede7; padding: 4px 12px; border-radius: 20px; }
+.content { padding: 64px 32px; }
+.eyebrow { font-size: .8rem; text-transform: uppercase; letter-spacing: .14em; font-weight: 700; color: #52756d; }
+h1 { max-width: 760px; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.12; letter-spacing: -.035em; margin: 16px 0; }
+h2 { font-size: 1.15rem; line-height: 1.4; }
+.intro { max-width: 640px; font-size: 1.15rem; color: #52756d; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 40px; }
+.card { padding: 24px; background: white; border: 1px solid #d5e3dc; border-radius: 14px; }
+.card p { color: #52756d; }
+@media (max-width: 600px) { .content { padding: 40px 20px; } .site-header { padding: 20px; } }

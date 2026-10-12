@@ -21,7 +21,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [ ] | F03 | Create FastAPI template with settings, logging, health/readiness and OpenAPI. Assignee: NorbertLoh; in progress, implementation verified in PR #4, merge pending. | F02 | M |
 | [ ] | F04 | Add SQLAlchemy/Alembic example and fresh-database migration instructions. | F03 | M |
 | [ ] | F05 | Add production Dockerfile and local reload override for the template. | F03 | S |
-| [ ] | F06 | Scaffold React/TypeScript/Vite; build succeeds. | F02 | S |
+| [ ] | F06 | Scaffold React/TypeScript/Vite; build succeeds. Assignee: NorbertLoh; in progress, issue #8. | F02 | S |
 | [ ] | F07 | Add router, role layouts and feature route registration. | F06 | M |
 | [ ] | F08 | Add query client, typed API client and loading/error components. | F06, C01 | M |
 | [ ] | F09 | Create Compose PostgreSQL/Redis/Floci services and environment examples. | F02 | M |
