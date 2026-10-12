@@ -164,6 +164,17 @@ Scheduling confirms only after validating the event against the bound payment
 and trusted appointment amount; if it confirms, it publishes appointment_confirmed.
 Billing marks resolution/refund requirement through authenticated idempotent
 internal coordination (implementation in S06), never a cross-service table write.
+POST `/api/v1/billing/internal/payments/{payment_id}/resolution` requires
+`resolution=refund_required`, `resource_id` and `reason`. Allow scheduling for
+consultation payments (`slot_reallocated`, `appointment_cancelled`,
+`appointment_unavailable`, `duplicate_charge`) and fulfilment for medication
+payments (C04 reasons). Validate stored succeeded payment, tenant, purpose and
+linked appointment/order before applying; return payment, 200 on repeat without
+duplicate refund. Public ingress excludes this endpoint. Operator refund completion
+is read from authorized billing APIs by the resource owner and applied idempotently
+to appointment/order resolution. This flag requests review; it does not itself call
+the provider refund API. During refund_pending/refund_failed the flag is retained;
+on refunded it clears to none and the resource owner's resolution becomes refunded.
 Resource retrieval and amount verification remain necessary even for trusted events.
 For an earlier failed attempt's late success, scheduling may bind that successful
 payment only if no different payment already confirmed the appointment. An extra
