@@ -36,8 +36,13 @@ def configure_logging(level: str) -> None:
             "version": 1,
             "disable_existing_loggers": False,
             "formatters": {"json": {"()": JsonFormatter}},
-            "handlers": {"stdout": {"class": "logging.StreamHandler", "stream": "ext://sys.stdout",
-                                     "formatter": "json"}},
+            "handlers": {
+                "stdout": {
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://sys.stdout",
+                    "formatter": "json",
+                }
+            },
             "root": {"handlers": ["stdout"], "level": level},
             "loggers": {
                 "uvicorn": {"handlers": [], "propagate": True},

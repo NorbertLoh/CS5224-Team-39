@@ -46,9 +46,14 @@ class RequestLoggingMiddleware:
                 route = getattr(scope.get("route"), "path", "<unmatched>")
                 logger.info(
                     "http_request",
-                    extra={"service": self.service, "request_id": request_id,
-                           "method": scope["method"], "route": route, "status_code": status_code,
-                           "duration_ms": round((perf_counter() - started) * 1000, 2)},
+                    extra={
+                        "service": self.service,
+                        "request_id": request_id,
+                        "method": scope["method"],
+                        "route": route,
+                        "status_code": status_code,
+                        "duration_ms": round((perf_counter() - started) * 1000, 2),
+                    },
                 )
             finally:
                 request_id_context.reset(token)

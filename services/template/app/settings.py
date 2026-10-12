@@ -23,7 +23,9 @@ class Settings(BaseSettings):
     @classmethod
     def validate_root_path(cls, value: str) -> str:
         if value and (not value.startswith("/") or "?" in value or "#" in value):
-            raise ValueError("root_path must be empty or an absolute URL path without query/fragment")
+            raise ValueError(
+                "root_path must be empty or an absolute URL path without query/fragment"
+            )
         return value.rstrip("/")
 
     @property

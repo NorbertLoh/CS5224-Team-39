@@ -56,8 +56,10 @@ def test_correlation_and_logs_omit_payloads(caplog):
         return {"ok": True}
 
     with TestClient(app) as client, caplog.at_level(logging.INFO, logger="telelink.request"):
-        response = client.get("/patients/private-patient?secret=private-secret",
-                              headers={"x-request-id": "demo-123", "authorization": "secret-token"})
+        response = client.get(
+            "/patients/private-patient?secret=private-secret",
+            headers={"x-request-id": "demo-123", "authorization": "secret-token"},
+        )
         assert response.headers["x-request-id"] == "demo-123"
         record = caplog.records[-1]
         payload = json.loads(JsonFormatter().format(record))

@@ -1,6 +1,6 @@
 # TeleLink Health implementation plan
 
-Status: planning draft, 12 October 2026. No application or AWS resources have been created.
+Status: architecture plan, 12 October 2026. F02 repository scaffold is merged; the F03 FastAPI template is implemented on its task branch with review/merge pending. No business workflows or AWS resources have been created.
 
 Execution checklist: [implementation-plan.md](implementation-plan.md), with small unassigned tasks, effort estimates, dependencies and completion criteria for the four-week prototype. Anyone can claim a ready task.
 

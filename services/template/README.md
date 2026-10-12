@@ -14,7 +14,7 @@ Copy-Item .env.example .env
 .venv\Scripts\python.exe -m app
 ```
 
-The lockfile includes development tools and build dependencies for a repeatable local install. To deliberately update dependency resolution, install `-e ".[dev]"` and regenerate the lockfile using `pip freeze --exclude-editable`; review and verify the update before committing it. On Linux/macOS, use `.venv/bin/python` in place of the Windows interpreter path.
+The lockfile includes development tools and build dependencies for a repeatable local install. To deliberately update dependency resolution, install `-e ".[dev]"` and regenerate the lockfile using `pip freeze --all --exclude pip --exclude-editable`; review and verify the update before committing it. On Linux/macOS, use `.venv/bin/python` in place of the Windows interpreter path. The resolved dependencies were verified on Windows/Python 3.10.8; Linux container verification belongs to F05.
 
 Default URLs:
 
