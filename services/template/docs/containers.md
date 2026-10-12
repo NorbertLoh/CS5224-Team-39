@@ -1,6 +1,6 @@
 # Template containers
 
-Run from `services/template` with Docker Desktop using Linux containers. These files run only the generic API; F09/F10 supply the shared PostgreSQL/Redis/Floci stack later.
+Run from `services/template` with Docker Desktop using Linux containers. These standalone files run only the generic API. For the API alongside PostgreSQL/Redis/Floci with Vite forwarding, use the root [local startup guide](../../../docs/local-development.md). Stop one setup before starting the other on the same API port.
 
 ## Production-style local run
 

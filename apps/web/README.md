@@ -46,8 +46,13 @@ feature pages handle domain validation and field errors when needed.
 
 Copy `.env.example` to `.env` if needed. `VITE_API_BASE_URL` defaults to `/api/v1`;
 for a separate trusted origin use a URL ending in `/api/v1`. Restart Vite or
-rebuild after changes. API forwarding belongs to F10/W04; cross-origin servers
-need CORS configuration. Authentication/token refresh belongs to A01/A02.
+rebuild after changes. Vite forwards `/api/v1/template` to the Compose API at
+`http://127.0.0.1:8000`, stripping the prefix. If its host port changes, set
+`TEMPLATE_API_TARGET` in this app's `.env` and restart Vite. This server-only
+setting is not bundled into the frontend. See [local startup](../../docs/local-development.md).
+Dev and preview support this forwarding; production routing belongs to W04.
+Other service prefixes are not wired yet; cross-origin servers need CORS
+configuration. Authentication/token refresh belongs to A01/A02.
 Never attach API tokens to external signed download URLs.
 
 The root query provider is available for feature pages that use `useQuery`.
