@@ -17,8 +17,8 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [x] | F01 | **Skipped by user decision.** Exact deadline and AWS budget/access remain open in `plan.md`; confirm them before affected deployment tasks. | none | S |
-| [ ] | F02 | Create repo structure, ignore rules and setup README placeholders. | none | S |
-| [ ] | F03 | Create FastAPI template with settings, logging, health/readiness and OpenAPI. | F02 | M |
+| [x] | F02 | Create repo structure, ignore rules and setup README placeholders. Completed in merged PR #2. | none | S |
+| [ ] | F03 | Create FastAPI template with settings, logging, health/readiness and OpenAPI. Assignee: NorbertLoh; in progress, implementation verified in PR #4, merge pending. | F02 | M |
 | [ ] | F04 | Add SQLAlchemy/Alembic example and fresh-database migration instructions. | F03 | M |
 | [ ] | F05 | Add production Dockerfile and local reload override for the template. | F03 | S |
 | [ ] | F06 | Scaffold React/TypeScript/Vite; build succeeds. | F02 | S |
