@@ -6,6 +6,7 @@ From `apps/web`:
 
 ```sh
 npm ci
+npm run lint
 npm run dev
 npm run build
 npm run preview
@@ -16,6 +17,16 @@ Development runs at http://127.0.0.1:5173. Preview serves the built `dist/` at h
 `dist/` contains static assets suitable for S3/CloudFront; the Vite development/preview servers are local tools, not production hosting. Configure cloud routing in W04. Browser-visible `VITE_*` environment variables are substituted at build time, so never put credentials or secrets in them.
 
 F07 adds route modules/layouts; F08 adds the API client and shared UI. This scaffold has no authentication or API integration yet. Planned feature groups: storefront, patient, doctor, clinic administration and platform administration.
+
+## Frontend lint in CI
+
+`npm run lint` checks JavaScript, TypeScript and TSX with ESLint's recommended
+JavaScript/TypeScript rules. Generated `dist/` and `node_modules/` are ignored.
+GitHub Actions runs the same command on pushes and pull requests using Node 24
+and `npm ci`. Errors or warnings fail the check. This frontend lint increment
+does not complete F15's planned build/type and backend lint checks.
+TypeScript uses 6.0.x to match the ESLint parser's supported compiler versions.
+Configuration follows the [typescript-eslint quickstart](https://typescript-eslint.io/getting-started/).
 
 ## UI components and styling
 
