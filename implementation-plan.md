@@ -33,9 +33,9 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [ ] | F15 | Add minimal frontend build/type and backend lint checks in CI. Frontend ESLint completed in merged PR #18 (issue #17 closed); frontend build/type and backend lint checks remain deferred. | F03, F06 | S |
 | [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. | F11-F13, A01-A03 | M |
 | [x] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. Completed in merged PR #15; examples verified. | none | S |
-| [ ] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. | C01 | M |
-| [ ] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. | C01 | M |
-| [ ] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. | C01 | M |
+| [ ] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. Assignee: NorbertLoh; in progress, issue #33, draft PR #36. | C01 | M |
+| [ ] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. Assignee: NorbertLoh; in progress, issue #34, draft PR #37. | C01 | M |
+| [ ] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. Assignee: NorbertLoh; in progress, issue #35, draft PR #38. | C01 | M |
 | [x] | C05 | Define event envelope, producers/consumers and sample workflow events. Completed in merged PR #27; fixtures validated and F12 consumer routing reviewed. | C01 | M |
 | [ ] | X01 | Spike self-hosted PeerJS across two networks; document TURN ports/setup. | none | L |
 | [ ] | X02 | Spike appointment-bound signalling admission; reject unrelated users. | X01 | M |
