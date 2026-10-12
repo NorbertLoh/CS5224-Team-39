@@ -1,0 +1,59 @@
+name: telelink
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:17}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-telelink}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-telelink-local-only}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:7.4-alpine}
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  floci:
+    image: ${FLOCI_IMAGE:-floci/floci:2.2.0}
+    profiles: ["offline"]
+    environment:
+      FLOCI_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-southeast-1}
+      FLOCI_BASE_URL: http://localhost:${FLOCI_PORT:-4566}
+      FLOCI_STORAGE_MODE: persistent
+      FLOCI_STORAGE_PERSISTENT_PATH: /app/data
+      FLOCI_SERVICES_UI_ENABLED: "false"
+      FLOCI_DNS_CONTAINER_FALLBACK_ENABLED: "false"
+    ports:
+      - "127.0.0.1:${FLOCI_PORT:-4566}:4566"
+    volumes:
+      - floci_data:/app/data
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    stop_grace_period: 30s
+
+volumes:
+  postgres_data:
+  redis_data:
+  floci_data:
