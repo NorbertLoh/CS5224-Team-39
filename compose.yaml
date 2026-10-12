@@ -43,6 +43,22 @@ services:
       timeout: 3s
       retries: 10
 
+  bootstrap:
+    image: amazon/aws-cli:2.37.11
+    profiles: ["bootstrap"]
+    depends_on:
+      floci:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/bootstrap/bootstrap.sh"]
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-southeast-1}
+      AWS_EC2_METADATA_DISABLED: "true"
+      AWS_PAGER: ""
+    volumes:
+      - ./dev/floci:/bootstrap:ro
+
   floci:
     image: ${FLOCI_IMAGE:-floci/floci:2.2.0}
     profiles: ["offline"]

@@ -2,7 +2,8 @@
 
 Compose runs the FastAPI template alongside PostgreSQL, Redis and optional
 Floci. Run the frontend on the host; Vite forwards `/api/v1/template` to the
-API container. F11-F14 add resource bootstrap and synthetic fixtures.
+API container. F11 supplies the S3/secrets bootstrap below; F12-F14 add messaging,
+Cognito and synthetic workflow fixtures.
 
 ## Start
 
@@ -56,6 +57,47 @@ If port 8000 is occupied, change `TEMPLATE_HOST_PORT` in the root `.env` and set
 Compose and Vite. Keep `VITE_API_BASE_URL=/api/v1` for same-origin requests.
 The template runs the production image locally with docs enabled, without hot
 reload. For API reload, use the [standalone development override](../services/template/docs/containers.md).
+
+## Bootstrap S3 and synthetic secrets
+
+From the repository root, after starting the offline stack:
+
+```powershell
+docker compose --profile offline run --rm bootstrap
+```
+
+The runner waits for healthy Floci and creates these resources:
+
+| Resource | Name | Initial contents |
+| --- | --- | --- |
+| S3 bucket | `telelink-local-documents` | Empty; public access block enabled |
+| Secrets Manager secret | `telelink/local/stripe` | JSON: `api_key`, `webhook_secret` |
+| Secrets Manager secret | `telelink/local/lalamove` | JSON: `api_key`, `api_secret` |
+
+All secret values are clearly synthetic and cannot call the real providers.
+Bootstrap creates missing resources, preserves existing objects and secret
+values, and reapplies the bucket's public access block. Errors stop the script
+with a nonzero exit code. Run it again after resetting the Floci volume.
+
+The separate `bootstrap` profile keeps this one-shot job out of ordinary `up`
+and `up --wait`. `run bootstrap` selects it explicitly; keep `--profile offline`
+to include its Floci dependency. The pinned AWS CLI container needs no host AWS
+installation or credentials. It always calls `http://floci:4566` with dummy
+credentials, regardless of host AWS settings or `FLOCI_PORT`.
+
+First use downloads `amazon/aws-cli:2.37.11`. With that image cached, use
+`docker compose --profile offline run --rm --pull never bootstrap` offline.
+For inspection with the same isolated CLI, override its entrypoint:
+
+```powershell
+docker compose --profile offline run --rm --entrypoint aws bootstrap --endpoint-url http://floci:4566 s3api list-buckets
+docker compose --profile offline run --rm --entrypoint aws bootstrap --endpoint-url http://floci:4566 secretsmanager list-secrets
+```
+
+Emulator settings do not establish AWS authorization or privacy guarantees.
+Real private S3/IAM configuration belongs to W08; restart/API coverage remains
+F16. Business services must configure these resource names and read secrets
+server-side; never copy provider secrets into frontend `VITE_*` variables.
 
 ## Endpoints
 
