@@ -1,0 +1,65 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/.aws/
+**/.credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# JavaScript dependencies and generated output
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+
+# Infrastructure state and generated artifacts
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
+*.auto.tfvars
+*.tfvars.json
+!*.tfvars.example
+cdk.out/
+
+# Local runtime data
+.local/
+.floci/
+.cognito/
+*.sqlite
+*.sqlite3
+*.log
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+
+# Keep dependency lockfiles and database migrations tracked.
+# Floci volumes and generated demo files should live under .local/.
