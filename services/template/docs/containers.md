@@ -37,6 +37,4 @@ docker build --target development -t telelink-template:dev .
 docker run --rm telelink-template:dev python -m pytest
 ```
 
-If a corporate network requires an extra trusted CA, supply a local PEM bundle with BuildKit's `--secret id=pip_ca,src=<local-ca-path>` flag. The optional build secret enables certificate verification without committing or copying the bundle into the final image. Do not disable TLS verification. Base-image downloads still use Docker Desktop's own trust configuration.
-
 The Python base tag is a maintained version tag rather than an immutable digest. Pin the approved digest in infrastructure when reproducible deployment images are required; deployed service images should use immutable commit tags.
