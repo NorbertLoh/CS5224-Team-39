@@ -16,7 +16,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | F01 | Record exact deadline, demo scope, AWS budget/account and access in `docs/project.md`. | none | S |
+| [x] | F01 | **Skipped by user decision.** Exact deadline and AWS budget/access remain open in `plan.md`; confirm them before affected deployment tasks. | none | S |
 | [ ] | F02 | Create repo structure, ignore rules and setup README placeholders. | none | S |
 | [ ] | F03 | Create FastAPI template with settings, logging, health/readiness and OpenAPI. | F02 | M |
 | [ ] | F04 | Add SQLAlchemy/Alembic example and fresh-database migration instructions. | F03 | M |
