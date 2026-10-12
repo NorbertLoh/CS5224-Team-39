@@ -6,6 +6,7 @@ From `apps/web`:
 
 ```sh
 npm ci
+npm run lint
 npm run dev
 npm run build
 npm test
@@ -61,6 +62,16 @@ and an optional retry callback. Do not display raw exception/server text.
 Native fetch cancellation is preserved; callers should ignore AbortError.
 `npm test` checks the helper and components; `npm run build` includes typechecking.
 These synthetic checks do not establish live API integration.
+
+## Frontend lint in CI
+
+`npm run lint` checks JavaScript, TypeScript and TSX with ESLint's recommended
+JavaScript/TypeScript rules. Generated `dist/` and `node_modules/` are ignored.
+GitHub Actions runs the same command on pushes and pull requests using Node 24
+and `npm ci`. Errors or warnings fail the check. This frontend lint increment
+does not complete F15's planned build/type and backend lint checks.
+TypeScript uses 6.0.x to match the ESLint parser's supported compiler versions.
+Configuration follows the [typescript-eslint quickstart](https://typescript-eslint.io/getting-started/).
 
 ## UI components and styling
 
