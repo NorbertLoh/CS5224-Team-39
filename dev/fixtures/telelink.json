@@ -1,0 +1,1326 @@
+{
+  "fixture_kind": "synthetic_shared_dataset",
+  "schema_version": 1,
+  "as_of": "2026-10-13T03:00:00.000Z",
+  "subjects": [
+    {
+      "subject_id": "00000000-0000-4000-8000-000000000003",
+      "cognito_sub": "synthetic-subject-3",
+      "display_name": "Demo Patient A",
+      "global_roles": [
+        "patient"
+      ]
+    },
+    {
+      "subject_id": "00000000-0000-4000-8000-000000000023",
+      "cognito_sub": "synthetic-subject-23",
+      "display_name": "Demo Patient B",
+      "global_roles": [
+        "patient"
+      ]
+    },
+    {
+      "subject_id": "00000000-0000-4000-8000-000000000004",
+      "cognito_sub": "synthetic-subject-4",
+      "display_name": "Demo Doctor A",
+      "global_roles": []
+    },
+    {
+      "subject_id": "00000000-0000-4000-8000-000000000021",
+      "cognito_sub": "synthetic-subject-21",
+      "display_name": "Demo Doctor B",
+      "global_roles": []
+    },
+    {
+      "subject_id": "00000000-0000-4000-8000-000000000022",
+      "cognito_sub": "synthetic-subject-22",
+      "display_name": "Demo Shared Doctor",
+      "global_roles": []
+    },
+    {
+      "subject_id": "00000000-0000-4000-8000-000000000024",
+      "cognito_sub": "synthetic-subject-24",
+      "display_name": "Demo Former Doctor",
+      "global_roles": []
+    },
+    {
+      "subject_id": "00000000-0000-4000-8000-000000000030",
+      "cognito_sub": "synthetic-subject-30",
+      "display_name": "Demo Clinic A Admin",
+      "global_roles": []
+    },
+    {
+      "subject_id": "00000000-0000-4000-8000-000000000031",
+      "cognito_sub": "synthetic-subject-31",
+      "display_name": "Demo Clinic B Admin",
+      "global_roles": []
+    },
+    {
+      "subject_id": "00000000-0000-4000-8000-000000000032",
+      "cognito_sub": "synthetic-subject-32",
+      "display_name": "Demo Platform Admin",
+      "global_roles": [
+        "platform_admin"
+      ]
+    }
+  ],
+  "clinics": [
+    {
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "slug": "demo-clinic-a",
+      "name": "Demo Clinic A",
+      "status": "active",
+      "branding": {
+        "primary_color": "#156B63",
+        "logo_url": null,
+        "description": "Synthetic clinic for prototype walkthroughs."
+      },
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "review_reason": null,
+      "created_at": "2026-10-12T01:00:00.000Z",
+      "updated_at": "2026-10-12T02:00:00.000Z"
+    },
+    {
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "slug": "demo-clinic-b",
+      "name": "Demo Clinic B",
+      "status": "active",
+      "branding": {
+        "primary_color": "#3756A6",
+        "logo_url": null,
+        "description": "Synthetic clinic for prototype walkthroughs."
+      },
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "review_reason": null,
+      "created_at": "2026-10-12T01:00:00.000Z",
+      "updated_at": "2026-10-12T02:00:00.000Z"
+    }
+  ],
+  "memberships": [
+    {
+      "membership_id": "00000000-0000-4000-8000-000000000005",
+      "subject_id": "00000000-0000-4000-8000-000000000004",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "roles": [
+        "doctor"
+      ],
+      "status": "active",
+      "created_at": "2026-10-12T01:00:00.000Z",
+      "updated_at": "2026-10-12T01:00:00.000Z"
+    },
+    {
+      "membership_id": "00000000-0000-4000-8000-000000000026",
+      "subject_id": "00000000-0000-4000-8000-000000000021",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "roles": [
+        "doctor"
+      ],
+      "status": "active",
+      "created_at": "2026-10-12T01:00:00.000Z",
+      "updated_at": "2026-10-12T01:00:00.000Z"
+    },
+    {
+      "membership_id": "00000000-0000-4000-8000-000000000027",
+      "subject_id": "00000000-0000-4000-8000-000000000022",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "roles": [
+        "doctor"
+      ],
+      "status": "active",
+      "created_at": "2026-10-12T01:00:00.000Z",
+      "updated_at": "2026-10-12T01:00:00.000Z"
+    },
+    {
+      "membership_id": "00000000-0000-4000-8000-000000000028",
+      "subject_id": "00000000-0000-4000-8000-000000000022",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "roles": [
+        "doctor"
+      ],
+      "status": "active",
+      "created_at": "2026-10-12T01:00:00.000Z",
+      "updated_at": "2026-10-12T01:00:00.000Z"
+    },
+    {
+      "membership_id": "00000000-0000-4000-8000-000000000029",
+      "subject_id": "00000000-0000-4000-8000-000000000024",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "roles": [
+        "doctor"
+      ],
+      "status": "revoked",
+      "created_at": "2026-10-12T01:00:00.000Z",
+      "updated_at": "2026-10-13T01:00:00.000Z"
+    },
+    {
+      "membership_id": "00000000-0000-4000-8000-000000000033",
+      "subject_id": "00000000-0000-4000-8000-000000000030",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "roles": [
+        "clinic_admin"
+      ],
+      "status": "active",
+      "created_at": "2026-10-12T01:00:00.000Z",
+      "updated_at": "2026-10-12T01:00:00.000Z"
+    },
+    {
+      "membership_id": "00000000-0000-4000-8000-000000000034",
+      "subject_id": "00000000-0000-4000-8000-000000000031",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "roles": [
+        "clinic_admin"
+      ],
+      "status": "active",
+      "created_at": "2026-10-12T01:00:00.000Z",
+      "updated_at": "2026-10-12T01:00:00.000Z"
+    }
+  ],
+  "slots": [
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000006",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "doctor_id": "00000000-0000-4000-8000-000000000004",
+      "starts_at": "2026-10-12T04:00:00.000Z",
+      "ends_at": "2026-10-12T04:30:00.000Z",
+      "availability": "unavailable",
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000041",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "doctor_id": "00000000-0000-4000-8000-000000000021",
+      "starts_at": "2026-10-13T04:00:00.000Z",
+      "ends_at": "2026-10-13T04:30:00.000Z",
+      "availability": "unavailable",
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000051",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "starts_at": "2026-10-13T05:00:00.000Z",
+      "ends_at": "2026-10-13T05:30:00.000Z",
+      "availability": "unavailable",
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000061",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "doctor_id": "00000000-0000-4000-8000-000000000021",
+      "starts_at": "2026-10-13T06:00:00.000Z",
+      "ends_at": "2026-10-13T06:30:00.000Z",
+      "availability": "unavailable",
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000071",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "doctor_id": "00000000-0000-4000-8000-000000000004",
+      "starts_at": "2026-10-13T07:00:00.000Z",
+      "ends_at": "2026-10-13T07:30:00.000Z",
+      "availability": "unavailable",
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000081",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "starts_at": "2026-10-13T08:00:00.000Z",
+      "ends_at": "2026-10-13T08:30:00.000Z",
+      "availability": "available",
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000101",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "doctor_id": "00000000-0000-4000-8000-000000000021",
+      "starts_at": "2026-10-13T02:45:00.000Z",
+      "ends_at": "2026-10-13T03:15:00.000Z",
+      "availability": "unavailable",
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000121",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "starts_at": "2026-10-12T08:00:00.000Z",
+      "ends_at": "2026-10-12T08:30:00.000Z",
+      "availability": "unavailable",
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000131",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "doctor_id": "00000000-0000-4000-8000-000000000024",
+      "starts_at": "2026-10-12T10:00:00.000Z",
+      "ends_at": "2026-10-12T10:30:00.000Z",
+      "availability": "unavailable",
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000090",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "starts_at": "2026-10-13T09:00:00.000Z",
+      "ends_at": "2026-10-13T09:30:00.000Z",
+      "availability": "available",
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      }
+    },
+    {
+      "slot_id": "00000000-0000-4000-8000-000000000091",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "starts_at": "2026-10-13T10:00:00.000Z",
+      "ends_at": "2026-10-13T10:30:00.000Z",
+      "availability": "available",
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      }
+    }
+  ],
+  "appointments": [
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "doctor_id": "00000000-0000-4000-8000-000000000004",
+      "slot_id": "00000000-0000-4000-8000-000000000006",
+      "status": "completed",
+      "starts_at": "2026-10-12T04:00:00.000Z",
+      "ends_at": "2026-10-12T04:30:00.000Z",
+      "hold_expires_at": null,
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "payment_id": "00000000-0000-4000-8000-000000000011",
+      "payment_resolution": "confirmed",
+      "created_at": "2026-10-12T02:55:00.000Z",
+      "updated_at": "2026-10-12T04:30:00.000Z"
+    },
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000040",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "doctor_id": "00000000-0000-4000-8000-000000000021",
+      "slot_id": "00000000-0000-4000-8000-000000000041",
+      "status": "confirmed",
+      "starts_at": "2026-10-13T04:00:00.000Z",
+      "ends_at": "2026-10-13T04:30:00.000Z",
+      "hold_expires_at": null,
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      },
+      "payment_id": "00000000-0000-4000-8000-000000000042",
+      "payment_resolution": "confirmed",
+      "created_at": "2026-10-13T02:50:00.000Z",
+      "updated_at": "2026-10-13T02:52:00.000Z"
+    },
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000050",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "slot_id": "00000000-0000-4000-8000-000000000051",
+      "status": "held",
+      "starts_at": "2026-10-13T05:00:00.000Z",
+      "ends_at": "2026-10-13T05:30:00.000Z",
+      "hold_expires_at": "2026-10-13T03:08:00.000Z",
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "payment_id": null,
+      "payment_resolution": "none",
+      "created_at": "2026-10-13T02:58:00.000Z",
+      "updated_at": "2026-10-13T02:58:00.000Z"
+    },
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000060",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000021",
+      "slot_id": "00000000-0000-4000-8000-000000000061",
+      "status": "pending_payment",
+      "starts_at": "2026-10-13T06:00:00.000Z",
+      "ends_at": "2026-10-13T06:30:00.000Z",
+      "hold_expires_at": "2026-10-13T03:05:00.000Z",
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      },
+      "payment_id": "00000000-0000-4000-8000-000000000062",
+      "payment_resolution": "awaiting_payment",
+      "created_at": "2026-10-13T02:55:00.000Z",
+      "updated_at": "2026-10-13T02:56:00.000Z"
+    },
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000070",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "doctor_id": "00000000-0000-4000-8000-000000000004",
+      "slot_id": "00000000-0000-4000-8000-000000000071",
+      "status": "expired",
+      "starts_at": "2026-10-13T07:00:00.000Z",
+      "ends_at": "2026-10-13T07:30:00.000Z",
+      "hold_expires_at": "2026-10-13T02:59:00.000Z",
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "payment_id": "00000000-0000-4000-8000-000000000072",
+      "payment_resolution": "refund_required",
+      "created_at": "2026-10-13T02:49:00.000Z",
+      "updated_at": "2026-10-13T03:00:00.000Z"
+    },
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000073",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000004",
+      "slot_id": "00000000-0000-4000-8000-000000000071",
+      "status": "held",
+      "starts_at": "2026-10-13T07:00:00.000Z",
+      "ends_at": "2026-10-13T07:30:00.000Z",
+      "hold_expires_at": "2026-10-13T03:09:00.000Z",
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "payment_id": null,
+      "payment_resolution": "none",
+      "created_at": "2026-10-13T02:59:00.000Z",
+      "updated_at": "2026-10-13T02:59:00.000Z"
+    },
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000080",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "slot_id": "00000000-0000-4000-8000-000000000081",
+      "status": "cancelled",
+      "starts_at": "2026-10-13T08:00:00.000Z",
+      "ends_at": "2026-10-13T08:30:00.000Z",
+      "hold_expires_at": "2026-10-13T02:30:00.000Z",
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      },
+      "payment_id": "00000000-0000-4000-8000-000000000082",
+      "payment_resolution": "none",
+      "created_at": "2026-10-13T02:20:00.000Z",
+      "updated_at": "2026-10-13T02:25:00.000Z"
+    },
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000100",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000021",
+      "slot_id": "00000000-0000-4000-8000-000000000101",
+      "status": "in_progress",
+      "starts_at": "2026-10-13T02:45:00.000Z",
+      "ends_at": "2026-10-13T03:15:00.000Z",
+      "hold_expires_at": null,
+      "consultation_price": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      },
+      "payment_id": "00000000-0000-4000-8000-000000000105",
+      "payment_resolution": "confirmed",
+      "created_at": "2026-10-13T02:35:00.000Z",
+      "updated_at": "2026-10-13T02:45:00.000Z"
+    },
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000120",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "slot_id": "00000000-0000-4000-8000-000000000121",
+      "status": "completed",
+      "starts_at": "2026-10-12T08:00:00.000Z",
+      "ends_at": "2026-10-12T08:30:00.000Z",
+      "hold_expires_at": null,
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "payment_id": "00000000-0000-4000-8000-000000000122",
+      "payment_resolution": "confirmed",
+      "created_at": "2026-10-12T07:50:00.000Z",
+      "updated_at": "2026-10-12T08:30:00.000Z"
+    },
+    {
+      "appointment_id": "00000000-0000-4000-8000-000000000130",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "doctor_id": "00000000-0000-4000-8000-000000000024",
+      "slot_id": "00000000-0000-4000-8000-000000000131",
+      "status": "completed",
+      "starts_at": "2026-10-12T10:00:00.000Z",
+      "ends_at": "2026-10-12T10:30:00.000Z",
+      "hold_expires_at": null,
+      "consultation_price": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "payment_id": "00000000-0000-4000-8000-000000000132",
+      "payment_resolution": "confirmed",
+      "created_at": "2026-10-12T09:50:00.000Z",
+      "updated_at": "2026-10-12T10:30:00.000Z"
+    }
+  ],
+  "payments": [
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000011",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "purpose": "consultation",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "order_id": null,
+      "quote_id": null,
+      "status": "succeeded",
+      "amount": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 250,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 2250,
+        "currency": "SGD"
+      },
+      "resolution": "none",
+      "created_at": "2026-10-12T02:56:00.000Z",
+      "updated_at": "2026-10-12T03:00:00.000Z"
+    },
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000042",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "purpose": "consultation",
+      "appointment_id": "00000000-0000-4000-8000-000000000040",
+      "order_id": null,
+      "quote_id": null,
+      "status": "succeeded",
+      "amount": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 300,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 2700,
+        "currency": "SGD"
+      },
+      "resolution": "none",
+      "created_at": "2026-10-13T02:51:00.000Z",
+      "updated_at": "2026-10-13T02:52:00.000Z"
+    },
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000062",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "purpose": "consultation",
+      "appointment_id": "00000000-0000-4000-8000-000000000060",
+      "order_id": null,
+      "quote_id": null,
+      "status": "pending",
+      "amount": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 300,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 2700,
+        "currency": "SGD"
+      },
+      "resolution": "none",
+      "created_at": "2026-10-13T02:56:00.000Z",
+      "updated_at": "2026-10-13T02:56:00.000Z"
+    },
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000072",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "purpose": "consultation",
+      "appointment_id": "00000000-0000-4000-8000-000000000070",
+      "order_id": null,
+      "quote_id": null,
+      "status": "succeeded",
+      "amount": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 250,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 2250,
+        "currency": "SGD"
+      },
+      "resolution": "refund_required",
+      "created_at": "2026-10-13T02:50:00.000Z",
+      "updated_at": "2026-10-13T03:00:00.000Z"
+    },
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000082",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "purpose": "consultation",
+      "appointment_id": "00000000-0000-4000-8000-000000000080",
+      "order_id": null,
+      "quote_id": null,
+      "status": "failed",
+      "amount": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 300,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 2700,
+        "currency": "SGD"
+      },
+      "resolution": "none",
+      "created_at": "2026-10-13T02:21:00.000Z",
+      "updated_at": "2026-10-13T02:24:00.000Z"
+    },
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000105",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "purpose": "consultation",
+      "appointment_id": "00000000-0000-4000-8000-000000000100",
+      "order_id": null,
+      "quote_id": null,
+      "status": "succeeded",
+      "amount": {
+        "amount_minor": 3000,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 300,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 2700,
+        "currency": "SGD"
+      },
+      "resolution": "none",
+      "created_at": "2026-10-13T02:36:00.000Z",
+      "updated_at": "2026-10-13T02:40:00.000Z"
+    },
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000122",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "purpose": "consultation",
+      "appointment_id": "00000000-0000-4000-8000-000000000120",
+      "order_id": null,
+      "quote_id": null,
+      "status": "succeeded",
+      "amount": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 250,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 2250,
+        "currency": "SGD"
+      },
+      "resolution": "none",
+      "created_at": "2026-10-12T07:51:00.000Z",
+      "updated_at": "2026-10-12T07:52:00.000Z"
+    },
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000132",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "purpose": "consultation",
+      "appointment_id": "00000000-0000-4000-8000-000000000130",
+      "order_id": null,
+      "quote_id": null,
+      "status": "succeeded",
+      "amount": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 250,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 2250,
+        "currency": "SGD"
+      },
+      "resolution": "none",
+      "created_at": "2026-10-12T09:51:00.000Z",
+      "updated_at": "2026-10-12T09:52:00.000Z"
+    },
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000016",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "purpose": "medication_delivery",
+      "appointment_id": null,
+      "order_id": "00000000-0000-4000-8000-000000000012",
+      "quote_id": "00000000-0000-4000-8000-000000000019",
+      "status": "succeeded",
+      "amount": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 200,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 2300,
+        "currency": "SGD"
+      },
+      "resolution": "none",
+      "created_at": "2026-10-12T04:50:00.000Z",
+      "updated_at": "2026-10-12T04:50:00.000Z"
+    },
+    {
+      "payment_id": "00000000-0000-4000-8000-000000000125",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "purpose": "medication_delivery",
+      "appointment_id": null,
+      "order_id": "00000000-0000-4000-8000-000000000126",
+      "quote_id": "00000000-0000-4000-8000-000000000124",
+      "status": "succeeded",
+      "amount": {
+        "amount_minor": 1500,
+        "currency": "SGD"
+      },
+      "commission_bps": 1000,
+      "commission_amount": {
+        "amount_minor": 100,
+        "currency": "SGD"
+      },
+      "clinic_amount": {
+        "amount_minor": 1400,
+        "currency": "SGD"
+      },
+      "resolution": "none",
+      "created_at": "2026-10-13T02:55:00.000Z",
+      "updated_at": "2026-10-13T02:55:00.000Z"
+    }
+  ],
+  "catalogue": [
+    {
+      "medication_id": "00000000-0000-4000-8000-000000000017",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "display_name": "Demo catalogue item A",
+      "unit_label": "dispensing unit",
+      "unit_price": {
+        "amount_minor": 1000,
+        "currency": "SGD"
+      },
+      "active": true,
+      "updated_at": "2026-10-12T01:00:00.000Z"
+    },
+    {
+      "medication_id": "00000000-0000-4000-8000-000000000113",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "display_name": "Demo catalogue item B",
+      "unit_label": "dispensing unit",
+      "unit_price": {
+        "amount_minor": 2000,
+        "currency": "SGD"
+      },
+      "active": true,
+      "updated_at": "2026-10-12T01:00:00.000Z"
+    }
+  ],
+  "notes": [
+    {
+      "note_id": "00000000-0000-4000-8000-000000000020",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "doctor_id": "00000000-0000-4000-8000-000000000004",
+      "text": "Synthetic consultation note placeholder.",
+      "created_at": "2026-10-12T04:25:00.000Z",
+      "updated_at": "2026-10-12T04:25:00.000Z"
+    },
+    {
+      "note_id": "00000000-0000-4000-8000-000000000115",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "appointment_id": "00000000-0000-4000-8000-000000000100",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000021",
+      "text": "Synthetic consultation note placeholder.",
+      "created_at": "2026-10-13T02:50:00.000Z",
+      "updated_at": "2026-10-13T02:50:00.000Z"
+    },
+    {
+      "note_id": "00000000-0000-4000-8000-000000000128",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "appointment_id": "00000000-0000-4000-8000-000000000120",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "text": "Synthetic consultation note placeholder.",
+      "created_at": "2026-10-12T08:25:00.000Z",
+      "updated_at": "2026-10-12T08:25:00.000Z"
+    }
+  ],
+  "prescriptions": [
+    {
+      "prescription_id": "00000000-0000-4000-8000-000000000013",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "doctor_id": "00000000-0000-4000-8000-000000000004",
+      "status": "issued",
+      "items": [
+        {
+          "prescription_item_id": "00000000-0000-4000-8000-000000000018",
+          "medication_id": "00000000-0000-4000-8000-000000000017",
+          "quantity": 2,
+          "instructions": "Synthetic instruction placeholder; no treatment content.",
+          "display_name": "Demo catalogue item A"
+        }
+      ],
+      "issued_at": "2026-10-12T04:25:00.000Z",
+      "created_at": "2026-10-12T04:25:00.000Z",
+      "updated_at": "2026-10-12T04:25:00.000Z"
+    },
+    {
+      "prescription_id": "00000000-0000-4000-8000-000000000110",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "appointment_id": "00000000-0000-4000-8000-000000000100",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000021",
+      "status": "issued",
+      "items": [
+        {
+          "prescription_item_id": "00000000-0000-4000-8000-000000000114",
+          "medication_id": "00000000-0000-4000-8000-000000000113",
+          "quantity": 1,
+          "instructions": "Synthetic instruction placeholder; no treatment content.",
+          "display_name": "Demo catalogue item B"
+        }
+      ],
+      "issued_at": "2026-10-13T02:50:00.000Z",
+      "created_at": "2026-10-13T02:50:00.000Z",
+      "updated_at": "2026-10-13T02:50:00.000Z"
+    },
+    {
+      "prescription_id": "00000000-0000-4000-8000-000000000123",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "appointment_id": "00000000-0000-4000-8000-000000000120",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "doctor_id": "00000000-0000-4000-8000-000000000022",
+      "status": "issued",
+      "items": [
+        {
+          "prescription_item_id": "00000000-0000-4000-8000-000000000129",
+          "medication_id": "00000000-0000-4000-8000-000000000017",
+          "quantity": 1,
+          "instructions": "Synthetic instruction placeholder; no treatment content.",
+          "display_name": "Demo catalogue item A"
+        }
+      ],
+      "issued_at": "2026-10-12T08:25:00.000Z",
+      "created_at": "2026-10-12T08:25:00.000Z",
+      "updated_at": "2026-10-12T08:25:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "order_id": "00000000-0000-4000-8000-000000000012",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "prescription_id": "00000000-0000-4000-8000-000000000013",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "patient_id": "00000000-0000-4000-8000-000000000003",
+      "status": "delivered",
+      "medicine_status": "ready",
+      "payment_status": "succeeded",
+      "payment_id": "00000000-0000-4000-8000-000000000016",
+      "quote_id": "00000000-0000-4000-8000-000000000019",
+      "delivery_id": "00000000-0000-4000-8000-000000000015",
+      "items": [
+        {
+          "prescription_item_id": "00000000-0000-4000-8000-000000000018",
+          "medication_id": "00000000-0000-4000-8000-000000000017",
+          "display_name": "Demo catalogue item A",
+          "quantity": 2,
+          "unit_price": {
+            "amount_minor": 1000,
+            "currency": "SGD"
+          },
+          "line_total": {
+            "amount_minor": 2000,
+            "currency": "SGD"
+          }
+        }
+      ],
+      "medication_subtotal": {
+        "amount_minor": 2000,
+        "currency": "SGD"
+      },
+      "delivery_fee": {
+        "amount_minor": 500,
+        "currency": "SGD"
+      },
+      "total": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "created_at": "2026-10-12T04:50:00.000Z",
+      "updated_at": "2026-10-12T05:30:00.000Z"
+    },
+    {
+      "order_id": "00000000-0000-4000-8000-000000000111",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "prescription_id": "00000000-0000-4000-8000-000000000110",
+      "appointment_id": "00000000-0000-4000-8000-000000000100",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "status": "awaiting_payment",
+      "medicine_status": "ready",
+      "payment_status": "unpaid",
+      "payment_id": null,
+      "quote_id": "00000000-0000-4000-8000-000000000112",
+      "delivery_id": null,
+      "items": [
+        {
+          "prescription_item_id": "00000000-0000-4000-8000-000000000114",
+          "medication_id": "00000000-0000-4000-8000-000000000113",
+          "display_name": "Demo catalogue item B",
+          "quantity": 1,
+          "unit_price": {
+            "amount_minor": 2000,
+            "currency": "SGD"
+          },
+          "line_total": {
+            "amount_minor": 2000,
+            "currency": "SGD"
+          }
+        }
+      ],
+      "medication_subtotal": {
+        "amount_minor": 2000,
+        "currency": "SGD"
+      },
+      "delivery_fee": {
+        "amount_minor": 400,
+        "currency": "SGD"
+      },
+      "total": {
+        "amount_minor": 2400,
+        "currency": "SGD"
+      },
+      "created_at": "2026-10-13T02:54:00.000Z",
+      "updated_at": "2026-10-13T02:54:00.000Z"
+    },
+    {
+      "order_id": "00000000-0000-4000-8000-000000000126",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "prescription_id": "00000000-0000-4000-8000-000000000123",
+      "appointment_id": "00000000-0000-4000-8000-000000000120",
+      "patient_id": "00000000-0000-4000-8000-000000000023",
+      "status": "paid",
+      "medicine_status": "not_ready",
+      "payment_status": "succeeded",
+      "payment_id": "00000000-0000-4000-8000-000000000125",
+      "quote_id": "00000000-0000-4000-8000-000000000124",
+      "delivery_id": null,
+      "items": [
+        {
+          "prescription_item_id": "00000000-0000-4000-8000-000000000129",
+          "medication_id": "00000000-0000-4000-8000-000000000017",
+          "display_name": "Demo catalogue item A",
+          "quantity": 1,
+          "unit_price": {
+            "amount_minor": 1000,
+            "currency": "SGD"
+          },
+          "line_total": {
+            "amount_minor": 1000,
+            "currency": "SGD"
+          }
+        }
+      ],
+      "medication_subtotal": {
+        "amount_minor": 1000,
+        "currency": "SGD"
+      },
+      "delivery_fee": {
+        "amount_minor": 500,
+        "currency": "SGD"
+      },
+      "total": {
+        "amount_minor": 1500,
+        "currency": "SGD"
+      },
+      "created_at": "2026-10-13T02:55:00.000Z",
+      "updated_at": "2026-10-13T02:55:00.000Z"
+    }
+  ],
+  "quotes": [
+    {
+      "quote_id": "00000000-0000-4000-8000-000000000019",
+      "order_id": "00000000-0000-4000-8000-000000000012",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "status": "accepted",
+      "medication_subtotal": {
+        "amount_minor": 2000,
+        "currency": "SGD"
+      },
+      "delivery_fee": {
+        "amount_minor": 500,
+        "currency": "SGD"
+      },
+      "total": {
+        "amount_minor": 2500,
+        "currency": "SGD"
+      },
+      "expires_at": "2026-10-12T05:00:00.000Z",
+      "created_at": "2026-10-12T04:50:00.000Z"
+    },
+    {
+      "quote_id": "00000000-0000-4000-8000-000000000112",
+      "order_id": "00000000-0000-4000-8000-000000000111",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "status": "active",
+      "medication_subtotal": {
+        "amount_minor": 2000,
+        "currency": "SGD"
+      },
+      "delivery_fee": {
+        "amount_minor": 400,
+        "currency": "SGD"
+      },
+      "total": {
+        "amount_minor": 2400,
+        "currency": "SGD"
+      },
+      "expires_at": "2026-10-13T03:04:00.000Z",
+      "created_at": "2026-10-13T02:54:00.000Z"
+    },
+    {
+      "quote_id": "00000000-0000-4000-8000-000000000124",
+      "order_id": "00000000-0000-4000-8000-000000000126",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "status": "accepted",
+      "medication_subtotal": {
+        "amount_minor": 1000,
+        "currency": "SGD"
+      },
+      "delivery_fee": {
+        "amount_minor": 500,
+        "currency": "SGD"
+      },
+      "total": {
+        "amount_minor": 1500,
+        "currency": "SGD"
+      },
+      "expires_at": "2026-10-13T03:05:00.000Z",
+      "created_at": "2026-10-13T02:55:00.000Z"
+    }
+  ],
+  "documents": [
+    {
+      "document_id": "00000000-0000-4000-8000-000000000014",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "prescription_id": "00000000-0000-4000-8000-000000000013",
+      "kind": "prescription_pdf",
+      "status": "ready",
+      "created_at": "2026-10-12T04:25:00.000Z",
+      "updated_at": "2026-10-12T04:25:01.000Z"
+    },
+    {
+      "document_id": "00000000-0000-4000-8000-000000000116",
+      "tenant_id": "00000000-0000-4000-8000-000000000025",
+      "appointment_id": "00000000-0000-4000-8000-000000000100",
+      "prescription_id": "00000000-0000-4000-8000-000000000110",
+      "kind": "prescription_pdf",
+      "status": "ready",
+      "created_at": "2026-10-13T02:50:00.000Z",
+      "updated_at": "2026-10-13T02:50:01.000Z"
+    },
+    {
+      "document_id": "00000000-0000-4000-8000-000000000127",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "appointment_id": "00000000-0000-4000-8000-000000000120",
+      "prescription_id": "00000000-0000-4000-8000-000000000123",
+      "kind": "prescription_pdf",
+      "status": "ready",
+      "created_at": "2026-10-12T08:25:00.000Z",
+      "updated_at": "2026-10-12T08:25:01.000Z"
+    }
+  ],
+  "deliveries": [
+    {
+      "delivery_id": "00000000-0000-4000-8000-000000000015",
+      "order_id": "00000000-0000-4000-8000-000000000012",
+      "tenant_id": "00000000-0000-4000-8000-000000000002",
+      "status": "delivered",
+      "created_at": "2026-10-12T04:53:00.000Z",
+      "updated_at": "2026-10-12T05:30:00.000Z"
+    }
+  ],
+  "events": [
+    {
+      "EventBusName": "telelink-local",
+      "Source": "telelink.billing",
+      "DetailType": "consultation_payment_succeeded.v1",
+      "Time": "2026-10-12T03:00:00.000Z",
+      "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000201\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T03:00:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"payment_id\":\"00000000-0000-4000-8000-000000000011\",\"appointment_id\":\"00000000-0000-4000-8000-000000000010\",\"amount\":{\"amount_minor\":2500,\"currency\":\"SGD\"}}}"
+    },
+    {
+      "EventBusName": "telelink-local",
+      "Source": "telelink.scheduling",
+      "DetailType": "appointment_confirmed.v1",
+      "Time": "2026-10-12T03:00:00.000Z",
+      "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000202\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T03:00:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"appointment_id\":\"00000000-0000-4000-8000-000000000010\"}}"
+    },
+    {
+      "EventBusName": "telelink-local",
+      "Source": "telelink.clinical-records",
+      "DetailType": "prescription_issued.v1",
+      "Time": "2026-10-12T04:25:00.000Z",
+      "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000203\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T04:25:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"prescription_id\":\"00000000-0000-4000-8000-000000000013\",\"appointment_id\":\"00000000-0000-4000-8000-000000000010\"}}"
+    },
+    {
+      "EventBusName": "telelink-local",
+      "Source": "telelink.document",
+      "DetailType": "document_ready.v1",
+      "Time": "2026-10-12T04:25:01.000Z",
+      "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000204\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T04:25:01.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"document_id\":\"00000000-0000-4000-8000-000000000014\",\"prescription_id\":\"00000000-0000-4000-8000-000000000013\",\"appointment_id\":\"00000000-0000-4000-8000-000000000010\"}}"
+    },
+    {
+      "EventBusName": "telelink-local",
+      "Source": "telelink.billing",
+      "DetailType": "medication_payment_succeeded.v1",
+      "Time": "2026-10-12T04:50:00.000Z",
+      "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000205\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T04:50:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"payment_id\":\"00000000-0000-4000-8000-000000000016\",\"order_id\":\"00000000-0000-4000-8000-000000000012\",\"amount\":{\"amount_minor\":2500,\"currency\":\"SGD\"}}}"
+    },
+    {
+      "EventBusName": "telelink-local",
+      "Source": "telelink.fulfilment",
+      "DetailType": "delivery_status_changed.v1",
+      "Time": "2026-10-12T05:30:00.000Z",
+      "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000206\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T05:30:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"delivery_id\":\"00000000-0000-4000-8000-000000000015\",\"order_id\":\"00000000-0000-4000-8000-000000000012\",\"status\":\"delivered\"}}"
+    },
+    {
+      "EventBusName": "telelink-local",
+      "Source": "telelink.billing",
+      "DetailType": "medication_payment_succeeded.v1",
+      "Time": "2026-10-13T02:55:00.000Z",
+      "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000207\",\"schema_version\":1,\"occurred_at\":\"2026-10-13T02:55:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000200\",\"data\":{\"payment_id\":\"00000000-0000-4000-8000-000000000125\",\"order_id\":\"00000000-0000-4000-8000-000000000126\",\"amount\":{\"amount_minor\":1500,\"currency\":\"SGD\"}}}"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "completed_journey",
+      "collection": "appointments",
+      "resource_id": "00000000-0000-4000-8000-000000000010",
+      "description": "Completed consultation with issued prescription, document and delivered medication."
+    },
+    {
+      "name": "patient_across_clinics",
+      "collection": "appointments",
+      "resource_id": "00000000-0000-4000-8000-000000000040",
+      "description": "Patient A has a confirmed booking at clinic B as well as history at clinic A."
+    },
+    {
+      "name": "live_hold",
+      "collection": "appointments",
+      "resource_id": "00000000-0000-4000-8000-000000000050",
+      "description": "Patient B holds a slot until 03:08 UTC."
+    },
+    {
+      "name": "pending_checkout",
+      "collection": "appointments",
+      "resource_id": "00000000-0000-4000-8000-000000000060",
+      "description": "Pending payment with original hold deadline 03:05 UTC."
+    },
+    {
+      "name": "late_payment_slot_reallocated",
+      "collection": "appointments",
+      "resource_id": "00000000-0000-4000-8000-000000000070",
+      "description": "Successful late charge requires refund; slot belongs to a newer hold."
+    },
+    {
+      "name": "cancelled_booking",
+      "collection": "appointments",
+      "resource_id": "00000000-0000-4000-8000-000000000080",
+      "description": "Cancelled booking with failed checkout."
+    },
+    {
+      "name": "ready_before_paid",
+      "collection": "orders",
+      "resource_id": "00000000-0000-4000-8000-000000000111",
+      "description": "Clinic marked medicine ready; payment still required."
+    },
+    {
+      "name": "paid_before_ready",
+      "collection": "orders",
+      "resource_id": "00000000-0000-4000-8000-000000000126",
+      "description": "Medication payment succeeded; clinic readiness still required."
+    },
+    {
+      "name": "revoked_doctor_history",
+      "collection": "appointments",
+      "resource_id": "00000000-0000-4000-8000-000000000130",
+      "description": "Historical assigned doctor now has revoked membership."
+    }
+  ],
+  "access_cases": [
+    {
+      "name": "patient_own_clinical",
+      "subject_id": "00000000-0000-4000-8000-000000000003",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "action": "clinical.read",
+      "expected_allowed": true,
+      "expected_http_status": 200
+    },
+    {
+      "name": "patient_other_clinic_booking",
+      "subject_id": "00000000-0000-4000-8000-000000000003",
+      "appointment_id": "00000000-0000-4000-8000-000000000040",
+      "action": "appointment.read",
+      "expected_allowed": true,
+      "expected_http_status": 200
+    },
+    {
+      "name": "unrelated_patient",
+      "subject_id": "00000000-0000-4000-8000-000000000023",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "action": "appointment.read",
+      "expected_allowed": false,
+      "expected_http_status": 404
+    },
+    {
+      "name": "clinic_b_admin_into_clinic_a",
+      "subject_id": "00000000-0000-4000-8000-000000000031",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "action": "appointment.read",
+      "expected_allowed": false,
+      "expected_http_status": 404
+    },
+    {
+      "name": "same_clinic_different_doctor",
+      "subject_id": "00000000-0000-4000-8000-000000000022",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "action": "clinical.read",
+      "expected_allowed": false,
+      "expected_http_status": 404
+    },
+    {
+      "name": "shared_doctor_assigned",
+      "subject_id": "00000000-0000-4000-8000-000000000022",
+      "appointment_id": "00000000-0000-4000-8000-000000000120",
+      "action": "clinical.read",
+      "expected_allowed": true,
+      "expected_http_status": 200
+    },
+    {
+      "name": "clinic_admin_operational",
+      "subject_id": "00000000-0000-4000-8000-000000000030",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "action": "appointment.read",
+      "expected_allowed": true,
+      "expected_http_status": 200
+    },
+    {
+      "name": "clinic_admin_no_clinical",
+      "subject_id": "00000000-0000-4000-8000-000000000030",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "action": "clinical.read",
+      "expected_allowed": false,
+      "expected_http_status": 404
+    },
+    {
+      "name": "platform_operational",
+      "subject_id": "00000000-0000-4000-8000-000000000032",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "action": "appointment.read",
+      "expected_allowed": true,
+      "expected_http_status": 200
+    },
+    {
+      "name": "platform_no_clinical",
+      "subject_id": "00000000-0000-4000-8000-000000000032",
+      "appointment_id": "00000000-0000-4000-8000-000000000010",
+      "action": "clinical.read",
+      "expected_allowed": false,
+      "expected_http_status": 404
+    },
+    {
+      "name": "revoked_assigned_doctor",
+      "subject_id": "00000000-0000-4000-8000-000000000024",
+      "appointment_id": "00000000-0000-4000-8000-000000000130",
+      "action": "clinical.read",
+      "expected_allowed": false,
+      "expected_http_status": 404
+    }
+  ]
+}
