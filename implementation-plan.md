@@ -20,17 +20,17 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [x] | F02 | Create repo structure, ignore rules and setup README placeholders. Completed in merged PR #2. | none | S |
 | [x] | F03 | Create FastAPI template with settings, logging, health/readiness and OpenAPI. Completed in merged PR #4. | F02 | M |
 | [x] | F04 | Add SQLAlchemy/Alembic example and fresh-database migration instructions. Completed in merged PR #6. | F03 | M |
-| [ ] | F05 | Add production Dockerfile and local reload override for the template. Assignee: NorbertLoh; in progress, issue #7, draft PR #10. | F03 | S |
-| [ ] | F06 | Scaffold React/TypeScript/Vite; build succeeds. Assignee: NorbertLoh; in progress, issue #8, draft PR #11. | F02 | S |
-| [ ] | F07 | Add router, role layouts and feature route registration. Assignee: NorbertLoh; in progress, issue #9, draft PR #12; depends on draft PR #11. | F06 | M |
-| [ ] | F08 | Add query client, typed API client and loading/error components. Assignee: NorbertLoh; in progress, issue #13, PR #16. | F06, C01 | M |
-| [ ] | F09 | Create Compose PostgreSQL/Redis/Floci services and environment examples. Assignee: NorbertLoh; in progress, issue #19, PR #20. | F02 | M |
+| [x] | F05 | Add production Dockerfile and local reload override for the template. Completed in merged PR #10; image build, health checks and local reload verified. | F03 | S |
+| [x] | F06 | Scaffold React/TypeScript/Vite; build succeeds. Completed in merged PR #11; TypeScript, production build and browser checks passed. | F02 | S |
+| [x] | F07 | Add router, role layouts and feature route registration. Completed in merged PR #12; all four role layouts, feature routes and fallbacks verified. | F06 | M |
+| [x] | F08 | Add query client, typed API client and loading/error components. Completed in merged PR #16; tests, lint and production build passed. | F06, C01 | M |
+| [x] | F09 | Create Compose PostgreSQL/Redis/Floci services and environment examples. Completed in merged PR #20; all three services passed startup, health and smoke checks. | F02 | M |
 | [ ] | F10 | Add reverse proxy and template API to Compose; documented startup works. | F05, F09 | M |
 | [ ] | F11 | Bootstrap Floci S3 and synthetic secrets; repeated bootstrap is safe. | F09 | S |
 | [ ] | F12 | Bootstrap event bus, consumer queues/rules and DLQs; deliver one message. | F09, C05 | M |
 | [ ] | F13 | Bootstrap Floci Cognito pool/public client and four-role synthetic users. | F09 | M |
 | [ ] | F14 | Create shared fixtures for two clinics, doctors and workflow entities. | C01-C05 | M |
-| [ ] | F15 | Add minimal frontend build/type and backend lint checks in CI. Assignee: NorbertLoh; in progress, issue #17, PR #18 for frontend ESLint increment; remaining planned checks deferred. | F03, F06 | S |
+| [ ] | F15 | Add minimal frontend build/type and backend lint checks in CI. Frontend ESLint completed in merged PR #18 (issue #17 closed); frontend build/type and backend lint checks remain deferred. | F03, F06 | S |
 | [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. | F11-F13, A01-A03 | M |
 | [x] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. Completed in merged PR #15; examples verified. | none | S |
 | [ ] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. | C01 | M |
