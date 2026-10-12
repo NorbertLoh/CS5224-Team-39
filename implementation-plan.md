@@ -25,7 +25,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [x] | F07 | Add router, role layouts and feature route registration. Completed in merged PR #12; all four role layouts, feature routes and fallbacks verified. | F06 | M |
 | [x] | F08 | Add query client, typed API client and loading/error components. Completed in merged PR #16; tests, lint and production build passed. | F06, C01 | M |
 | [x] | F09 | Create Compose PostgreSQL/Redis/Floci services and environment examples. Completed in merged PR #20; all three services passed startup, health and smoke checks. | F02 | M |
-| [ ] | F10 | Add reverse proxy and template API to Compose; documented startup works. | F05, F09 | M |
+| [x] | F10 | Add template API to Compose and Vite API forwarding; documented startup works. Completed in merged PR #23; four healthy containers, dev/preview API forwarding and Swagger verified. Separate proxy container deferred by user decision. | F05, F09 | M |
 | [ ] | F11 | Bootstrap Floci S3 and synthetic secrets; repeated bootstrap is safe. | F09 | S |
 | [ ] | F12 | Bootstrap event bus, consumer queues/rules and DLQs; deliver one message. | F09, C05 | M |
 | [ ] | F13 | Bootstrap Floci Cognito pool/public client and four-role synthetic users. | F09 | M |
