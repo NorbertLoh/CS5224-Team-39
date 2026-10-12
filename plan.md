@@ -64,7 +64,7 @@ Docker Compose orchestrates local services. Use the same production business-ser
 | Capability | Local development | AWS deployment |
 | --- | --- | --- |
 | Frontend | Vite on localhost | Static S3 assets + CloudFront |
-| HTTP routing | Reverse proxy under `/api/v1/<service>` | API Gateway HTTP API -> VPC Link -> ALB -> ECS |
+| HTTP routing | Vite development proxy under `/api/v1/<service>`; separate proxy deferred | API Gateway HTTP API -> VPC Link -> ALB -> ECS |
 | Business services | Separate FastAPI containers | Separate ECS Fargate services, images in ECR |
 | Database | PostgreSQL container, schema and user per service | RDS PostgreSQL, schema and user per service |
 | Temporary coordination | Redis container | ElastiCache for Redis |

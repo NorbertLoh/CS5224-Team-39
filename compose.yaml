@@ -1,6 +1,18 @@
 name: telelink
 
 services:
+  template:
+    build:
+      context: ./services/template
+      target: production
+    ports:
+      - "127.0.0.1:${TEMPLATE_HOST_PORT:-8000}:8000"
+    environment:
+      SERVICE_NAME: template
+      SERVICE_ENVIRONMENT: local
+      SERVICE_DOCS_ENABLED: "true"
+      SERVICE_ROOT_PATH: /api/v1/template
+
   postgres:
     image: ${POSTGRES_IMAGE:-postgres:17}
     environment:
