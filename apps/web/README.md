@@ -9,6 +9,7 @@ npm ci
 npm run lint
 npm run dev
 npm run build
+npm test
 npm run preview
 ```
 
@@ -16,7 +17,51 @@ Development runs at http://127.0.0.1:5173. Preview serves the built `dist/` at h
 
 `dist/` contains static assets suitable for S3/CloudFront; the Vite development/preview servers are local tools, not production hosting. Configure cloud routing in W04. Browser-visible `VITE_*` environment variables are substituted at build time, so never put credentials or secrets in them.
 
-F07 adds route modules/layouts; F08 adds the API client and shared UI. This scaffold has no authentication or API integration yet. Planned feature groups: storefront, patient, doctor, clinic administration and platform administration.
+F08 provides the query provider, a small fetch helper and shared loading/error states. F07 adds route modules/layouts. This scaffold has no authentication or live business API integration yet. Planned feature groups: storefront, patient, doctor, clinic administration and platform administration.
+
+## Calling an API
+
+`apiFetch()` is a small wrapper around `fetch()`. It adds the API base URL,
+optionally attaches an access token, and throws when the HTTP response fails.
+It returns the normal `Response`; feature pages parse their own data:
+
+```ts
+import { apiFetch } from '@/lib/api'
+import type { CursorPage } from '@/lib/api-types'
+
+type Appointment = { appointment_id: string; starts_at: string }
+const response = await apiFetch('/scheduling/appointments?limit=25', {
+  signal, // optional AbortSignal, including the signal from useQuery
+  accessToken, // optional current access token from authentication
+})
+const appointments: CursorPage<Appointment> = await response.json()
+```
+
+This illustrates a future endpoint; domain APIs remain their owning tasks.
+Pass ordinary fetch options for writes (`method`, JSON.stringify(body), and a
+Content-Type header). Skip response.json() for a 204 response. Construct query
+strings with URLSearchParams and encode dynamic IDs with encodeURIComponent.
+Response types describe [C01 wire shapes](../../contracts/api-conventions.md);
+feature pages handle domain validation and field errors when needed.
+
+Copy `.env.example` to `.env` if needed. `VITE_API_BASE_URL` defaults to `/api/v1`;
+for a separate trusted origin use a URL ending in `/api/v1`. Restart Vite or
+rebuild after changes. API forwarding belongs to F10/W04; cross-origin servers
+need CORS configuration. Authentication/token refresh belongs to A01/A02.
+Never attach API tokens to external signed download URLs.
+
+The root query provider is available for feature pages that use `useQuery`.
+Automatic retries are off. Use keys such as
+`['appointments', subject, tenantId, role, filters]`, including the current scope
+and every filter/cursor. On logout or identity changes, stop rendering the old
+scope, await queryClient.cancelQueries(), and call queryClient.clear().
+Keep clinical caches in memory; services still enforce access.
+
+`LoadingState` announces progress. `ErrorState` accepts a safe display message
+and an optional retry callback. Do not display raw exception/server text.
+Native fetch cancellation is preserved; callers should ignore AbortError.
+`npm test` checks the helper and components; `npm run build` includes typechecking.
+These synthetic checks do not establish live API integration.
 
 ## Frontend lint in CI
 

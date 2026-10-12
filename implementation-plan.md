@@ -23,7 +23,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [ ] | F05 | Add production Dockerfile and local reload override for the template. Assignee: NorbertLoh; in progress, issue #7, draft PR #10. | F03 | S |
 | [ ] | F06 | Scaffold React/TypeScript/Vite; build succeeds. Assignee: NorbertLoh; in progress, issue #8, draft PR #11. | F02 | S |
 | [ ] | F07 | Add router, role layouts and feature route registration. Assignee: NorbertLoh; in progress, issue #9, draft PR #12; depends on draft PR #11. | F06 | M |
-| [ ] | F08 | Add query client, typed API client and loading/error components. | F06, C01 | M |
+| [ ] | F08 | Add query client, typed API client and loading/error components. Assignee: NorbertLoh; in progress, issue #13, PR #16. | F06, C01 | M |
 | [ ] | F09 | Create Compose PostgreSQL/Redis/Floci services and environment examples. | F02 | M |
 | [ ] | F10 | Add reverse proxy and template API to Compose; documented startup works. | F05, F09 | M |
 | [ ] | F11 | Bootstrap Floci S3 and synthetic secrets; repeated bootstrap is safe. | F09 | S |
@@ -32,7 +32,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [ ] | F14 | Create shared fixtures for two clinics, doctors and workflow entities. | C01-C05 | M |
 | [ ] | F15 | Add minimal frontend build/type and backend lint checks in CI. Assignee: NorbertLoh; in progress, issue #17, PR #18 for frontend ESLint increment; remaining planned checks deferred. | F03, F06 | S |
 | [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. | F11-F13, A01-A03 | M |
-| [ ] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. Assignee: NorbertLoh; in progress, issue #14, PR #15. | none | S |
+| [x] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. Completed in merged PR #15; examples verified. | none | S |
 | [ ] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. | C01 | M |
 | [ ] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. | C01 | M |
 | [ ] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. | C01 | M |
