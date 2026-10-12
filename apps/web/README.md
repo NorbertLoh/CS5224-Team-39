@@ -68,13 +68,17 @@ Native fetch cancellation is preserved; callers should ignore AbortError.
 `npm test` checks the helper and components; `npm run build` includes typechecking.
 These synthetic checks do not establish live API integration.
 
-## Frontend lint in CI
+## Frontend checks in CI
 
 `npm run lint` checks JavaScript, TypeScript and TSX with ESLint's recommended
 JavaScript/TypeScript rules. Generated `dist/` and `node_modules/` are ignored.
-GitHub Actions runs the same command on pushes and pull requests using Node 24
-and `npm ci`. Errors or warnings fail the check. This frontend lint increment
-does not complete F15's planned build/type and backend lint checks.
+GitHub Actions runs separate ESLint and typecheck/build jobs on pushes and pull
+requests using Node 24 and `npm ci`. Errors or warnings fail the lint check.
+The build job runs `npm run build`, which first runs `tsc --noEmit` and then Vite's
+production build; either failure fails the job. Run `npm run lint` and
+`npm run build` locally to reproduce the frontend checks. These checks require
+no backend, database or Floci instance. Backend Ruff checks are documented in
+the [service template](../../services/template/README.md).
 TypeScript uses 6.0.x to match the ESLint parser's supported compiler versions.
 Configuration follows the [typescript-eslint quickstart](https://typescript-eslint.io/getting-started/).
 
