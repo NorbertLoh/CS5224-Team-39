@@ -26,7 +26,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [x] | F08 | Add query client, typed API client and loading/error components. Completed in merged PR #16; tests, lint and production build passed. | F06, C01 | M |
 | [x] | F09 | Create Compose PostgreSQL/Redis/Floci services and environment examples. Completed in merged PR #20; all three services passed startup, health and smoke checks. | F02 | M |
 | [x] | F10 | Add template API to Compose and Vite API forwarding; documented startup works. Completed in merged PR #23; four healthy containers, dev/preview API forwarding and Swagger verified. Separate proxy container deferred by user decision. | F05, F09 | M |
-| [ ] | F11 | Bootstrap Floci S3 and synthetic secrets; repeated bootstrap is safe. Assignee: NorbertLoh; in progress, issue #24, PR #25. | F09 | S |
+| [x] | F11 | Bootstrap Floci S3 and synthetic secrets; repeated bootstrap is safe. Completed in merged PR #25; resource settings, safe reruns and object/secret preservation verified. | F09 | S |
 | [ ] | F12 | Bootstrap event bus, consumer queues/rules and DLQs; deliver one message. | F09, C05 | M |
 | [ ] | F13 | Bootstrap Floci Cognito pool/public client and four-role synthetic users. | F09 | M |
 | [ ] | F14 | Create shared fixtures for two clinics, doctors and workflow entities. | C01-C05 | M |
@@ -36,7 +36,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [ ] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. | C01 | M |
 | [ ] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. | C01 | M |
 | [ ] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. | C01 | M |
-| [ ] | C05 | Define event envelope, producers/consumers and sample workflow events. | C01 | M |
+| [ ] | C05 | Define event envelope, producers/consumers and sample workflow events. Assignee: NorbertLoh; in progress, issue #26, PR #27. | C01 | M |
 | [ ] | X01 | Spike self-hosted PeerJS across two networks; document TURN ports/setup. | none | L |
 | [ ] | X02 | Spike appointment-bound signalling admission; reject unrelated users. | X01 | M |
 | [ ] | X03 | Verify Stripe test checkout, Connect access and commission capability. | none | M |
