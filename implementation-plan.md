@@ -36,7 +36,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [ ] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. | C01 | M |
 | [ ] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. | C01 | M |
 | [ ] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. | C01 | M |
-| [ ] | C05 | Define event envelope, producers/consumers and sample workflow events. Assignee: NorbertLoh; in progress, issue #26. | C01 | M |
+| [ ] | C05 | Define event envelope, producers/consumers and sample workflow events. Assignee: NorbertLoh; in progress, issue #26, PR #27. | C01 | M |
 | [ ] | X01 | Spike self-hosted PeerJS across two networks; document TURN ports/setup. | none | L |
 | [ ] | X02 | Spike appointment-bound signalling admission; reject unrelated users. | X01 | M |
 | [ ] | X03 | Verify Stripe test checkout, Connect access and commission capability. | none | M |
