@@ -1,0 +1,10 @@
+services:
+  template:
+    image: telelink-template:dev
+    build:
+      target: development
+    environment:
+      SERVICE_ENVIRONMENT: local
+      SERVICE_DOCS_ENABLED: "true"
+    volumes:
+      - .:/app
