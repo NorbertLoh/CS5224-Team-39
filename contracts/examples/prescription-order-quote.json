@@ -1,0 +1,176 @@
+{
+  "fixture_kind": "synthetic_contract_examples",
+  "prescription": {
+    "prescription_id": "00000000-0000-4000-8000-000000000013",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "appointment_id": "00000000-0000-4000-8000-000000000010",
+    "patient_id": "00000000-0000-4000-8000-000000000003",
+    "doctor_id": "00000000-0000-4000-8000-000000000004",
+    "status": "issued",
+    "items": [
+      {
+        "prescription_item_id": "00000000-0000-4000-8000-000000000018",
+        "medication_id": "00000000-0000-4000-8000-000000000017",
+        "quantity": 2,
+        "instructions": "Synthetic instruction placeholder.",
+        "display_name": "Demo catalogue item"
+      }
+    ],
+    "issued_at": "2026-10-12T03:00:00.000Z",
+    "created_at": "2026-10-12T02:59:00.000Z",
+    "updated_at": "2026-10-12T03:00:00.000Z"
+  },
+  "order_after_payment": {
+    "order_id": "00000000-0000-4000-8000-000000000012",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "prescription_id": "00000000-0000-4000-8000-000000000013",
+    "appointment_id": "00000000-0000-4000-8000-000000000010",
+    "patient_id": "00000000-0000-4000-8000-000000000003",
+    "status": "paid",
+    "medicine_status": "not_ready",
+    "payment_status": "succeeded",
+    "payment_id": "00000000-0000-4000-8000-000000000016",
+    "quote_id": "00000000-0000-4000-8000-000000000019",
+    "delivery_id": null,
+    "items": [
+      {
+        "prescription_item_id": "00000000-0000-4000-8000-000000000018",
+        "medication_id": "00000000-0000-4000-8000-000000000017",
+        "quantity": 2,
+        "display_name": "Demo catalogue item",
+        "unit_price": {
+          "amount_minor": 1000,
+          "currency": "SGD"
+        },
+        "line_total": {
+          "amount_minor": 2000,
+          "currency": "SGD"
+        }
+      }
+    ],
+    "medication_subtotal": {
+      "amount_minor": 2000,
+      "currency": "SGD"
+    },
+    "delivery_fee": {
+      "amount_minor": 500,
+      "currency": "SGD"
+    },
+    "total": {
+      "amount_minor": 2500,
+      "currency": "SGD"
+    },
+    "created_at": "2026-10-12T03:00:00.000Z",
+    "updated_at": "2026-10-12T03:02:00.000Z"
+  },
+  "accepted_quote": {
+    "quote_id": "00000000-0000-4000-8000-000000000019",
+    "order_id": "00000000-0000-4000-8000-000000000012",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "status": "accepted",
+    "medication_subtotal": {
+      "amount_minor": 2000,
+      "currency": "SGD"
+    },
+    "delivery_fee": {
+      "amount_minor": 500,
+      "currency": "SGD"
+    },
+    "total": {
+      "amount_minor": 2500,
+      "currency": "SGD"
+    },
+    "expires_at": "2026-10-12T03:10:00.000Z",
+    "created_at": "2026-10-12T03:00:00.000Z"
+  },
+  "medication_payment": {
+    "payment_id": "00000000-0000-4000-8000-000000000016",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "patient_id": "00000000-0000-4000-8000-000000000003",
+    "purpose": "medication_delivery",
+    "appointment_id": null,
+    "order_id": "00000000-0000-4000-8000-000000000012",
+    "quote_id": "00000000-0000-4000-8000-000000000019",
+    "status": "succeeded",
+    "amount": {
+      "amount_minor": 2500,
+      "currency": "SGD"
+    },
+    "commission_bps": 1000,
+    "commission_amount": {
+      "amount_minor": 200,
+      "currency": "SGD"
+    },
+    "clinic_amount": {
+      "amount_minor": 2300,
+      "currency": "SGD"
+    },
+    "resolution": "none",
+    "created_at": "2026-10-12T03:00:00.000Z",
+    "updated_at": "2026-10-12T03:02:00.000Z"
+  },
+  "delivery_later": {
+    "delivery_id": "00000000-0000-4000-8000-000000000015",
+    "order_id": "00000000-0000-4000-8000-000000000012",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "status": "delivered",
+    "created_at": "2026-10-12T03:04:00.000Z",
+    "updated_at": "2026-10-12T04:30:00.000Z"
+  },
+  "document": {
+    "document_id": "00000000-0000-4000-8000-000000000014",
+    "tenant_id": "00000000-0000-4000-8000-000000000002",
+    "appointment_id": "00000000-0000-4000-8000-000000000010",
+    "prescription_id": "00000000-0000-4000-8000-000000000013",
+    "kind": "prescription_pdf",
+    "status": "ready",
+    "created_at": "2026-10-12T03:00:00.000Z",
+    "updated_at": "2026-10-12T03:02:00.000Z"
+  },
+  "delivery_gate_cases": [
+    {
+      "case": "payment_first_waits",
+      "payment_succeeded": true,
+      "medicine_ready": false,
+      "provider_quote_valid": true,
+      "order_status": "paid",
+      "submit_delivery": false
+    },
+    {
+      "case": "readiness_first_waits",
+      "payment_succeeded": false,
+      "medicine_ready": true,
+      "provider_quote_valid": true,
+      "order_status": "awaiting_payment",
+      "submit_delivery": false
+    },
+    {
+      "case": "both_permit_submission",
+      "payment_succeeded": true,
+      "medicine_ready": true,
+      "provider_quote_valid": true,
+      "order_status": "paid",
+      "submit_delivery": true
+    },
+    {
+      "case": "expired_quote_blocks_submission",
+      "payment_succeeded": true,
+      "medicine_ready": true,
+      "provider_quote_valid": false,
+      "order_status": "paid",
+      "submit_delivery": false
+    }
+  ],
+  "quote_expired": {
+    "error": {
+      "code": "quote_expired",
+      "message": "The delivery quote has expired.",
+      "request_id": "synthetic-order-001",
+      "details": []
+    }
+  },
+  "empty_orders": {
+    "items": [],
+    "next_cursor": null
+  }
+}
