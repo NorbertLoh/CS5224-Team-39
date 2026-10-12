@@ -29,7 +29,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [x] | F11 | Bootstrap Floci S3 and synthetic secrets; repeated bootstrap is safe. Completed in merged PR #25; resource settings, safe reruns and object/secret preservation verified. | F09 | S |
 | [x] | F12 | Bootstrap event bus, consumer queues/rules and DLQs; deliver one message. Completed in merged PR #29; all six routes and queued-message preservation verified. | F09, C05 | M |
 | [ ] | F13 | Bootstrap Floci Cognito pool/public client and four-role synthetic users. Assignee: NorbertLoh; in progress, issue #30, PR #31. | F09 | M |
-| [ ] | F14 | Create shared fixtures for two clinics, doctors and workflow entities. Assignee: NorbertLoh; in progress, issue #32; C01-C05 dependencies now merged. | C01-C05 | M |
+| [ ] | F14 | Create shared fixtures for two clinics, doctors and workflow entities. Assignee: NorbertLoh; in progress, issue #32; C01-C05 dependencies merged; shared fixture PR in preparation. | C01-C05 | M |
 | [ ] | F15 | Add minimal frontend build/type and backend lint checks in CI. Frontend ESLint completed in merged PR #18 (issue #17 closed); frontend build/type and backend lint checks remain deferred. | F03, F06 | S |
 | [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. | F11-F13, A01-A03 | M |
 | [x] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. Completed in merged PR #15; examples verified. | none | S |
