@@ -1,0 +1,42 @@
+# Template containers
+
+Run from `services/template` with Docker Desktop using Linux containers. These files run only the generic API; F09/F10 supply the shared PostgreSQL/Redis/Floci stack later.
+
+## Production-style local run
+
+```powershell
+docker compose -f compose.template.yaml up --build -d
+docker compose -f compose.template.yaml logs template
+```
+
+Open `http://localhost:8000/health/live` and `/health/ready`. Docs default off in production. The image runs as UID 10001, logs JSON to stdout, installs only declared runtime dependencies under the checked-in lockfile constraints, and excludes local environment files/caches from its build context. Dev tools are installed only in the development target.
+
+The image's liveness health check uses port 8000. When deploying to ECS, keep that container port or update the check deliberately; configure the load balancer to use `/health/ready`. With future database mode enabled, run migrations separately before routing traffic. No credentials are baked into this image.
+
+Stop this standalone service:
+
+```powershell
+docker compose -f compose.template.yaml down
+```
+
+## Source reload
+
+```powershell
+docker compose -f compose.template.yaml -f compose.template.dev.yaml up --build
+```
+
+The override mounts source at `/app`, enables docs and runs Uvicorn's reload process. Edit an application file and the server reloads. Development uses Uvicorn's default logs with raw access logs disabled; production uses the JSON entry point. Do not deploy the development target or source mount on AWS.
+
+If port 8000 is occupied, set `$env:TEMPLATE_HOST_PORT = '18005'` before the Compose command. The internal port remains 8000. On Linux/macOS, set the equivalent shell environment variable.
+
+## Direct builds and checks
+
+```powershell
+docker build --target production -t telelink-template:local .
+docker build --target development -t telelink-template:dev .
+docker run --rm telelink-template:dev python -m pytest
+```
+
+If a corporate network requires an extra trusted CA, supply a local PEM bundle with BuildKit's `--secret id=pip_ca,src=<local-ca-path>` flag. The optional build secret enables certificate verification without committing or copying the bundle into the final image. Do not disable TLS verification. Base-image downloads still use Docker Desktop's own trust configuration.
+
+The Python base tag is a maintained version tag rather than an immutable digest. Pin the approved digest in infrastructure when reproducible deployment images are required; deployed service images should use immutable commit tags.
