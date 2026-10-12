@@ -66,6 +66,21 @@ The direct Uvicorn command uses its own logging configuration rather than the JS
 
 The default checks cover configuration, health, logging and missing database configuration without external services. PostgreSQL integration is explicitly skipped unless `TEST_DATABASE_URL` is set; see [database instructions](docs/database.md) for migration, transaction and readiness checks against a disposable database. Floci and AWS are not needed.
 
+## Backend lint in CI
+
+GitHub Actions runs Ruff on pushes and pull requests using Python 3.10 and the
+committed `requirements.lock.txt`. From `services/template`, it runs
+`python -m ruff check .` to cover application code, tests and migrations, then
+`python -m ruff check ../../dev/fixtures --config pyproject.toml` for the shared
+fixture tools. Run these commands with your installed virtualenv interpreter to
+reproduce the checks. The service working directory preserves the project's
+first-party import discovery. No database, AWS credentials or Floci is required.
+Formatting and tests remain documented local checks; this minimal F15 workflow
+does not add service/integration test jobs. Extend CI with service-local commands
+as additional business services are implemented.
+
+Python setup uses the documented [setup-python action](https://github.com/actions/setup-python).
+
 ## Copying into a service
 
 Copy source, project metadata, lockfile, `.env.example`, tests, Alembic configuration, migrations and setup documentation/scripts; exclude `.venv`, `.env`, caches and egg-info. Change the project package name/description, `SERVICE_NAME` and database schema as described in the [database guide](docs/database.md), add domain routers, and keep its environment/virtualenv isolated. The `app` package name assumes one service per interpreter/process, matching the planned independent containers.

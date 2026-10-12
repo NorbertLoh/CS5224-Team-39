@@ -1,0 +1,27 @@
+name: Backend lint
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ruff:
+    name: Backend Ruff
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: services/template
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.10'
+          cache: pip
+          cache-dependency-path: services/template/requirements.lock.txt
+      - run: python -m pip install -r requirements.lock.txt
+      - run: python -m ruff check .
+      - run: python -m ruff check ../../dev/fixtures --config pyproject.toml
