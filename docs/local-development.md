@@ -1,6 +1,6 @@
 # Local development setup
 
-Status: placeholder. There is no runnable local stack yet.
+Status: the [F03 service template](../services/template/README.md) runs locally without external dependencies. Full local stack setup remains a placeholder until Compose/bootstrap tasks are implemented.
 
 ## Setup tasks
 

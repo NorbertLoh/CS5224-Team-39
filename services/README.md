@@ -13,6 +13,6 @@
 | `notification/` | Event-driven email jobs and send status |
 | `signalling/` | Node.js PeerServer and admission validation |
 
-Business services use the FastAPI template from F03-F05 once available. Keep app code, tests and migrations inside the corresponding service. Each service supplies its own Dockerfile, health checks and deployment inputs. HTTP and worker commands may share an image while remaining independently scalable.
+Use [template/](template/README.md) for the F03 FastAPI foundation. F04 adds database/migration examples and F05 adds container builds. Keep app code, tests and migrations inside the corresponding service. Each service supplies its own Dockerfile, health checks and deployment inputs. HTTP and worker commands may share an image while remaining independently scalable.
 
-These directories are placeholders; no service is runnable yet.
+The business-service directories are placeholders. Only the generic template is currently runnable.
