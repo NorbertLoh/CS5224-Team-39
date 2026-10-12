@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.database import Database
 from app.health import router as health_router
 from app.middleware import RequestLoggingMiddleware
 from app.settings import Settings
@@ -15,13 +16,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        # Future tasks initialise service-owned resources here before becoming ready.
-        app.state.ready = True
-        logger.info("service_started", extra={"service": config.name})
         try:
+            app.state.database = Database(config) if config.database_url is not None else None
+            app.state.ready = True
+            logger.info("service_started", extra={"service": config.name})
             yield
         finally:
             app.state.ready = False
+            if app.state.database is not None:
+                app.state.database.close()
+                app.state.database = None
             logger.info("service_stopped", extra={"service": config.name})
 
     app = FastAPI(
@@ -35,6 +39,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = config
     app.state.ready = False
+    app.state.database = None
     app.add_middleware(RequestLoggingMiddleware, service=config.name)
     app.include_router(health_router)
     return app
