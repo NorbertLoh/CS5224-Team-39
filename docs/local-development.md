@@ -3,7 +3,10 @@
 Compose runs the FastAPI template alongside PostgreSQL, Redis and optional
 Floci. Run the frontend on the host; Vite forwards `/api/v1/template` to the
 API container. Bootstrap supplies S3, synthetic secrets, messaging and Cognito
-below; F14 adds synthetic workflow fixtures.
+below; [F14 shared workflow fixtures](../dev/fixtures/README.md) supply a static
+two-clinic dataset for mock UI/service development. Validate it from the root with
+`python dev/fixtures/validate.py`; it is independent of Floci bootstrap and does
+not load live service databases or grant login/membership access.
 
 ## Start
 
