@@ -22,7 +22,7 @@ RUN --mount=type=secret,id=pip_ca \
 RUN useradd --uid 10001 --create-home app
 USER app
 EXPOSE 8000
-CMD ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--no-access-log"]
+CMD ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--no-access-log"]
 
 FROM base AS production
 WORKDIR /app
