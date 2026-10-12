@@ -115,84 +115,103 @@ function normalizeBase(base: string): string {
   return base.replace(/\/+$/, '')
 }
 
+function buildUrl(base: string, path: ApiPath, query: RequestOptions['query']): string {
+  if (!path.startsWith('/') || path.startsWith('//') || /[\\?#]/.test(path) || !safeSegments(path)) {
+    throw new Error('Use a service-relative API path and separate query parameters.')
+  }
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(query ?? {})) {
+    if (value !== null && value !== undefined) search.set(key, String(value))
+  }
+  return `${base}${path}${search.size ? `?${search}` : ''}`
+}
+
+function buildHeaders(options: RequestOptions, token: string | null | undefined): Headers {
+  const headers = new Headers(options.headers)
+  headers.set('Accept', 'application/json')
+  if (options.body !== undefined) headers.set('Content-Type', 'application/json')
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  return headers
+}
+
+async function sendRequest(fetcher: typeof fetch, url: string, init: RequestInit, method: HttpMethod): Promise<Response> {
+  try {
+    return await fetcher(url, init)
+  } catch (error) {
+    init.signal?.throwIfAborted()
+    if (isAbortError(error)) throw error
+    throw new ApiError('Unable to connect. Check your connection and try again.', {
+      kind: 'network', method, code: 'network_error',
+    })
+  }
+}
+
+async function readJson(response: Response, signal?: AbortSignal): Promise<unknown> {
+  const mediaType = response.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase()
+  if (mediaType !== 'application/json' && !mediaType?.endsWith('+json')) return undefined
+  try {
+    return await response.json()
+  } catch (error) {
+    signal?.throwIfAborted()
+    if (isAbortError(error)) throw error
+    // Treat malformed JSON as missing data; never display raw server text.
+    return undefined
+  }
+}
+
+function invalidResponse(method: HttpMethod, status: number, correlation?: string): ApiError {
+  return new ApiError('The service returned an unexpected response. Please try again.', {
+    kind: 'invalid_response', method, status, code: 'invalid_response', requestId: correlation,
+  })
+}
+
+async function readResponse<T>(response: Response, method: HttpMethod, signal?: AbortSignal): Promise<T | undefined> {
+  signal?.throwIfAborted()
+  if (response.ok && response.status === 204) return undefined
+  const correlation = requestId(response.headers.get('X-Request-ID'))
+  const data = await readJson(response, signal)
+  if (!response.ok) {
+    const envelope = errorEnvelope(data) ? data.error : undefined
+    throw new ApiError(envelope?.message ?? safeHttpMessage(response.status), {
+      kind: 'http', method, status: response.status,
+      code: envelope?.code ?? 'http_error',
+      requestId: correlation ?? envelope?.request_id,
+      details: envelope?.details,
+      retryAfterMs: retryAfter(response.headers.get('Retry-After')),
+    })
+  }
+  if (data === undefined) throw invalidResponse(method, response.status, correlation)
+  // Feature contracts supply T (or their own decoder). This is not schema validation.
+  return data as T
+}
+
 export function createApiClient(options: ApiClientOptions = {}) {
   const base = normalizeBase(options.baseUrl ?? '/api/v1')
   const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis)
 
-  async function request<T = unknown>(path: ApiPath, optionsForRequest: RequestOptions = {}): Promise<T | undefined> {
-    if (!/^\/(identity|tenant|scheduling|consultation|clinical-records|billing|document|fulfilment|notification)(\/|$)/.test(path)
-      || /[\\?#]/.test(path) || !safeSegments(path)) {
-      throw new Error('Use a service-relative API path and separate query parameters.')
-    }
-    const { method = 'GET', query, body, signal } = optionsForRequest
+  async function request<T = unknown>(path: ApiPath, requestOptions: RequestOptions = {}): Promise<T | undefined> {
+    const { method = 'GET', query, body, signal } = requestOptions
     if (method === 'GET' && body !== undefined) throw new Error('GET requests cannot have a body.')
-    const search = new URLSearchParams()
-    for (const [key, value] of Object.entries(query ?? {})) {
-      if (value !== null && value !== undefined) search.set(key, String(value))
-    }
-    const url = `${base}${path}${search.size ? `?${search}` : ''}`
-    const headers = new Headers(optionsForRequest.headers)
-    headers.set('Accept', 'application/json')
-    if (body !== undefined) headers.set('Content-Type', 'application/json')
+    const url = buildUrl(base, path, query)
     signal?.throwIfAborted()
     const token = await options.getAccessToken?.()
     signal?.throwIfAborted()
-    if (token) headers.set('Authorization', `Bearer ${token}`)
-    const serializedBody = body === undefined ? undefined : JSON.stringify(body)
-    let response: Response
-    try {
-      response = await fetcher(url, {
-        method, headers, body: serializedBody, signal,
-        credentials: 'omit', cache: 'no-store', redirect: 'error',
-      })
-    } catch (error) {
-      signal?.throwIfAborted()
-      if (isAbortError(error)) throw error
-      throw new ApiError('Unable to connect. Check your connection and try again.', {
-        kind: 'network', method, code: 'network_error',
-      })
-    }
-    signal?.throwIfAborted()
-    const correlation = requestId(response.headers.get('X-Request-ID'))
-    if (response.ok && response.status === 204) return undefined
-    let data: unknown
-    const mediaType = response.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase()
-    if (mediaType === 'application/json' || mediaType?.endsWith('+json')) {
-      try {
-        data = await response.json()
-      } catch (error) {
-        signal?.throwIfAborted()
-        if (isAbortError(error)) throw error
-        // Malformed bodies are handled below; never display raw proxy/server text.
-      }
-    }
-    if (!response.ok) {
-      const envelope = errorEnvelope(data) ? data.error : undefined
-      throw new ApiError(envelope?.message ?? safeHttpMessage(response.status), {
-        kind: 'http', method, status: response.status,
-        code: envelope?.code ?? 'http_error',
-        requestId: correlation ?? envelope?.request_id,
-        details: envelope?.details,
-        retryAfterMs: retryAfter(response.headers.get('Retry-After')),
-      })
-    }
-    if (data === undefined) {
-      throw new ApiError('The service returned an unexpected response. Please try again.', {
-        kind: 'invalid_response', method, status: response.status,
-        code: 'invalid_response', requestId: correlation,
-      })
-    }
-    // Feature contracts supply T (or their own runtime decoder). This is not schema validation.
-    return data as T
+
+    const response = await sendRequest(fetcher, url, {
+      method,
+      headers: buildHeaders(requestOptions, token),
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
+      credentials: 'omit',
+      cache: 'no-store',
+      redirect: 'error',
+    }, method)
+    return readResponse<T>(response, method, signal)
   }
 
   async function get<T>(path: ApiPath, requestOptions: Omit<RequestOptions, 'method' | 'body'> = {}): Promise<T> {
     const data = await request<T>(path, { ...requestOptions, method: 'GET' })
-    if (data === undefined) {
-      throw new ApiError('The service returned an unexpected response. Please try again.', {
-        kind: 'invalid_response', method: 'GET', status: 204, code: 'invalid_response',
-      })
-    }
+    if (data === undefined) throw invalidResponse('GET', 204)
     return data
   }
 
