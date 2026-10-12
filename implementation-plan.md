@@ -1,0 +1,198 @@
+﻿# TeleLink Health: shared implementation backlog
+
+Five people, four weeks. Anyone can claim any ready task. Architecture: [plan.md](plan.md).
+
+## Claiming and finishing tasks
+
+All tasks start unassigned and unchecked. Add `Assignee: <name>; status: in progress` to the task you claim. Check its dependencies first. A task is ready when all listed dependencies are merged; `none` means it can start immediately. Prefer one task per PR, with branch names such as `feat/S03-slot-holds`.
+
+Each row is a separately claimable deliverable. Effort is a rough focused-work estimate: S = 1-3 hours, M = half a day, L = about a day. Estimates exclude waiting for credentials and integration debugging. Split an L task further if it becomes larger. Week labels indicate priority, not a restriction on when to start.
+
+UI work can start against the agreed API fixtures after its listed contract dependency; replace mocks during integration. Do not check an integration task until real services work together. Check implementation tasks after merging, meeting their completion criterion, and recording a brief verification/setup note.
+
+Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
+
+## Week 1: setup and contracts
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | F01 | Record exact deadline, demo scope, AWS budget/account and access in `docs/project.md`. | none | S |
+| [ ] | F02 | Create repo structure, ignore rules and setup README placeholders. | none | S |
+| [ ] | F03 | Create FastAPI template with settings, logging, health/readiness and OpenAPI. | F02 | M |
+| [ ] | F04 | Add SQLAlchemy/Alembic example and fresh-database migration instructions. | F03 | M |
+| [ ] | F05 | Add production Dockerfile and local reload override for the template. | F03 | S |
+| [ ] | F06 | Scaffold React/TypeScript/Vite; build succeeds. | F02 | S |
+| [ ] | F07 | Add router, role layouts and feature route registration. | F06 | M |
+| [ ] | F08 | Add query client, typed API client and loading/error components. | F06, C01 | M |
+| [ ] | F09 | Create Compose PostgreSQL/Redis/Floci services and environment examples. | F02 | M |
+| [ ] | F10 | Add reverse proxy and template API to Compose; documented startup works. | F05, F09 | M |
+| [ ] | F11 | Bootstrap Floci S3 and synthetic secrets; repeated bootstrap is safe. | F09 | S |
+| [ ] | F12 | Bootstrap event bus, consumer queues/rules and DLQs; deliver one message. | F09, C05 | M |
+| [ ] | F13 | Bootstrap Floci Cognito pool/public client and four-role synthetic users. | F09 | M |
+| [ ] | F14 | Create shared fixtures for two clinics, doctors and workflow entities. | C01-C05 | M |
+| [ ] | F15 | Add minimal frontend build/type and backend lint checks in CI. | F03, F06 | S |
+| [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. | F11-F13, A01-A03 | M |
+| [ ] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. | none | S |
+| [ ] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. | C01 | M |
+| [ ] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. | C01 | M |
+| [ ] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. | C01 | M |
+| [ ] | C05 | Define event envelope, producers/consumers and sample workflow events. | C01 | M |
+| [ ] | X01 | Spike self-hosted PeerJS across two networks; document TURN ports/setup. | none | L |
+| [ ] | X02 | Spike appointment-bound signalling admission; reject unrelated users. | X01 | M |
+| [ ] | X03 | Verify Stripe test checkout, Connect access and commission capability. | none | M |
+| [ ] | X04 | Verify Stripe webhook signatures against a sample raw-body callback. | X03 | S |
+| [ ] | X05 | Verify Lalamove sandbox quote/order/status and callback verification. | none | M |
+
+C02-C05 each need a quick review by someone building a consuming feature. They do not need a meeting with all five people. Use temporary fixtures for feasibility spikes and keep credentials out of Git. If sandbox access is blocked, record it immediately and implement an explicitly labelled adapter for demo continuity.
+
+Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01-C05 and X05 should follow early, before dependent features grow.
+
+## Week 1-2: authentication and clinics
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | A01 | Add React PKCE login/return flow against Floci; obtain access token. | F07, F13 | M |
+| [ ] | A02 | Add refresh/logout handling and expiry UX; verify pinned emulator behaviour. | A01 | M |
+| [ ] | A03 | Add FastAPI token verification: JWKS, issuer, expiry, token use and client. | F03, F13 | M |
+| [ ] | A04 | Create identity service schema/migrations for subjects, roles and memberships. | F04, C02 | M |
+| [ ] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. | A03, A04 | M |
+| [ ] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. | A05 | M |
+| [ ] | A07 | Create tenant service schema/migrations for clinic, branding and activation. | F04, C02 | M |
+| [ ] | A08 | Add clinic create/update/public-profile APIs; inactive clinics cannot accept bookings. | A06, A07 | M |
+| [ ] | A09 | Add platform approve/reject and commission-setting APIs with audit events. | A08 | M |
+| [ ] | A10 | Add staff assignment/membership APIs with authorised clinic administration. | A05, A08 | M |
+| [ ] | U01 | Build branded clinic storefront using fixtures. | F07, F08, C02 | M |
+| [ ] | U02 | Build clinic profile/branding editor using fixtures. | F07, F08, C02 | M |
+| [ ] | U03 | Build staff management page using fixtures. | F07, F08, C02 | M |
+| [ ] | U04 | Build platform clinic approval and commission page using fixtures. | F07, F08, C02 | M |
+| [ ] | U05 | Add role navigation, validated clinic selection and login/logout controls. | A01, A02, F07, C02 | M |
+| [ ] | A11 | Connect clinic/staff/admin pages to real identity and tenant APIs. | A08-A10, U01-U05 | M |
+
+## Week 2: scheduling and booking
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | S01 | Create scheduling schema/migrations: fixed availability slots and appointments. | F04, C02, C03 | M |
+| [ ] | S02 | Add doctor availability and patient slot-list APIs with access checks. | S01, A06, A08 | M |
+| [ ] | S03 | Add expiring Redis holds plus database reservation constraint/transaction. | S02, F09 | L |
+| [ ] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. | S03 | M |
+| [ ] | S05 | Consume consultation-payment success idempotently and confirm appointment. | S04, M03, C05 | M |
+| [ ] | S06 | Handle expired hold/late payment as an explicit recoverable exception. | S05 | S |
+| [ ] | U06 | Build doctor availability editor using fixtures. | F07, F08, C02 | M |
+| [ ] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. | F07, F08, C03 | M |
+| [ ] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. | F07, F08, C02, C03 | M |
+| [ ] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. | S04, U06-U08 | M |
+
+## Week 2: payments
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. | F04, C03, C04 | M |
+| [ ] | B02 | Add consultation checkout API with trusted price and appointment linkage. | B01, X03, A06 | M |
+| [ ] | B03 | Add raw-body webhook signature verification and event-ID deduplication. | B02, X04 | M |
+| [ ] | B04 | Save payment changes and outbox event in one transaction; publish success. | B03, M02, C05 | M |
+| [ ] | B05 | Add authorised payment status/list APIs and basic commission totals. | B03, A06 | M |
+| [ ] | B06 | Add medication/delivery checkout with validated order/quote totals. | B04, C04 | M |
+| [ ] | U09 | Build checkout return/pending/failure/success screens using fixtures. | F07, F08, C03 | M |
+| [ ] | U10 | Build clinic payments and simple commission summary using fixtures. | F07, F08, C03 | M |
+| [ ] | B07 | Connect payment pages and scheduling handoff to real billing APIs. | B02, B05, U09, U10, S07 | M |
+
+## Week 2-3: consultation, records and files
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | V01 | Create consultation service schema and session start/end/join-window rules. | F04, C02 | M |
+| [ ] | V02 | Add admission API validating actual appointment, participants and payment. | V01, A06, S04, X02 | M |
+| [ ] | V03 | Package PeerServer with admission validation and local HTTPS/WSS routing. | X02, F10 | M |
+| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. | F07, X01 | L |
+| [ ] | V04 | Connect video room to admission and booked appointment pages. | U11, V02, V03, S07 | M |
+| [ ] | R01 | Create clinical-record schema/migrations for notes and prescriptions. | F04, C04 | M |
+| [ ] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. | R01, A06, S04 | M |
+| [ ] | R03 | Publish prescription-issued event through outbox. | R02, M02, C05 | S |
+| [ ] | U12 | Build doctor note/prescription form using fixtures. | F07, F08, C04 | M |
+| [ ] | U13 | Build patient prescription view using fixtures. | F07, F08, C04 | S |
+| [ ] | R04 | Connect note/prescription pages to real records APIs. | R02, U12, U13 | M |
+| [ ] | P01 | Create document service metadata schema and a simple prescription PDF template. | F04, C04 | M |
+| [ ] | P02 | Consume prescription event, generate PDF once and store in private S3. | P01, R03, F11, M03 | M |
+| [ ] | P03 | Add authorised document list/download APIs with browser-reachable signed URLs. | P02, A06 | M |
+| [ ] | U14 | Build document list/download UI and connect real document APIs. | F07, P03 | S |
+
+## Week 2-3: delivery, email and messaging
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | M01 | Add shared event envelope validation and SDK endpoint configuration. | F03, C05 | S |
+| [ ] | M02 | Add minimal outbox publisher with retryable send and publication tracking. | F04, F12, M01 | M |
+| [ ] | M03 | Add SQS consumer helper with acknowledgement, inbox deduplication and retries. | F12, M01 | M |
+| [ ] | M04 | Document and verify one failed job reaching DLQ and operator replay. | M03 | S |
+| [ ] | D01 | Create fulfilment schema/catalogue and prescription-linked order APIs. | F04, C04, A06 | M |
+| [ ] | D02 | Add sandbox delivery quote adapter with expiry and trusted order total. | D01, X05 | M |
+| [ ] | D03 | Add authorised clinic medicine-ready action. | D01 | S |
+| [ ] | D04 | Consume medication-payment event and persist paid state idempotently. | D01, M03, C05 | M |
+| [ ] | D05 | Submit one delivery only after paid AND ready; handle uncertain provider outcomes. | D02-D04 | L |
+| [ ] | D06 | Add verified callback or documented polling to update delivery status. | D05, X05 | M |
+| [ ] | U15 | Build medication order/quote/payment view using fixtures. | F07, F08, C04 | M |
+| [ ] | U16 | Build clinic readiness and patient/clinic tracking views using fixtures. | F07, F08, C04 | M |
+| [ ] | D07 | Connect fulfilment pages to real APIs and medication checkout. | D06, U15, U16, B06 | M |
+| [ ] | N01 | Create notification schema, templates and SES adapter; inspect a local message. | F04, F09, M01 | M |
+| [ ] | N02 | Consume booking/document/delivery events; deduplicate sends and record status. | N01, M03, C05 | M |
+
+Service-specific outbox/inbox migrations belong to the service using the helpers. No service writes another service's tables. Fixtures unblock B06 and D01 development; the real order pricing/payment boundary is verified in I03.
+
+## Week 1-3: AWS tasks, individually claimable
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | W01 | Choose IaC tool; create environment skeleton, cost notes and ignore remote state. | F01, F02 | M |
+| [ ] | W02 | Provision network/security groups and HTTP API -> VPC Link -> internal ALB ingress. | W01 | L |
+| [ ] | W03 | Provision ECR/ECS skeleton and scoped execution/task roles; deploy health service. | W02, F05 | L |
+| [ ] | W04 | Host built frontend on private S3/CloudFront with SPA/API routing separated. | W01, F07 | M |
+| [ ] | W05 | Provision dev Cognito public client/callbacks; verify real login/token validation. | W01, A01, A03 | M |
+| [ ] | W06 | Provision RDS and service schema/users; document migration task execution. | W02, F04 | M |
+| [ ] | W07 | Provision Redis and configure service-only access. | W02 | M |
+| [ ] | W08 | Provision private document bucket and synthetic Secrets Manager entries. | W01, F11 | M |
+| [ ] | W09 | Provision AWS event rules/queues/DLQs; verify one real delivery. | W01, F12 | M |
+| [ ] | W10 | Verify SES demo sender/recipients and one email. | W01, N01 | S |
+| [ ] | W11 | Deploy signalling ALB/ECS and TURN; verify HTTPS/WSS cross-network video. | W03, V03, X01 | L |
+| [ ] | W12 | Create reusable service deployment command and immutable image tagging. | W03, W06 | M |
+| [ ] | W13 | Deploy identity and tenant services; verify AWS login and clinic APIs. | W05, W12, A11 | M |
+| [ ] | W14 | Deploy scheduling service; verify availability and appointment APIs. | W07, W12, S07 | M |
+| [ ] | W15 | Deploy billing API/workers; configure public verified Stripe callback. | W09, W12, B07 | M |
+| [ ] | W16 | Deploy consultation and clinical-record services; verify appointment context. | W12, V04, R04 | M |
+| [ ] | W17 | Deploy document API/worker; verify private PDF download. | W08, W09, W12, U14 | M |
+| [ ] | W18 | Deploy fulfilment API/worker; configure callbacks/polling and outbound access. | W09, W12, D07 | M |
+| [ ] | W19 | Deploy notification worker; verify AWS event produces one email. | W09, W10, W12, N02 | M |
+| [ ] | W20 | Publish frontend configuration for deployed routes; verify API errors and auth. | W04, W05, W13-W19 | M |
+| [ ] | W21 | Write deploy/reset/log/teardown runbook and budget/log-retention settings. | W12 | M |
+
+Each deployment task includes that service's Dockerfile/commands, environment values, health check and migrations. Keep business services independently deployed. Document controlled migration ordering and avoid migration execution on every replica startup. Deploy skeleton in Week 1; do not leave all AWS work to Week 3.
+
+## Integration gates and Week 4 demo checks
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. | A11, S05-S07, B04, B07 | M |
+| [ ] | I02 | Run actual booked pair -> consultation -> saved prescription -> private PDF. | I01, V04, R04, U14 | M |
+| [ ] | I03 | Run actual prescription -> quote -> separate medication payment -> ready -> one delivery. | I02, D07, B06 | M |
+| [ ] | I04 | Verify journey events produce booking/document/delivery messages. | I03, N02 | S |
+| [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
+| [ ] | Q01 | Reject clinic A access to clinic B appointment, record and file; reject wrong roles/tokens. | I05 | M |
+| [ ] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. | S06 | S |
+| [ ] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. | I03, M04 | S |
+| [ ] | Q04 | Verify AWS video across networks and reject unrelated participant/file access. | I05 | S |
+| [ ] | Q05 | Walk through all four roles; record blockers and create small fix tasks. | I05 | M |
+| [ ] | Q06 | Have a different teammate follow fresh local setup/seed/reset instructions. | F14, F16, W21 | M |
+| [ ] | E01 | Write presenter handoffs, demo accounts, steps and expected screens. | Q05 | S |
+| [ ] | E02 | Capture successful AWS backup video/screenshots before final-day changes. | Q05 | S |
+| [ ] | E03 | Write final architecture/local-AWS setup report and explicitly document limitations. | Q01-Q06, W21 | M |
+| [ ] | E04 | Record shutdown date/resource owner and keep demo available through assessment. | W21, F01 | S |
+
+Week 4: finish essential checks in the first half; freeze features, rehearse and prepare evidence in the second half. Extensive automated tests, load benchmarks, formal usability studies, premium features and automated refunds are deferred. Record simulated integrations honestly.
+
+## Completion checklist
+
+- [ ] Actual AWS patient journey works with two separate payment purposes and paid+ready delivery gating.
+- [ ] All four role views support the journey; two clinics demonstrate tenant separation.
+- [ ] Independent service deployments, service-owned migrations and Floci setup are documented.
+- [ ] Essential checks and known limitations have brief evidence.
+- [ ] Demo script, backup recording and report are ready.
