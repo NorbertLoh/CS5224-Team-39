@@ -32,7 +32,7 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 | [ ] | F14 | Create shared fixtures for two clinics, doctors and workflow entities. | C01-C05 | M |
 | [ ] | F15 | Add minimal frontend build/type and backend lint checks in CI. | F03, F06 | S |
 | [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. | F11-F13, A01-A03 | M |
-| [ ] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. | none | S |
+| [ ] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. Assignee: NorbertLoh; in progress, issue #14. | none | S |
 | [ ] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. | C01 | M |
 | [ ] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. | C01 | M |
 | [ ] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. | C01 | M |
