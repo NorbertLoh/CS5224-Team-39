@@ -1,3 +1,5 @@
+import { usesAws } from '@/lib/backend-config'
+
 export interface AuthConfig {
   clientId: string
   issuer: string
@@ -37,32 +39,37 @@ function random(): string {
   return base64url(crypto.getRandomValues(new Uint8Array(32)))
 }
 
-export function authConfig(): AuthConfig | null {
-  const env = import.meta.env
-  if (!env?.VITE_COGNITO_CLIENT_ID) return null
-  const issuer = env.VITE_COGNITO_ISSUER
-  const oauth = env.VITE_COGNITO_OAUTH_BASE_URL
-  const api = env.VITE_COGNITO_API_URL
-  if (!issuer || !oauth || !api) throw new Error('Complete the Cognito environment configuration.')
+export function authConfig(env: Record<string, unknown> = import.meta.env ?? {}, origin = location.origin): AuthConfig | null {
+  const aws = usesAws(env ?? {})
+  const prefix = aws ? 'VITE_AWS_COGNITO_' : 'VITE_COGNITO_'
+  const clientId = env?.[`${prefix}CLIENT_ID`]
+  if (typeof clientId !== 'string' || !clientId) {
+    if (aws) throw new Error('Configure AWS Cognito before using AWS mode.')
+    return null
+  }
+  const issuer = env[`${prefix}ISSUER`]
+  const oauth = env[`${prefix}OAUTH_BASE_URL`]
+  const api = env[`${prefix}API_URL`]
+  if (typeof issuer !== 'string' || !issuer || typeof oauth !== 'string' || !oauth || typeof api !== 'string' || !api) throw new Error('Complete the Cognito environment configuration.')
 
   for (const value of [issuer, oauth, api]) {
     const url = new URL(value)
-    const localHttp = env.DEV && url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname)
+    const localHttp = !aws && url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname)
     const hasExtras = url.username || url.password || url.search || url.hash
     if (hasExtras || (url.protocol !== 'https:' && !localHttp)) {
-      throw new Error('Cognito URLs require HTTPS, or localhost HTTP in development.')
+      throw new Error('Cognito URLs require HTTPS, or localhost HTTP in local mode.')
     }
   }
   const base = oauth.replace(/\/+$/, '')
   return {
-    clientId: env.VITE_COGNITO_CLIENT_ID,
+    clientId,
     issuer: issuer.replace(/\/+$/, ''),
     authorizeUrl: `${base}/oauth2/authorize`,
     tokenUrl: `${base}/oauth2/token`,
     logoutUrl: `${base}/logout`,
     apiUrl: api,
-    redirectUri: `${location.origin}/auth/callback`,
-    logoutUri: `${location.origin}/`,
+    redirectUri: `${origin}/auth/callback`,
+    logoutUri: `${origin}/`,
   }
 }
 

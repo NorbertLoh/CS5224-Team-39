@@ -1,7 +1,7 @@
 import { Stethoscope } from 'lucide-react'
-import type { StorefrontClinic } from './fixtures'
+import type { Doctor } from '../clinics/api'
 
-export function DoctorList({ doctors }: { doctors: StorefrontClinic['doctors'] }) {
+export function DoctorList({ doctors }: { doctors: Doctor[] }) {
   return (
     <section id="doctors" aria-labelledby="doctors-heading" className="scroll-mt-6 border-t border-slate-200 pt-10">
       <div className="flex flex-wrap items-end justify-between gap-3">

@@ -11,6 +11,11 @@ A10 provides an identity-service-only clinic lookup for live staff membership
 administration. Staff roles and memberships stay in identity; see
 [staff integration](../identity/docs/staff-integration.md).
 
+U02's user-requested logo upload extension adds managed S3 logo upload, overwrite
+and removal with the same clinic-role checks. Set up an unversioned branding
+bucket and public HTTPS asset base; see [logo API setup](docs/api.md) and the
+[editor/upload guide](../../apps/web/src/features/clinic-profile/README.md).
+
 ## Schema
 
 One table, `tenant.clinics`, stores the C02 resource:
