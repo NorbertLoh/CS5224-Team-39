@@ -1,8 +1,9 @@
 # A01–A03 authentication
 
-Issues #46–#48 and PR #49 implement browser PKCE login, session renewal/logout,
-and reusable FastAPI access-token verification. They remain In progress until
-merge. F16's wider API and persistence audit remains separate.
+Merged PR #49 completes browser PKCE login, session renewal/logout,
+and reusable FastAPI access-token verification; issues #46–#48 are closed.
+F16's authentication dependencies are ready. Its wider API and persistence audit
+remains separate.
 
 ## Local setup
 
