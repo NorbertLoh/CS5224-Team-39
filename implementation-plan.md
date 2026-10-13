@@ -13,9 +13,9 @@ UI work can start against the agreed API fixtures after its listed contract depe
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
 Completion audit, 13 October 2026: checked all 127 task rows against merged PRs,
-closed issues and repository contents. F02-F15 and C01-C05 are complete (19 tasks);
+closed issues and repository contents. F02-F15, C01-C05 and A01-A03 are complete (22 tasks);
 F01 is skipped by user decision. F16's initial released-image pin does not
-complete its API/restart checks. The remaining 107
+complete its API/restart checks. The remaining 104
 tasks stay unchecked; contract documentation, shared fixtures and route previews
 do not count as implemented services, authentication, feature pages or integrations.
 
@@ -38,7 +38,7 @@ do not count as implemented services, authentication, feature pages or integrati
 | [x] | F13 | Bootstrap Floci Cognito pool/public client and four-role synthetic users. Completed in merged PR #31; stable IDs/passwords/disabled-state reruns, four PKCE logins, signed access tokens and redirect/Compose configuration verified. Issue #30 closed. | F09 | M |
 | [x] | F14 | Create shared fixtures for two clinics, doctors and workflow entities. Completed in merged PR #40; linked two-clinic dataset, validator, 12 integrity tests, lint and CI passed. | C01-C05 | M |
 | [x] | F15 | Add minimal frontend build/type and backend lint checks in CI. Completed in merged PRs #18 and #44; clean frontend install/lint/type/build, backend Ruff and all push/PR CI checks passed. Issue #17 closed. | F03, F06 | S |
-| [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. Assignee: NorbertLoh; issue #43; deferred by user pending unfinished A01-A03. Floci 2.2.0 is initially pinned; full required-API and restart-persistence verification remains pending. | F11-F13, A01-A03 | M |
+| [ ] | F16 | Verify Floci restart persistence and required APIs; pin a released image. Assignee: NorbertLoh; issue #43; dependencies ready after A01-A03 merged in PR #49. Floci 2.2.0 is initially pinned; full required-API and restart-persistence verification remains pending. Auth findings/setup: `docs/authentication.md`. | F11-F13, A01-A03 | M |
 | [x] | C01 | Document IDs, money, timestamps, errors, pagination and API prefixes. Completed in merged PR #15; examples verified. | none | S |
 | [x] | C02 | Define identity/membership, clinic and appointment access APIs with fixtures. Completed in merged PR #36; resource links, access-denial examples and C01/C05 consistency verified. | C01 | M |
 | [x] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. Completed in merged PR #37; amount splits, expiry boundary, late-payment recovery and C05 consistency verified. | C01 | M |
@@ -58,9 +58,9 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | A01 | Add React PKCE login/return flow against Floci; obtain access token. Assignee: NorbertLoh; status: in progress; issue #46; PR #49. | F07, F13 | M |
-| [ ] | A02 | Add refresh/logout handling and expiry UX; verify pinned emulator behaviour. Assignee: NorbertLoh; status: in progress; issue #47; PR #49. | A01 | M |
-| [ ] | A03 | Add FastAPI token verification: JWKS, issuer, expiry, token use and client. Assignee: NorbertLoh; status: in progress; issue #48; PR #49. | F03, F13 | M |
+| [x] | A01 | Add React PKCE login/return flow against Floci; obtain access token. Completed in merged PR #49; four-role browser PKCE, callback cleanup/reload and signed API access verified. Issue #46 closed. | F07, F13 | M |
+| [x] | A02 | Add refresh/logout handling and expiry UX; verify pinned emulator behaviour. Completed in merged PR #49; automatic refresh, expiry UX, revocation and hosted logout verified on Floci 2.2.0; OAuth refresh limitation documented. Issue #47 closed. | A01 | M |
+| [x] | A03 | Add FastAPI token verification: JWKS, issuer, expiry, token use and client. Completed in merged PR #49; strict RS256/JWKS access-token verification, invalid-token tests, non-local config guards and container/browser integration passed. Issue #48 closed. | F03, F13 | M |
 | [ ] | A04 | Create identity service schema/migrations for subjects, roles and memberships. | F04, C02 | M |
 | [ ] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. | A03, A04 | M |
 | [ ] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. | A05 | M |
