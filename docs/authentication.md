@@ -115,7 +115,8 @@ Verified 13 October 2026 with the real pinned container and seeded users:
   revocation of already-issued access tokens; they remain valid until expiry.
   **F16 found that revocation is lost on restart in Floci 2.2.0**: its persisted
   token store fails to deserialize, so previously revoked refresh tokens become
-  usable again. This is a recorded blocker, not verified AWS behavior.
+  usable again. This is an accepted local limitation; real AWS verification is
+  tracked in [issue #54](https://github.com/NorbertLoh/CS5224-Team-39/issues/54).
 
 Floci does not apply refresh-token rotation and keeps hosted login sessions in
 memory. F16 verified retained resources/keys and access/refresh token use across

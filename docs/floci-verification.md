@@ -3,8 +3,9 @@
 Verified on 13 October 2026 using released Floci **2.2.0**, Linux amd64 on
 Docker Desktop. A revoked refresh token becomes usable after restart because
 Floci cannot reload its revocation store. The user accepted keeping Floci with
-documented local limitations, conditional on the real AWS flows passing.
-AWS verification has not been performed. Draft PR #53 remains unmerged;
+documented local limitations and tracking real AWS verification separately in
+[issue #54](https://github.com/NorbertLoh/CS5224-Team-39/issues/54).
+AWS verification has not been performed. PR #53 remains unmerged;
 issue #43 stays In progress and the backlog stays unchecked.
 
 The Compose default and environment example pin the tested multi-platform
@@ -116,7 +117,7 @@ request carrying the old hosted cookie should show the sign-in form. Verify
 API use with `GET /api/v1/template/auth/session` and a bearer access token.
 Do not log tokens or commit browser session files.
 
-### Revocation persistence blocker
+### Accepted revocation persistence limitation
 
 `RevokeToken` succeeds and refresh immediately fails with `NotAuthorizedException`.
 After restarting without reseeding, the same refresh token is accepted again.
@@ -140,7 +141,8 @@ docker run --rm --network telelink-f16_default -e F16_ENDPOINT=http://floci:4566
 ```
 
 Expected: `check` passes. **Observed on 2.2.0: it fails with a revived token.**
-This is an accepted local limitation, conditional on real Cognito verification.
+This is an accepted local limitation; real Cognito verification is tracked in
+[issue #54](https://github.com/NorbertLoh/CS5224-Team-39/issues/54).
 The repro still reports the failure rather than claiming revocation persisted.
 No JWT checks were weakened,
 no persisted records were rewritten, and no patched emulator image was used.
@@ -153,6 +155,10 @@ for rejected signatures/issuer/client/expiry/token-use/scope and configuration
 guards. Frontend and backend CI remain required before review.
 
 ## Known differences and remaining AWS checks
+
+[Issue #54](https://github.com/NorbertLoh/CS5224-Team-39/issues/54) tracks the
+Cognito lifecycle/revocation and private S3/document-download acceptance checks
+for W05/W08/P03. It is future work and does not claim those tasks are complete.
 
 - **S3 access control/expiry is not proven locally.** Under this configuration,
   unsigned and expired signed object GETs both returned HTTP 200, despite the

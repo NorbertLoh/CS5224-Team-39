@@ -41,7 +41,7 @@ def prepare():
 
 def check():
     if not STATE.is_file():
-        raise SystemExit("Missing token file. Run check_revocation.py prepare before restarting Floci.")
+        raise SystemExit("Missing token file. Run check_revocation.py prepare before restart.")
     state = json.loads(STATE.read_text(encoding="utf-8"))
     rejected(state["client_id"], state["token"])
     print("Revocation survived restart.")
