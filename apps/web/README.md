@@ -22,6 +22,15 @@ The clinic list, public storefront at `/clinics/<slug>` and profile editor at
 Profile fields persist in PostgreSQL; logo files persist in S3. There are no
 runtime fixtures, browser-only saves or fallback data. Booking remains a later task.
 
+Staff management at `/clinic-admin/clinics/<tenant UUID>/staff` uses the real
+identity GET/PUT/DELETE membership APIs with the same local/AWS configuration.
+Open **Manage staff** from the clinic list or profile editor. Clinic administrators
+and platform administrators can assign existing subjects, replace doctor/admin
+roles, revoke access and reactivate memberships. The backend protects the last
+active administrator. Staff are shown by identity subject UUID because the
+membership API does not expose names or account search. This page does not create
+accounts; provision subjects first using the existing backend setup.
+
 `VITE_USE_AWS=false` selects local API/Cognito configuration; `true` selects
 `VITE_AWS_API_BASE_URL` and `VITE_AWS_COGNITO_*`. Missing AWS values show errors.
 Copy `.env.example` and restart Vite (or rebuild) after changing settings.

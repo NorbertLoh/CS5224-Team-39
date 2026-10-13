@@ -78,6 +78,7 @@ function ProfileEditor({ clinic }: { clinic: EditableClinic }) {
       <header className="border-b border-slate-200 bg-white"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5 sm:px-8"><a href="/" className="font-semibold">TeleLink Health</a><span className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600">Clinic administration</span></div></header>
       <main className="mx-auto max-w-6xl px-6 py-10 sm:px-8">
         {<a href={`/clinics/${clinic.slug}`} className="text-sm text-slate-600 underline underline-offset-4">View storefront</a>}
+        <a href={`/clinic-admin/clinics/${clinic.tenant_id}/staff`} className="ml-5 text-sm text-slate-600 underline underline-offset-4">Manage staff</a>
         <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">Clinic profile & branding</h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">{`Edit ${saved.name}'s profile. Logo changes save immediately; use Save changes for the remaining fields.`}</p>
         <p className="mt-3 text-xs text-slate-500">Storefront address: /clinics/{clinic.slug} · The address cannot be changed here.</p>

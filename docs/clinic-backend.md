@@ -112,6 +112,25 @@ For AWS logos, configure tenant's `SERVICE_LOGO_BUCKET`,
 for the service, plus CDN access to public clinic logos. Never reuse the clinical
 documents bucket. See [tenant logo API](../services/tenant/docs/api.md).
 
+## Staff management
+
+Open **Manage staff** from Manage clinics or the profile editor. The route is
+`/clinic-admin/clinics/<tenant UUID>/staff`. Lists include active and revoked
+memberships with cursor pagination. Use an existing identity subject UUID to
+assign doctor, clinic administrator, or both roles. **Edit roles** replaces the
+role set; **Revoke access** retains the row; **Reactivate** opens the role form
+and **Save roles** restores active access. Saving waits for the backend response
+and refreshes the membership and doctor lists. No runtime fixtures are used.
+
+The membership API exposes subject IDs rather than names/emails and has no account
+creation/search endpoint. Find the provisioned UUID through the user's authenticated
+identity `/me` response or local operator provisioning. Do not substitute Cognito
+`sub` or email. Authorization is enforced by identity; the last active clinic
+administrator cannot be demoted or revoked. Local identity must use
+`SERVICE_TENANT_URL` with matching `SERVICE_IDENTITY_SECRET` in tenant; unset
+`SERVICE_CLINIC_FIXTURE_PATH`. AWS uses the same API paths/configuration described
+above; no additional frontend settings or backend changes are required.
+
 ## Doctor directory
 
 Public `GET /tenant/clinics/{tenant_id}/doctors` checks the clinic is active and
