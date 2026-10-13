@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID, uuid4
 
+import httpx
 import jwt
 import pytest
 from alembic import command
@@ -16,6 +17,7 @@ from pydantic import SecretStr, ValidationError
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.clinics import ClinicDirectory
 from app.database import create_database_engine
 from app.main import create_app
 from app.models import Membership, Subject
@@ -512,6 +514,98 @@ def test_concurrent_puts_create_one_membership(api):
         )
     assert sorted(response.status_code for response in responses) == [200, 201]
     assert responses[0].json()["membership_id"] == responses[1].json()["membership_id"]
+
+
+def test_live_clinic_validation_and_authorization(api):
+    calls = []
+    key = "identity-secret-for-tests-at-least-32-bytes"
+    settings = configuration(
+        clinic_fixture_path=None, tenant_url="http://tenant.test/api/v1/tenant", identity_secret=key
+    )
+
+    def lookup(request):
+        calls.append(request)
+        claims = jwt.decode(
+            request.headers["Authorization"].split()[1],
+            key,
+            algorithms=["HS256"],
+            issuer="telelink-service:identity",
+            audience="telelink-tenant-memberships",
+        )
+        assert claims["sub"] == "identity" and claims["exp"] - claims["iat"] == 60
+        assert request.headers["X-Request-ID"]
+        assert request.url.path.startswith("/api/v1/tenant/internal/clinics/")
+        tenant = request.url.path.split("/")[-2]
+        return httpx.Response(200, json={"tenant_id": tenant})
+
+    api.app.state.clinic_directory.close()
+    api.app.state.clinic_directory = ClinicDirectory(
+        settings, transport=httpx.MockTransport(lookup)
+    )
+    for name in ("patient", "doctor", "admin_b", "former"):
+        assert api.client.get(path(), headers=headers(api, name)).status_code == 404
+    assert not calls
+    target = path(subject=api.ids["target"])
+    assert (
+        api.client.put(
+            target, json={"roles": ["doctor"]}, headers=headers(api, "admin_a")
+        ).status_code
+        == 201
+    )
+    assert api.client.get(path(), headers=headers(api, "platform")).status_code == 200
+    assert api.client.delete(target, headers=headers(api, "admin_a")).status_code == 204
+    assert (
+        api.client.put(
+            target, json={"roles": ["clinic_admin"]}, headers=headers(api, "admin_a")
+        ).status_code
+        == 200
+    )
+    assert len(calls) == 4
+
+
+@pytest.mark.parametrize("outcome", [404, 401, 500, 302, "timeout", "mismatch", "malformed"])
+def test_live_clinic_failures_do_not_write_memberships(api, outcome):
+    def lookup(request):
+        if outcome == "timeout":
+            raise httpx.ReadTimeout("private upstream detail", request=request)
+        if outcome == "mismatch":
+            return httpx.Response(200, json={"tenant_id": str(uuid4())})
+        if outcome == "malformed":
+            return httpx.Response(200, json=[])
+        return httpx.Response(outcome, text="private upstream detail")
+
+    api.app.state.clinic_directory = ClinicDirectory(
+        configuration(
+            clinic_fixture_path=None,
+            tenant_url="http://tenant.test",
+            identity_secret="identity-secret-for-tests-at-least-32-bytes",
+        ),
+        transport=httpx.MockTransport(lookup),
+    )
+    response = api.client.put(
+        path(subject=api.ids["target"]), json={"roles": ["doctor"]}, headers=headers(api, "admin_a")
+    )
+    assert response.status_code == (404 if outcome == 404 else 503)
+    assert "private upstream detail" not in response.text
+    with Session(api.engine) as session:
+        assert (
+            session.scalar(select(Membership).where(Membership.subject_id == api.ids["target"]))
+            is None
+        )
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"tenant_url": "http://tenant.test"},
+        {"tenant_url": "http://tenant.test", "identity_secret": "x" * 32},
+        {"tenant_url": "http://user:password@tenant.test", "clinic_fixture_path": None},
+        {"identity_secret": CURSOR_KEY},
+    ],
+)
+def test_live_clinic_configuration_rejects_unsafe_settings(changes):
+    with pytest.raises(ValidationError):
+        configuration(**changes)
 
 
 def test_missing_dependencies_keys_cors_and_error_sanitization(api):

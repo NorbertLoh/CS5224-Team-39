@@ -127,7 +127,7 @@ def memberships(
     cursor: Annotated[str | None, Query(max_length=4096)] = None,
 ):
     subject = authorize_admin(session, principal, tenant_id)
-    request.app.state.clinic_directory.require_clinic(tenant_id)
+    request.app.state.clinic_directory.require_clinic(tenant_id, request.state.request_id)
     settings = request.app.state.settings
     cursor_key(settings)
     query = select(Membership).where(Membership.tenant_id == tenant_id)
@@ -169,7 +169,7 @@ def put_membership(
 ):
     # Pre-authorize before locking so unrelated callers cannot hold tenant locks.
     authorize_admin(session, principal, tenant_id)
-    request.app.state.clinic_directory.require_clinic(tenant_id)
+    request.app.state.clinic_directory.require_clinic(tenant_id, request.state.request_id)
     lock_tenant(session, tenant_id)
     # Re-read current membership after serialization, including self-revocation races.
     session.expire_all()
@@ -201,7 +201,7 @@ def revoke_membership(
     tenant_id: UUID, subject_id: UUID, request: Request, principal: User, session: DB
 ):
     authorize_admin(session, principal, tenant_id)
-    request.app.state.clinic_directory.require_clinic(tenant_id)
+    request.app.state.clinic_directory.require_clinic(tenant_id, request.state.request_id)
     lock_tenant(session, tenant_id)
     session.expire_all()
     authorize_admin(session, principal, tenant_id)

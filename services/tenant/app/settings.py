@@ -10,13 +10,19 @@ class Settings(ServiceSettings):
     cursor_secret: SecretStr | None = None
     tenant_secret: SecretStr | None = None
     scheduling_secret: SecretStr | None = None
+    identity_secret: SecretStr | None = None
     cors_origins: list[str] = []
 
     @model_validator(mode="after")
     def validate_configuration(self):
         secrets = [
             value.get_secret_value()
-            for value in (self.cursor_secret, self.tenant_secret, self.scheduling_secret)
+            for value in (
+                self.cursor_secret,
+                self.tenant_secret,
+                self.scheduling_secret,
+                self.identity_secret,
+            )
             if value is not None
         ]
         if any(len(value.encode()) < 32 for value in secrets):

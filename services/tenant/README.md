@@ -1,4 +1,4 @@
-# Tenant service (A07-A09)
+# Tenant service (A07-A10)
 
 Tenant owns clinic data in the `tenant` PostgreSQL schema, following
 [C02](../../contracts/identity-clinic-access.md). A07 adds the clinic model,
@@ -7,7 +7,9 @@ creation, authorised profile edits, public profiles and booking eligibility.
 A09 adds platform review, commission settings and durable audit events.
 See [API setup and integration boundaries](docs/api.md).
 
-General staff administration and doctor-directory integration follow in A10.
+A10 provides an identity-service-only clinic lookup for live staff membership
+administration. Staff roles and memberships stay in identity; see
+[staff integration](../identity/docs/staff-integration.md).
 
 ## Schema
 

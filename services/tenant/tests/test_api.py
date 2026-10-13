@@ -27,6 +27,7 @@ from app.settings import Settings
 CURSOR = "cursor-secret-for-tests-at-least-32-bytes"
 TENANT = "tenant-secret-for-tests-at-least-32-bytes"
 BOOKING = "booking-secret-for-tests-at-least-32-bytes"
+IDENTITY = "identity-secret-for-tests-at-least-32-bytes"
 
 
 def configuration(**changes):
@@ -41,6 +42,7 @@ def configuration(**changes):
             "cursor_secret": CURSOR,
             "tenant_secret": TENANT,
             "scheduling_secret": BOOKING,
+            "identity_secret": IDENTITY,
         }
         | changes,
     )
@@ -652,4 +654,69 @@ def test_admin_list_filter_pagination_and_unknown_clinics(api):
             f"/clinics/{uuid4()}/commission", json={"commission_bps": 1000}, headers=credential
         ).status_code
         == 404
+    )
+
+
+def identity_service_token(**changes):
+    now = int(time.time())
+    return jwt.encode(
+        {
+            "iss": "telelink-service:identity",
+            "aud": "telelink-tenant-memberships",
+            "sub": "identity",
+            "iat": now,
+            "exp": now + 60,
+        }
+        | changes,
+        IDENTITY,
+        algorithm="HS256",
+    )
+
+
+@pytest.mark.parametrize("status", ["pending_review", "active", "rejected", "suspended"])
+def test_membership_profile_allows_staff_admin_in_all_clinic_states(api, status):
+    created = api.client.post("/clinics", json=body(), headers=api.user()).json()
+    tenant_id = created["tenant_id"]
+    with Session(api.engine) as session, session.begin():
+        session.get(Clinic, tenant_id).status = status
+    auth = {"Authorization": "Bearer " + identity_service_token()}
+    response = api.client.get(f"/internal/clinics/{tenant_id}/membership-profile", headers=auth)
+    assert response.status_code == 200
+    assert response.json() == {"tenant_id": tenant_id}
+    assert (
+        api.client.get(f"/internal/clinics/{uuid4()}/membership-profile", headers=auth).status_code
+        == 404
+    )
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"iss": "telelink-service:tenant"},
+        {"aud": "telelink-tenant-booking"},
+        {"sub": "scheduling"},
+        {"exp": 1},
+        {"exp": int(time.time()) + 3600},
+        {"iat": int(time.time()) + 3600},
+        {"iat": "invalid"},
+    ],
+)
+def test_membership_profile_rejects_invalid_service_claims(api, changes):
+    response = api.client.get(
+        f"/internal/clinics/{uuid4()}/membership-profile",
+        headers={"Authorization": "Bearer " + identity_service_token(**changes)},
+    )
+    assert response.status_code == 401
+
+
+def test_membership_profile_rejects_user_and_other_service_tokens(api):
+    endpoint = f"/internal/clinics/{uuid4()}/membership-profile"
+    for auth in ({}, api.user(), api.booking(), {"Authorization": "Bearer invalid"}):
+        assert api.client.get(endpoint, headers=auth).status_code == 401
+    api.app.state.settings.identity_secret = None
+    assert (
+        api.client.get(
+            endpoint, headers={"Authorization": "Bearer " + identity_service_token()}
+        ).status_code
+        == 503
     )

@@ -13,12 +13,20 @@ from telelink_common.access import (
 )
 from telelink_common.errors import DomainError, ErrorEnvelope
 
-from app.auth import require_booking_service
+from app.auth import require_booking_service, require_identity_service
 from app.database import get_session
 from app.models import Clinic
 from app.pagination import cursor_key, decode_cursor, encode_cursor
 from app.provisioning import provision_creator
-from app.schemas import ClinicAdmin, ClinicCreate, ClinicPage, ClinicPublic, ClinicUpdate, profile
+from app.schemas import (
+    ClinicAdmin,
+    ClinicCreate,
+    ClinicMembershipProfile,
+    ClinicPage,
+    ClinicPublic,
+    ClinicUpdate,
+    profile,
+)
 
 router = APIRouter(
     tags=["clinics"],
@@ -154,3 +162,14 @@ def booking_profile(tenant_id: UUID, session: DB):
     if clinic.status != "active" or not clinic.membership_provisioned:
         raise DomainError(409, "clinic_not_active", "Clinic cannot accept new bookings.")
     return profile(clinic)
+
+
+@router.get(
+    "/internal/clinics/{tenant_id}/membership-profile",
+    response_model=ClinicMembershipProfile,
+    dependencies=[Depends(require_identity_service)],
+    tags=["internal"],
+)
+def membership_profile(tenant_id: UUID, session: DB):
+    clinic = clinic_or_404(session, tenant_id)
+    return ClinicMembershipProfile(tenant_id=clinic.tenant_id)
