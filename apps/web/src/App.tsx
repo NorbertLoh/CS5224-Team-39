@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AuthControls } from './auth/AuthControls'
 
 export default function App() {
   return (
@@ -7,6 +8,7 @@ export default function App() {
       <header className="flex flex-wrap items-center justify-between gap-4 border-b px-5 py-6 sm:px-8">
         <span className="text-xl font-semibold tracking-tight">TeleLink Health</span>
         <Badge variant="secondary">Prototype preview</Badge>
+        <AuthControls />
       </header>
       <main className="px-5 py-12 sm:px-8 sm:py-16">
         <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Connected care</p>

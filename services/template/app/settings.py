@@ -1,8 +1,10 @@
 """Validated configuration from SERVICE_* environment variables or local .env."""
 
+import re
 from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 
@@ -25,6 +27,38 @@ class Settings(BaseSettings):
     root_path: str = ""
     database_url: SecretStr | None = None
     database_timeout_seconds: int = Field(default=3, ge=1, le=30)
+    auth_issuer: str | None = None
+    auth_jwks_url: str | None = None
+    auth_client_id: str | None = Field(default=None, min_length=1)
+    auth_required_scopes: str = ""
+
+    @model_validator(mode="after")
+    def validate_auth(self):
+        values = (self.auth_issuer, self.auth_jwks_url, self.auth_client_id)
+        if not any(values):
+            return self
+        if not all(values):
+            raise ValueError("auth_issuer, auth_jwks_url and auth_client_id are required together")
+        for value in (self.auth_issuer, self.auth_jwks_url):
+            url = urlsplit(value)
+            if url.username or url.password or url.query or url.fragment:
+                raise ValueError(
+                    "authentication URLs cannot contain credentials, query or fragment"
+                )
+            if url.scheme not in {"http", "https"} or not url.hostname:
+                raise ValueError("authentication URLs must be absolute HTTP(S) URLs")
+        if self.environment not in {"local", "test"}:
+            if (
+                not re.fullmatch(
+                    r"https://cognito-idp\.[a-z0-9-]+\.amazonaws\.com(?:\.cn)?/[A-Za-z0-9_-]+",
+                    self.auth_issuer,
+                )
+                or self.auth_jwks_url != self.auth_issuer + "/.well-known/jwks.json"
+            ):
+                raise ValueError(
+                    "non-local environments require an AWS Cognito issuer and its JWKS"
+                )
+        return self
 
     @field_validator("database_url")
     @classmethod
