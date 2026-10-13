@@ -76,7 +76,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | A07 | Create tenant service schema/migrations for clinic, branding and activation. Completed in merged PR #65; 30 PostgreSQL tests, migration isolation, lint and CI passed. Issue #64 closed. | F04, C02 | M |
 | [x] | A08 | Add clinic create/update/public-profile APIs; inactive clinics cannot accept bookings. Completed in merged PR #67; 165 tests, real Floci/two-service HTTP checks and CI passed. Issue #66 closed. | A06, A07 | M |
 | [x] | A09 | Add platform approve/reject and commission-setting APIs with audit events. Completed in merged PR #69; 94 tenant tests, live Floci/platform HTTP checks and CI passed. Issue #68 closed. | A08 | M |
-| [ ] | A10 | Add staff assignment/membership APIs with authorised clinic administration. | A05, A08 | M |
+| [x] | A10 | Add staff assignment/membership APIs with authorised clinic administration. Completed in merged PR #71; 205 tests, live two-service HTTP staff lifecycle/authorization checks and CI passed. Issue #70 closed. | A05, A08 | M |
 | [ ] | U01 | Build branded clinic storefront using fixtures. | F07, F08, C02 | M |
 | [ ] | U02 | Build clinic profile/branding editor using fixtures. | F07, F08, C02 | M |
 | [ ] | U03 | Build staff management page using fixtures. | F07, F08, C02 | M |
