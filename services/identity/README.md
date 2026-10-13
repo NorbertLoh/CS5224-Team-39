@@ -1,5 +1,8 @@
 # Identity persistence (A04)
 
+A05 adds authenticated self/membership APIs and service-only access decisions.
+Implementation and verification are tracked in issue #60.
+
 Identity owns application subjects, runtime Cognito subject mappings, global
 roles and clinic memberships under the `identity` PostgreSQL schema. This task
 implements persistence only; authenticated APIs and access policies follow in
