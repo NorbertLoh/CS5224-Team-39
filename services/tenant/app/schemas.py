@@ -16,6 +16,10 @@ Nonblank = Annotated[str, Field(min_length=1, max_length=200)]
 ClinicStatus = Literal["pending_review", "active", "rejected", "suspended"]
 
 
+class ClinicMembershipProfile(BaseModel):
+    tenant_id: UUID
+
+
 class Branding(BaseModel):
     model_config = ConfigDict(extra="forbid")
     primary_color: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")

@@ -27,7 +27,7 @@ at least 32 bytes and distinct from cursor/scheduling secrets. JWT issuer is
 `tenant`, with integer `iat`/`exp` and a maximum five-minute lifetime. Missing or
 wrong service credentials are rejected. Tenant owns clinic existence/creator
 verification; this narrowly scoped route does not use the local clinic fixture
-adapter or read/write tenant tables. General staff integration remains A10.
+adapter or read/write tenant tables. General staff APIs now use live tenant validation; see [A10 setup](staff-integration.md).
 
 Unrelated/revoked clinic admins receive concealed 404 responses before clinic
 lookup, including on collection/mutation routes. Platform administration does not
@@ -65,8 +65,10 @@ First follow the [database setup](../README.md) and `alembic upgrade head`.
 From `services/identity`, export the values shown in `.env.example` or copy them
 to an ignored `.env` for the server. Set the actual local Cognito issuer/JWKS/
 client, `SERVICE_AUTH_REQUIRED_SCOPES=openid`, a random cursor signing secret,
-and explicitly enable `SERVICE_CLINIC_FIXTURE_PATH=../../dev/fixtures/telelink.json`
-for synthetic clinic validation. Provision subjects using their actual runtime
+and configure `SERVICE_TENANT_URL` plus `SERVICE_IDENTITY_SECRET` shared with tenant
+for live clinic validation. For explicit local fixture development, use only
+`SERVICE_CLINIC_FIXTURE_PATH=../../dev/fixtures/telelink.json` and unset the tenant URL.
+Provision subjects using their actual runtime
 Cognito sub as documented in the README; fixtures do not auto-provision identities.
 
 ```powershell

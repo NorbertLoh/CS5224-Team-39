@@ -1,4 +1,4 @@
-# Identity service (A04/A05)
+# Identity service (A04-A10)
 
 A05 adds authenticated self/membership APIs and service-only access decisions.
 See [API setup, authentication and integration boundaries](docs/api.md) and the
@@ -7,7 +7,7 @@ See [API setup, authentication and integration boundaries](docs/api.md) and the
 Identity owns application subjects, runtime Cognito subject mappings, global
 roles and clinic memberships under the `identity` PostgreSQL schema. This task
 implements persistence and C02 identity APIs. Reusable checks in consuming services
-and live clinic integration follow in A06/A10. Contract:
+are shared through A06; A10 supplies [live staff administration](docs/staff-integration.md). Contract:
 [C02](../../contracts/identity-clinic-access.md).
 
 ## Schema decisions
@@ -25,9 +25,8 @@ and live clinic integration follow in A06/A10. Contract:
   `created_at` and advances `updated_at` for ORM and direct SQL updates.
   This retains the revoked row; it is not a complete audit of every role change.
 - Deleting a subject with memberships is restricted. There is no foreign key
-  to tenant-owned clinics and no cross-service table writes. A10 must validate
-  clinic existence through the tenant API. A05/A10 must enforce last-active-admin
-  concurrency rules and cache invalidation; A05 serializes membership mutations
+  to tenant-owned clinics and no cross-service table writes. A10 validates
+  clinic existence through the tenant API. A05 serializes membership mutations
   per tenant and reads current permissions without caching.
 - A tenant/creation/ID index supports C02 membership pagination. Subject lookup
   and subject/tenant lookup use their unique indexes.
@@ -140,4 +139,5 @@ uniqueness, subject referential integrity, transaction rollback, and downgrade/
 re-upgrade. A05 additionally tests signed user/service tokens, clinic access,
 pagination, safe errors and concurrent membership mutations. Local verification
 also passed with an actual Floci PKCE token, live JWKS retrieval and a provisioned
-runtime `sub`. Tenant/scheduling service integration remains future work.
+runtime `sub`. A10 additionally verifies live tenant membership validation;
+scheduling integration remains future work.

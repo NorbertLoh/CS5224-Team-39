@@ -120,3 +120,12 @@ A09 review and commission APIs are implemented. A10 owns general staff administr
 public doctor directory. S02/S03 must enforce this eligibility gate in actual
 slot/hold/booking flows; these services are not implemented by A08. No frontend
 or shared Compose/routing changes are included.
+
+## A10 staff membership integration
+
+GET `/internal/clinics/{tenant_id}/membership-profile` is restricted to the identity
+service and returns only the clinic ID, including pending, rejected and suspended
+clinics. Configure a separate `SERVICE_IDENTITY_SECRET` shared only with identity.
+User tokens and other service credentials cannot use this endpoint. Membership
+roles, listing and writes remain identity-owned; see the
+[setup, credentials and verification](../../identity/docs/staff-integration.md).

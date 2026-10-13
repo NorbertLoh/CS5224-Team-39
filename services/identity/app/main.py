@@ -33,6 +33,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             yield
         finally:
+            app.state.clinic_directory.close()
             if app.state.database_engine is not None:
                 app.state.database_engine.dispose()
                 app.state.database_engine = None
@@ -49,7 +50,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = config
     app.state.database_engine = None
     app.state.token_verifier = TokenVerifier(config)
-    app.state.clinic_directory = ClinicDirectory(config.clinic_fixture_path)
+    app.state.clinic_directory = ClinicDirectory(config)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors_origins,
