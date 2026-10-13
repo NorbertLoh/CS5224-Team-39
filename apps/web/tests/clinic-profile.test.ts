@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { storefrontClinics } from '../src/features/storefront/fixtures'
+import { readFileSync } from 'node:fs'
+import type { ClinicProfile } from '../src/features/clinic-profile/profile'
+const storefrontClinics: ClinicProfile[] = JSON.parse(readFileSync(new URL('../../../dev/fixtures/telelink.json', import.meta.url), 'utf8')).clinics
 import { feeMinor, profileDraft, profileUpdate, validateProfile, validLogoUrl } from '../src/features/clinic-profile/profile'
 import { validateLogoFile, maxLogoBytes } from '../src/features/clinic-profile/logo-api'
 
@@ -44,9 +46,9 @@ test('tenant update contains only writable fields and retains exact money after 
 test('editing one clinic does not mutate the other clinic or the shared fixture', () => {
   const before = JSON.stringify(storefrontClinics)
   const draft = profileDraft(storefrontClinics[0])
-  draft.name = 'Local demo edit'
+  draft.name = 'Updated clinic'
   draft.primaryColor = '#123456'
-  assert.equal(profileUpdate(draft).name, 'Local demo edit')
+  assert.equal(profileUpdate(draft).name, 'Updated clinic')
   assert.equal(JSON.stringify(storefrontClinics), before)
   assert.equal(profileDraft(storefrontClinics[1]).fee, '30.00')
 })

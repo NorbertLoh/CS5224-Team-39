@@ -1,8 +1,7 @@
 import { HeartPulse } from 'lucide-react'
-import { consultationPrice } from '../storefront/fixtures'
+import { consultationPrice } from '@/lib/money'
 import { feeMinor } from './profile'
 import type { ProfileDraft } from './profile'
-import { profileApiEnabled } from './logo-api'
 
 export function BrandingPreview({ draft, logoPreview }: { draft: ProfileDraft; logoPreview: string | null }) {
   const color = /^#[0-9a-f]{6}$/i.test(draft.primaryColor) ? draft.primaryColor : '#64748b'
@@ -11,7 +10,7 @@ export function BrandingPreview({ draft, logoPreview }: { draft: ProfileDraft; l
   return (
     <aside aria-labelledby="preview-heading" className="self-start lg:sticky lg:top-6">
       <h2 id="preview-heading" className="text-sm font-semibold">Branding preview</h2>
-      <p className="mt-1 text-xs text-slate-500">{profileApiEnabled ? 'Updates as you edit. Logo changes save immediately.' : 'Updates as you edit. Nothing is published.'}</p>
+      <p className="mt-1 text-xs text-slate-500">Updates as you edit. Logo changes save immediately.</p>
       <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="h-1.5" style={{ backgroundColor: color }} />
         <div className="p-6 sm:p-8">

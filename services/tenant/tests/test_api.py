@@ -855,3 +855,59 @@ def test_logo_decoder_limits_dimensions_and_normalizes_supported_images(image_fo
 
     with pytest.raises(DomainError):
         logo_png(logo_bytes(size=(2001, 2000)))
+
+
+def test_public_doctors_enforces_clinic_state_and_forwards_scoped_request(api):
+    clinic = api.client.post("/clinics", json=body(), headers=api.user()).json()
+    tenant_id = clinic["tenant_id"]
+    endpoint = f"/clinics/{tenant_id}/doctors"
+    assert api.client.get(endpoint).status_code == 404
+    activate(api, tenant_id)
+    state = {"status": 200, "extra": False}
+
+    def directory_http(request):
+        assert request.url.path == f"/internal/clinics/{tenant_id}/doctors"
+        assert request.url.params["limit"] == "1"
+        claims = jwt.decode(
+            request.headers["Authorization"].split()[1],
+            TENANT,
+            algorithms=["HS256"],
+            issuer="telelink-service:tenant",
+            audience="telelink-identity-doctors",
+        )
+        assert claims["sub"] == "tenant" and claims["exp"] - claims["iat"] == 60
+        item = {"doctor_id": str(api.ids["doctor"]), "display_name": "Doctor"}
+        if state["extra"]:
+            item["cognito_sub"] = "private"
+        return httpx.Response(state["status"], json={"items": [item], "next_cursor": "next"})
+
+    api.app.state.identity_client.close()
+    api.app.state.identity_client = IdentityClient(
+        api.app.state.settings, transport=httpx.MockTransport(directory_http)
+    )
+    response = api.client.get(endpoint, params={"limit": 1})
+    assert response.status_code == 200 and response.json()["items"] == [
+        {"doctor_id": str(api.ids["doctor"]), "display_name": "Doctor"}
+    ]
+    state["extra"] = True
+    assert api.client.get(endpoint, params={"limit": 1}).status_code == 503
+    state["status"] = 422
+    assert api.client.get(endpoint, params={"limit": 1, "cursor": "bad"}).status_code == 422
+    state["status"] = 503
+    assert api.client.get(endpoint, params={"limit": 1}).status_code == 503
+    activate(api, tenant_id, membership_provisioned=False)
+    assert api.client.get(endpoint).status_code == 404
+
+
+def test_public_logo_only_exposes_approved_clinic_branding(api):
+    clinic = api.client.post("/clinics", json=body(), headers=api.user()).json()
+    tenant_id = clinic["tenant_id"]
+    endpoint = f"/clinics/{tenant_id}/public-logo"
+    api.app.state.logo_storage = SimpleNamespace(read=lambda tenant: b"image", close=lambda: None)
+    assert api.client.get(endpoint).status_code == 404
+    activate(api, tenant_id, logo_url="https://assets.example.com/logo.png")
+    response = api.client.get(endpoint)
+    assert response.status_code == 200 and response.content == b"image"
+    assert response.headers["cache-control"] == "no-cache"
+    activate(api, tenant_id, status="suspended")
+    assert api.client.get(endpoint).status_code == 404

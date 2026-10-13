@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => ({
   server: {
     strictPort: true,
     proxy: {
+      '^/api/v1/identity(?:/|\\?|$)': {
+        target: loadEnv(mode, process.cwd(), 'IDENTITY_').IDENTITY_API_TARGET || 'http://127.0.0.1:8001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/v1\/identity(?=\/|\?|$)/, '') || '/',
+      },
       '^/api/v1/tenant(?:/|\\?|$)': {
         target: loadEnv(mode, process.cwd(), 'TENANT_').TENANT_API_TARGET || 'http://127.0.0.1:8002',
         changeOrigin: true,

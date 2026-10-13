@@ -742,3 +742,53 @@ def test_creator_provisioning_rejects_wrong_service_credentials(api, changes):
         headers={"Authorization": "Bearer " + tenant_token(**changes)},
     )
     assert result.status_code == 401
+
+
+def test_doctor_directory_service_scope_pagination_and_revocation(api):
+    api.app.state.settings.tenant_secret = SecretStr(TENANT_KEY)
+    endpoint = f"/internal/clinics/{TENANT_A}/doctors"
+    credential = {"Authorization": "Bearer " + tenant_token(aud="telelink-identity-doctors")}
+    assert api.client.get(endpoint).status_code == 401
+    assert api.client.get(endpoint, headers=headers(api)).status_code == 401
+    assert (
+        api.client.get(endpoint, headers={"Authorization": "Bearer " + tenant_token()}).status_code
+        == 401
+    )
+    with Session(api.engine) as session, session.begin():
+        session.add(Membership(subject_id=api.ids["target"], tenant_id=TENANT_A, roles=["doctor"]))
+        session.add(Membership(subject_id=api.ids["patient"], tenant_id=TENANT_B, roles=["doctor"]))
+    first = api.client.get(endpoint, params={"limit": 1}, headers=credential).json()
+    assert len(first["items"]) == 1 and first["next_cursor"]
+    second = api.client.get(
+        endpoint, params={"cursor": first["next_cursor"]}, headers=credential
+    ).json()
+    summaries = first["items"] + second["items"]
+    assert {item["doctor_id"] for item in summaries} == {
+        str(api.ids["doctor"]),
+        str(api.ids["target"]),
+    }
+    assert all(set(item) == {"doctor_id", "display_name"} for item in summaries)
+    assert (
+        api.client.get(
+            f"/internal/clinics/{TENANT_B}/doctors",
+            params={"cursor": first["next_cursor"]},
+            headers=credential,
+        ).status_code
+        == 422
+    )
+    assert (
+        api.client.get(
+            endpoint, params={"cursor": first["next_cursor"] + "x"}, headers=credential
+        ).status_code
+        == 422
+    )
+    with Session(api.engine) as session, session.begin():
+        membership = session.scalar(
+            select(Membership).where(
+                Membership.subject_id == api.ids["doctor"], Membership.tenant_id == TENANT_A
+            )
+        )
+        membership.status = "revoked"
+    assert api.client.get(endpoint, headers=credential).json()["items"] == [
+        {"doctor_id": str(api.ids["target"]), "display_name": "target"}
+    ]

@@ -1,8 +1,8 @@
 import { ArrowUpRight, Video } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { StorefrontClinic } from './fixtures'
+import type { Clinic } from '../clinics/api'
 
-export function ClinicIntro({ clinic }: { clinic: StorefrontClinic }) {
+export function ClinicIntro({ clinic }: { clinic: Clinic }) {
   return (
     <div>
       <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase"><span className="size-2 rounded-full bg-[var(--clinic-color)]" /> Care, wherever you are</p>

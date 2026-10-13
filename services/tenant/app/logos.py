@@ -151,3 +151,17 @@ def preview_logo(tenant_id: UUID, request: Request, identity: Admin, session: DB
         raise DomainError(404, "not_found", "Resource not found.")
     data = request.app.state.logo_storage.read(tenant_id)
     return Response(data, media_type="image/png", headers={"Cache-Control": "no-store"})
+
+
+@router.get("/clinics/{tenant_id}/public-logo")
+def public_logo(tenant_id: UUID, request: Request, session: DB):
+    clinic = session.get(Clinic, tenant_id)
+    if (
+        clinic is None
+        or clinic.status != "active"
+        or not clinic.membership_provisioned
+        or clinic.logo_url is None
+    ):
+        raise DomainError(404, "not_found", "Resource not found.")
+    data = request.app.state.logo_storage.read(tenant_id)
+    return Response(data, media_type="image/png", headers={"Cache-Control": "no-cache"})

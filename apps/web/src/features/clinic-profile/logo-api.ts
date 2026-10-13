@@ -1,8 +1,7 @@
-import { readSession } from '@/auth/session'
-import { apiFetch } from '@/lib/api'
+import { clinicRequest } from '../clinics/api'
+import type { Clinic } from '../clinics/api'
 import type { ClinicProfile } from './profile'
 
-export const profileApiEnabled = import.meta.env?.VITE_CLINIC_PROFILE_API_ENABLED === 'true'
 export const maxLogoBytes = 2 * 1024 * 1024
 
 export function validateLogoFile(file: File): string | undefined {
@@ -11,11 +10,7 @@ export function validateLogoFile(file: File): string | undefined {
 }
 
 async function request(tenantId: string, options: RequestInit = {}, suffix = '/logo') {
-  const session = readSession()
-  if (!session || session.expiresAt <= Date.now()) throw new Error('Sign in from the home page, then return to upload your logo.')
-  return apiFetch(`/tenant/clinics/${encodeURIComponent(tenantId)}${suffix}`, {
-    ...options, accessToken: session.accessToken,
-  })
+  return clinicRequest(`/clinics/${encodeURIComponent(tenantId)}${suffix}`, options, true)
 }
 
 export async function readLogo(tenantId: string) {
@@ -45,7 +40,7 @@ export async function removeLogo(tenantId: string) {
   await request(tenantId, { method: 'DELETE' })
 }
 
-export type EditableClinic = ClinicProfile & { slug: string; tenant_id: string }
+export type EditableClinic = Clinic
 
 export async function readClinic(tenantId: string): Promise<EditableClinic> {
   const response = await request(tenantId, {}, '')
