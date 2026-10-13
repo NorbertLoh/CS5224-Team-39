@@ -5,8 +5,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 import jwt
-
-from app.errors import DomainError
+from telelink_common.errors import DomainError
 
 
 def cursor_error():

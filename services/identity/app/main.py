@@ -5,13 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
+from telelink_common.auth import TokenVerifier
+from telelink_common.errors import install_error_handlers
+from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.api import router
-from app.auth import TokenVerifier
 from app.clinics import ClinicDirectory
 from app.database import create_database_engine
-from app.errors import install_error_handlers
-from app.middleware import RequestLoggingMiddleware
 from app.models import Membership, Subject
 from app.settings import Settings
 
@@ -22,7 +22,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app):
         app.state.database_engine = (
-            create_database_engine(config.database_url.get_secret_value())
+            create_database_engine(
+                config.database_url.get_secret_value(),
+                timeout_seconds=config.database_timeout_seconds,
+            )
             if config.database_url is not None
             else None
         )

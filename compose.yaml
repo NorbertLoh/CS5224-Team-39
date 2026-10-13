@@ -4,6 +4,8 @@ services:
   template:
     build:
       context: ./services/template
+      additional_contexts:
+        python_common: ./packages/python_common
       target: production
     ports:
       - "127.0.0.1:${TEMPLATE_HOST_PORT:-8000}:8000"

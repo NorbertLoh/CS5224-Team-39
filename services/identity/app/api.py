@@ -7,16 +7,17 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy import func, select, text, tuple_
 from sqlalchemy.orm import Session
+from telelink_common.access import has_global_role, has_tenant_role
+from telelink_common.auth import Principal, require_principal
+from telelink_common.errors import DomainError, ErrorEnvelope
 
-from app.auth import Principal, require_principal, require_scheduling_service
+from app.auth import require_scheduling_service
 from app.database import find_subject, get_session
-from app.errors import DomainError
 from app.models import Membership, Subject
 from app.pagination import cursor_key, decode_cursor, encode_cursor
 from app.schemas import (
     AccessDecision,
     AccessRequest,
-    ErrorEnvelope,
     IdentityRead,
     MembershipPage,
     MembershipRead,
@@ -53,8 +54,12 @@ def active_membership(session, subject_id, tenant_id):
 def authorize_admin(session, principal, tenant_id):
     subject = current_subject(session, principal)
     membership = active_membership(session, subject.subject_id, tenant_id)
-    if "platform_admin" not in subject.global_roles and (
-        membership is None or "clinic_admin" not in membership.roles
+    if not has_tenant_role(
+        membership,
+        tenant_id,
+        "clinic_admin",
+        global_roles=subject.global_roles,
+        allow_platform_admin=True,
     ):
         raise DomainError(404, "not_found", "Resource not found.")
     return subject
@@ -221,16 +226,22 @@ def access_decision(body: AccessRequest, actions: Service, session: DB):
     if subject is None:
         return AccessDecision(allowed=False, reason="not_authorized")
     membership = active_membership(session, subject.subject_id, body.tenant_id)
-    roles = set(membership.roles) if membership is not None else set()
-    own = subject.subject_id == body.resource.patient_id and "patient" in subject.global_roles
-    assigned = subject.subject_id == body.resource.doctor_id and "doctor" in roles
-    admin = "clinic_admin" in roles
+    own = subject.subject_id == body.resource.patient_id and has_global_role(
+        subject.global_roles, "patient"
+    )
+    assigned = subject.subject_id == body.resource.doctor_id and has_tenant_role(
+        membership, body.tenant_id, "doctor"
+    )
+    admin = has_tenant_role(membership, body.tenant_id, "clinic_admin")
     if own and body.action in {"appointment.read", "appointment.cancel", "clinical.read"}:
         return AccessDecision(allowed=True, reason="own_appointment")
     if assigned and body.action in {"appointment.read", "clinical.read", "clinical.write"}:
         return AccessDecision(allowed=True, reason="assigned_doctor")
     if admin and body.action in {"appointment.read", "appointment.cancel", "medicine.ready"}:
         return AccessDecision(allowed=True, reason="clinic_admin")
-    if "platform_admin" in subject.global_roles and body.action == "appointment.read":
+    if (
+        has_global_role(subject.global_roles, "platform_admin")
+        and body.action == "appointment.read"
+    ):
         return AccessDecision(allowed=True, reason="platform_admin")
     return AccessDecision(allowed=False, reason="not_authorized")

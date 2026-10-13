@@ -50,14 +50,15 @@ from sqlalchemy.orm import Session
 from app.database import get_session
 from app.models import ExampleItem
 
-@router.post('/example')  # Illustration only; add auth before exposing real writes.
+
+@router.post("/example")  # Illustration only; add auth before exposing real writes.
 def write_example(session: Session = Depends(get_session)):
     with session.begin():
-        item = ExampleItem(name='synthetic-example')
+        item = ExampleItem(name="synthetic-example")
         session.add(item)
         session.flush()
         item_id = item.id
-    return {'id': str(item_id)}
+    return {"id": str(item_id)}
 ```
 
 The dependency closes the session and rolls back unfinished transactions; it does not silently commit. `session.begin()` commits on success and rolls back on an exception. Do not share sessions across requests or call synchronous SQLAlchemy directly in an async handler. Future workers create their own session/transaction per job.

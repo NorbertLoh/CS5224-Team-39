@@ -19,16 +19,26 @@ def auth():
     jwk = json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(key.public_key()))
     jwk.update(kid="test-key", use="sig", alg="RS256")
     settings = Settings(
-        _env_file=None, environment="test", auth_issuer="http://localhost:4566/pool",
+        _env_file=None,
+        environment="test",
+        auth_issuer="http://localhost:4566/pool",
         auth_jwks_url="http://localhost:4566/pool/.well-known/jwks.json",
-        auth_client_id="web", auth_required_scopes="openid",
+        auth_client_id="web",
+        auth_required_scopes="openid",
     )
     app = create_app(settings)
     app.state.token_verifier.jwks.fetch_data = lambda: {"keys": [jwk]}
 
     def mint(**changes):
-        claims = dict(sub="patient", iss=settings.auth_issuer, exp=int(time.time()) + 300,
-                      iat=int(time.time()), token_use="access", client_id="web", scope="openid")
+        claims = dict(
+            sub="patient",
+            iss=settings.auth_issuer,
+            exp=int(time.time()) + 300,
+            iat=int(time.time()),
+            token_use="access",
+            client_id="web",
+            scope="openid",
+        )
         return jwt.encode(claims | changes, key, algorithm="RS256", headers={"kid": "test-key"})
 
     with TestClient(app) as client:
@@ -46,10 +56,18 @@ def test_access_token_and_missing_auth(auth):
     assert probe(client, mint()).json() == {"subject": "patient", "scopes": ["openid"]}
 
 
-@pytest.mark.parametrize("changes", [
-    {"iss": "http://localhost:4566/other"}, {"client_id": "other"}, {"token_use": "id"},
-    {"exp": 1}, {"exp": None}, {"iat": int(time.time()) + 3600}, {"sub": ""},
-])
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"iss": "http://localhost:4566/other"},
+        {"client_id": "other"},
+        {"token_use": "id"},
+        {"exp": 1},
+        {"exp": None},
+        {"iat": int(time.time()) + 3600},
+        {"sub": ""},
+    ],
+)
 def test_rejected_claims(auth, changes):
     client, mint, _ = auth
     response = probe(client, mint(**changes))
@@ -59,8 +77,9 @@ def test_rejected_claims(auth, changes):
 
 def test_signature_and_algorithm(auth):
     client, mint, _ = auth
-    forged = jwt.encode({"sub": "patient"}, "untrusted" * 4, algorithm="HS256",
-                        headers={"kid": "test-key"})
+    forged = jwt.encode(
+        {"sub": "patient"}, "untrusted" * 4, algorithm="HS256", headers={"kid": "test-key"}
+    )
     assert probe(client, forged).status_code == 401
     header, body, signature = mint().split(".")
     signature = ("A" if signature[0] != "A" else "B") + signature[1:]
@@ -90,6 +109,10 @@ def test_configuration_fails_closed():
         Settings(_env_file=None, auth_client_id="web")
     for environment in ("development", "demo", "production"):
         with pytest.raises(ValidationError):
-            Settings(_env_file=None, environment=environment, auth_client_id="web",
-                     auth_issuer="http://localhost:4566/pool",
-                     auth_jwks_url="http://floci:4566/pool/.well-known/jwks.json")
+            Settings(
+                _env_file=None,
+                environment=environment,
+                auth_client_id="web",
+                auth_issuer="http://localhost:4566/pool",
+                auth_jwks_url="http://floci:4566/pool/.well-known/jwks.json",
+            )

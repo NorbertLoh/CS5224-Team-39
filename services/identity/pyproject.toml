@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Identity-owned subjects, roles and clinic membership persistence"
 requires-python = ">=3.10"
 dependencies = [
+    "telelink-python-common==0.1.0",
     "SQLAlchemy>=2.0,<2.1", "alembic>=1.13,<2", "psycopg[binary]>=3.2,<4",
     "fastapi>=0.115,<1", "pydantic-settings>=2.6,<3", "uvicorn>=0.30,<1",
     "PyJWT[crypto]>=2.10,<3",

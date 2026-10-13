@@ -9,6 +9,7 @@ Run from this directory. Python 3.10 or newer is required; validation currently 
 ```powershell
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.lock.txt
+.venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation -e ../../packages/python_common
 .venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation -e .
 Copy-Item .env.example .env
 .venv\Scripts\python.exe -m app
@@ -40,7 +41,14 @@ Environment variables override `.env`. The `.env` is loaded relative to the work
 | `SERVICE_DATABASE_URL` | unset | Optional `postgresql+psycopg` URL; held as a secret setting |
 | `SERVICE_DATABASE_TIMEOUT_SECONDS` | `3` | Connection and statement timeout, 1-30 seconds |
 
-Invalid settings fail startup. Do not place provider credentials in frontend configuration. Authentication is not implemented by this template.
+Invalid settings fail startup. Do not place provider credentials in frontend configuration.
+Authentication and tenant/role checks now use the shared `telelink_common` package.
+See [A06 setup and verification](docs/access.md). The protected clinic access probe
+uses `SERVICE_IDENTITY_URL` to fetch current persisted permissions from identity.
+
+When copying this template, keep the shared dependency/imports instead of copying
+common infrastructure. Extend shared settings and retain service-owned models,
+migrations and routes. See [shared foundations](../../packages/python_common/README.md).
 
 ## Logging and correlation
 

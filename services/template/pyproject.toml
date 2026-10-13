@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Reusable FastAPI foundation for TeleLink business services"
 requires-python = ">=3.10"
 dependencies = [
+    "telelink-python-common==0.1.0",
     "fastapi>=0.115,<1",
     "pydantic-settings>=2.6,<3",
     "uvicorn>=0.30,<1",

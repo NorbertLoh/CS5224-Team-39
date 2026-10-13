@@ -3,8 +3,26 @@
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from starlette.exceptions import HTTPException
+
+
+class ErrorDetail(BaseModel):
+    field: str
+    code: str
+    message: str
+
+
+class ErrorBody(BaseModel):
+    code: str
+    message: str
+    request_id: str
+    details: list[ErrorDetail]
+
+
+class ErrorEnvelope(BaseModel):
+    error: ErrorBody
 
 
 class DomainError(HTTPException):

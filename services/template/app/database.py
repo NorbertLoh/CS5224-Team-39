@@ -3,30 +3,19 @@
 from collections.abc import Iterator
 
 from fastapi import HTTPException, Request
-from sqlalchemy import create_engine, select
+from sqlalchemy import select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+from telelink_common.database import create_postgres_engine
 
 from app.models import ExampleItem
 from app.settings import Settings
 
 
 def create_database_engine(settings: Settings, **kwargs) -> Engine:
-    if settings.database_url is None:
-        raise ValueError("SERVICE_DATABASE_URL is required for database operations")
-    return create_engine(
-        settings.database_url.get_secret_value(),
-        pool_pre_ping=True,
-        connect_args={
-            "connect_timeout": settings.database_timeout_seconds,
-            # Explicit model schemas own tables; avoid PostgreSQL's $user search_path
-            # making a same-named role/schema appear as the default during reflection.
-            "options": (
-                "-c search_path=public "
-                f"-c statement_timeout={settings.database_timeout_seconds * 1000}"
-            ),
-        },
-        hide_parameters=True,
+    return create_postgres_engine(
+        settings.database_url.get_secret_value() if settings.database_url is not None else None,
+        timeout_seconds=settings.database_timeout_seconds,
         **kwargs,
     )
 

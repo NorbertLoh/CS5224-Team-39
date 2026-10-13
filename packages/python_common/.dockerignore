@@ -1,0 +1,13 @@
+.venv
+venv
+.env
+.env.*
+!.env.example
+__pycache__
+**/__pycache__
+*.egg-info
+.pytest_cache
+.ruff_cache
+build
+dist
+*.log
