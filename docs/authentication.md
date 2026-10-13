@@ -136,7 +136,7 @@ revokes only the refresh token it creates, never prints tokens, and preserves
 seeded resources. It does not repeat the four-role/rejection/compatibility matrix.
 
 Verification: frontend lint/type/build and 14 passing tests; backend Ruff and
-17 passing service/authentication tests; real browser checks for all four roles
+19 passing service/authentication tests; real browser checks for all four roles
 against both the host API and the built, healthy API container. CI runs the
 frontend tests and focused backend authentication tests. The database integration
 test is skipped without its dedicated database URL, unrelated to A01–A03.

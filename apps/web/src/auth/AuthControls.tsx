@@ -1,21 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import {
-  authConfig,
-  beginLogin,
-  clearSession,
-  endSession,
-  finishLogin,
-  readSession,
-  refreshSession,
-} from './session'
-import type { Session } from './session'
 import { Button } from '../components/ui/button'
+import { authConfig, beginLogin, clearSession, endSession, finishLogin, readSession, refreshSession } from './session'
+import type { AuthConfig, Session } from './session'
 
-// A single callback exchange survives React StrictMode's effect replay.
+// Configuration is fixed for this Vite build. Callback work is shared across StrictMode mounts.
+let config: AuthConfig | null = null
+let configurationError = ''
+try {
+  config = authConfig()
+} catch (error) {
+  configurationError = (error as Error).message
+}
+const callbackSearch = location.pathname === '/auth/callback' ? location.search : null
 let callback: Promise<Session> | undefined
-const callbackSearch =
-  location.pathname === '/auth/callback' ? location.search : null
 const logoutWarning = sessionStorage.getItem('telelink.logout-warning') || ''
 sessionStorage.removeItem('telelink.logout-warning')
 
@@ -24,98 +22,83 @@ export function AuthControls() {
   const [session, setSession] = useState(readSession)
   const [message, setMessage] = useState(logoutWarning)
   const [busy, setBusy] = useState(false)
-  let config: ReturnType<typeof authConfig> = null
-  let configurationError = ''
-  try {
-    config = authConfig()
-  } catch (error) {
-    configurationError = (error as Error).message
-  }
-  const configured = Boolean(config)
+
+  const signOut = useCallback(
+    (notice = '') => {
+      clearSession()
+      queryClient.clear()
+      setSession(null)
+      setMessage(notice)
+    },
+    [queryClient],
+  )
 
   useEffect(() => {
-    if (!configured || callbackSearch === null) return
-    const settings = authConfig()!
-    callback ??= finishLogin(settings, callbackSearch)
-    // Strip OAuth credentials from address bar/history immediately.
+    if (!config || callbackSearch === null) return
+    callback ??= finishLogin(config, callbackSearch)
     history.replaceState(null, '', '/')
-    let active = true
+    let cancelled = false
     callback
       .then((value) => {
-        if (active) {
-          queryClient.clear()
-          setSession(value)
-          setMessage('Signed in.')
-        }
+        if (cancelled) return
+        queryClient.clear()
+        setSession(value)
+        setMessage('Signed in.')
       })
       .catch(() => {
-        if (active) {
-          clearSession()
-          queryClient.clear()
-          setSession(null)
-          setMessage('Sign-in failed or expired. Please try again.')
-        }
+        if (!cancelled) signOut('Sign-in failed or expired. Please try again.')
       })
     return () => {
-      active = false
+      cancelled = true
     }
-  }, [configured, queryClient])
+  }, [queryClient, signOut])
 
   useEffect(() => {
-    if (!configured || !session) return
-    let active = true
-    let refreshing = false
+    const settings = config
+    if (!settings || !session) return
+    let cancelled = false
     const check = async () => {
-      if (!active || refreshing || session.expiresAt - Date.now() > 60000)
-        return
-      refreshing = true
+      if (cancelled || session.expiresAt - Date.now() > 60000) return
       try {
-        const refreshed = await refreshSession(authConfig()!, session)
-        if (active) setSession(refreshed)
+        const renewed = await refreshSession(settings, session)
+        if (!cancelled) setSession(renewed)
       } catch {
-        if (active) {
-          clearSession()
-          queryClient.clear()
-          setSession(null)
-          setMessage('Your session expired. Please sign in again.')
-        }
-      } finally {
-        refreshing = false
+        if (!cancelled) signOut('Your session expired. Please sign in again.')
       }
     }
-    const timer = window.setInterval(() => {
-      void check()
-    }, 5000)
+    const timer = window.setInterval(check, 5000)
     window.addEventListener('focus', check)
     void check()
     return () => {
-      active = false
+      cancelled = true
       clearInterval(timer)
       window.removeEventListener('focus', check)
     }
-  }, [configured, queryClient, session])
+  }, [session, signOut])
 
-  async function login() {
+  async function handleClick() {
+    if (!config) return
     setBusy(true)
     try {
-      location.assign(await beginLogin(config!))
+      if (session) {
+        signOut()
+        location.assign(await endSession(config, session))
+      } else {
+        location.assign(await beginLogin(config))
+      }
     } catch {
       setBusy(false)
-      setMessage('Unable to start sign-in. Please try again.')
+      setMessage('Unable to complete sign-in or sign-out. Please try again.')
     }
   }
-  async function logout() {
-    setBusy(true)
-    queryClient.clear()
-    setSession(null)
-    location.assign(await endSession(config!, session))
-  }
-  if (!configured)
+
+  if (!config)
     return (
       <p role="status" className="text-sm text-muted-foreground">
         {configurationError || 'Configure Cognito to enable sign-in.'}
       </p>
     )
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <span role="status" className="text-sm">
@@ -124,7 +107,7 @@ export function AuthControls() {
       <Button
         disabled={busy}
         onClick={() => {
-          void (session ? logout() : login())
+          void handleClick()
         }}
       >
         {session ? 'Sign out' : 'Sign in'}

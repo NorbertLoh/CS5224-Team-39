@@ -17,7 +17,9 @@ export interface Session {
 
 const pendingKey = 'telelink.pkce'
 const sessionKey = 'telelink.session'
-const maxAge = 10 * 60 * 1000
+const pendingLifetime = 10 * 60 * 1000
+const expiredMessage = 'Your session expired. Please sign in again.'
+const refreshes = new WeakMap<Storage, Promise<Session>>()
 
 function base64url(bytes: Uint8Array): string {
   return btoa(String.fromCharCode(...bytes))
@@ -27,11 +29,8 @@ function base64url(bytes: Uint8Array): string {
 }
 
 export async function pkceChallenge(verifier: string): Promise<string> {
-  return base64url(
-    new Uint8Array(
-      await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)),
-    ),
-  )
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))
+  return base64url(new Uint8Array(digest))
 }
 
 function random(): string {
@@ -44,25 +43,14 @@ export function authConfig(): AuthConfig | null {
   const issuer = env.VITE_COGNITO_ISSUER
   const oauth = env.VITE_COGNITO_OAUTH_BASE_URL
   const api = env.VITE_COGNITO_API_URL
-  if (!issuer || !oauth || !api)
-    throw new Error('Complete the Cognito environment configuration.')
+  if (!issuer || !oauth || !api) throw new Error('Complete the Cognito environment configuration.')
+
   for (const value of [issuer, oauth, api]) {
     const url = new URL(value)
-    if (
-      url.username ||
-      url.password ||
-      url.search ||
-      url.hash ||
-      (url.protocol !== 'https:' &&
-        !(
-          import.meta.env.DEV &&
-          url.protocol === 'http:' &&
-          ['localhost', '127.0.0.1'].includes(url.hostname)
-        ))
-    ) {
-      throw new Error(
-        'Cognito URLs require HTTPS, or localhost HTTP in development.',
-      )
+    const localHttp = env.DEV && url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname)
+    const hasExtras = url.username || url.password || url.search || url.hash
+    if (hasExtras || (url.protocol !== 'https:' && !localHttp)) {
+      throw new Error('Cognito URLs require HTTPS, or localhost HTTP in development.')
     }
   }
   const base = oauth.replace(/\/+$/, '')
@@ -78,17 +66,90 @@ export function authConfig(): AuthConfig | null {
   }
 }
 
-export async function beginLogin(
-  config: AuthConfig,
-  storage: Storage = sessionStorage,
-): Promise<string> {
+function readStored(key: string, storage: Storage) {
+  try {
+    return JSON.parse(storage.getItem(key) || 'null')
+  } catch {
+    return null
+  }
+}
+
+export function readSession(storage: Storage = sessionStorage): Session | null {
+  const session = readStored(sessionKey, storage)
+  if (
+    session &&
+    typeof session.accessToken === 'string' &&
+    typeof session.refreshToken === 'string' &&
+    Number.isFinite(session.expiresAt)
+  )
+    return session
+  storage.removeItem(sessionKey)
+  return null
+}
+
+export function clearSession(storage: Storage = sessionStorage): void {
+  storage.removeItem(sessionKey)
+  storage.removeItem(pendingKey)
+}
+
+function saveSession(session: Session, storage: Storage): Session {
+  storage.setItem(sessionKey, JSON.stringify(session))
+  return session
+}
+
+async function post(url: string, body: BodyInit, headers: Record<string, string>): Promise<Response> {
+  const response = await fetch(url, {
+    method: 'POST',
+    body,
+    headers,
+    credentials: 'omit',
+    cache: 'no-store',
+    redirect: 'error',
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!response.ok) throw new Error('Authentication request failed. Please sign in again.')
+  return response
+}
+
+function cognito(config: AuthConfig, action: string, body: object): Promise<Response> {
+  return post(config.apiUrl, JSON.stringify(body), {
+    'Content-Type': 'application/x-amz-json-1.1',
+    'X-Amz-Target': `AWSCognitoIdentityProviderService.${action}`,
+  })
+}
+
+function validateSession(config: AuthConfig, accessToken: unknown, refreshToken: unknown, expiresIn: unknown): Session {
+  if (
+    typeof accessToken !== 'string' ||
+    typeof refreshToken !== 'string' ||
+    !refreshToken ||
+    typeof expiresIn !== 'number' ||
+    !Number.isFinite(expiresIn) ||
+    expiresIn <= 0
+  ) {
+    throw new Error('Invalid sign-in response. Please sign in again.')
+  }
+  // Browser checks catch configuration mistakes; the API verifies the signature.
+  const payload = accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+  const bytes = Uint8Array.from(atob(payload), (character) => character.charCodeAt(0))
+  const claims = JSON.parse(new TextDecoder().decode(bytes))
+  if (
+    claims.iss !== config.issuer ||
+    claims.client_id !== config.clientId ||
+    claims.token_use !== 'access' ||
+    typeof claims.exp !== 'number' ||
+    claims.exp * 1000 <= Date.now()
+  ) {
+    throw new Error('Invalid access token. Please sign in again.')
+  }
+  return { accessToken, refreshToken, expiresAt: Math.min(claims.exp * 1000, Date.now() + expiresIn * 1000) }
+}
+
+export async function beginLogin(config: AuthConfig, storage: Storage = sessionStorage): Promise<string> {
   const verifier = random()
   const state = random()
   const challenge = await pkceChallenge(verifier)
-  storage.setItem(
-    pendingKey,
-    JSON.stringify({ verifier, state, createdAt: Date.now() }),
-  )
+  storage.setItem(pendingKey, JSON.stringify({ verifier, state, createdAt: Date.now() }))
   const url = new URL(config.authorizeUrl)
   url.search = new URLSearchParams({
     client_id: config.clientId,
@@ -102,136 +163,42 @@ export async function beginLogin(
   return url.toString()
 }
 
-function validateSession(
-  config: AuthConfig,
-  accessToken: unknown,
-  refreshToken: unknown,
-  expiresIn: unknown,
-): Session {
-  if (
-    typeof accessToken !== 'string' ||
-    typeof refreshToken !== 'string' ||
-    !refreshToken ||
-    typeof expiresIn !== 'number' ||
-    !Number.isFinite(expiresIn) ||
-    expiresIn <= 0
-  ) {
-    throw new Error('Invalid sign-in response. Please sign in again.')
-  }
-  // These checks catch configuration/response mistakes. The API verifies the signature.
-  const part = accessToken.split('.')[1]
-  const claims = JSON.parse(
-    new TextDecoder().decode(
-      Uint8Array.from(atob(part.replace(/-/g, '+').replace(/_/g, '/')), (c) =>
-        c.charCodeAt(0),
-      ),
-    ),
-  )
-  if (
-    claims.iss !== config.issuer ||
-    claims.client_id !== config.clientId ||
-    claims.token_use !== 'access' ||
-    typeof claims.exp !== 'number' ||
-    claims.exp * 1000 <= Date.now()
-  )
-    throw new Error('Invalid access token. Please sign in again.')
-  return {
-    accessToken,
-    refreshToken,
-    expiresAt: Math.min(claims.exp * 1000, Date.now() + expiresIn * 1000),
-  }
-}
-
 export async function finishLogin(
   config: AuthConfig,
   search: string,
   storage: Storage = sessionStorage,
 ): Promise<Session> {
-  const raw = storage.getItem(pendingKey)
-  storage.removeItem(pendingKey) // one attempt; replay requires a new login
+  const pending = readStored(pendingKey, storage)
+  storage.removeItem(pendingKey) // Consume once, including failed attempts.
   const params = new URLSearchParams(search)
-  const pending = raw ? JSON.parse(raw) : null
+  const age = Date.now() - pending?.createdAt
   if (
     !pending ||
     typeof pending.verifier !== 'string' ||
     !Number.isFinite(pending.createdAt) ||
-    Date.now() < pending.createdAt ||
-    Date.now() - pending.createdAt > maxAge ||
+    age < 0 ||
+    age > pendingLifetime ||
     !params.get('state') ||
     params.get('state') !== pending.state
-  )
+  ) {
     throw new Error('Sign-in expired or state did not match. Please try again.')
-  if (params.has('error') || !params.get('code'))
-    throw new Error('Sign-in was not completed. Please try again.')
-  const response = await fetch(config.tokenUrl, {
-    method: 'POST',
-    credentials: 'omit',
-    cache: 'no-store',
-    redirect: 'error',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
+  }
+  const code = params.get('code')
+  if (params.has('error') || !code) throw new Error('Sign-in was not completed. Please try again.')
+  const response = await post(
+    config.tokenUrl,
+    new URLSearchParams({
       grant_type: 'authorization_code',
       client_id: config.clientId,
       redirect_uri: config.redirectUri,
-      code: params.get('code')!,
+      code,
       code_verifier: pending.verifier,
     }),
-    signal: AbortSignal.timeout(15000),
-  })
-  if (!response.ok) throw new Error('Sign-in failed. Please try again.')
-  const data = await response.json()
-  const session = validateSession(
-    config,
-    data.access_token,
-    data.refresh_token,
-    data.expires_in,
+    { 'Content-Type': 'application/x-www-form-urlencoded' },
   )
-  storage.setItem(sessionKey, JSON.stringify(session))
-  return session
+  const tokens = await response.json()
+  return saveSession(validateSession(config, tokens.access_token, tokens.refresh_token, tokens.expires_in), storage)
 }
-
-export function readSession(storage: Storage = sessionStorage): Session | null {
-  try {
-    const data = JSON.parse(storage.getItem(sessionKey) || 'null')
-    if (
-      data &&
-      typeof data.accessToken === 'string' &&
-      typeof data.refreshToken === 'string' &&
-      Number.isFinite(data.expiresAt)
-    )
-      return data
-  } catch {
-    /* corrupt storage is a signed-out session */
-  }
-  storage.removeItem(sessionKey)
-  return null
-}
-
-export function clearSession(storage: Storage = sessionStorage): void {
-  storage.removeItem(sessionKey)
-  storage.removeItem(pendingKey)
-}
-
-async function cognito(
-  config: AuthConfig,
-  action: string,
-  body: object,
-): Promise<Response> {
-  return fetch(config.apiUrl, {
-    method: 'POST',
-    credentials: 'omit',
-    cache: 'no-store',
-    redirect: 'error',
-    headers: {
-      'Content-Type': 'application/x-amz-json-1.1',
-      'X-Amz-Target': `AWSCognitoIdentityProviderService.${action}`,
-    },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(15000),
-  })
-}
-
-const refreshes = new WeakMap<Storage, Promise<Session>>()
 
 export function refreshSession(
   config: AuthConfig,
@@ -240,37 +207,34 @@ export function refreshSession(
 ): Promise<Session> {
   const existing = refreshes.get(storage)
   if (existing) return existing
-  const pending = performRefresh(config, session, storage).finally(() => {
-    refreshes.delete(storage)
-  })
+  const pending = performRefresh(config, session, storage).finally(() => refreshes.delete(storage))
   refreshes.set(storage, pending)
   return pending
 }
 
-async function performRefresh(
-  config: AuthConfig,
-  session: Session,
-  storage: Storage,
-): Promise<Session> {
+async function performRefresh(config: AuthConfig, session: Session, storage: Storage): Promise<Session> {
   const previous = storage.getItem(sessionKey)
-  const response = await cognito(config, 'InitiateAuth', {
-    AuthFlow: 'REFRESH_TOKEN_AUTH',
-    ClientId: config.clientId,
-    AuthParameters: { REFRESH_TOKEN: session.refreshToken },
-  })
-  if (!response.ok)
-    throw new Error('Your session expired. Please sign in again.')
-  const data = (await response.json()).AuthenticationResult
+  if (!previous) throw new Error('Session changed during refresh.')
+  let response: Response
+  try {
+    response = await cognito(config, 'InitiateAuth', {
+      AuthFlow: 'REFRESH_TOKEN_AUTH',
+      ClientId: config.clientId,
+      AuthParameters: { REFRESH_TOKEN: session.refreshToken },
+    })
+  } catch {
+    throw new Error(expiredMessage)
+  }
+  const tokens = (await response.json()).AuthenticationResult
   const refreshed = validateSession(
     config,
-    data?.AccessToken,
-    data?.RefreshToken || session.refreshToken,
-    data?.ExpiresIn,
+    tokens?.AccessToken,
+    tokens?.RefreshToken || session.refreshToken,
+    tokens?.ExpiresIn,
   )
-  if (storage.getItem(sessionKey) !== previous)
-    throw new Error('Session changed during refresh.')
-  storage.setItem(sessionKey, JSON.stringify(refreshed))
-  return refreshed
+  // A late refresh must never undo logout or overwrite a newer session.
+  if (storage.getItem(sessionKey) !== previous) throw new Error('Session changed during refresh.')
+  return saveSession(refreshed, storage)
 }
 
 export async function endSession(
@@ -279,28 +243,12 @@ export async function endSession(
   storage: Storage = sessionStorage,
 ): Promise<string> {
   clearSession(storage)
-  let revoked = true
   try {
-    if (session)
-      revoked = (
-        await cognito(config, 'RevokeToken', {
-          ClientId: config.clientId,
-          Token: session.refreshToken,
-        })
-      ).ok
+    if (session) await cognito(config, 'RevokeToken', { ClientId: config.clientId, Token: session.refreshToken })
   } catch {
-    revoked = false
+    storage.setItem('telelink.logout-warning', 'Signed out locally. Token revocation could not be confirmed.')
   }
-  // Clear local credentials even if revocation is unavailable; still end hosted login.
-  if (!revoked)
-    storage.setItem(
-      'telelink.logout-warning',
-      'Signed out locally. Token revocation could not be confirmed.',
-    )
   const url = new URL(config.logoutUrl)
-  url.search = new URLSearchParams({
-    client_id: config.clientId,
-    logout_uri: config.logoutUri,
-  }).toString()
+  url.search = new URLSearchParams({ client_id: config.clientId, logout_uri: config.logoutUri }).toString()
   return url.toString()
 }

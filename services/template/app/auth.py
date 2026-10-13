@@ -39,27 +39,25 @@ class TokenVerifier:
                 raise jwt.InvalidTokenError("invalid signing header")
             key = self.jwks.get_signing_key_from_jwt(token)
             claims = jwt.decode(
-                token,
-                key.key,
-                algorithms=["RS256"],
+                token, key.key, algorithms=["RS256"],
                 issuer=self.settings.auth_issuer,
                 options={
                     "require": ["exp", "iat", "iss", "sub", "token_use", "client_id"],
                     "verify_aud": False,
                 },
             )
-            if (
-                claims["token_use"] != "access"
-                or claims["client_id"] != self.settings.auth_client_id
-            ):
-                raise jwt.InvalidTokenError("invalid token purpose or client")
+            if claims["token_use"] != "access":
+                raise jwt.InvalidTokenError("API requires an access token")
+            if claims["client_id"] != self.settings.auth_client_id:
+                raise jwt.InvalidTokenError("access token belongs to another client")
             if not isinstance(claims["sub"], str) or not claims["sub"]:
                 raise jwt.InvalidTokenError("invalid subject")
             scope = claims.get("scope", "")
             if not isinstance(scope, str):
                 raise jwt.InvalidTokenError("invalid scope")
             scopes = frozenset(scope.split())
-            if not set(self.settings.auth_required_scopes.split()).issubset(scopes):
+            required_scopes = set(self.settings.auth_required_scopes.split())
+            if not required_scopes.issubset(scopes):
                 raise HTTPException(403, "Insufficient access token scope")
             return Principal(subject=claims["sub"], scopes=scopes)
         except PyJWKClientConnectionError:
