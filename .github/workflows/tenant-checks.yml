@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - 'services/tenant/**'
+      - 'services/identity/**'
       - 'packages/python_common/**'
       - '.github/workflows/tenant-checks.yml'
   pull_request:
     paths:
       - 'services/tenant/**'
+      - 'services/identity/**'
       - 'packages/python_common/**'
       - '.github/workflows/tenant-checks.yml'
 

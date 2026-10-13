@@ -36,6 +36,19 @@ def database():
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         command.check(config)
+        # A08 is additive: rolling back just 0002 preserves the A07 clinic rows.
+        clinic_id = create_clinic(engine)
+        command.downgrade(config, "0001")
+        with engine.connect() as connection:
+            assert (
+                connection.scalar(
+                    text("SELECT tenant_id FROM tenant.clinics WHERE tenant_id=:id"),
+                    {"id": clinic_id},
+                )
+                == clinic_id
+            )
+        command.upgrade(config, "head")
+        command.check(config)
         assert inspect(engine).get_table_names(schema="tenant") == ["alembic_version", "clinics"]
         yield engine
         command.downgrade(config, "base")
@@ -183,6 +196,7 @@ def test_unique_immutable_slug_and_rollback(database):
         "consultation_price_minor",
         "currency",
         "commission_bps",
+        "membership_provisioned",
     ],
 )
 def test_required_fields_in_direct_sql(database, column):

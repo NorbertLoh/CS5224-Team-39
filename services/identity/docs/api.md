@@ -19,6 +19,15 @@ Ingress strips `/api/v1/identity`; direct service routes are:
 | PUT `/clinics/{tenant_id}/memberships/{subject_id}` | Same admins; only `{ "roles": ["doctor"] }`; target subject and clinic must exist; 201 creates, 200 replaces roles/reactivates existing membership |
 | DELETE `/clinics/{tenant_id}/memberships/{subject_id}` | Same admins; revokes and retains the row; 204 with no body, including repeated/absent-membership revocation |
 | POST `/access-decisions` | **Internal only**; scheduling service JWT, server-side action allowlist and trusted scheduling resource context; returns allow/deny with a safe reason |
+| PUT `/internal/clinic-creators` | **A08 internal only**; tenant service JWT, body `{ "tenant_id": "UUID", "subject_id": "UUID" }`. Idempotently assigns the creator's clinic-admin membership; cannot accept arbitrary roles or reactivate a revoked/demoted membership. |
+
+A08 creator provisioning uses a separate `SERVICE_TENANT_SECRET` shared with tenant,
+at least 32 bytes and distinct from cursor/scheduling secrets. JWT issuer is
+`telelink-service:tenant`, audience `telelink-identity-provisioning`, subject
+`tenant`, with integer `iat`/`exp` and a maximum five-minute lifetime. Missing or
+wrong service credentials are rejected. Tenant owns clinic existence/creator
+verification; this narrowly scoped route does not use the local clinic fixture
+adapter or read/write tenant tables. General staff integration remains A10.
 
 Unrelated/revoked clinic admins receive concealed 404 responses before clinic
 lookup, including on collection/mutation routes. Platform administration does not

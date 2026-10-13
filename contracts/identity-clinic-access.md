@@ -62,12 +62,20 @@ administrative review details. An admin profile includes all clinic fields plus
 | GET `/clinics` | Public active profiles, C01 pagination; order `name`, `tenant_id` ascending | Public |
 | GET `/clinics/by-slug/{slug}` | Active public profile; 200, otherwise 404 | Public |
 | GET `/clinics/{tenant_id}/doctors` | Active doctors: `doctor_id`, `display_name`; C01 pagination, order `display_name`, `doctor_id` ascending | Public for active clinic; no membership IDs or private identity fields |
-| POST `/clinics` | `slug`, `name`, `branding`, `consultation_price`; admin profile, 201; server sets pending_review, commission default 0 | Verified subject; server assigns creator's admin membership |
+| POST `/clinics` | `slug`, `name`, `branding`, `consultation_price`; admin profile, 201 (200 for identical same-creator retry); server sets pending_review, commission default 0 | Verified subject; server assigns creator's admin membership |
 | GET `/clinics/{tenant_id}` | Admin profile; 200 | Active clinic admin or platform admin |
 | PATCH `/clinics/{tenant_id}` | Optional `name`, complete `branding`, `consultation_price`; admin profile, 200 | Active clinic admin or platform admin; no status/commission input |
 | GET `/admin/clinics` | Admin profiles; optional `status`, C01 pagination ordered `created_at`, `tenant_id` ascending | Platform admin |
 | POST `/clinics/{tenant_id}/review` | `decision` (`approve`, `reject`, `suspend`), `reason` (required nonempty text for reject/suspend, otherwise null); admin profile, 200 | Platform admin |
 | PUT `/clinics/{tenant_id}/commission` | `{ "commission_bps": 1000 }`; admin profile, 200 | Platform admin; audit previous/new value |
+
+A08 creation commits a pending clinic before provisioning the creator membership.
+If provisioning fails, 503 instructs the same creator to retry the identical slug
+and payload; the clinic stays hidden and non-bookable until acknowledged.
+Identical retries reuse the clinic/membership; after successful provisioning they
+also require the creator's current admin access. Other duplicate slugs or changed
+creation payloads return 409 `slug_taken`. Revoked creators cannot use this retry
+to restore membership or read the admin profile.
 
 Review transitions: pending_review -> active/rejected; rejected -> active on
 explicit approval; active -> suspended; suspended -> active on approval. A

@@ -86,7 +86,7 @@ def install_error_handlers(app):
 
     @app.exception_handler(SQLAlchemyError)
     async def database_error(request: Request, error: SQLAlchemyError):
-        return error_response(request, 503, "unavailable", "Identity storage is unavailable.")
+        return error_response(request, 503, "unavailable", "Service storage is unavailable.")
 
     @app.exception_handler(Exception)
     async def unexpected_error(request: Request, error: Exception):
