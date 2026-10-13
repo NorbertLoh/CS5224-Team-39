@@ -2,8 +2,8 @@
 
 Merged PR #49 completes browser PKCE login, session renewal/logout,
 and reusable FastAPI access-token verification; issues #46–#48 are closed.
-F16's authentication dependencies are ready. Its wider API and persistence audit
-remains separate.
+F16's authentication dependencies are ready. Its wider API and persistence
+results are recorded in [Floci verification](floci-verification.md).
 
 ## Local setup
 
@@ -113,10 +113,14 @@ Verified 13 October 2026 with the real pinned container and seeded users:
 - Hosted logout clears the cookie but does not itself revoke tokens. Explicit
   `RevokeToken` rejects later refresh. Offline JWT verification cannot detect
   revocation of already-issued access tokens; they remain valid until expiry.
+  **F16 found that revocation is lost on restart in Floci 2.2.0**: its persisted
+  token store fails to deserialize, so previously revoked refresh tokens become
+  usable again. This is an accepted local limitation; real AWS verification is
+  tracked in [issue #54](https://github.com/NorbertLoh/CS5224-Team-39/issues/54).
 
 Floci does not apply refresh-token rotation and keeps hosted login sessions in
-memory. F16 should distinguish resource persistence from session-cookie state,
-then re-run the live check after restart. Real Cognito rotation, recovery/MFA,
+memory. F16 verified retained resources/keys and access/refresh token use across
+restart/recreation; the hosted cookie required sign-in again. Real Cognito rotation, recovery/MFA,
 revocation enforcement and connected-profile flows still need AWS verification.
 See [pinned Floci documentation](https://github.com/floci-io/floci/blob/2.2.0/docs/services/cognito.md)
 and [Cognito access-token claims](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-access-token.html).

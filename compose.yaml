@@ -63,7 +63,7 @@ services:
       - ./dev/floci:/bootstrap:ro
 
   floci:
-    image: ${FLOCI_IMAGE:-floci/floci:2.2.0}
+    image: ${FLOCI_IMAGE:-floci/floci:2.2.0@sha256:e97cd0c1dc2aa14e7697fb5ef5018404c4d6345169dbd276315f0bed2c7b0520}
     profiles: ["offline"]
     environment:
       FLOCI_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-southeast-1}
