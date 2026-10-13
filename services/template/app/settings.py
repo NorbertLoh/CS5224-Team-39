@@ -47,17 +47,15 @@ class Settings(BaseSettings):
                 )
             if url.scheme not in {"http", "https"} or not url.hostname:
                 raise ValueError("authentication URLs must be absolute HTTP(S) URLs")
-        if self.environment not in {"local", "test"}:
-            if (
-                not re.fullmatch(
-                    r"https://cognito-idp\.[a-z0-9-]+\.amazonaws\.com(?:\.cn)?/[A-Za-z0-9_-]+",
-                    self.auth_issuer,
-                )
-                or self.auth_jwks_url != self.auth_issuer + "/.well-known/jwks.json"
-            ):
-                raise ValueError(
-                    "non-local environments require an AWS Cognito issuer and its JWKS"
-                )
+        if self.environment in {"local", "test"}:
+            return self
+        aws_issuer = re.fullmatch(
+            r"https://cognito-idp\.[a-z0-9-]+\.amazonaws\.com(?:\.cn)?/[A-Za-z0-9_-]+",
+            self.auth_issuer,
+        )
+        expected_jwks = self.auth_issuer + "/.well-known/jwks.json"
+        if not aws_issuer or self.auth_jwks_url != expected_jwks:
+            raise ValueError("non-local environments require an AWS Cognito issuer and its JWKS")
         return self
 
     @field_validator("database_url")

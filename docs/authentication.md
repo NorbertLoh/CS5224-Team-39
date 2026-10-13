@@ -121,21 +121,22 @@ revocation enforcement and connected-profile flows still need AWS verification.
 See [pinned Floci documentation](https://github.com/floci-io/floci/blob/2.2.0/docs/services/cognito.md)
 and [Cognito access-token claims](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-access-token.html).
 
-Run the reproducible live check with the configured host/container API running:
+Run the simple patient smoke check with the configured host/container API running.
+It checks PKCE login, authenticated API access, refresh and logout; the earlier
+four-role compatibility findings above record the original verification.
 
 ```powershell
 $env:COGNITO_CLIENT_ID='<printed client ID>'
-$env:AUTH_CHECK_API='http://localhost:8000/auth/session'
 services/template/.venv/Scripts/python.exe dev/floci/check_auth.py
 ```
 
-Optional variables: `AUTH_CHECK_ENDPOINT` (loopback only),
-`COGNITO_CALLBACK_URL`, `COGNITO_LOGOUT_URL` and `AUTH_CHECK_API`.
-The check uses only synthetic local users, revokes only the fresh tokens it
-creates, never prints credentials/tokens, and preserves seeded resources.
+The smoke check uses the standard localhost ports (Floci 4566, frontend 5173,
+API 8000) and needs only `COGNITO_CLIENT_ID`. It uses the synthetic patient,
+revokes only the refresh token it creates, never prints tokens, and preserves
+seeded resources. It does not repeat the four-role/rejection/compatibility matrix.
 
 Verification: frontend lint/type/build and 14 passing tests; backend Ruff and
-17 passing service/authentication tests; real browser checks for all four roles
+19 passing service/authentication tests; real browser checks for all four roles
 against both the host API and the built, healthy API container. CI runs the
 frontend tests and focused backend authentication tests. The database integration
 test is skipped without its dedicated database URL, unrelated to A01–A03.
