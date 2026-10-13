@@ -1,4 +1,4 @@
-# A08 clinic APIs
+# A08/A09 clinic APIs
 
 Direct routes below have no prefix. Ingress strips `/api/v1/tenant`; set
 `SERVICE_ROOT_PATH=/api/v1/tenant` for externally generated URLs/OpenAPI.
@@ -11,6 +11,9 @@ Direct routes below have no prefix. Ingress strips `/api/v1/tenant`; set
 | GET `/clinics/{tenant_id}` | Current active owning-clinic admin or platform admin; includes commission/review reason. |
 | PATCH `/clinics/{tenant_id}` | Same admins. At least one of name, complete branding, complete consultation price. No null fields or status/slug/commission writes. |
 | GET `/internal/clinics/{tenant_id}/booking-profile` | Scheduling service only. Active + provisioned clinic returns public profile and trusted price; inactive/unprovisioned returns 409 `clinic_not_active`, missing clinic 404. |
+| GET `/admin/clinics` | Platform admin only; all admin profiles, optional status filter, limit/cursor; ordered creation time/tenant ID. |
+| POST `/clinics/{tenant_id}/review` | Platform admin only; decision approve/reject/suspend, with required plain-text reason for reject/suspend. Returns admin profile. |
+| PUT `/clinics/{tenant_id}/commission` | Platform admin only; strict integer commission_bps from 0 to 10000. Returns admin profile. |
 
 Public profiles omit commission, review reason and internal provisioning fields.
 Creation validates lowercase hyphenated slugs (100 chars), nonblank names (200),
@@ -19,6 +22,37 @@ branding color, HTTPS logo URLs without credentials (2048), plain-text descripti
 Authentication verifies access-token signature/issuer/expiry/token use/client
 before querying identity `/me`; roles are current server-controlled memberships.
 Unrelated and revoked admins get 404. No permission cache is used.
+
+## Platform review and commission (A09)
+
+Platform permissions come from current identity records, not Cognito groups or
+clinic-admin membership. Other roles receive 403 on these platform routes.
+
+Review transitions follow C02: pending review can be approved or rejected;
+rejected/suspended clinics can be approved; active clinics can be suspended.
+Other transitions return 409 `invalid_clinic_transition`. Approvals accept no
+reason; rejection/suspension requires a nonblank plain-text reason up to 2000
+characters. Approval clears the current review reason while keeping past reasons
+in the audit trail. Approval does not bypass unfinished creator provisioning.
+
+Each review/commission change locks the clinic row and writes an audit event in
+the same PostgreSQL transaction. An audit failure rolls back the clinic change.
+Concurrent identical requests produce one change/event. A review decision matching
+the current status returns the unchanged profile, even if another reason is
+supplied. Setting the same commission is also a no-op, preserving the timestamp.
+Commission changes affect the current rate; billing must snapshot it at checkout
+and keep historical payment amounts unchanged.
+
+Audit events store actor subject UUID, tenant UUID, action, previous/new values,
+reason and UTC timestamp in `tenant.audit_events`. They are service-local records
+with no EventBridge routing/publication in this task. There is no audit-edit API;
+normal SQL UPDATE/DELETE is rejected. Migration downgrade deliberately removes
+this table, so the documented test commands require a disposable database.
+
+The admin list includes pending/unprovisioned clinics for review. Its signed
+cursors expire after 15 minutes and bind to the actor, status filter and creation/
+ID ordering; public-list cursors cannot be reused here. Each page checks current
+platform permissions. No additional secrets or configuration are required for A09.
 
 ## Retryable creation
 
@@ -74,7 +108,7 @@ for identity with issuer `telelink-service:tenant`, audience
 User tokens and other service audiences cannot use these internal routes.
 
 `/health/live`, `/health/ready`, `/docs` and `/openapi.json` are available directly.
-Readiness checks required local configuration and tenant migration 0002; it does
+Readiness checks required local configuration and tenant migration 0003; it does
 not promise upstream identity availability. C01 error envelopes and correlation
 headers apply; errors and request logs omit credentials and input values.
 The public-list cursors expire in 15 minutes and bind to the active/provisioned
@@ -82,8 +116,7 @@ filter and name/ID ordering. Tampered/expired cursors return 422.
 
 ## Remaining integration
 
-A09 owns approve/reject/suspend and commission changes with auditing. This task
-provides no status-edit bypass. A10 owns general staff administration and the
+A09 review and commission APIs are implemented. A10 owns general staff administration and the
 public doctor directory. S02/S03 must enforce this eligibility gate in actual
 slot/hold/booking flows; these services are not implemented by A08. No frontend
 or shared Compose/routing changes are included.

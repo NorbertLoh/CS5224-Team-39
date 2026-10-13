@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
@@ -12,13 +13,15 @@ from alembic import command
 from alembic.config import Config
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from telelink_common.access import IdentityClient
 
+from app import admin
 from app.database import create_database_engine
 from app.main import create_app
-from app.models import Clinic
+from app.models import AuditEvent, Clinic
 from app.settings import Settings
 
 CURSOR = "cursor-secret-for-tests-at-least-32-bytes"
@@ -180,6 +183,7 @@ def api(api_database):
             state=state,
             memberships=memberships,
             app=app,
+            ids=ids,
         )
 
 
@@ -363,3 +367,289 @@ def test_health_and_unconfigured_authentication():
         assert client.get("/health/live").status_code == 200
         assert client.get("/health/ready").status_code == 503
         assert client.post("/clinics", json=body()).status_code == 401
+
+
+def audit_events(api, tenant_id):
+    with Session(api.engine) as session:
+        return session.scalars(
+            select(AuditEvent)
+            .where(AuditEvent.tenant_id == tenant_id)
+            .order_by(AuditEvent.occurred_at, AuditEvent.event_id)
+        ).all()
+
+
+def create_for_review(api, status="pending_review"):
+    clinic = api.client.post("/clinics", json=body(), headers=api.user()).json()
+    if status != "pending_review":
+        activate(api, clinic["tenant_id"], status=status)
+    return clinic["tenant_id"]
+
+
+@pytest.mark.parametrize(
+    "initial,decision,target",
+    [
+        ("pending_review", "approve", "active"),
+        ("pending_review", "reject", "rejected"),
+        ("pending_review", "suspend", None),
+        ("active", "approve", "active"),
+        ("active", "reject", None),
+        ("active", "suspend", "suspended"),
+        ("rejected", "approve", "active"),
+        ("rejected", "reject", "rejected"),
+        ("rejected", "suspend", None),
+        ("suspended", "approve", "active"),
+        ("suspended", "reject", None),
+        ("suspended", "suspend", "suspended"),
+    ],
+)
+def test_review_transition_contract(api, initial, decision, target):
+    tenant_id = create_for_review(api, initial)
+    payload = {
+        "decision": decision,
+        "reason": None if decision == "approve" else "Synthetic reason",
+    }
+    response = api.client.post(
+        f"/clinics/{tenant_id}/review", json=payload, headers=api.user("platform")
+    )
+    events = audit_events(api, tenant_id)
+    if target is None:
+        assert response.status_code == 409
+        assert response.json()["error"]["code"] == "invalid_clinic_transition"
+        assert not events
+    else:
+        assert response.status_code == 200 and response.json()["status"] == target
+        assert len(events) == (0 if initial == target else 1)
+        if events:
+            event = events[0]
+            assert event.actor_subject_id == api.ids["platform"]
+            assert event.previous_values["status"] == initial
+            assert event.new_values == {"status": target, "review_reason": payload["reason"]}
+            assert event.reason == payload["reason"]
+            assert event.occurred_at.utcoffset().total_seconds() == 0
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"decision": "reject"},
+        {"decision": "suspend", "reason": "  "},
+        {"decision": "approve", "reason": "Not allowed"},
+        {"decision": "unknown"},
+        {"decision": "reject", "reason": "<b>HTML</b>"},
+        {"decision": "approve", "actor_subject_id": str(uuid4())},
+    ],
+)
+def test_review_input_validation(api, payload):
+    tenant_id = create_for_review(api)
+    assert (
+        api.client.post(
+            f"/clinics/{tenant_id}/review", json=payload, headers=api.user("platform")
+        ).status_code
+        == 422
+    )
+    assert not audit_events(api, tenant_id)
+
+
+@pytest.mark.parametrize("role", ["creator", "other", "doctor"])
+def test_platform_routes_reject_other_roles(api, role):
+    tenant_id = create_for_review(api)
+    credential = api.user(role)
+    assert api.client.get("/admin/clinics", headers=credential).status_code == 403
+    assert (
+        api.client.post(
+            f"/clinics/{tenant_id}/review", json={"decision": "approve"}, headers=credential
+        ).status_code
+        == 403
+    )
+    assert (
+        api.client.put(
+            f"/clinics/{tenant_id}/commission", json={"commission_bps": 1000}, headers=credential
+        ).status_code
+        == 403
+    )
+    assert not audit_events(api, tenant_id)
+
+
+@pytest.mark.parametrize("value", [-1, 10001, True, 100.5, "1000", None])
+def test_commission_validation(api, value):
+    tenant_id = create_for_review(api)
+    assert (
+        api.client.put(
+            f"/clinics/{tenant_id}/commission",
+            json={"commission_bps": value},
+            headers=api.user("platform"),
+        ).status_code
+        == 422
+    )
+    assert not audit_events(api, tenant_id)
+
+
+def test_commission_changes_are_audited_and_retries_are_noops(api):
+    tenant_id = create_for_review(api)
+    path = f"/clinics/{tenant_id}/commission"
+    for value in (1000, 10000, 0):
+        response = api.client.put(
+            path, json={"commission_bps": value}, headers=api.user("platform")
+        )
+        assert response.status_code == 200 and response.json()["commission_bps"] == value
+        repeated = api.client.put(
+            path, json={"commission_bps": value}, headers=api.user("platform")
+        )
+        assert repeated.json()["updated_at"] == response.json()["updated_at"]
+    events = audit_events(api, tenant_id)
+    assert [(item.previous_values, item.new_values) for item in events] == [
+        ({"commission_bps": 0}, {"commission_bps": 1000}),
+        ({"commission_bps": 1000}, {"commission_bps": 10000}),
+        ({"commission_bps": 10000}, {"commission_bps": 0}),
+    ]
+    assert all(
+        item.action == "clinic.commission_changed" and item.reason is None for item in events
+    )
+
+
+@pytest.mark.parametrize("operation", ["review", "commission"])
+def test_concurrent_identical_admin_requests_emit_one_event(api, operation):
+    tenant_id = create_for_review(api)
+    credential = api.user("platform")
+
+    def change(_):
+        if operation == "review":
+            return api.client.post(
+                f"/clinics/{tenant_id}/review", json={"decision": "approve"}, headers=credential
+            )
+        return api.client.put(
+            f"/clinics/{tenant_id}/commission", json={"commission_bps": 1000}, headers=credential
+        )
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        responses = list(pool.map(change, range(4)))
+    assert all(response.status_code == 200 for response in responses)
+    assert len(audit_events(api, tenant_id)) == 1
+
+
+@pytest.mark.parametrize("operation", ["review", "commission"])
+def test_audit_insert_failure_rolls_back_clinic_change(api, monkeypatch, operation):
+    tenant_id = create_for_review(api)
+
+    def invalid_audit(session, clinic, *args):
+        session.add(
+            AuditEvent(
+                tenant_id=clinic.tenant_id,
+                actor_subject_id=None,
+                action="clinic.approved",
+                previous_values={},
+                new_values={},
+            )
+        )
+
+    monkeypatch.setattr(admin, "record_audit", invalid_audit)
+    if operation == "review":
+        result = api.client.post(
+            f"/clinics/{tenant_id}/review",
+            json={"decision": "approve"},
+            headers=api.user("platform"),
+        )
+    else:
+        result = api.client.put(
+            f"/clinics/{tenant_id}/commission",
+            json={"commission_bps": 1000},
+            headers=api.user("platform"),
+        )
+    assert result.status_code == 409
+    with Session(api.engine) as session:
+        clinic = session.get(Clinic, tenant_id)
+        assert clinic.status == "pending_review" and clinic.commission_bps == 0
+    assert not audit_events(api, tenant_id)
+
+
+def test_approval_and_suspension_control_public_and_booking_access(api):
+    tenant_id = create_for_review(api)
+    with Session(api.engine) as session:
+        slug = session.get(Clinic, tenant_id).slug
+    review_path = f"/clinics/{tenant_id}/review"
+    gate = f"/internal/clinics/{tenant_id}/booking-profile"
+    public = f"/clinics/by-slug/{slug}"
+    for decision, expected in [("approve", 200), ("suspend", 409), ("approve", 200)]:
+        payload = {
+            "decision": decision,
+            "reason": "Synthetic suspension" if decision == "suspend" else None,
+        }
+        response = api.client.post(review_path, json=payload, headers=api.user("platform"))
+        assert response.status_code == 200
+        assert api.client.get(gate, headers=api.booking()).status_code == expected
+        assert api.client.get(public).status_code == (200 if expected == 200 else 404)
+    assert api.client.get(public).json()["status"] == "active"
+    assert len(audit_events(api, tenant_id)) == 3
+
+
+def test_audit_records_are_append_only(api):
+    tenant_id = create_for_review(api)
+    api.client.post(
+        f"/clinics/{tenant_id}/review", json={"decision": "approve"}, headers=api.user("platform")
+    ).raise_for_status()
+    for sql in (
+        "UPDATE tenant.audit_events SET reason='changed' WHERE tenant_id=:id",
+        "DELETE FROM tenant.audit_events WHERE tenant_id=:id",
+    ):
+        with pytest.raises(IntegrityError) as error, api.engine.begin() as connection:
+            connection.execute(text(sql), {"id": tenant_id})
+        assert error.value.orig.sqlstate == "23514"
+    assert len(audit_events(api, tenant_id)) == 1
+
+
+def test_approval_cannot_bypass_missing_creator_provisioning(api):
+    tenant_id = create_for_review(api)
+    with Session(api.engine) as session, session.begin():
+        clinic = session.get(Clinic, tenant_id)
+        clinic.membership_provisioned = False
+        slug = clinic.slug
+    result = api.client.post(
+        f"/clinics/{tenant_id}/review", json={"decision": "approve"}, headers=api.user("platform")
+    )
+    assert result.status_code == 200
+    assert api.client.get(f"/clinics/by-slug/{slug}").status_code == 404
+    assert (
+        api.client.get(
+            f"/internal/clinics/{tenant_id}/booking-profile", headers=api.booking()
+        ).status_code
+        == 409
+    )
+
+
+def test_admin_list_filter_pagination_and_unknown_clinics(api):
+    create_for_review(api)
+    credential = api.user("platform")
+    first = api.client.get(
+        "/admin/clinics", params={"status": "pending_review", "limit": 1}, headers=credential
+    ).json()
+    assert len(first["items"]) == 1 and first["next_cursor"]
+    assert "commission_bps" in first["items"][0]
+    second = api.client.get(
+        "/admin/clinics",
+        params={"status": "pending_review", "limit": 1, "cursor": first["next_cursor"]},
+        headers=credential,
+    ).json()
+    assert first["items"][0]["tenant_id"] != second["items"][0]["tenant_id"]
+    assert (
+        api.client.get(
+            "/admin/clinics",
+            params={"status": "active", "cursor": first["next_cursor"]},
+            headers=credential,
+        ).status_code
+        == 422
+    )
+    assert api.client.get("/admin/clinics?cursor=bad", headers=credential).status_code == 422
+    assert api.client.get("/admin/clinics?status=invalid", headers=credential).status_code == 422
+    assert api.client.get("/admin/clinics").status_code == 401
+    assert (
+        api.client.post(
+            f"/clinics/{uuid4()}/review", json={"decision": "approve"}, headers=credential
+        ).status_code
+        == 404
+    )
+    assert (
+        api.client.put(
+            f"/clinics/{uuid4()}/commission", json={"commission_bps": 1000}, headers=credential
+        ).status_code
+        == 404
+    )

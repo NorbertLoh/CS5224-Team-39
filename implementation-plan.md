@@ -19,10 +19,11 @@ tests, migration isolation checks, lint and CI passed. A05 is complete in merged
 PR #61; 81 tests, live Floci identity mapping and CI passed. A06 is complete in
 merged PR #63; 124 local tests, real HTTP authorization, container checks and CI
 passed. A07 is complete in merged PR #65; 30 PostgreSQL tests, migration isolation,
-lint and CI passed. There are now 27 completed tasks.
+lint and CI passed. A08 is complete in merged PR #67; 165 tests, real Floci and
+two-service HTTP checks and CI passed. There are now 28 completed tasks.
 F16's API/restart checks and accepted emulator
 limitations are recorded in merged PR #53; AWS follow-up stays open in issue #54.
-The remaining 99
+The remaining 98
 tasks stay unchecked; contract documentation, shared fixtures and route previews
 do not count as implemented services, authentication, feature pages or integrations.
 
@@ -72,8 +73,8 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. Completed in merged PR #61; 81 tests, live Floci identity mapping and CI passed. Issue #60 closed; live tenant integration remains A08/A10. | A03, A04 | M |
 | [x] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. Completed in merged PR #63; shared foundations, 124 local tests, real HTTP authorization, container checks and CI passed. Issue #62 closed. | A05 | M |
 | [x] | A07 | Create tenant service schema/migrations for clinic, branding and activation. Completed in merged PR #65; 30 PostgreSQL tests, migration isolation, lint and CI passed. Issue #64 closed. | F04, C02 | M |
-| [ ] | A08 | Add clinic create/update/public-profile APIs; inactive clinics cannot accept bookings. Assignee: NorbertLoh; status: in progress. Issue #66; PR #67. | A06, A07 | M |
-| [ ] | A09 | Add platform approve/reject and commission-setting APIs with audit events. | A08 | M |
+| [x] | A08 | Add clinic create/update/public-profile APIs; inactive clinics cannot accept bookings. Completed in merged PR #67; 165 tests, real Floci/two-service HTTP checks and CI passed. Issue #66 closed. | A06, A07 | M |
+| [ ] | A09 | Add platform approve/reject and commission-setting APIs with audit events. Assignee: NorbertLoh; status: in progress. Issue #68; PR #69. | A08 | M |
 | [ ] | A10 | Add staff assignment/membership APIs with authorised clinic administration. | A05, A08 | M |
 | [ ] | U01 | Build branded clinic storefront using fixtures. | F07, F08, C02 | M |
 | [ ] | U02 | Build clinic profile/branding editor using fixtures. | F07, F08, C02 | M |
