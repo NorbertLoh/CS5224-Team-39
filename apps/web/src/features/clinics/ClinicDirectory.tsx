@@ -8,11 +8,14 @@ import { Button } from '@/components/ui/button'
 
 export function ClinicLinks({ clinics, edit = false }: { clinics: Clinic[]; edit?: boolean }) {
   return <div className="mt-5 grid gap-5 sm:grid-cols-2">{clinics.map(clinic => (
-    <a key={clinic.tenant_id} href={edit ? `/clinic-admin/clinics/${clinic.tenant_id}/profile` : `/clinics/${clinic.slug}`} className="rounded-xl border border-t-4 p-6 hover:bg-muted/50" style={{ borderTopColor: clinic.branding.primary_color }}>
+    <article key={clinic.tenant_id} className="rounded-xl border border-t-4 p-6" style={{ borderTopColor: clinic.branding.primary_color }}>
       <h3 className="text-lg font-semibold">{clinic.name}</h3>
       <p className="mt-2 text-sm text-muted-foreground">Consultation - {consultationPrice(clinic.consultation_price.amount_minor, clinic.consultation_price.currency)} SGD</p>
-      <p className="mt-5 text-sm font-medium underline underline-offset-4">{edit ? 'Edit profile' : 'View clinic'}</p>
-    </a>
+      <div className="mt-5 flex gap-5 text-sm font-medium underline underline-offset-4">
+        <a href={edit ? `/clinic-admin/clinics/${clinic.tenant_id}/profile` : `/clinics/${clinic.slug}`}>{edit ? 'Edit profile' : 'View clinic'}</a>
+        {edit && <a href={`/clinic-admin/clinics/${clinic.tenant_id}/staff`}>Manage staff</a>}
+      </div>
+    </article>
   ))}</div>
 }
 
