@@ -5,8 +5,9 @@ Docker Desktop. A revoked refresh token becomes usable after restart because
 Floci cannot reload its revocation store. The user accepted keeping Floci with
 documented local limitations and tracking real AWS verification separately in
 [issue #54](https://github.com/NorbertLoh/CS5224-Team-39/issues/54).
-AWS verification has not been performed. PR #53 remains unmerged;
-issue #43 stays In progress and the backlog stays unchecked.
+AWS verification has not been performed. PR #53 is merged, issue #43 is closed
+and F16 is checked off with these accepted local limitations. Issue #54 remains
+open for the AWS checks.
 
 The Compose default and environment example pin the tested multi-platform
 manifest `sha256:e97cd0c1dc2aa14e7697fb5ef5018404c4d6345169dbd276315f0bed2c7b0520`.
