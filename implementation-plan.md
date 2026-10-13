@@ -78,7 +78,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | A09 | Add platform approve/reject and commission-setting APIs with audit events. Completed in merged PR #69; 94 tenant tests, live Floci/platform HTTP checks and CI passed. Issue #68 closed. | A08 | M |
 | [x] | A10 | Add staff assignment/membership APIs with authorised clinic administration. Completed in merged PR #71; 205 tests, live two-service HTTP staff lifecycle/authorization checks and CI passed. Issue #70 closed. | A05, A08 | M |
 | [x] | U01 | Build branded clinic storefront using fixtures. Completed in merged PR #73; 17 frontend tests, desktop/mobile browser checks, component output parity and CI passed. Issue #72 closed; live integration remains A11. | F07, F08, C02 | M |
-| [ ] | U02 | Build clinic profile/branding editor using fixtures. | F07, F08, C02 | M |
+| [x] | U02 | Build clinic profile/branding editor. Completed in merged PR #75; profile saves persist in PostgreSQL, logo upload/replacement/removal uses S3, and all implemented clinic pages use real APIs with local/AWS configuration. 22 frontend, 100 identity and 113 tenant tests, browser Save/Discard/reload/login checks and CI passed. Issue #74 closed; remaining staff/admin integration stays in A11. | F07, F08, C02 | M |
 | [ ] | U03 | Build staff management page using fixtures. | F07, F08, C02 | M |
 | [ ] | U04 | Build platform clinic approval and commission page using fixtures. | F07, F08, C02 | M |
 | [ ] | U05 | Add role navigation, validated clinic selection and login/logout controls. | A01, A02, F07, C02 | M |
