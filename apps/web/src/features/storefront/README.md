@@ -17,8 +17,10 @@ records. When shared clinics or staff change, update this public projection;
 `tests/storefront-fixtures.test.ts` checks parity, doctor membership scope and
 the exclusion of private fields.
 
-`ClinicStorefront.tsx` presents each clinic with its primary colour, optional
-logo (icon fallback), description, SGD consultation price and doctor list. The
+`ClinicStorefront.tsx` handles clinic lookup, colour and page layout. Small
+components render the header, introduction, consultation card, doctor list,
+footer and unavailable page. They share a `StorefrontClinic` type derived from
+the public fixture shape and receive their data through props. The
 home page links to both previews. Normal links support direct entry, reloads and
 browser history without additional routing dependencies. Unknown, inactive and
 malformed clinic paths display an unavailable page. The preview is public and

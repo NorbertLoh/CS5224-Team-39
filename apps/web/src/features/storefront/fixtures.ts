@@ -1,5 +1,7 @@
 import fixtures from './fixtures.json'
 
+export type StorefrontClinic = (typeof fixtures)[number]
+
 export const storefrontClinics = fixtures.filter(clinic => clinic.status === 'active')
 
 export function findClinic(slug: string | undefined, clinics = fixtures) {
