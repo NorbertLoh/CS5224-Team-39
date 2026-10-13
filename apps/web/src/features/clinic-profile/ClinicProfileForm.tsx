@@ -7,7 +7,7 @@ import { profileApiEnabled } from './logo-api'
 
 const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-700 aria-invalid:border-red-600'
 
-export function ClinicProfileForm({ draft, errors, onChange, onSave, onReset, tenantId, logoPreview, onLogoChange, saving }: {
+export function ClinicProfileForm({ draft, errors, onChange, onSave, onReset, tenantId, logoPreview, onLogoChange, saving, message }: {
   draft: ProfileDraft
   errors: ProfileErrors
   onChange: (field: keyof ProfileDraft, value: string) => void
@@ -17,6 +17,7 @@ export function ClinicProfileForm({ draft, errors, onChange, onSave, onReset, te
   logoPreview: string | null
   onLogoChange: (url: string | null, preview: string | null) => void
   saving: boolean
+  message: string
 }) {
   function fieldProps(field: keyof ProfileDraft) {
     return {
@@ -59,9 +60,12 @@ export function ClinicProfileForm({ draft, errors, onChange, onSave, onReset, te
           <input {...fieldProps('fee')} required inputMode="decimal" maxLength={20} />
         </ProfileField>
       </fieldset>
-      <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 px-6 py-5 sm:px-8">
-        <Button type="submit" disabled={saving} className="h-10 px-5">{saving ? 'Saving…' : profileApiEnabled ? 'Save changes' : 'Save demo changes'}</Button>
-        <Button type="button" disabled={saving} variant="outline" className="h-10 px-5" onClick={onReset}>Discard unsaved changes</Button>
+      <div className="border-t border-slate-200 px-6 py-5 sm:px-8">
+        <p role="status" aria-live="polite" className="mb-3 min-h-5 text-sm font-medium">{message}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" disabled={saving} className="h-10 px-5">{saving ? 'Saving…' : profileApiEnabled ? 'Save changes' : 'Save demo changes'}</Button>
+          <Button type="button" disabled={saving} variant="outline" className="h-10 px-5" onClick={onReset}>Discard unsaved changes</Button>
+        </div>
       </div>
     </form>
   )

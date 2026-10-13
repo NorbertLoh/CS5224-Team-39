@@ -11,15 +11,21 @@ Default fixture previews:
 - `BrandingPreview.tsx`: live visual preview and icon fallback.
 - `LogoUpload.tsx`: simple file picker, replacement/removal, status and blob cleanup.
 - `logo-api.ts`: authenticated profile/logo API calls and file checks.
+- `demo-storage.ts`: clinic-scoped browser saves and persistent local logo previews.
 - `profile.ts`: profile validation and exact SGD cents conversion.
 
 ## Fixture mode
 
 `VITE_CLINIC_PROFILE_API_ENABLED=false` is the default. Clinic data comes from
-U01's public-only agreed fixture projection. File selection previews the image
-locally; replacing/removing releases the previous browser object URL. Nothing is
-sent to S3. Profile save/discard uses an in-memory snapshot and resets on exit or
-reload. The editor labels this mode explicitly.
+U01's public-only agreed fixture projection. Save writes editable profile fields
+to localStorage, scoped to the clinic, and restores them after navigation/reload.
+Local logo changes save immediately as image data URLs; replacement/removal
+overwrites the previous saved preview. Nothing is sent to S3 or published to the
+live clinic. Discard restores the last saved fields; it does not undo immediate
+logo changes. Confirmation and errors appear beside the Save/Discard controls.
+Blocked/full browser storage reports a failure and keeps the unsaved edits.
+Clear site storage to restore all original demo fixtures. The editor labels this
+mode explicitly; browser-saved values cannot establish permissions for live APIs.
 
 ## Live mode
 
@@ -90,7 +96,7 @@ managed storage is enabled; use upload/remove instead.
 From `apps/web`: `npm test`, `npm run lint`, `npm run build`.
 From `services/tenant`: run the existing disposable PostgreSQL suite and Ruff.
 
-Local verification passed **23 frontend tests and 111 tenant tests**, lint,
+Local verification passed **27 frontend tests and 111 tenant tests**, lint,
 TypeScript/build, dependency checks and formatting. Coverage includes amount and
 URL/field limits, file picker checks, decoded image limits, tenant-role denial,
 one-object replacement, idempotent removal, versioned-bucket rejection and S3
@@ -101,7 +107,9 @@ Floci S3 passed real upload/overwrite/delete and cross-clinic/patient denial.
 Headless Chrome then passed the actual file picker, stored preview, WebP
 replacement, corrupt-image failure, profile save/reload, logo removal/reload and
 390-pixel layout without horizontal overflow. Listing S3 after removal confirmed
-zero clinic logo objects. Fixture mode was also checked independently. This is
+zero clinic logo objects. Fixture mode also passed actual Save/Discard mouse
+clicks, visible feedback, persisted profile/logo reloads, clinic separation and
+storage-failure feedback without a false success or loss of unsaved edits. This is
 local integration evidence, not deployed AWS/CloudFront verification.
 
 Other clinic/staff/admin page integration remains A11; validated role navigation

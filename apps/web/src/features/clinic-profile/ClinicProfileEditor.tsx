@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { readSession } from '@/auth/session'
@@ -11,6 +11,7 @@ import { profileDraft, profileUpdate, validateProfile } from './profile'
 import type { ClinicProfile, ProfileDraft, ProfileErrors } from './profile'
 import { profileApiEnabled, readClinic, saveClinic } from './logo-api'
 import type { EditableClinic } from './logo-api'
+import { readDemoProfile, saveDemoProfile } from './demo-storage'
 
 export function ClinicProfileEditor({ slug }: { slug: string | undefined }) {
   const clinic = fixtures.find(item => item.slug === slug)
@@ -32,18 +33,25 @@ function LiveProfileEditor({ tenantId }: { tenantId: string }) {
 }
 
 function ProfileEditor({ clinic }: { clinic: EditableClinic }) {
-  const [saved, setSaved] = useState<ClinicProfile>(clinic)
-  const [draft, setDraft] = useState(() => profileDraft(clinic))
+  const [initial] = useState(() => profileApiEnabled
+    ? { profile: clinic, logoPreview: clinic.branding.logo_url }
+    : readDemoProfile(clinic.tenant_id, clinic))
+  const [saved, setSaved] = useState<ClinicProfile>(initial.profile)
+  const savedRef = useRef(initial.profile)
+  const [draft, setDraft] = useState(() => profileDraft(initial.profile))
   const [errors, setErrors] = useState<ProfileErrors>({})
   const [message, setMessage] = useState('')
-  const [logoPreview, setLogoPreview] = useState<string | null>(clinic.branding.logo_url)
+  const [logoPreview, setLogoPreview] = useState<string | null>(initial.logoPreview)
   const [saving, setSaving] = useState(false)
 
   const changeLogo = useCallback((url: string | null, preview: string | null) => {
+    const updated = { ...savedRef.current, branding: { ...savedRef.current.branding, logo_url: url } }
+    if (!profileApiEnabled) saveDemoProfile(clinic.tenant_id, updated, preview)
+    savedRef.current = updated
     setDraft(current => ({ ...current, logoUrl: url ?? '' }))
-    setSaved(current => ({ ...current, branding: { ...current.branding, logo_url: url } }))
+    setSaved(updated)
     setLogoPreview(preview)
-  }, [])
+  }, [clinic.tenant_id])
 
   function change(field: keyof ProfileDraft, value: string) {
     setDraft(current => ({ ...current, [field]: value }))
@@ -64,10 +72,12 @@ function ProfileEditor({ clinic }: { clinic: EditableClinic }) {
     setSaving(true)
     try {
       const updated = profileApiEnabled ? await saveClinic(clinic.tenant_id, profileUpdate(draft)) : profileUpdate(draft)
+      if (!profileApiEnabled) saveDemoProfile(clinic.tenant_id, updated, logoPreview)
+      savedRef.current = updated
       setSaved(updated)
       setDraft(profileDraft(updated))
-      setMessage(profileApiEnabled ? 'Clinic profile saved.' : 'Demo changes saved in this editor. Nothing was published.')
-    } catch { setMessage('Could not save the profile. Your edits are still here; try again.') }
+      setMessage(profileApiEnabled ? 'Clinic profile saved.' : 'Demo profile saved in this browser.')
+    } catch { setMessage(profileApiEnabled ? 'Could not save the profile. Your edits are still here; try again.' : 'Could not save in this browser. Storage may be full or disabled; your edits are still here.') }
     finally { setSaving(false) }
   }
 
@@ -83,11 +93,10 @@ function ProfileEditor({ clinic }: { clinic: EditableClinic }) {
       <main className="mx-auto max-w-6xl px-6 py-10 sm:px-8">
         {!profileApiEnabled && <a href={`/clinics/${clinic.slug}`} className="text-sm text-slate-600 underline underline-offset-4">View original demo storefront</a>}
         <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">Clinic profile & branding</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">{profileApiEnabled ? `Edit ${clinic.name}'s profile. Logo changes save immediately; use Save changes for the remaining fields.` : `Edit ${clinic.name}'s profile using sample data. Saved changes stay in this editor and reset when you leave or reload. Live clinic access and publishing are not connected yet.`}</p>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">{profileApiEnabled ? `Edit ${saved.name}'s profile. Logo changes save immediately; use Save changes for the remaining fields.` : `Edit ${saved.name}'s demo profile. Saves stay in this browser, including after reload. Logo changes save immediately; nothing is published to the live clinic.`}</p>
         <p className="mt-3 text-xs text-slate-500">Storefront address: /clinics/{clinic.slug} · The address cannot be changed here.</p>
-        <div role="status" aria-live="polite" className="mt-5 min-h-6 text-sm font-medium">{message}</div>
         <div className="mt-5 grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
-          <ClinicProfileForm draft={draft} errors={errors} onChange={change} onSave={save} onReset={reset} tenantId={clinic.tenant_id} logoPreview={logoPreview} onLogoChange={changeLogo} saving={saving} />
+          <ClinicProfileForm draft={draft} errors={errors} onChange={change} onSave={save} onReset={reset} tenantId={clinic.tenant_id} logoPreview={logoPreview} onLogoChange={changeLogo} saving={saving} message={message} />
           <BrandingPreview draft={draft} logoPreview={logoPreview} />
         </div>
       </main>

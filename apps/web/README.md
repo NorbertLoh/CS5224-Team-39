@@ -26,7 +26,8 @@ Booking and live business API integration remain later tasks.
 U02 adds profile/branding editors at
 `/clinic-admin/clinics/demo-clinic-a/profile` and
 `/clinic-admin/clinics/demo-clinic-b/profile`, linked from the clinic-administrator
-card. By default, edits and logo file selection preview locally. Enable
+card. By default, Save keeps edits and logo previews in this browser across reloads;
+the original public fixture storefront is unchanged. Enable
 `VITE_CLINIC_PROFILE_API_ENABLED=true` for authenticated tenant profile saves and
 S3 logo upload/replacement/removal; use an actual clinic UUID in the editor route.
 Configure the tenant S3 bucket and HTTPS asset base first. See the

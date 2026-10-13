@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { profileApiEnabled, readLogo, removeLogo, uploadLogo, validateLogoFile } from './logo-api'
+import { localLogoPreview } from './demo-storage'
 
 export function LogoUpload({ tenantId, preview, onChange }: {
   tenantId: string
@@ -34,11 +35,11 @@ export function LogoUpload({ tenantId, preview, onChange }: {
     setBusy(true)
     setNotice('Uploading logo…')
     try {
-      const result = profileApiEnabled ? await uploadLogo(tenantId, file) : { url: null, preview: URL.createObjectURL(file) }
+      const result = profileApiEnabled ? await uploadLogo(tenantId, file) : { url: null, preview: await localLogoPreview(file) }
       onChange(result.url, result.preview)
-      setNotice(profileApiEnabled ? 'Logo saved. The previous image was replaced.' : 'Logo changed in this local preview only.')
+      setNotice(profileApiEnabled ? 'Logo saved. The previous image was replaced.' : 'Logo saved in this browser.')
     } catch {
-      setNotice('Logo upload failed. Check the image and your sign-in, then try again.')
+      setNotice(profileApiEnabled ? 'Logo upload failed. Check the image and your sign-in, then try again.' : 'Could not save the logo in this browser. Check the image and available browser storage.')
     } finally { setBusy(false) }
   }
 
@@ -47,7 +48,7 @@ export function LogoUpload({ tenantId, preview, onChange }: {
     try {
       if (profileApiEnabled) await removeLogo(tenantId)
       onChange(null, null)
-      setNotice(profileApiEnabled ? 'Logo removed from storage.' : 'Logo removed from this local preview.')
+      setNotice(profileApiEnabled ? 'Logo removed from storage.' : 'Logo removed from this browser’s saved demo.')
     } catch { setNotice('Could not remove the logo. Try again.') }
     finally { setBusy(false) }
   }
@@ -66,7 +67,7 @@ export function LogoUpload({ tenantId, preview, onChange }: {
           )}
         </div>
       )}
-      <p id="logo-help" className="mt-2 text-xs text-slate-500">PNG, JPEG or WebP, up to 2 MB and 4 megapixels. {profileApiEnabled ? 'Logo changes save immediately.' : 'Local preview only; S3 is not connected.'}</p>
+      <p id="logo-help" className="mt-2 text-xs text-slate-500">PNG, JPEG or WebP, up to 2 MB and 4 megapixels. {profileApiEnabled ? 'Logo changes save immediately.' : 'Saved in this browser only; S3 is not connected.'}</p>
       {preview && <Button type="button" variant="outline" disabled={busy} onClick={() => void remove()} className="mt-3">Remove logo</Button>}
       <p id="logo-status" role="status" className="mt-2 text-sm text-slate-600">{notice}</p>
     </div>
