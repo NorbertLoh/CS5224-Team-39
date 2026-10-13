@@ -62,7 +62,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | A01 | Add React PKCE login/return flow against Floci; obtain access token. Completed in merged PR #49; four-role browser PKCE, callback cleanup/reload and signed API access verified. Issue #46 closed. | F07, F13 | M |
 | [x] | A02 | Add refresh/logout handling and expiry UX; verify pinned emulator behaviour. Completed in merged PR #49; automatic refresh, expiry UX, revocation and hosted logout verified on Floci 2.2.0; OAuth refresh limitation documented. Issue #47 closed. | A01 | M |
 | [x] | A03 | Add FastAPI token verification: JWKS, issuer, expiry, token use and client. Completed in merged PR #49; strict RS256/JWKS access-token verification, invalid-token tests, non-local config guards and container/browser integration passed. Issue #48 closed. | F03, F13 | M |
-| [ ] | A04 | Create identity service schema/migrations for subjects, roles and memberships. | F04, C02 | M |
+| [ ] | A04 | Create identity service schema/migrations for subjects, roles and memberships. Assignee: NorbertLoh; status: in progress; issue #58, PR #59. | F04, C02 | M |
 | [ ] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. | A03, A04 | M |
 | [ ] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. | A05 | M |
 | [ ] | A07 | Create tenant service schema/migrations for clinic, branding and activation. | F04, C02 | M |
