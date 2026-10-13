@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { storefrontClinics } from '../src/features/storefront/fixtures'
 import { feeMinor, profileDraft, profileUpdate, validateProfile, validLogoUrl } from '../src/features/clinic-profile/profile'
+import { validateLogoFile, maxLogoBytes } from '../src/features/clinic-profile/logo-api'
 
 test('fee input converts decimal SGD exactly without rounding or accepting exponent notation', () => {
   for (const [input, expected] of [['0', 0], ['0.01', 1], ['25.5', 2550], ['25.50', 2550], ['90071992547409.91', Number.MAX_SAFE_INTEGER]] as const) {
@@ -48,4 +49,11 @@ test('editing one clinic does not mutate the other clinic or the shared fixture'
   assert.equal(profileUpdate(draft).name, 'Local demo edit')
   assert.equal(JSON.stringify(storefrontClinics), before)
   assert.equal(profileDraft(storefrontClinics[1]).fee, '30.00')
+})
+
+test('file picker rejects empty, oversized and unsupported uploads before contacting storage', () => {
+  assert.equal(validateLogoFile(new File(['png'], 'logo.png', { type: 'image/png' })), undefined)
+  assert.match(validateLogoFile(new File([], 'logo.png', { type: 'image/png' }))!, /2 MB/)
+  assert.match(validateLogoFile(new File([new Uint8Array(maxLogoBytes + 1)], 'logo.png', { type: 'image/png' }))!, /2 MB/)
+  assert.match(validateLogoFile(new File(['<svg/>'], 'logo.svg', { type: 'image/svg+xml' }))!, /PNG, JPEG or WebP/)
 })

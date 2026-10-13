@@ -1,23 +1,24 @@
 import { HeartPulse } from 'lucide-react'
 import { consultationPrice } from '../storefront/fixtures'
-import { feeMinor, validLogoUrl } from './profile'
+import { feeMinor } from './profile'
 import type { ProfileDraft } from './profile'
+import { profileApiEnabled } from './logo-api'
 
-export function BrandingPreview({ draft }: { draft: ProfileDraft }) {
+export function BrandingPreview({ draft, logoPreview }: { draft: ProfileDraft; logoPreview: string | null }) {
   const color = /^#[0-9a-f]{6}$/i.test(draft.primaryColor) ? draft.primaryColor : '#64748b'
   const minor = feeMinor(draft.fee)
 
   return (
     <aside aria-labelledby="preview-heading" className="self-start lg:sticky lg:top-6">
       <h2 id="preview-heading" className="text-sm font-semibold">Branding preview</h2>
-      <p className="mt-1 text-xs text-slate-500">Updates as you edit. Nothing is published.</p>
+      <p className="mt-1 text-xs text-slate-500">{profileApiEnabled ? 'Updates as you edit. Logo changes save immediately.' : 'Updates as you edit. Nothing is published.'}</p>
       <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="h-1.5" style={{ backgroundColor: color }} />
         <div className="p-6 sm:p-8">
           <div className="flex items-center gap-3">
             <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl text-white" style={{ backgroundColor: color }} aria-hidden="true">
               <HeartPulse className="size-6" />
-              {validLogoUrl(draft.logoUrl) && <img key={draft.logoUrl} src={draft.logoUrl} alt="" className="absolute inset-0 size-full bg-white object-contain" onError={event => { event.currentTarget.hidden = true }} />}
+              {logoPreview && <img key={logoPreview} src={logoPreview} alt="" className="absolute inset-0 size-full bg-white object-contain" onError={event => { event.currentTarget.hidden = true }} />}
             </span>
             <h3 className="min-w-0 text-lg font-semibold break-words">{draft.name.trim() || 'Clinic name'}</h3>
           </div>

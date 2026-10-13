@@ -13,6 +13,8 @@ from telelink_common.middleware import RequestLoggingMiddleware
 from app.admin import router as admin_router
 from app.api import router
 from app.database import create_database_engine
+from app.logos import LogoStorage
+from app.logos import router as logos_router
 from app.models import AuditEvent, Clinic
 from app.settings import Settings
 
@@ -23,6 +25,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app):
         app.state.identity_client = IdentityClient(config)
+        app.state.logo_storage = LogoStorage(config)
         app.state.database_engine = (
             create_database_engine(
                 config.database_url.get_secret_value(),
@@ -35,6 +38,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             yield
         finally:
             app.state.identity_client.close()
+            app.state.logo_storage.close()
             if app.state.database_engine is not None:
                 app.state.database_engine.dispose()
                 app.state.database_engine = None
@@ -54,7 +58,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors_origins,
-        allow_methods=["GET", "POST", "PATCH", "PUT"],
+        allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
         allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
         expose_headers=["X-Request-ID", "Retry-After"],
     )
@@ -62,6 +66,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_error_handlers(app)
     app.include_router(router)
     app.include_router(admin_router)
+    app.include_router(logos_router)
 
     @app.get("/health/live", tags=["health"])
     def live():

@@ -129,3 +129,25 @@ clinics. Configure a separate `SERVICE_IDENTITY_SECRET` shared only with identit
 User tokens and other service credentials cannot use this endpoint. Membership
 roles, listing and writes remain identity-owned; see the
 [setup, credentials and verification](../../identity/docs/staff-integration.md).
+
+## Managed clinic logo uploads (U02)
+
+Configure `SERVICE_LOGO_BUCKET`, `SERVICE_LOGO_PUBLIC_BASE_URL` and optional
+`SERVICE_LOGO_REGION`. Use a separate unversioned branding bucket; local emulator
+configuration is `SERVICE_LOGO_S3_ENDPOINT=http://localhost:4566`. AWS uses task-role
+credentials; custom emulator endpoints are rejected outside local/test.
+
+| Route | Behavior |
+| --- | --- |
+| PUT `/clinics/{tenant_id}/logo` | Raw PNG/JPEG/WebP bytes, maximum 2 MB and 4 megapixels; decode, resize to at most 512px, normalize PNG and overwrite the clinic's single managed key. Returns updated admin profile. |
+| DELETE `/clinics/{tenant_id}/logo` | Delete the managed object and clear the logo URL; repeat removal is safe. Returns updated admin profile. |
+| GET `/clinics/{tenant_id}/logo` | Authenticated stored-image preview, PNG response with no-store. Missing clinic/logo returns 404. |
+
+All three require current owning-clinic admin or platform-admin access. Keys are
+server-owned `clinic-logos/<tenant_id>/logo.png`. Versioned/suspended-versioning
+buckets are rejected to avoid retaining old images. Storage errors return safe
+503 responses. Profile PATCH cannot change logo references when managed storage
+is enabled. Configure CloudFront OAC and disable caching for logo keys before
+cloud use; the editor preview reads through tenant so local buckets remain private.
+
+See [upload setup and verification](../../../apps/web/src/features/clinic-profile/README.md).

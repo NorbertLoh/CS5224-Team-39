@@ -23,11 +23,14 @@ fixture storefronts at `/clinics/demo-clinic-a` and `/clinics/demo-clinic-b`, li
 from the home page. See the [storefront guide](src/features/storefront/README.md).
 Booking and live business API integration remain later tasks.
 
-U02 adds fixture profile/branding editors at
+U02 adds profile/branding editors at
 `/clinic-admin/clinics/demo-clinic-a/profile` and
 `/clinic-admin/clinics/demo-clinic-b/profile`, linked from the clinic-administrator
-card. Edits preview locally; save/discard stay in the editor and reset on exit or
-reload. See the [editor guide](src/features/clinic-profile/README.md).
+card. By default, edits and logo file selection preview locally. Enable
+`VITE_CLINIC_PROFILE_API_ENABLED=true` for authenticated tenant profile saves and
+S3 logo upload/replacement/removal; use an actual clinic UUID in the editor route.
+Configure the tenant S3 bucket and HTTPS asset base first. See the
+[editor/upload guide](src/features/clinic-profile/README.md).
 
 ## Calling an API
 
