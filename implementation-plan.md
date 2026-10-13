@@ -58,9 +58,9 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | A01 | Add React PKCE login/return flow against Floci; obtain access token. | F07, F13 | M |
-| [ ] | A02 | Add refresh/logout handling and expiry UX; verify pinned emulator behaviour. | A01 | M |
-| [ ] | A03 | Add FastAPI token verification: JWKS, issuer, expiry, token use and client. | F03, F13 | M |
+| [ ] | A01 | Add React PKCE login/return flow against Floci; obtain access token. Assignee: NorbertLoh; status: in progress; issue #46; PR #49. | F07, F13 | M |
+| [ ] | A02 | Add refresh/logout handling and expiry UX; verify pinned emulator behaviour. Assignee: NorbertLoh; status: in progress; issue #47; PR #49. | A01 | M |
+| [ ] | A03 | Add FastAPI token verification: JWKS, issuer, expiry, token use and client. Assignee: NorbertLoh; status: in progress; issue #48; PR #49. | F03, F13 | M |
 | [ ] | A04 | Create identity service schema/migrations for subjects, roles and memberships. | F04, C02 | M |
 | [ ] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. | A03, A04 | M |
 | [ ] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. | A05 | M |

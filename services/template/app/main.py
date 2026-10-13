@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.auth import TokenVerifier
+from app.auth import router as auth_router
 from app.database import Database
 from app.health import router as health_router
 from app.middleware import RequestLoggingMiddleware
@@ -40,6 +42,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = config
     app.state.ready = False
     app.state.database = None
+    app.state.token_verifier = TokenVerifier(config)
     app.add_middleware(RequestLoggingMiddleware, service=config.name)
     app.include_router(health_router)
+    app.include_router(auth_router)
     return app

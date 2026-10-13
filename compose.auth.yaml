@@ -1,0 +1,7 @@
+# Optional local auth overlay; copy these three public values from bootstrap output.
+services:
+  template:
+    environment:
+      SERVICE_AUTH_ISSUER: ${COGNITO_ISSUER:?Set COGNITO_ISSUER from bootstrap}
+      SERVICE_AUTH_CLIENT_ID: ${COGNITO_CLIENT_ID:?Set COGNITO_CLIENT_ID from bootstrap}
+      SERVICE_AUTH_JWKS_URL: http://floci:4566/${COGNITO_USER_POOL_ID:?Set COGNITO_USER_POOL_ID from bootstrap}/.well-known/jwks.json
