@@ -63,7 +63,7 @@ def database():
             )
         command.upgrade(config, "head")
         command.check(config)
-        assert inspect(engine).get_table_names(schema="tenant") == [
+        assert sorted(inspect(engine).get_table_names(schema="tenant")) == [
             "alembic_version",
             "audit_events",
             "clinics",
