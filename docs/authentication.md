@@ -121,7 +121,9 @@ revocation enforcement and connected-profile flows still need AWS verification.
 See [pinned Floci documentation](https://github.com/floci-io/floci/blob/2.2.0/docs/services/cognito.md)
 and [Cognito access-token claims](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-access-token.html).
 
-Run the reproducible live check with the configured host/container API running:
+Run the simple patient smoke check with the configured host/container API running.
+It checks PKCE login, authenticated API access, refresh and logout; the earlier
+four-role compatibility findings above record the original verification.
 
 ```powershell
 $env:COGNITO_CLIENT_ID='<printed client ID>'
