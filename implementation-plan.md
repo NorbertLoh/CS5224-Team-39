@@ -65,7 +65,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | A02 | Add refresh/logout handling and expiry UX; verify pinned emulator behaviour. Completed in merged PR #49; automatic refresh, expiry UX, revocation and hosted logout verified on Floci 2.2.0; OAuth refresh limitation documented. Issue #47 closed. | A01 | M |
 | [x] | A03 | Add FastAPI token verification: JWKS, issuer, expiry, token use and client. Completed in merged PR #49; strict RS256/JWKS access-token verification, invalid-token tests, non-local config guards and container/browser integration passed. Issue #48 closed. | F03, F13 | M |
 | [x] | A04 | Create identity service schema/migrations for subjects, roles and memberships. Completed in merged PR #59; 29 PostgreSQL tests, schema isolation, lint and CI passed. Issue #58 closed. | F04, C02 | M |
-| [ ] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. | A03, A04 | M |
+| [ ] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. Assignee: NorbertLoh; status: in progress; issue #60, PR #61. | A03, A04 | M |
 | [ ] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. | A05 | M |
 | [ ] | A07 | Create tenant service schema/migrations for clinic, branding and activation. | F04, C02 | M |
 | [ ] | A08 | Add clinic create/update/public-profile APIs; inactive clinics cannot accept bookings. | A06, A07 | M |
