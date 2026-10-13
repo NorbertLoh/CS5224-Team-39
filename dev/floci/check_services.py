@@ -178,6 +178,8 @@ def check_messages():
 
 
 def check():
+    if not BASELINE.is_file():
+        raise SystemExit("Missing baseline. Run check_services.py prepare before restarting Floci.")
     expected = json.loads(BASELINE.read_text(encoding="utf-8"))
     actual = snapshot()
     for service, values in actual.items():

@@ -1,10 +1,11 @@
 # F16: Floci compatibility and persistence
 
 Verified on 13 October 2026 using released Floci **2.2.0**, Linux amd64 on
-Docker Desktop. **F16 is not fully cleared:** a revoked refresh token becomes
-usable after restart because Floci cannot reload its revocation store. Draft
-PR #53 records the checks and blocker; issue #43 stays In progress and the
-backlog stays unchecked.
+Docker Desktop. A revoked refresh token becomes usable after restart because
+Floci cannot reload its revocation store. The user accepted keeping Floci with
+documented local limitations, conditional on the real AWS flows passing.
+AWS verification has not been performed. Draft PR #53 remains unmerged;
+issue #43 stays In progress and the backlog stays unchecked.
 
 The Compose default and environment example pin the tested multi-platform
 manifest `sha256:e97cd0c1dc2aa14e7697fb5ef5018404c4d6345169dbd276315f0bed2c7b0520`.
@@ -57,13 +58,13 @@ $env:COGNITO_CORS_ORIGINS='http://localhost:5183'
 
 docker compose -p telelink-f16 --profile offline up -d --wait floci
 docker compose -p telelink-f16 --profile offline run --rm bootstrap
-services/template/.venv/Scripts/python.exe -m pip install -r dev/floci/requirements-checks.txt
 docker build -f dev/floci/Dockerfile.checks -t telelink-f16-checks .
-services/template/.venv/Scripts/python.exe dev/floci/check_services.py prepare
+New-Item -ItemType Directory -Force .local | Out-Null
+docker run --rm --network telelink-f16_default -e F16_ENDPOINT=http://floci:4566 -v "${PWD}:/workspace:ro" -v "${PWD}/.local:/workspace/.local" telelink-f16-checks prepare
 
 docker compose -p telelink-f16 --profile offline restart floci
 docker compose -p telelink-f16 --profile offline up -d --wait floci
-services/template/.venv/Scripts/python.exe dev/floci/check_services.py check
+docker run --rm --network telelink-f16_default -e F16_ENDPOINT=http://floci:4566 -v "${PWD}:/workspace:ro" telelink-f16-checks check
 
 # Recreate on a network without internet access; retain the volume.
 docker compose -p telelink-f16 --profile offline down
@@ -80,6 +81,14 @@ including preparation. Extra checks can eventually redrive those messages.
 Run `exercise` last; it adds fresh test data, so subsequent baseline comparisons
 are no longer expected to match. Do not rerun `prepare` after restart to conceal
 missing state. Use a fresh disposable volume for a new complete run.
+
+No existing `.local` files or Python virtual environment are required. The
+commands above create the directory and run the committed scripts in the SDK
+image. `prepare` generates the baseline for your own emulator; `check` reads
+that baseline after restart. The optional revocation repro below generates its
+own token file. Keep both files untracked: they contain runtime IDs, synthetic
+secret values and a refresh token, and cannot serve as another teammate's
+baseline. The application and bootstrap do not depend on these files.
 
 An internal-only Docker network also blocks host access to the published ports
 in the tested Docker Desktop setup. The runner therefore connects directly to
@@ -131,8 +140,9 @@ docker run --rm --network telelink-f16_default -e F16_ENDPOINT=http://floci:4566
 ```
 
 Expected: `check` passes. **Observed on 2.2.0: it fails with a revived token.**
-This needs an upstream fix/validated released image or an explicitly accepted
-local limitation with real Cognito verification. No JWT checks were weakened,
+This is an accepted local limitation, conditional on real Cognito verification.
+The repro still reports the failure rather than claiming revocation persisted.
+No JWT checks were weakened,
 no persisted records were rewritten, and no patched emulator image was used.
 Relevant pinned source:
 [revocation model](https://github.com/floci-io/floci/blob/2.2.0/src/main/java/io/github/hectorvent/floci/services/cognito/model/RevokedTokenInfo.java),

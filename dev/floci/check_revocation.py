@@ -22,6 +22,8 @@ def rejected(client_id, token):
 
 
 def prepare():
+    if not BASELINE.is_file():
+        raise SystemExit("Missing baseline. Run check_services.py prepare first.")
     baseline = json.loads(BASELINE.read_text(encoding="utf-8"))
     settings = baseline["cognito"]["client"]
     client_id = settings["ClientId"]
@@ -38,6 +40,8 @@ def prepare():
 
 
 def check():
+    if not STATE.is_file():
+        raise SystemExit("Missing token file. Run check_revocation.py prepare before restarting Floci.")
     state = json.loads(STATE.read_text(encoding="utf-8"))
     rejected(state["client_id"], state["token"])
     print("Revocation survived restart.")
