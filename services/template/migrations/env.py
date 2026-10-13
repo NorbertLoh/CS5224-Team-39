@@ -1,8 +1,8 @@
 from alembic import context
 from sqlalchemy import pool
+from telelink_common.logging import configure_logging
 
 from app.database import create_database_engine
-from app.logging import configure_logging
 from app.models import SERVICE_SCHEMA, Base
 from app.settings import Settings
 

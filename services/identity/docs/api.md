@@ -2,8 +2,9 @@
 
 These APIs implement [C01](../../../contracts/api-conventions.md) and
 [C02](../../../contracts/identity-clinic-access.md) using A04 PostgreSQL persistence.
-The A03 RS256 verifier is copied into this service without changing the shared
-template. Signature, issuer, expiry, token use, client and configured scopes are
+The A03 RS256 verifier is now shared through `telelink_common`, with settings,
+logging, correlation, errors and engine construction. Signature, issuer, expiry,
+token use, client and configured scopes are
 validated before resolving the runtime Cognito `sub`. Token groups and arbitrary
 identity/tenant/role headers never grant permissions.
 
@@ -61,6 +62,8 @@ Cognito sub as documented in the README; fixtures do not auto-provision identiti
 
 ```powershell
 .venv\Scripts\python.exe -m pip install -r requirements.lock.txt
+.venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation -e ../../packages/python_common
+.venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation -e .
 .venv\Scripts\python.exe -m app
 ```
 

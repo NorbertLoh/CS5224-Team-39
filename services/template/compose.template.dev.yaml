@@ -8,3 +8,4 @@ services:
       SERVICE_DOCS_ENABLED: "true"
     volumes:
       - .:/app
+      - ../../packages/python_common:/shared

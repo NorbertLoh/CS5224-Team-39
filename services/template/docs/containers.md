@@ -21,6 +21,13 @@ docker compose -f compose.template.yaml down
 
 ## Source reload
 
+A06 mounts the shared package at `/shared` and watches its `telelink_common`
+directory in addition to `/app/app`. Shared source edits also reload. Both root
+and standalone Compose pass the named `python_common` build context so the image
+can install the shared package without using the entire repository as its context.
+Direct builds need the extra argument shown below. Use BuildKit and
+[Compose 2.17+](https://docs.docker.com/reference/compose-file/build/#additional_contexts).
+
 ```powershell
 docker compose -f compose.template.yaml -f compose.template.dev.yaml up --build
 ```
@@ -32,8 +39,8 @@ If port 8000 is occupied, set `$env:TEMPLATE_HOST_PORT = '18005'` before the Com
 ## Direct builds and checks
 
 ```powershell
-docker build --target production -t telelink-template:local .
-docker build --target development -t telelink-template:dev .
+docker build --build-context python_common=../../packages/python_common --target production -t telelink-template:local .
+docker build --build-context python_common=../../packages/python_common --target development -t telelink-template:dev .
 docker run --rm telelink-template:dev python -m pytest
 ```
 

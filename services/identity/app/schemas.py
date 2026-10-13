@@ -3,8 +3,9 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from telelink_common.access import ClinicMembership, ClinicRole, CurrentIdentity
 
-MembershipRole = Literal["doctor", "clinic_admin"]
+MembershipRole = ClinicRole
 MembershipStatus = Literal["active", "revoked"]
 Action = Literal[
     "appointment.read", "appointment.cancel", "clinical.read", "clinical.write", "medicine.ready"
@@ -23,15 +24,8 @@ class MembershipWrite(BaseModel):
         return roles
 
 
-class MembershipRead(BaseModel):
+class MembershipRead(ClinicMembership):
     model_config = ConfigDict(from_attributes=True)
-    membership_id: UUID
-    subject_id: UUID
-    tenant_id: UUID
-    roles: list[MembershipRole]
-    status: MembershipStatus
-    created_at: datetime
-    updated_at: datetime
 
     @field_serializer("created_at", "updated_at")
     def utc_timestamp(self, value: datetime):
@@ -40,11 +34,7 @@ class MembershipRead(BaseModel):
         )
 
 
-class IdentityRead(BaseModel):
-    subject_id: UUID
-    cognito_sub: str
-    display_name: str
-    global_roles: list[Literal["patient", "platform_admin"]]
+class IdentityRead(CurrentIdentity):
     memberships: list[MembershipRead]
 
 
@@ -73,20 +63,3 @@ class AccessDecision(BaseModel):
     reason: Literal[
         "own_appointment", "assigned_doctor", "clinic_admin", "platform_admin", "not_authorized"
     ]
-
-
-class ErrorDetail(BaseModel):
-    field: str
-    code: str
-    message: str
-
-
-class ErrorBody(BaseModel):
-    code: str
-    message: str
-    request_id: str
-    details: list[ErrorDetail]
-
-
-class ErrorEnvelope(BaseModel):
-    error: ErrorBody

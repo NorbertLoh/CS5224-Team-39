@@ -4,8 +4,8 @@ import logging
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
+from telelink_common.logging import JsonFormatter, request_id_context
 
-from app.logging import JsonFormatter, request_id_context
 from app.main import create_app
 from app.settings import Settings
 

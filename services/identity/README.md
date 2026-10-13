@@ -44,6 +44,8 @@ From `services/identity`, with Python 3.10+ and Docker Desktop running:
 ```powershell
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.lock.txt
+.venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation -e ../../packages/python_common
+.venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation -e .
 docker run --name telelink-a04-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=a04-local-admin -e POSTGRES_DB=telelink -p 127.0.0.1:55408:5432 -d postgres:17
 docker exec telelink-a04-postgres pg_isready -U postgres -d telelink
 ```

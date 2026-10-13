@@ -35,7 +35,7 @@ def test_session_dependency_without_database_returns_503():
     with TestClient(app) as client:
         response = client.get("/db-example")
         assert response.status_code == 503
-        assert response.json()["detail"] == "Database is not configured"
+        assert response.json()["error"]["message"] == "Database is not configured"
 
 
 @pytest.fixture

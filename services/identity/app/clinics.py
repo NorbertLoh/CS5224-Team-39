@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from uuid import UUID
 
-from app.errors import DomainError
+from telelink_common.errors import DomainError
 
 
 class ClinicDirectory:

@@ -23,7 +23,10 @@ jobs:
           cache: pip
           cache-dependency-path: services/template/requirements.lock.txt
       - run: python -m pip install -r requirements.lock.txt
+      - run: python -m pip install --no-deps --no-build-isolation -e ../../packages/python_common
       - run: python -m ruff check .
       - run: python -m ruff check ../../dev/fixtures --config pyproject.toml
       - run: python -m ruff check ../../dev/floci --config pyproject.toml
-      - run: python -m pytest tests/test_auth.py -q
+      - run: python -m ruff check ../../packages/python_common
+      - run: python -m pytest tests -q
+      - run: python -m pytest ../../packages/python_common/tests -q

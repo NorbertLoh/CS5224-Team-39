@@ -5,19 +5,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 FROM base AS build
 WORKDIR /build
 COPY . .
+COPY --from=python_common . /shared
 RUN python -m pip install --no-cache-dir -c requirements.lock.txt setuptools wheel && \
     python -m pip install --no-cache-dir --no-build-isolation \
-      --prefix=/install -c requirements.lock.txt .
+      --prefix=/install -c requirements.lock.txt /shared .
 
 FROM base AS development
 WORKDIR /app
 COPY . .
+COPY --from=python_common . /shared
 RUN python -m pip install --no-cache-dir -r requirements.lock.txt && \
-    python -m pip install --no-deps --no-build-isolation -e .
+    python -m pip install --no-deps --no-build-isolation -e /shared -e .
 RUN useradd --uid 10001 --create-home app
 USER app
 EXPOSE 8000
-CMD ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--no-access-log"]
+CMD ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--reload-dir", "/shared/telelink_common", "--no-access-log"]
 
 FROM base AS production
 WORKDIR /app

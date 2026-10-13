@@ -1,6 +1,6 @@
 import uvicorn
+from telelink_common.logging import configure_logging
 
-from app.logging import configure_logging
 from app.main import create_app
 from app.settings import Settings
 

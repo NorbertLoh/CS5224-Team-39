@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - 'services/identity/**'
+      - 'packages/python_common/**'
       - '.github/workflows/identity-checks.yml'
   pull_request:
     paths:
       - 'services/identity/**'
+      - 'packages/python_common/**'
       - '.github/workflows/identity-checks.yml'
 
 permissions:
@@ -46,6 +48,7 @@ jobs:
           cache: pip
           cache-dependency-path: services/identity/requirements.lock.txt
       - run: python -m pip install -r requirements.lock.txt
+      - run: python -m pip install --no-deps --no-build-isolation -e ../../packages/python_common
       - name: Provision disposable service schema
         env:
           PGPASSWORD: a04-local-admin
