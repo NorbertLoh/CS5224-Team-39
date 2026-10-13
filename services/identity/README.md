@@ -1,9 +1,14 @@
-# Identity persistence (A04)
+# Identity service (A04/A05)
+
+A05 adds authenticated self/membership APIs and service-only access decisions.
+See [API setup, authentication and integration boundaries](docs/api.md) and the
+[OpenAPI snapshot](docs/openapi.json). Implementation is tracked in issue #60.
 
 Identity owns application subjects, runtime Cognito subject mappings, global
 roles and clinic memberships under the `identity` PostgreSQL schema. This task
-implements persistence only; authenticated APIs and access policies follow in
-A05/A06/A10. Contract: [C02](../../contracts/identity-clinic-access.md).
+implements persistence and C02 identity APIs. Reusable checks in consuming services
+and live clinic integration follow in A06/A10. Contract:
+[C02](../../contracts/identity-clinic-access.md).
 
 ## Schema decisions
 
@@ -22,7 +27,8 @@ A05/A06/A10. Contract: [C02](../../contracts/identity-clinic-access.md).
 - Deleting a subject with memberships is restricted. There is no foreign key
   to tenant-owned clinics and no cross-service table writes. A10 must validate
   clinic existence through the tenant API. A05/A10 must enforce last-active-admin
-  concurrency rules and cache invalidation; this schema alone grants no access.
+  concurrency rules and cache invalidation; A05 serializes membership mutations
+  per tenant and reads current permissions without caching.
 - A tenant/creation/ID index supports C02 membership pagination. Subject lookup
   and subject/tenant lookup use their unique indexes.
 
@@ -59,8 +65,8 @@ Only the identity role runs migrations. Tables and `alembic_version` are in
 application startup. Rerunning `upgrade head` is safe. Migration reflection is
 restricted to this service's schema, following the F04 template; connections use
 `search_path=public` to keep reflection unambiguous and `timezone=UTC` for reads.
-The environment variable is required; `.env.example` is reference configuration,
-and A04 does not automatically read `.env` files.
+The environment variable is required for migration commands. The A05 HTTP server
+also reads an ignored local `.env`; Alembic still requires the exported variable.
 
 No HTTP server or Compose integration is added by A04. For future deployments,
 provide an externally managed database URL with verified TLS, separate migration
@@ -101,8 +107,8 @@ finally:
     engine.dispose()
 ```
 
-A05 must authenticate the token with A03 first, then pass its verified `sub` to
-`find_subject`. Unknown `sub` returns `None`; A05 translates this to C02's
+A05 authenticates the token with the A03 verifier first, then passes its verified
+`sub` to `find_subject`. Unknown `sub` returns `None`; the API translates this to C02's
 `403 identity_not_provisioned`. Lookup is case-sensitive and treats `sub` as
 opaque. Global platform-admin provisioning stays operator-controlled.
 
@@ -129,4 +135,7 @@ CI workflow provisions a fresh PostgreSQL 17 instance and runs the complete suit
 Tests verify repeat upgrades, metadata parity, runtime mapping, multi-clinic
 roles, revocation/reactivation, timestamps, invalid role/status/null rejection,
 uniqueness, subject referential integrity, transaction rollback, and downgrade/
-re-upgrade. No live API authorization or integrated Cognito login is claimed.
+re-upgrade. A05 additionally tests signed user/service tokens, clinic access,
+pagination, safe errors and concurrent membership mutations. Local verification
+also passed with an actual Floci PKCE token, live JWKS retrieval and a provisioned
+runtime `sub`. Tenant/scheduling service integration remains future work.
