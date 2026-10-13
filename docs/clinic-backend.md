@@ -78,6 +78,8 @@ npm ci
 npm run dev
 ```
 
+Both `http://localhost:5173` and `http://127.0.0.1:5173` are registered for local
+Cognito callback/logout. For a different frontend port, register its exact URLs.
 Open http://localhost:5173 and sign in as `clinic@example.test`, password
 `LocalDemo123!`. The clinic is a persisted local database record, editable through
 Manage clinics. It is not imported from the shared fixtures. Re-running the helper

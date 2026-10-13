@@ -53,6 +53,27 @@ def main():
         ]
         if item["ClientName"] == "telelink-web"
     )
+    client = cognito.describe_user_pool_client(UserPoolId=pool, ClientId=client_id)[
+        "UserPoolClient"
+    ]
+    callbacks = set(client.get("CallbackURLs", []))
+    logouts = set(client.get("LogoutURLs", []))
+    for origin in ["http://localhost:5173", "http://127.0.0.1:5173"]:
+        callbacks.add(origin + "/auth/callback")
+        logouts.add(origin + "/")
+    cognito.update_user_pool_client(
+        UserPoolId=pool,
+        ClientId=client_id,
+        ClientName="telelink-web",
+        SupportedIdentityProviders=["COGNITO"],
+        AllowedOAuthFlowsUserPoolClient=True,
+        AllowedOAuthFlows=["code"],
+        AllowedOAuthScopes=["openid", "email", "profile"],
+        ExplicitAuthFlows=["ALLOW_REFRESH_TOKEN_AUTH"],
+        PreventUserExistenceErrors="ENABLED",
+        CallbackURLs=sorted(callbacks),
+        LogoutURLs=sorted(logouts),
+    )
     LOCAL.mkdir(parents=True, exist_ok=True)
     key_file = LOCAL / "keys.json"
     if not key_file.exists():
