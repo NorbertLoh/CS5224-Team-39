@@ -9,6 +9,7 @@ export function LogoUpload({ tenantId, preview, onChange }: {
 }) {
   const [busy, setBusy] = useState(profileApiEnabled)
   const [notice, setNotice] = useState('')
+  const [failedPreview, setFailedPreview] = useState<string | null>(null)
 
   useEffect(() => {
     if (!profileApiEnabled) return
@@ -58,6 +59,13 @@ export function LogoUpload({ tenantId, preview, onChange }: {
         event.target.value = ''
         void select(file)
       }} className="w-full min-w-0 rounded-lg border border-slate-300 p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:font-medium" />
+      {preview && (
+        <div className="mt-3 flex size-32 items-center justify-center rounded-lg border border-slate-200 bg-white p-2">
+          {failedPreview === preview ? <p className="text-center text-xs text-slate-500">Logo preview unavailable.</p> : (
+            <img key={preview} src={preview} alt="Current clinic logo" width={128} height={128} className="size-full object-contain" onError={() => setFailedPreview(preview)} />
+          )}
+        </div>
+      )}
       <p id="logo-help" className="mt-2 text-xs text-slate-500">PNG, JPEG or WebP, up to 2 MB and 4 megapixels. {profileApiEnabled ? 'Logo changes save immediately.' : 'Local preview only; S3 is not connected.'}</p>
       {preview && <Button type="button" variant="outline" disabled={busy} onClick={() => void remove()} className="mt-3">Remove logo</Button>}
       <p id="logo-status" role="status" className="mt-2 text-sm text-slate-600">{notice}</p>
