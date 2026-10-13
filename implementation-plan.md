@@ -70,8 +70,8 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | A04 | Create identity service schema/migrations for subjects, roles and memberships. Completed in merged PR #59; 29 PostgreSQL tests, schema isolation, lint and CI passed. Issue #58 closed. | F04, C02 | M |
 | [x] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. Completed in merged PR #61; 81 tests, live Floci identity mapping and CI passed. Issue #60 closed; live tenant integration remains A08/A10. | A03, A04 | M |
 | [x] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. Completed in merged PR #63; shared foundations, 124 local tests, real HTTP authorization, container checks and CI passed. Issue #62 closed. | A05 | M |
-| [ ] | A07 | Create tenant service schema/migrations for clinic, branding and activation. Assignee: NorbertLoh; status: in progress. Issue #64; PR #65. | F04, C02 | M |
-| [ ] | A08 | Add clinic create/update/public-profile APIs; inactive clinics cannot accept bookings. | A06, A07 | M |
+| [x] | A07 | Create tenant service schema/migrations for clinic, branding and activation. Completed in merged PR #65; 30 PostgreSQL tests, migration isolation, lint and CI passed. Issue #64 closed. | F04, C02 | M |
+| [ ] | A08 | Add clinic create/update/public-profile APIs; inactive clinics cannot accept bookings. Assignee: NorbertLoh; status: in progress. Issue #66. | A06, A07 | M |
 | [ ] | A09 | Add platform approve/reject and commission-setting APIs with audit events. | A08 | M |
 | [ ] | A10 | Add staff assignment/membership APIs with authorised clinic administration. | A05, A08 | M |
 | [ ] | U01 | Build branded clinic storefront using fixtures. | F07, F08, C02 | M |
