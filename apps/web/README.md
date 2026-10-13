@@ -17,7 +17,11 @@ Development runs at http://127.0.0.1:5173. Preview serves the built `dist/` at h
 
 `dist/` contains static assets suitable for S3/CloudFront; the Vite development/preview servers are local tools, not production hosting. Configure cloud routing in W04. Browser-visible `VITE_*` environment variables are substituted at build time, so never put credentials or secrets in them.
 
-F08 provides the query provider, a small fetch helper and shared loading/error states. F07 adds route modules/layouts. This scaffold has no authentication or live business API integration yet. Planned feature groups: storefront, patient, doctor, clinic administration and platform administration.
+F08 provides the query provider, a small fetch helper and shared loading/error states.
+The current landing page includes A01/A02 authentication controls. U01 adds public
+fixture storefronts at `/clinics/demo-clinic-a` and `/clinics/demo-clinic-b`, linked
+from the home page. See the [storefront guide](src/features/storefront/README.md).
+Booking and live business API integration remain later tasks.
 
 ## Calling an API
 
