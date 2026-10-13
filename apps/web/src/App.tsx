@@ -3,8 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AuthControls } from './auth/AuthControls'
 import { ClinicStorefront } from './features/storefront/ClinicStorefront'
 import { storefrontClinics, consultationPrice } from './features/storefront/fixtures'
+import { ClinicProfileEditor } from './features/clinic-profile/ClinicProfileEditor'
 
 export default function App() {
+  if (window.location.pathname.startsWith('/clinic-admin/')) {
+    const route = /^\/clinic-admin\/clinics\/([^/]+)\/profile\/?$/.exec(window.location.pathname)
+    return <ClinicProfileEditor slug={route?.[1]} />
+  }
   if (window.location.pathname.startsWith('/clinics/')) {
     const route = /^\/clinics\/([^/]+)\/?$/.exec(window.location.pathname)
     return <ClinicStorefront slug={route?.[1]} />
@@ -38,7 +43,11 @@ export default function App() {
           {['Patient', 'Doctor', 'Clinic administrator', 'Platform administrator'].map(role => (
             <Card key={role}>
               <CardHeader><CardTitle><h2>{role}</h2></CardTitle></CardHeader>
-              <CardContent><p className="text-muted-foreground">Portal pages are coming next.</p></CardContent>
+              <CardContent>{role === 'Clinic administrator' ? (
+                <ul className="space-y-2 text-sm">
+                  {storefrontClinics.map(clinic => <li key={clinic.tenant_id}><a href={`/clinic-admin/clinics/${clinic.slug}/profile`} className="underline underline-offset-4">Edit {clinic.name} demo</a></li>)}
+                </ul>
+              ) : <p className="text-muted-foreground">Portal pages are coming next.</p>}</CardContent>
             </Card>
           ))}
         </div>

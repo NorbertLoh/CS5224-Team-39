@@ -23,6 +23,12 @@ fixture storefronts at `/clinics/demo-clinic-a` and `/clinics/demo-clinic-b`, li
 from the home page. See the [storefront guide](src/features/storefront/README.md).
 Booking and live business API integration remain later tasks.
 
+U02 adds fixture profile/branding editors at
+`/clinic-admin/clinics/demo-clinic-a/profile` and
+`/clinic-admin/clinics/demo-clinic-b/profile`, linked from the clinic-administrator
+card. Edits preview locally; save/discard stay in the editor and reset on exit or
+reload. See the [editor guide](src/features/clinic-profile/README.md).
+
 ## Calling an API
 
 `apiFetch()` is a small wrapper around `fetch()`. It adds the API base URL,
