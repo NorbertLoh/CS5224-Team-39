@@ -38,6 +38,20 @@ def database():
         command.check(config)
         # A08 is additive: rolling back just 0002 preserves the A07 clinic rows.
         clinic_id = create_clinic(engine)
+        command.downgrade(config, "0002")
+        assert "audit_events" not in inspect(engine).get_table_names(schema="tenant")
+        with engine.connect() as connection:
+            assert (
+                connection.scalar(
+                    text("SELECT tenant_id FROM tenant.clinics WHERE tenant_id=:id"),
+                    {"id": clinic_id},
+                )
+                == clinic_id
+            )
+            assert (
+                connection.scalar(text("SELECT to_regprocedure('tenant.prevent_audit_mutation()')"))
+                is None
+            )
         command.downgrade(config, "0001")
         with engine.connect() as connection:
             assert (
@@ -49,7 +63,11 @@ def database():
             )
         command.upgrade(config, "head")
         command.check(config)
-        assert inspect(engine).get_table_names(schema="tenant") == ["alembic_version", "clinics"]
+        assert inspect(engine).get_table_names(schema="tenant") == [
+            "alembic_version",
+            "audit_events",
+            "clinics",
+        ]
         yield engine
         command.downgrade(config, "base")
         assert inspect(engine).get_table_names(schema="tenant") == ["alembic_version"]
@@ -57,6 +75,10 @@ def database():
         with engine.connect() as connection:
             assert (
                 connection.scalar(text("SELECT to_regprocedure('tenant.touch_clinic()')")) is None
+            )
+            assert (
+                connection.scalar(text("SELECT to_regprocedure('tenant.prevent_audit_mutation()')"))
+                is None
             )
         command.upgrade(config, "head")
         command.check(config)

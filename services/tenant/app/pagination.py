@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from uuid import UUID
 
 import jwt
@@ -47,5 +48,54 @@ def decode_cursor(settings, cursor):
             422,
             "validation_error",
             "Invalid clinic cursor.",
+            [{"field": "query.cursor", "code": "invalid_cursor", "message": "Reset pagination."}],
+        ) from None
+
+
+def encode_admin_cursor(settings, subject_id, status, clinic):
+    now = int(time.time())
+    return jwt.encode(
+        {
+            "iss": "telelink-tenant-cursor",
+            "aud": "admin-clinics",
+            "sub": str(subject_id),
+            "status": status,
+            "order": "created_at,tenant_id",
+            "created_at": clinic.created_at.isoformat(),
+            "id": str(clinic.tenant_id),
+            "iat": now,
+            "exp": now + 900,
+        },
+        cursor_key(settings),
+        algorithm="HS256",
+    )
+
+
+def decode_admin_cursor(settings, cursor, subject_id, status):
+    key = cursor_key(settings)
+    try:
+        claims = jwt.decode(
+            cursor,
+            key,
+            algorithms=["HS256"],
+            issuer="telelink-tenant-cursor",
+            audience="admin-clinics",
+            options={"require": ["exp", "iat", "sub", "status", "order", "created_at", "id"]},
+        )
+        if (claims["sub"], claims["status"], claims["order"]) != (
+            str(subject_id),
+            status,
+            "created_at,tenant_id",
+        ):
+            raise ValueError("Mismatched cursor scope")
+        created_at = datetime.fromisoformat(claims["created_at"])
+        if created_at.tzinfo is None:
+            raise ValueError("Missing cursor timezone")
+        return created_at, UUID(claims["id"])
+    except (jwt.InvalidTokenError, ValueError, TypeError, KeyError):
+        raise DomainError(
+            422,
+            "validation_error",
+            "Invalid admin clinic cursor.",
             [{"field": "query.cursor", "code": "invalid_cursor", "message": "Reset pagination."}],
         ) from None

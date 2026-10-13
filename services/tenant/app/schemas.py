@@ -110,6 +110,33 @@ class ClinicPage(BaseModel):
     next_cursor: str | None
 
 
+class ClinicAdminPage(BaseModel):
+    items: list[ClinicAdmin]
+    next_cursor: str | None
+
+
+class ClinicReview(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    decision: Literal["approve", "reject", "suspend"]
+    reason: str | None = Field(default=None, max_length=2000)
+
+    @model_validator(mode="after")
+    def review_reason(self):
+        if self.decision == "approve":
+            if self.reason is not None:
+                raise ValueError("Approval reason must be null")
+        elif self.reason is None or not self.reason.strip():
+            raise ValueError("Rejection/suspension requires a reason")
+        if self.reason is not None and ("<" in self.reason or ">" in self.reason):
+            raise ValueError("Review reason must be plain text")
+        return self
+
+
+class CommissionWrite(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    commission_bps: int = Field(strict=True, ge=0, le=10000)
+
+
 def profile(clinic, *, admin=False):
     fields = {
         field: getattr(clinic, field)

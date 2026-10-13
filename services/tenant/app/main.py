@@ -10,9 +10,10 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
+from app.admin import router as admin_router
 from app.api import router
 from app.database import create_database_engine
-from app.models import Clinic
+from app.models import AuditEvent, Clinic
 from app.settings import Settings
 
 
@@ -53,13 +54,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors_origins,
-        allow_methods=["GET", "POST", "PATCH"],
+        allow_methods=["GET", "POST", "PATCH", "PUT"],
         allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
         expose_headers=["X-Request-ID", "Retry-After"],
     )
     app.add_middleware(RequestLoggingMiddleware, service="tenant")
     install_error_handlers(app)
     app.include_router(router)
+    app.include_router(admin_router)
 
     @app.get("/health/live", tags=["health"])
     def live():
@@ -82,9 +84,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             try:
                 with engine.connect() as connection:
                     connection.execute(select(Clinic.tenant_id).limit(1))
+                    connection.execute(select(AuditEvent.event_id).limit(1))
                     available = (
                         connection.scalar(text("SELECT version_num FROM tenant.alembic_version"))
-                        == "0002"
+                        == "0003"
                     )
             except SQLAlchemyError:
                 available = False

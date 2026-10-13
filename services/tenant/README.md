@@ -1,13 +1,13 @@
-# Tenant service (A07/A08)
+# Tenant service (A07-A09)
 
 Tenant owns clinic data in the `tenant` PostgreSQL schema, following
 [C02](../../contracts/identity-clinic-access.md). A07 adds the clinic model,
 service-local migrations and focused persistence checks. A08 implements clinic
 creation, authorised profile edits, public profiles and booking eligibility.
+A09 adds platform review, commission settings and durable audit events.
 See [API setup and integration boundaries](docs/api.md).
 
-Review actions and audit events follow in A09; general staff administration and
-doctor-directory integration follow in A10.
+General staff administration and doctor-directory integration follow in A10.
 
 ## Schema
 
@@ -36,9 +36,16 @@ pending review. A08 keeps a clinic non-bookable until identity membership
 provisioning and approval succeed. Scheduling must call the booking-profile
 gate before accepting new slots/holds/bookings when S02/S03 are implemented.
 A09 enforces legal review transitions, reason requirements and audit events.
-The database constrains stored values; it does not implement those workflows.
+The API enforces those workflows; database constraints protect stored values.
 The HTTPS check is a storage guard; the API validates URLs and plain-text
 input and omits commission/review details from public profiles.
+
+`tenant.audit_events` records administrative changes with actor subject ID,
+clinic ID, action, previous/new values, review reason and UTC occurrence time.
+The actor is an external identity ID, without a cross-service foreign key.
+Audit rows and clinic changes commit atomically. Ordinary UPDATE/DELETE is
+rejected by a trigger; clinic deletion is restricted while audit rows refer to it.
+These are local audit records; no EventBridge publication is included in A09.
 
 ## Fresh local setup (PowerShell)
 
@@ -103,5 +110,11 @@ fields, pagination and lost/mismatched provisioning acknowledgements. Local
 verification also used an actual Floci PKCE token/JWKS and separate HTTP tenant
 and identity servers: creation recovered after a provisioning failure and tenant
 restart, then profile editing, active/suspended booking checks and membership
-revocation passed. Review actions were operator SQL solely in that synthetic
-verification; A09 review APIs and real scheduling integration remain future work.
+revocation passed. That A08 check used operator SQL for review transitions.
+
+A09 verification passed all review transitions, strict commission/reason inputs,
+concurrent retries, append-only audit checks and rollback on audit insertion
+failure. Real Floci patient/platform PKCE tokens and separate HTTP services also
+passed platform-only listing, approval/suspension/reactivation, commission changes,
+public/booking eligibility, persisted audit events and immediate denial after
+platform-role removal. Actual scheduling integration remains future work.
