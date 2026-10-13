@@ -12,7 +12,7 @@ from alembic import command
 from alembic.config import Config
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -565,3 +565,86 @@ def test_missing_dependencies_keys_cors_and_error_sanitization(api):
 def test_invalid_api_configuration(changes):
     with pytest.raises(ValidationError):
         configuration(**changes)
+
+
+TENANT_KEY = "test-tenant-provisioning-secret-at-least-32-bytes"
+
+
+def tenant_token(**changes):
+    now = int(time.time())
+    return jwt.encode(
+        {
+            "iss": "telelink-service:tenant",
+            "aud": "telelink-identity-provisioning",
+            "sub": "tenant",
+            "iat": now,
+            "exp": now + 60,
+        }
+        | changes,
+        TENANT_KEY,
+        algorithm="HS256",
+    )
+
+
+def test_creator_provisioning_is_scoped_and_idempotent(api):
+    api.app.state.settings.tenant_secret = SecretStr(TENANT_KEY)
+    tenant_id = uuid4()
+    body = {"tenant_id": str(tenant_id), "subject_id": str(api.ids["patient"])}
+    credential = {"Authorization": "Bearer " + tenant_token()}
+    endpoint = "/internal/clinic-creators"
+    assert api.client.put(endpoint, json=body).status_code == 401
+    assert api.client.put(endpoint, json=body, headers=headers(api)).status_code == 401
+    assert (
+        api.client.put(
+            endpoint, json=body, headers={"Authorization": "Bearer " + api.service_token()}
+        ).status_code
+        == 401
+    )
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        responses = list(
+            pool.map(lambda _: api.client.put(endpoint, json=body, headers=credential), range(4))
+        )
+    assert all(response.status_code == 200 for response in responses)
+    assert len({response.json()["membership_id"] for response in responses}) == 1
+    first = responses[0]
+    assert first.status_code == 200 and first.json()["roles"] == ["clinic_admin"]
+    repeated = api.client.put(endpoint, json=body, headers=credential)
+    assert repeated.status_code == 200
+    assert repeated.json()["membership_id"] == first.json()["membership_id"]
+    assert repeated.json()["updated_at"] == first.json()["updated_at"]
+    assert (
+        api.client.put(
+            endpoint, json=body | {"roles": ["platform_admin"]}, headers=credential
+        ).status_code
+        == 422
+    )
+    assert (
+        api.client.put(
+            endpoint, json=body | {"subject_id": str(uuid4())}, headers=credential
+        ).status_code
+        == 404
+    )
+    with Session(api.engine) as session, session.begin():
+        membership = session.get(Membership, UUID(first.json()["membership_id"]))
+        membership.status = "revoked"
+    assert api.client.put(endpoint, json=body, headers=credential).status_code == 409
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"aud": "telelink-identity-access"},
+        {"sub": "scheduling"},
+        {"exp": int(time.time()) - 1},
+        {"exp": int(time.time()) + 3600},
+        {"iat": "invalid"},
+    ],
+)
+def test_creator_provisioning_rejects_wrong_service_credentials(api, changes):
+    api.app.state.settings.tenant_secret = SecretStr(TENANT_KEY)
+    result = api.client.put(
+        "/internal/clinic-creators",
+        json={"tenant_id": str(uuid4()), "subject_id": str(api.ids["patient"])},
+        headers={"Authorization": "Bearer " + tenant_token(**changes)},
+    )
+    assert result.status_code == 401

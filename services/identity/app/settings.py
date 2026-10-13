@@ -12,21 +12,20 @@ class Settings(ServiceSettings):
     port: ServicePort = 8001
     cursor_secret: SecretStr | None = None
     scheduling_secret: SecretStr | None = None
+    tenant_secret: SecretStr | None = None
     scheduling_actions: str = ""
     clinic_fixture_path: Path | None = None
     cors_origins: list[str] = []
 
     @model_validator(mode="after")
     def validate_service_configuration(self):
-        for secret in (self.cursor_secret, self.scheduling_secret):
+        secrets = (self.cursor_secret, self.scheduling_secret, self.tenant_secret)
+        for secret in secrets:
             if secret is not None and len(secret.get_secret_value().encode()) < 32:
-                raise ValueError("cursor and scheduling secrets require at least 32 bytes")
-        if (
-            self.cursor_secret is not None
-            and self.scheduling_secret is not None
-            and self.cursor_secret == self.scheduling_secret
-        ):
-            raise ValueError("cursor and scheduling secrets must be different")
+                raise ValueError("cursor and service secrets require at least 32 bytes")
+        configured = [secret.get_secret_value() for secret in secrets if secret is not None]
+        if len(configured) != len(set(configured)):
+            raise ValueError("cursor and service secrets must be different")
         actions = {
             "appointment.read",
             "appointment.cancel",

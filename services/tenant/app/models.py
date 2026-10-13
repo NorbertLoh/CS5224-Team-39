@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     FetchedValue,
@@ -57,6 +58,11 @@ class Clinic(Base):
     __mapper_args__ = {"eager_defaults": True}
 
     tenant_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    # External identity ID; only tenant creates clinics, never identity tables.
+    creator_subject_id: Mapped[UUID | None] = mapped_column(Uuid)
+    membership_provisioned: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
     slug: Mapped[str] = mapped_column(Text)
     name: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(

@@ -90,6 +90,27 @@
         "title": "AppointmentContext",
         "type": "object"
       },
+      "CreatorMembership": {
+        "additionalProperties": false,
+        "properties": {
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "subject_id"
+        ],
+        "title": "CreatorMembership",
+        "type": "object"
+      },
       "ErrorBody": {
         "properties": {
           "code": {
@@ -317,6 +338,10 @@
         "type": "http"
       },
       "SchedulingServiceJWT": {
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "TenantServiceJWT": {
         "scheme": "bearer",
         "type": "http"
       }
@@ -874,6 +899,92 @@
         "summary": "Ready",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/internal/clinic-creators": {
+      "put": {
+        "operationId": "provision_creator_internal_clinic_creators_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatorMembership"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "TenantServiceJWT": []
+          }
+        ],
+        "summary": "Provision Creator",
+        "tags": [
+          "internal"
         ]
       }
     },
