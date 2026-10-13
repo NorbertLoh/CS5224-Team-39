@@ -79,7 +79,10 @@ npm run dev
 ```
 
 Both `http://localhost:5173` and `http://127.0.0.1:5173` are registered for local
-Cognito callback/logout. For a different frontend port, register its exact URLs.
+Cognito callback/logout and Floci CORS. For a different frontend port, register
+its exact URLs and add its origin to `COGNITO_CORS_ORIGINS`. After changing CORS,
+recreate Floci with `docker compose --profile offline up -d --wait floci`;
+existing Cognito/S3 data stays in its persistent volume.
 Open http://localhost:5173 and sign in as `clinic@example.test`, password
 `LocalDemo123!`. The clinic is a persisted local database record, editable through
 Manage clinics. It is not imported from the shared fixtures. Re-running the helper
