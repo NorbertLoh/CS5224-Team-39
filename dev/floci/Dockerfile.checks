@@ -1,0 +1,5 @@
+FROM python:3.10-slim
+WORKDIR /workspace
+COPY dev/floci/requirements-checks.txt /tmp/requirements-checks.txt
+RUN python -m pip install --no-cache-dir -r /tmp/requirements-checks.txt
+ENTRYPOINT ["python", "dev/floci/check_services.py"]

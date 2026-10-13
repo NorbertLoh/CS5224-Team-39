@@ -25,5 +25,5 @@ jobs:
       - run: python -m pip install -r requirements.lock.txt
       - run: python -m ruff check .
       - run: python -m ruff check ../../dev/fixtures --config pyproject.toml
-      - run: python -m ruff check ../../dev/floci/check_auth.py --config pyproject.toml
+      - run: python -m ruff check ../../dev/floci --config pyproject.toml
       - run: python -m pytest tests/test_auth.py -q

@@ -24,37 +24,38 @@ def cognito(client, action, **payload):
     return response
 
 
-def main():
-    client_id = os.environ["COGNITO_CLIENT_ID"]
+def login(client, client_id, oauth=OAUTH, callback=CALLBACK):
+    """Return tokens from the seeded patient's PKCE login; also used by F16."""
     verifier = secrets.token_urlsafe(32)
     challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
     params = {
-        "client_id": client_id, "response_type": "code", "redirect_uri": CALLBACK,
+        "client_id": client_id, "response_type": "code", "redirect_uri": callback,
         "scope": "openid email profile", "state": secrets.token_urlsafe(32),
         "code_challenge": challenge.decode().rstrip("="), "code_challenge_method": "S256",
     }
+    page = client.get(oauth + "/oauth2/authorize", params=params, follow_redirects=True)
+    page.raise_for_status()
+    csrf = re.search(r'name="_csrf" value="([^"]+)"', page.text)
+    assert csrf, "Login page did not contain a CSRF token"
+    result = client.post(oauth + "/login", data={
+        **params, "_csrf": csrf.group(1),
+        "username": "patient@example.test", "password": "LocalDemo123!",
+    })
+    assert result.status_code == 302, "Patient login failed"
+    query = parse_qs(urlsplit(result.headers["location"]).query)
+    assert query["state"][0] == params["state"], "Login state did not match"
+    response = client.post(oauth + "/oauth2/token", data={
+        "grant_type": "authorization_code", "client_id": client_id,
+        "redirect_uri": callback, "code": query["code"][0], "code_verifier": verifier,
+    })
+    response.raise_for_status()
+    return response.json()
 
+
+def main():
+    client_id = os.environ["COGNITO_CLIENT_ID"]
     with httpx.Client(timeout=10) as client:
-        # Open managed login and submit the seeded patient's credentials.
-        login = client.get(OAUTH + "/oauth2/authorize", params=params, follow_redirects=True)
-        login.raise_for_status()
-        csrf = re.search(r'name="_csrf" value="([^"]+)"', login.text)
-        assert csrf, "Login page did not contain a CSRF token"
-        result = client.post(OAUTH + "/login", data={
-            **params, "_csrf": csrf.group(1),
-            "username": "patient@example.test", "password": "LocalDemo123!",
-        })
-        assert result.status_code == 302, "Patient login failed"
-        callback = parse_qs(urlsplit(result.headers["location"]).query)
-        assert callback["state"][0] == params["state"], "Login state did not match"
-
-        # Exchange the code, then prove the access token works at the API.
-        response = client.post(OAUTH + "/oauth2/token", data={
-            "grant_type": "authorization_code", "client_id": client_id,
-            "redirect_uri": CALLBACK, "code": callback["code"][0], "code_verifier": verifier,
-        })
-        response.raise_for_status()
-        tokens = response.json()
+        tokens = login(client, client_id)
         access = tokens["access_token"]
         client.get(API, headers={"Authorization": "Bearer " + access}).raise_for_status()
 

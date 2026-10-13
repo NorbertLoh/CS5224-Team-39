@@ -1,0 +1,4 @@
+# Local F16 verification only; application dependencies are unchanged.
+boto3==1.43.112
+botocore==1.43.112
+httpx==0.28.1

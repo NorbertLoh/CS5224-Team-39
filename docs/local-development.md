@@ -30,9 +30,10 @@ Floci; `connected` does not configure real Cognito or providers.
 Plain `docker compose up` starts the API and PostgreSQL/Redis. Stop the
 offline stack before switching profiles: profiles do not stop running containers.
 
-Initial images are PostgreSQL 17, Redis 7.4 Alpine and released Floci 2.2.0.
-Override references in `.env` if needed. F16 validates required Floci operations
-before treating this selection as the tested emulator baseline.
+Images are PostgreSQL 17, Redis 7.4 Alpine and released Floci 2.2.0, pinned by
+its tested manifest digest. Override references in `.env` if needed; existing
+overrides take precedence. See [F16 verification](floci-verification.md) for
+API/restart/recreation results, reproduction steps and emulator limitations.
 
 In a second terminal, start the frontend:
 
@@ -106,8 +107,9 @@ docker compose --profile offline run --rm --entrypoint aws bootstrap --endpoint-
 ```
 
 Emulator settings do not establish AWS authorization or privacy guarantees.
-Real private S3/IAM configuration belongs to W08; restart/API coverage remains
-F16. Business services must configure these resource names and read secrets
+Real private S3/IAM configuration belongs to W08; the F16 report records that
+unsigned and expired signed object GETs are accepted by the tested local
+configuration. Business services must configure these resource names and read secrets
 server-side; never copy provider secrets into frontend `VITE_*` variables.
 
 ### Event routes and queue access
@@ -119,7 +121,7 @@ four days, use a 30-second visibility timeout and redrive after three receives.
 DLQs retain messages for 14 days. EventBridge targets retry three times within
 one hour and send delivery failures to the shared delivery DLQ. These settings
 are local defaults; worker acknowledgement, idempotency and operator replay
-remain M03/M04, and full emulator compatibility remains F16.
+remain M03/M04. F16 verifies API support/persistence; it does not prove AWS parity.
 
 Inspect the bus and queues without publishing workflow events:
 
@@ -178,8 +180,9 @@ authorization/token requests. The pinned release serves managed login at
 `/cognito-idp/login`; it needs no AWS-style domain. Inside Compose, fetch JWKS
 from `http://floci:4566/<pool-id>/.well-known/jwks.json` but validate the original
 host-facing issuer in tokens. Do not rewrite token claims or use ID tokens as
-API access tokens. A03 implements verification; A02/F16 verify lifecycle and
-emulator behavior, and W05 verifies real AWS Cognito.
+API access tokens. A03 implements verification; A02/F16 verification and known
+emulator differences are documented in [authentication](authentication.md) and
+[Floci verification](floci-verification.md). W05 verifies real AWS Cognito.
 
 Groups are synthetic role fixtures, not clinic memberships or an authorization
 bypass. Identity/access tasks own server-controlled roles and tenant checks.
@@ -234,7 +237,8 @@ checks show basic availability, not full AWS compatibility. Ports bind to
 localhost. There is no Docker socket mount; Floci's UI sidecar is disabled.
 
 Named volumes retain PostgreSQL, Redis AOF and Floci persistent storage during
-normal `down`/`up`. F16 verifies Floci persistence service by service. Changing
+normal `down`/`up`. F16 verified Floci persistence service by service; see its
+report for the tested sequence and limitations. Changing
 PostgreSQL credentials in `.env` does not change an initialized database; update
 them through PostgreSQL or use a fresh disposable Compose project.
 

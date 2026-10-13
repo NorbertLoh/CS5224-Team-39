@@ -1,0 +1,4 @@
+# Verification project only: required APIs must work without container internet access.
+networks:
+  default:
+    internal: true
