@@ -14,9 +14,11 @@ Coordinate changes to shared Compose, routing, contracts and infrastructure file
 
 Completion audit, 13 October 2026: checked all 127 task rows against merged PRs,
 closed issues and repository contents. F02-F16, C01-C05 and A01-A03 are complete (23 tasks);
-F01 is skipped by user decision. F16's API/restart checks and accepted emulator
+F01 is skipped by user decision. A04 is complete in merged PR #59; its 29 PostgreSQL
+tests, migration isolation checks, lint and CI passed. There are now 24 completed tasks.
+F16's API/restart checks and accepted emulator
 limitations are recorded in merged PR #53; AWS follow-up stays open in issue #54.
-The remaining 103
+The remaining 102
 tasks stay unchecked; contract documentation, shared fixtures and route previews
 do not count as implemented services, authentication, feature pages or integrations.
 
@@ -62,7 +64,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | A01 | Add React PKCE login/return flow against Floci; obtain access token. Completed in merged PR #49; four-role browser PKCE, callback cleanup/reload and signed API access verified. Issue #46 closed. | F07, F13 | M |
 | [x] | A02 | Add refresh/logout handling and expiry UX; verify pinned emulator behaviour. Completed in merged PR #49; automatic refresh, expiry UX, revocation and hosted logout verified on Floci 2.2.0; OAuth refresh limitation documented. Issue #47 closed. | A01 | M |
 | [x] | A03 | Add FastAPI token verification: JWKS, issuer, expiry, token use and client. Completed in merged PR #49; strict RS256/JWKS access-token verification, invalid-token tests, non-local config guards and container/browser integration passed. Issue #48 closed. | F03, F13 | M |
-| [ ] | A04 | Create identity service schema/migrations for subjects, roles and memberships. Assignee: NorbertLoh; status: in progress; issue #58, PR #59. | F04, C02 | M |
+| [x] | A04 | Create identity service schema/migrations for subjects, roles and memberships. Completed in merged PR #59; 29 PostgreSQL tests, schema isolation, lint and CI passed. Issue #58 closed. | F04, C02 | M |
 | [ ] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. | A03, A04 | M |
 | [ ] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. | A05 | M |
 | [ ] | A07 | Create tenant service schema/migrations for clinic, branding and activation. | F04, C02 | M |
