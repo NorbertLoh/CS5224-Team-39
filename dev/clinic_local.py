@@ -91,6 +91,9 @@ def main():
             )
         )
     keys = json.loads(key_file.read_text())
+    if "scheduling" not in keys:
+        keys["scheduling"] = secrets.token_urlsafe(48)
+        key_file.write_text(json.dumps(keys))
     common = {
         "SERVICE_ENVIRONMENT": "local",
         "SERVICE_AUTH_ISSUER": f"http://localhost:4566/{pool}",
@@ -110,6 +113,7 @@ def main():
         else:
             settings |= {
                 "SERVICE_IDENTITY_URL": "http://127.0.0.1:8001",
+                "SERVICE_SCHEDULING_SECRET": keys["scheduling"],
                 "SERVICE_LOGO_BUCKET": "telelink-local-branding",
                 "SERVICE_LOGO_PUBLIC_BASE_URL": "https://local-assets.example.test",
                 "SERVICE_LOGO_S3_ENDPOINT": "http://localhost:4566",

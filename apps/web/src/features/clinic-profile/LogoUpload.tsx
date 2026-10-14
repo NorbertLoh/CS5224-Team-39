@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { refreshClinicViews } from '../clinics/cache'
 import { Button } from '@/components/ui/button'
 import { readLogo, removeLogo, uploadLogo, validateLogoFile } from './logo-api'
 
@@ -7,6 +9,7 @@ export function LogoUpload({ tenantId, preview, onChange }: {
   preview: string | null
   onChange: (url: string | null, preview: string | null) => void
 }) {
+  const client = useQueryClient()
   const [busy, setBusy] = useState(true)
   const [notice, setNotice] = useState('')
   const [failedPreview, setFailedPreview] = useState<string | null>(null)
@@ -36,6 +39,7 @@ export function LogoUpload({ tenantId, preview, onChange }: {
       const result = await uploadLogo(tenantId, file)
       onChange(result.url, result.preview)
       setNotice('Logo saved. The previous image was replaced.')
+      await refreshClinicViews(client)
     } catch {
       setNotice('Logo upload failed. Check the image and your sign-in, then try again.')
     } finally { setBusy(false) }
@@ -47,6 +51,7 @@ export function LogoUpload({ tenantId, preview, onChange }: {
       await removeLogo(tenantId)
       onChange(null, null)
       setNotice('Logo removed from storage.')
+      await refreshClinicViews(client)
     } catch { setNotice('Could not remove the logo. Try again.') }
     finally { setBusy(false) }
   }

@@ -80,8 +80,11 @@ def decode_admin_cursor(settings, cursor, subject_id, status):
             algorithms=["HS256"],
             issuer="telelink-tenant-cursor",
             audience="admin-clinics",
-            options={"require": ["exp", "iat", "sub", "status", "order", "created_at", "id"]},
+            options={"require": ["exp", "iat", "sub", "order", "created_at", "id"]},
         )
+        # JWT's required-claim check rejects null; null means the unfiltered list.
+        if "status" not in claims:
+            raise ValueError("Missing cursor scope")
         if (claims["sub"], claims["status"], claims["order"]) != (
             str(subject_id),
             status,

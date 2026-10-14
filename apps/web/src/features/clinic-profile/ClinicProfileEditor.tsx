@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { refreshClinicViews } from '../clinics/cache'
 import { readSession } from '@/auth/session'
 import { LoadingState } from '@/components/LoadingState'
 import { ErrorState } from '@/components/ErrorState'
@@ -24,6 +25,7 @@ export function ClinicProfileEditor({ tenantId }: { tenantId: string | undefined
 }
 
 function ProfileEditor({ clinic }: { clinic: EditableClinic }) {
+  const client = useQueryClient()
   const [saved, setSaved] = useState<ClinicProfile>(clinic)
   const savedRef = useRef<ClinicProfile>(clinic)
   const [draft, setDraft] = useState(() => profileDraft(clinic))
@@ -63,6 +65,7 @@ function ProfileEditor({ clinic }: { clinic: EditableClinic }) {
       setSaved(updated)
       setDraft(profileDraft(updated))
       setMessage('Clinic profile saved.')
+      await refreshClinicViews(client)
     } catch { setMessage('Could not save the profile. Your edits are still here; try again.') }
     finally { setSaving(false) }
   }
