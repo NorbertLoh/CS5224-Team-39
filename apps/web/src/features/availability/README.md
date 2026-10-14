@@ -16,18 +16,35 @@ Active fixture doctor memberships determine the choices. Changes are kept in
 component memory across demo clinic/doctor selections and reset on page reload.
 There is no simulated save to a server or durable browser persistence.
 
-Dates and times always use Asia/Singapore, including browsers in other timezones.
-Creating a slot produces a future 30-minute UTC interval. Overlaps are rejected
-for that doctor across both clinics, while adjacent intervals are allowed.
-Unavailable slots and past slots cannot be removed. To change an available time,
-remove the old slot and add its replacement. Empty days, validation errors and
-successful changes have explicit feedback. Data loads synchronously from the
-bundled fixture, so this editor does not simulate network loading or failures.
+The editor displays a Monday–Sunday timetable in Singapore time with 48 half-hour
+rows per day. Previous/next week and This week controls change the visible dates.
+The grid initially scrolls to morning; scroll vertically for all 24 hours and
+horizontally on narrow screens for the remaining days.
 
-Verification (14 October 2026): all 38 tests passed with `npm test`;
+Drag vertically to select a time range or horizontally to repeat the range across
+days, then choose Add availability or Remove availability. Selection is a rectangle
+of half-hour cells. Enter/Space selects a cell, arrows move focus, Shift + arrows
+extend the range, and Escape clears it. Pointer capture supports releasing outside
+the grid, and cancelled gestures clear the selection. Touch dragging is supported
+on cells; use the time gutter or scrollbar to scroll without selecting.
+
+Every added cell becomes a future 30-minute UTC interval. Overlaps are rejected
+for that doctor across both clinics, while adjacent intervals are allowed.
+Other-clinic slots are shown in purple, unavailable slots in grey and available
+slots in green. Removal affects the selected doctor's overlapping slots in the
+selected clinic, including fixture slots starting between half-hour boundaries.
+Unavailable, past and other-clinic slots cannot be removed. Range operations are
+atomic: any conflict leaves all slots unchanged. Clear selection cancels without
+editing. Data loads synchronously from the bundled fixture, so the editor does
+not simulate network loading or failures.
+
+Verification (14 October 2026): all 40 tests passed with `npm test`;
 `npm run lint` and `npm run build` (including TypeScript) passed from `apps/web`.
 Focused tests cover timezone conversion, invalid dates, interval boundaries,
-cross-clinic conflicts, membership choices and removal protection. Browser
-interaction and live scheduling integration are separate checks; S07 replaces
+cross-clinic conflicts, membership choices, removal protection, reverse rectangular
+ranges across month boundaries and atomic range failure. Local browser checks
+passed for dragging six cells across two days, adding the range, selecting two
+cells using the keyboard and removing them. Live scheduling integration remains
+separate; S07 replaces
 fixture data and client-side validation with authenticated scheduling API calls
 and authoritative server conflicts.

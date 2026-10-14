@@ -1,0 +1,32 @@
+import { addSlot, removeSlot, slotStart } from './fixtures'
+import type { Slot } from './fixtures'
+
+export type Cell = { day: number; row: number }
+export type Selection = { from: Cell; to: Cell }
+export const times = Array.from({ length: 48 }, (_, index) => `${String(Math.floor(index / 2)).padStart(2, '0')}:${index % 2 ? '30' : '00'}`)
+
+export function shiftDate(date: string, days: number) {
+  return new Date(Date.parse(date) + days * 86400000).toISOString().slice(0, 10)
+}
+
+export function weekStart(date: string) {
+  return shiftDate(date, -((new Date(date).getUTCDay() + 6) % 7))
+}
+
+export function isSelected(selection: Selection | null, day: number, row: number) {
+  return Boolean(selection && day >= Math.min(selection.from.day, selection.to.day) && day <= Math.max(selection.from.day, selection.to.day) &&
+    row >= Math.min(selection.from.row, selection.to.row) && row <= Math.max(selection.from.row, selection.to.row))
+}
+
+export function cellsInSelection(selection: Selection, dates: string[]) {
+  return dates.flatMap((date, day) => times.flatMap((time, row) => isSelected(selection, day, row) ? [{ date, time, start: slotStart(date, time) }] : []))
+}
+
+export function applySelection(slots: Slot[], tenantId: string, doctorId: string, selection: Selection, dates: string[], action: 'add' | 'remove', now = Date.now()) {
+  const cells = cellsInSelection(selection, dates)
+  if (action === 'add') return cells.reduce((result, cell) => addSlot(result, tenantId, doctorId, cell.date, cell.time, now), slots)
+  const selected = slots.filter(slot => slot.doctor_id === doctorId && cells.some(cell => Date.parse(slot.starts_at) < cell.start + 1800000 && Date.parse(slot.ends_at) > cell.start))
+  if (!selected.length) throw new Error('There is no availability to remove in this selection.')
+  if (selected.some(slot => slot.tenant_id !== tenantId)) throw new Error('This selection includes another clinic. Choose that clinic to edit its availability.')
+  return selected.reduce((result, slot) => removeSlot(result, slot.slot_id, tenantId, doctorId, now), slots)
+}

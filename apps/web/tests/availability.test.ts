@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AvailabilityEditor } from '../src/features/availability/AvailabilityEditor'
+import { applySelection, cellsInSelection, shiftDate, weekStart } from '../src/features/availability/timetable'
 import { addSlot, fixtureClinics, fixtureDoctors, initialSlots, removeSlot, singaporeDate, slotStart } from '../src/features/availability/fixtures'
 
 const now = Date.parse('2026-10-14T03:00:00Z')
@@ -58,7 +59,31 @@ test('editor identifies fixture-only data and timezone and uses accessible label
   assert.match(markup, /Fixture preview/)
   assert.match(markup, /do not change real availability/)
   assert.match(markup, /Singapore time/)
-  assert.match(markup, /type="date"/)
-  assert.match(markup, /type="time"/)
+  assert.match(markup, /Weekly availability timetable/)
+  assert.match(markup, /Add availability/)
+  assert.match(markup, /Shift \+ arrows/)
   assert.match(markup, /role="status"/)
+})
+
+test('reverse rectangular selection spans half-hour cells across a week boundary', () => {
+  assert.equal(weekStart('2026-11-01'), '2026-10-26')
+  const dates = Array.from({ length: 7 }, (_, index) => shiftDate('2026-10-26', index))
+  const cells = cellsInSelection({ from: { day: 6, row: 19 }, to: { day: 5, row: 18 } }, dates)
+  assert.deepEqual(cells.map(cell => [cell.date, cell.time]), [['2026-10-31', '09:00'], ['2026-10-31', '09:30'], ['2026-11-01', '09:00'], ['2026-11-01', '09:30']])
+})
+
+test('range operations are atomic when any selected slot conflicts or is protected', () => {
+  const dates = Array.from({ length: 7 }, (_, index) => shiftDate('2026-10-15', index))
+  const range = { from: { day: 0, row: 18 }, to: { day: 0, row: 20 } }
+  const blocked = addSlot([], clinicA, doctor, dates[0], '10:00', now)
+  const snapshot = JSON.stringify(blocked)
+  assert.throws(() => applySelection(blocked, clinicA, doctor, range, dates, 'add', now), /overlapping/)
+  assert.equal(JSON.stringify(blocked), snapshot)
+  const added = applySelection([], clinicA, doctor, range, dates, 'add', now)
+  assert.equal(added.length, 3)
+  assert.deepEqual(applySelection(added, clinicA, doctor, range, dates, 'remove', now), [])
+  const reserved = added.map((slot, index) => index === 2 ? { ...slot, availability: 'unavailable' } : slot)
+  assert.throws(() => applySelection(reserved, clinicA, doctor, range, dates, 'remove', now), /Unavailable/)
+  assert.equal(reserved.length, 3)
+  assert.throws(() => applySelection(blocked, clinicB, doctor, range, dates, 'remove', now), /another clinic/)
 })
