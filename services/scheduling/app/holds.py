@@ -72,7 +72,7 @@ class HoldCache:
             logger.warning("hold_cache_unavailable")
 
 
-def expire_slot_holds(session, slot_id, now, cache):
+def expire_slot_holds(session, slot_id, now, cache=None):
     """Caller must own the slot row lock before locking any appointment rows."""
     expired = session.scalars(
         select(Appointment)
@@ -86,7 +86,8 @@ def expire_slot_holds(session, slot_id, now, cache):
     ).all()
     for appointment in expired:
         appointment.status = "expired"
-        cache.release(slot_id, appointment.appointment_id)
+        if cache is not None:
+            cache.release(slot_id, appointment.appointment_id)
     # Release uniqueness before an INSERT; ORM flush ordering otherwise inserts first.
     if expired:
         session.flush()

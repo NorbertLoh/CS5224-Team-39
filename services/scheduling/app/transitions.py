@@ -32,7 +32,7 @@ def lock_appointment(session, appointment_id):
     return appointment
 
 
-def cancel_appointment(appointment, now, reason, actor_id):
+def cancel_appointment(appointment, now, reason, actor_id, *, session):
     if appointment.status == "cancelled":
         return False
     if appointment.status not in {"held", "pending_payment", "confirmed"}:
@@ -43,6 +43,13 @@ def cancel_appointment(appointment, now, reason, actor_id):
         appointment.payment_resolution != "refunded"
     ):
         appointment.payment_resolution = "refund_required"
+        if appointment.payment_id is not None:
+            # Local import keeps the shared slot-lock helpers independent of the consumer.
+            from app.payments import recovery_record
+
+            recovery_record(
+                session, appointment, appointment.payment_id, "appointment_cancelled", now
+            )
     appointment.status = "cancelled"
     appointment.cancellation_reason = reason
     appointment.cancelled_by_subject_id = actor_id

@@ -156,7 +156,9 @@ def cancel(
         # Persist expiry even when the requested cancellation can no longer proceed.
         session.commit()
         invalid_transition()
-    cancel_appointment(appointment, server_now(session), body.reason, identity.subject_id)
+    cancel_appointment(
+        appointment, server_now(session), body.reason, identity.subject_id, session=session
+    )
     slot_id = appointment.slot_id
     session.commit()
     # Cleanup after commit remains safe if a replacement hold was already published.

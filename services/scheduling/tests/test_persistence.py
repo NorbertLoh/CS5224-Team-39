@@ -65,6 +65,7 @@ def database():
             "availability_slots",
             "event_inbox",
             "event_outbox",
+            "payment_recoveries",
         ]
         yield engine
         command.downgrade(config, "base")

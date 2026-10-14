@@ -1,4 +1,4 @@
-# Scheduling service (S01-S05)
+# Scheduling service (S01-S06)
 
 S01 creates scheduling-owned fixed availability slots and appointments following
 [C02](../../contracts/identity-clinic-access.md) and
@@ -11,7 +11,8 @@ S04 adds appointment list/detail/cancellation, retained cancellation metadata an
 service-only start/complete/no-show actions. See [appointment APIs](docs/appointments.md).
 S05 adds idempotent payment-event confirmation and a transactional confirmation outbox.
 See [payment worker setup and scope](docs/payments.md). Its billing read adapter uses
-fixtures until billing is implemented; checkout and late recovery remain B02/S06.
+fixtures until billing is implemented; checkout remains B02. S06 adds guarded
+late recovery, a durable recovery audit and billing refund-exception retry worker.
 
 ## Schema
 
@@ -52,7 +53,8 @@ Redis TTLs cannot release database capacity. S04 cancellation releases capacity
 under the same slot-first locks and records reason/actor/time. Cancelling a confirmed
 booking flags its payment for manual refund review, without calling a provider.
 S04 internal actions enforce legal state/time windows. S05 consumes on-time bound
-payment successes. Real billing integration and late recovery remain B02/B05/S06.
+payment successes. S06 recovers available future slots or records refund-required
+exceptions without replacing another reservation. Real billing integration remains B02/B05.
 
 ## Fresh local setup (PowerShell)
 
