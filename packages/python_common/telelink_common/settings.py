@@ -36,6 +36,29 @@ class ServiceSettings(BaseSettings):
     auth_required_scopes: str = ""
     identity_url: str | None = None
     identity_timeout_seconds: int = Field(default=3, ge=1, le=30)
+    aws_region: str = Field(default="ap-southeast-1", pattern=r"^[a-z]{2}(-[a-z]+)+-\d$")
+    aws_endpoint_url: str | None = None
+    event_bus_name: str | None = Field(default=None, pattern=r"^[A-Za-z0-9._/-]{1,256}$")
+
+    @field_validator("aws_endpoint_url")
+    @classmethod
+    def validate_aws_endpoint_url(cls, value, info):
+        # Emulator override only; AWS deployments omit it and use task-role credentials.
+        if value is None:
+            return value
+        url = urlsplit(value)
+        if (
+            info.data.get("environment") not in {"local", "test"}
+            or url.scheme not in {"http", "https"}
+            or url.hostname not in {"localhost", "127.0.0.1", "floci"}
+            or url.username
+            or url.password
+            or url.query
+            or url.fragment
+            or url.path not in {"", "/"}
+        ):
+            raise ValueError("aws_endpoint_url is only for the local emulator in local/test")
+        return value.rstrip("/")
 
     @field_validator("identity_url")
     @classmethod
