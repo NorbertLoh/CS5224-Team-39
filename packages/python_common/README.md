@@ -14,6 +14,7 @@ business routes and scheduling service credentials stay service-local.
 | `logging`, `middleware` | JSON logs, request IDs and request timing |
 | `events` | M01 C05 event envelope, type/route registry, PutEvents entries and SQS body parsing |
 | `aws` | M01 boto3 client construction from region/endpoint settings (`aws` extra) |
+| `outbox` | M02 outbox table, transactional event staging and retrying PutEvents publisher |
 
 ## Install
 
@@ -86,8 +87,55 @@ It raises `EventValidationError` for malformed JSON, unknown types or versions,
 source/type mismatches, events not routed to that consumer, invalid IDs, money or
 timestamps. Do not acknowledge those messages; bounded receives move them to the
 consumer DLQ. Unknown optional fields are ignored. Error messages list field
-locations only, never payload values. Persisting the outbox (M02) and inbox
-deduplication/acknowledgement (M03) remain separate tasks.
+locations only, never payload values. Producers publish through the outbox below; inbox
+deduplication/acknowledgement (M03) remains a separate task.
+
+## Transactional outbox (M02)
+
+A producer saves its domain change and the event in one transaction, so an event
+is published only for committed facts and is never lost after commit. Add the
+table to the service's own metadata (its schema) and migration:
+
+```python
+# app/models.py
+from telelink_common.outbox import outbox_table
+
+event_outbox = outbox_table(Base.metadata)  # SERVICE_SCHEMA.event_outbox
+```
+
+Generate the service migration with `alembic revision --autogenerate`; it creates
+`event_outbox` plus the partial index `ix_event_outbox_pending`. Then stage the
+event in the same transaction as the change:
+
+```python
+with session.begin():
+    appointment.status = "confirmed"
+    add_event(session, event_outbox, new_event("appointment_confirmed.v1", ...))
+```
+
+A worker process (like scheduling's `app.expire_holds`) publishes due rows:
+
+```python
+client = create_client("events", settings)
+while True:
+    result = publish_pending(sessions, event_outbox, client, settings.event_bus_name)
+    if not (result.published or result.failed):
+        time.sleep(1)
+```
+
+`publish_pending` sends up to 10 due rows in one PutEvents call. Accepted entries
+get `published_at`; failed entries keep their stored envelope and `event_id`, get
+`attempts + 1`, the EventBridge error code (or exception type) in `last_error`,
+and retry after 5s, 10s, 20s ... capped at 5 minutes. Successful siblings are
+not resent. Rows stay locked (`FOR UPDATE SKIP LOCKED`) until the outcome is
+saved, so several workers never send the same row concurrently; the SDK timeouts
+bound that lock. A crash between PutEvents and saving the outcome can resend an
+event with the same `event_id`, which consumers deduplicate (M03).
+
+Check publication with SQL, for example
+`SELECT detail_type, attempts, last_error FROM <schema>.event_outbox WHERE published_at IS NULL`.
+Stored rows contain IDs only, never clinical notes. Prune old published rows in
+a later reviewed migration or job if the table grows.
 
 ## AWS SDK configuration (M01)
 
@@ -114,6 +162,10 @@ From `services/template`, run shared and service tests:
 .venv\Scripts\python.exe -m pytest tests -q
 .venv\Scripts\python.exe -m ruff check ../../packages/python_common
 ```
+
+Outbox tests use SQLite and a fake EventBridge client; with `TEST_DATABASE_URL`
+set to a disposable service database (schema named after its role), a PostgreSQL
+test also checks that concurrent publishers skip locked rows.
 
 M01 also verified one live Floci PutEvents -> `telelink-local-notification`
 round trip through `create_client`, `to_put_events_entry` and `parse_sqs_body`.
