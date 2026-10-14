@@ -1,5 +1,6 @@
-import { consultationPrice } from '../../lib/money'
-import { formatBookingDate, formatBookingTime, singaporeDate } from './fixtures'
+import { BookingSlotCell } from './BookingSlotCell'
+import { BookingSelection } from './BookingSelection'
+import { formatBookingDate, singaporeDate } from './fixtures'
 import type { BookingSlot } from './fixtures'
 
 export function SlotPicker({
@@ -57,40 +58,15 @@ export function SlotPicker({
         aria-label="Consultation time slots"
       >
         {daySlots.map((slot) => (
-          <button
+          <BookingSlotCell
             key={slot.slot_id}
-            type="button"
-            disabled={slot.availability !== 'available'}
-            aria-pressed={selectedId === slot.slot_id}
-            onClick={() => onSelect(slot.slot_id)}
-            className={`rounded-xl border p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-slate-100 disabled:text-slate-400 ${selectedId === slot.slot_id ? 'border-teal-700 bg-teal-50 ring-1 ring-teal-700' : 'bg-white enabled:hover:border-teal-600'}`}
-          >
-            <span className="block font-semibold">
-              {formatBookingTime(slot.starts_at)}–
-              {formatBookingTime(slot.ends_at)}
-            </span>
-            <span className="mt-1 block text-sm">{slot.doctor_name}</span>
-            <span className="mt-2 block text-xs">
-              {slot.availability === 'available' ? 'Available' : 'Unavailable'}
-            </span>
-          </button>
+            slot={slot}
+            selected={selectedId === slot.slot_id}
+            onSelect={() => onSelect(slot.slot_id)}
+          />
         ))}
       </div>
-      <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-white p-4 shadow-sm">
-        <p role="status" className="text-sm">
-          {selected
-            ? `${formatBookingDate(date)}, ${formatBookingTime(selected.starts_at)} · ${selected.doctor_name} · ${consultationPrice(selected.consultation_price.amount_minor, selected.consultation_price.currency)}`
-            : 'Select an available time to continue.'}
-        </p>
-        <button
-          type="button"
-          disabled={!selected}
-          onClick={onCheckout}
-          className="rounded-lg bg-teal-700 px-5 py-3 font-medium text-white disabled:opacity-40"
-        >
-          Continue to checkout
-        </button>
-      </div>
+      <BookingSelection selected={selected} onCheckout={onCheckout} />
     </section>
   )
 }

@@ -12,6 +12,12 @@ S07 replaces this adapter with scheduling APIs; B07 connects billing checkout.
 U09 owns payment return/result screens. Reloading clears the local selection/hold.
 
 No new configuration. Existing local clinic backend and frontend setup applies.
+
+Components: `ClinicBooking` loads clinic/doctor data, `BookingFlow` owns selection
+and checkout state, `SlotPicker` arranges date and slot selection,
+`BookingSlotCell` renders one time slot, `BookingSelection` shows the selection
+and checkout action, and `CheckoutReview` shows the checkout preview.
+
 Run frontend tests, lint and build. Review the clinic-to-Book link, date changes,
 disabled occupied slots, checkout details and exact hold-expiry boundary.
 
