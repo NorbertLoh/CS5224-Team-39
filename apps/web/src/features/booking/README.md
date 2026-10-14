@@ -14,3 +14,9 @@ U09 owns payment return/result screens. Reloading clears the local selection/hol
 No new configuration. Existing local clinic backend and frontend setup applies.
 Run frontend tests, lint and build. Review the clinic-to-Book link, date changes,
 disabled occupied slots, checkout details and exact hold-expiry boundary.
+
+Verification: all 48 frontend tests passed (including five U07 checks), along
+with ESLint, TypeScript/production build, Prettier and git diff --check. The
+running Vite server serves the booking component and the local clinic API is
+reachable. Browser interaction/visual checks remain unverified because no
+browser surface is available in this session.
