@@ -69,6 +69,11 @@ marking withdrawal. S03 must use that same slot lock, reject withdrawn slots and
 add the active-reservation uniqueness constraint inside its booking/expiry transaction.
 The schema alone still permits multiple active appointments.
 
+Availability creation takes a per-doctor PostgreSQL transaction advisory lock
+across clinics before inserting. This prevents simultaneous overlapping GiST
+inserts from deadlocking and lets the losing request return `slot_overlap`.
+The database exclusion constraint remains the final guard, including direct SQL.
+
 Until S03 performs expiry, a held/pending appointment remains unavailable even when
 its persisted deadline has passed. Redis TTL alone will not release it. Listing is
 a snapshot; active clinic, membership, price and capacity must be revalidated at hold

@@ -3,7 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, Response
-from sqlalchemy import exists, select, tuple_
+from sqlalchemy import exists, select, text, tuple_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from telelink_common.access import (
@@ -45,14 +45,21 @@ def slot_public(slot, price, occupied=False):
 @router.post("/clinics/{tenant_id}/slots", response_model=SlotPublic, status_code=201)
 def create_slot(tenant_id: UUID, body: SlotCreate, request: Request, identity: Doctor, session: DB):
     profile = request.app.state.tenant_client.booking_profile(tenant_id, request.state.request_id)
-    if body.starts_at <= datetime.now(timezone.utc):
-        raise DomainError(422, "validation_error", "Slot must start in the future.")
     slot = AvailabilitySlot(
         tenant_id=tenant_id,
         doctor_id=identity.subject_id,
         starts_at=body.starts_at,
         ends_at=body.ends_at,
     )
+    # Exclusion constraints can deadlock when both inserts see the other's
+    # uncommitted GiST entry. Serialize only this doctor's slot creation across
+    # clinics; the exclusion constraint still protects direct database writes.
+    session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:doctor, 0))"),
+        {"doctor": str(identity.subject_id)},
+    )
+    if body.starts_at <= datetime.now(timezone.utc):
+        raise DomainError(422, "validation_error", "Slot must start in the future.")
     session.add(slot)
     try:
         session.commit()

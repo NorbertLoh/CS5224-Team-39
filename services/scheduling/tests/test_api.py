@@ -4,6 +4,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from threading import Barrier
 from uuid import UUID, uuid4
 
 import httpx
@@ -319,12 +320,14 @@ def test_overlap_across_clinics_and_concurrent_create(api):
         memberships["doctor"][0] | {"membership_id": str(uuid4()), "tenant_id": str(other)}
     )
     body, headers = slot_body(), user()
+    barrier = Barrier(4)
 
     def create(_):
+        barrier.wait(timeout=10)
         return client.post(f"/clinics/{tenant}/slots", json=body, headers=headers).status_code
 
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        assert sorted(executor.map(create, range(2))) == [201, 409]
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        assert sorted(executor.map(create, range(4))) == [201, 409, 409, 409]
     assert client.post(f"/clinics/{other}/slots", json=body, headers=headers).status_code == 409
     assert (
         client.post(f"/clinics/{tenant}/slots", json=body, headers=user("other_doctor")).status_code
