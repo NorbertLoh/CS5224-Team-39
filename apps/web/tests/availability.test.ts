@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AvailabilityEditor } from '../src/features/availability/AvailabilityEditor'
-import { applySelection, cellsInSelection, shiftDate, weekStart } from '../src/features/availability/timetable'
+import { applySelection, cellsInSelection, cellsInSelections, shiftDate, updateSelections, weekStart } from '../src/features/availability/timetable'
 import { addSlot, fixtureClinics, fixtureDoctors, initialSlots, removeSlot, singaporeDate, slotStart } from '../src/features/availability/fixtures'
 
 const now = Date.parse('2026-10-14T03:00:00Z')
@@ -77,13 +77,30 @@ test('range operations are atomic when any selected slot conflicts or is protect
   const range = { from: { day: 0, row: 18 }, to: { day: 0, row: 20 } }
   const blocked = addSlot([], clinicA, doctor, dates[0], '10:00', now)
   const snapshot = JSON.stringify(blocked)
-  assert.throws(() => applySelection(blocked, clinicA, doctor, range, dates, 'add', now), /overlapping/)
+  assert.throws(() => applySelection(blocked, clinicA, doctor, [range], dates, 'add', now), /overlapping/)
   assert.equal(JSON.stringify(blocked), snapshot)
-  const added = applySelection([], clinicA, doctor, range, dates, 'add', now)
+  const added = applySelection([], clinicA, doctor, [range], dates, 'add', now)
   assert.equal(added.length, 3)
-  assert.deepEqual(applySelection(added, clinicA, doctor, range, dates, 'remove', now), [])
+  assert.deepEqual(applySelection(added, clinicA, doctor, [range], dates, 'remove', now), [])
   const reserved = added.map((slot, index) => index === 2 ? { ...slot, availability: 'unavailable' } : slot)
-  assert.throws(() => applySelection(reserved, clinicA, doctor, range, dates, 'remove', now), /Unavailable/)
+  assert.throws(() => applySelection(reserved, clinicA, doctor, [range], dates, 'remove', now), /Unavailable/)
   assert.equal(reserved.length, 3)
-  assert.throws(() => applySelection(blocked, clinicB, doctor, range, dates, 'remove', now), /another clinic/)
+  assert.throws(() => applySelection(blocked, clinicB, doctor, [range], dates, 'remove', now), /another clinic/)
+})
+
+test('separate ranges retain gaps and overlapping drags do not duplicate slots', () => {
+  const dates = Array.from({ length: 7 }, (_, index) => shiftDate('2026-10-15', index))
+  const first = { from: { day: 0, row: 18 }, to: { day: 0, row: 19 } }
+  const second = { from: { day: 0, row: 26 }, to: { day: 0, row: 27 } }
+  let ranges = updateSelections([], first)
+  ranges = updateSelections(ranges, { from: second.from, to: second.from })
+  ranges = updateSelections(ranges, second, true)
+  assert.deepEqual(ranges, [first, second])
+  assert.deepEqual(cellsInSelections(ranges, dates).map(cell => cell.time), ['09:00', '09:30', '13:00', '13:30'])
+  const repeated = updateSelections(ranges, first)
+  assert.equal(cellsInSelections(repeated, dates).length, 4)
+  const added = applySelection([], clinicA, doctor, repeated, dates, 'add', now)
+  assert.equal(added.length, 4)
+  assert.deepEqual(applySelection(added, clinicA, doctor, repeated, dates, 'remove', now), [])
+  assert.deepEqual(updateSelections(ranges, null), [])
 })

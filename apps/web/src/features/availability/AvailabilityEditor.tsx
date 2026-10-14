@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { ErrorState } from '../../components/ErrorState'
 import { fixtureClinics, fixtureDoctors, initialSlots, singaporeDate } from './fixtures'
-import { applySelection, cellsInSelection, shiftDate, weekStart } from './timetable'
+import { applySelection, cellsInSelections, shiftDate, updateSelections, weekStart } from './timetable'
 import type { Selection } from './timetable'
 import { WeeklyTimetable } from './WeeklyTimetable'
 
@@ -13,20 +13,20 @@ export function AvailabilityEditor() {
   const [tenantId, setTenantId] = useState(fixtureClinics[0].tenant_id)
   const [doctorId, setDoctorId] = useState(fixtureDoctors(tenantId)[0].subject_id)
   const [week, setWeek] = useState(() => weekStart(singaporeDate()))
-  const [selection, setSelection] = useState<Selection | null>(null)
+  const [selections, setSelections] = useState<Selection[]>([])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const dates = Array.from({ length: 7 }, (_, index) => shiftDate(week, index))
-  const selected = selection ? cellsInSelection(selection, dates) : []
-  function clearFeedback() { setSelection(null); setError(''); setMessage('') }
+  const selected = cellsInSelections(selections, dates)
+  function clearFeedback() { setSelections([]); setError(''); setMessage('') }
   function changeWeek(next: string) { setWeek(next); clearFeedback() }
   function apply(action: 'add' | 'remove') {
-    if (!selection) return
+    if (!selections.length) return
     setError(''); setMessage('')
     try {
-      setSlots(applySelection(slots, tenantId, doctorId, selection, dates, action))
+      setSlots(applySelection(slots, tenantId, doctorId, selections, dates, action))
       setMessage(action === 'add' ? `${selected.length} slots added to the fixture schedule.` : 'Selected availability removed from the fixture schedule.')
-      setSelection(null)
+      setSelections([])
     } catch (cause) { setError((cause as Error).message) }
   }
 
@@ -59,15 +59,15 @@ export function AvailabilityEditor() {
       <span className="rounded bg-violet-100 px-2 py-1 text-violet-900">Other clinic</span>
       <span className="rounded border-2 border-sky-600 px-2 py-0.5">Selected</span>
     </div>
-    <p className="text-xs text-slate-500">Drag down for a time range or across days to repeat it. Keyboard: select with Enter or Space, use arrow keys to move, Shift + arrows to extend, and Escape to clear. Scroll for all 24 hours.</p>
-    <WeeklyTimetable key={`${tenantId}:${doctorId}:${week}`} slots={slots} tenantId={tenantId} doctorId={doctorId} dates={dates} selection={selection}
-      onSelect={next => { setSelection(next); setError(''); setMessage('') }} />
+    <p className="text-xs text-slate-500">Each drag adds a separate selection. Drag down for a time range or across days to repeat it. Keyboard: select with Enter or Space, use arrow keys to move, Shift + arrows to extend, and Escape to clear. Scroll for all 24 hours.</p>
+    <WeeklyTimetable key={`${tenantId}:${doctorId}:${week}`} slots={slots} tenantId={tenantId} doctorId={doctorId} dates={dates} selections={selections}
+      onSelect={(next, extend) => { setSelections(previous => updateSelections(previous, next, extend)); setError(''); setMessage('') }} />
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-slate-50 p-4">
       <p className="text-sm" role="status">{selected.length ? `${selected.length} ${selected.length === 1 ? 'slot' : 'slots'} selected · ${selected.length / 2} ${selected.length === 2 ? 'hour' : 'hours'}` : 'Select times on the timetable to get started.'}</p>
       <div className="flex flex-wrap gap-2">
-        <Button disabled={!selection} onClick={() => apply('add')}>Add availability</Button>
-        <Button variant="outline" disabled={!selection} onClick={() => apply('remove')}>Remove availability</Button>
-        <Button variant="ghost" disabled={!selection} onClick={clearFeedback}>Clear selection</Button>
+        <Button disabled={!selected.length} onClick={() => apply('add')}>Add availability</Button>
+        <Button variant="outline" disabled={!selected.length} onClick={() => apply('remove')}>Remove availability</Button>
+        <Button variant="ghost" disabled={!selected.length} onClick={clearFeedback}>Clear selection</Button>
       </div>
     </div>
     {error && <ErrorState message={error} />}

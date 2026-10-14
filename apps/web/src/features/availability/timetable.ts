@@ -22,8 +22,19 @@ export function cellsInSelection(selection: Selection, dates: string[]) {
   return dates.flatMap((date, day) => times.flatMap((time, row) => isSelected(selection, day, row) ? [{ date, time, start: slotStart(date, time) }] : []))
 }
 
-export function applySelection(slots: Slot[], tenantId: string, doctorId: string, selection: Selection, dates: string[], action: 'add' | 'remove', now = Date.now()) {
-  const cells = cellsInSelection(selection, dates)
+export function updateSelections(selections: Selection[], next: Selection | null, extend = false): Selection[] {
+  if (!next) return []
+  return [...(extend ? selections.slice(0, -1) : selections), next]
+}
+
+export function cellsInSelections(selections: Selection[], dates: string[]) {
+  const unique = new Map<number, ReturnType<typeof cellsInSelection>[number]>()
+  for (const range of selections) for (const cell of cellsInSelection(range, dates)) unique.set(cell.start, cell)
+  return [...unique.values()].sort((a, b) => a.start - b.start)
+}
+
+export function applySelection(slots: Slot[], tenantId: string, doctorId: string, selections: Selection[], dates: string[], action: 'add' | 'remove', now = Date.now()) {
+  const cells = cellsInSelections(selections, dates)
   if (action === 'add') return cells.reduce((result, cell) => addSlot(result, tenantId, doctorId, cell.date, cell.time, now), slots)
   const selected = slots.filter(slot => slot.doctor_id === doctorId && cells.some(cell => Date.parse(slot.starts_at) < cell.start + 1800000 && Date.parse(slot.ends_at) > cell.start))
   if (!selected.length) throw new Error('There is no availability to remove in this selection.')

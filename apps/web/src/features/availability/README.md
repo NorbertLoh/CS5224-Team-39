@@ -22,8 +22,10 @@ The grid initially scrolls to morning; scroll vertically for all 24 hours and
 horizontally on narrow screens for the remaining days.
 
 Drag vertically to select a time range or horizontally to repeat the range across
-days, then choose Add availability or Remove availability. Selection is a rectangle
-of half-hour cells. Enter/Space selects a cell, arrows move focus, Shift + arrows
+days, then choose Add availability or Remove availability. Each new drag adds a
+separate rectangle of half-hour cells, preserving earlier selections. Overlapping
+ranges are combined so each cell is counted and applied once; gaps remain empty.
+Enter/Space adds a cell, arrows move focus, Shift + arrows
 extend the range, and Escape clears it. Pointer capture supports releasing outside
 the grid, and cancelled gestures clear the selection. Touch dragging is supported
 on cells; use the time gutter or scrollbar to scroll without selecting.
@@ -38,13 +40,15 @@ atomic: any conflict leaves all slots unchanged. Clear selection cancels without
 editing. Data loads synchronously from the bundled fixture, so the editor does
 not simulate network loading or failures.
 
-Verification (14 October 2026): all 40 tests passed with `npm test`;
+Verification (14 October 2026): all 41 tests passed with `npm test`;
 `npm run lint` and `npm run build` (including TypeScript) passed from `apps/web`.
 Focused tests cover timezone conversion, invalid dates, interval boundaries,
 cross-clinic conflicts, membership choices, removal protection, reverse rectangular
 ranges across month boundaries and atomic range failure. Local browser checks
 passed for dragging six cells across two days, adding the range, selecting two
-cells using the keyboard and removing them. Live scheduling integration remains
+cells using the keyboard and removing them. Separate keyboard selections and
+consecutive disjoint drags were also verified; adding both ranges preserved the
+gap between them. Live scheduling integration remains
 separate; S07 replaces
 fixture data and client-side validation with authenticated scheduling API calls
 and authoritative server conflicts.

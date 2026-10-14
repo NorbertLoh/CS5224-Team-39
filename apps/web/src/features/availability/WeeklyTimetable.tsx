@@ -6,13 +6,14 @@ import type { Cell, Selection } from './timetable'
 
 const dayLabel = (date: string) => new Intl.DateTimeFormat('en-SG', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(date))
 
-export function WeeklyTimetable({ slots, tenantId, doctorId, dates, selection, onSelect }: {
+export function WeeklyTimetable({ slots, tenantId, doctorId, dates, selections, onSelect }: {
   slots: Slot[]; tenantId: string; doctorId: string; dates: string[]
-  selection: Selection | null; onSelect: (selection: Selection | null) => void
+  selections: Selection[]; onSelect: (selection: Selection | null, extend?: boolean) => void
 }) {
   const viewport = useRef<HTMLDivElement>(null)
   const anchor = useRef<Cell | null>(null)
   const dragging = useRef(false)
+  const extending = useRef(false)
   useEffect(() => { if (viewport.current) viewport.current.scrollTop = 16 * 32 }, [])
   const doctorSlots = slots.filter(slot => slot.doctor_id === doctorId)
 
@@ -20,7 +21,7 @@ export function WeeklyTimetable({ slots, tenantId, doctorId, dates, selection, o
     <table className="w-full min-w-[780px] table-fixed select-none border-collapse text-sm" onPointerMove={event => {
       if (!dragging.current || !anchor.current) return
       const cell = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-day][data-row]')
-      if (cell && event.currentTarget.contains(cell)) onSelect({ from: anchor.current, to: { day: Number(cell.dataset.day), row: Number(cell.dataset.row) } })
+      if (cell && event.currentTarget.contains(cell)) onSelect({ from: anchor.current, to: { day: Number(cell.dataset.day), row: Number(cell.dataset.row) } }, true)
     }} onPointerUp={() => { dragging.current = false }} onLostPointerCapture={() => { dragging.current = false }} onPointerCancel={() => { dragging.current = false; onSelect(null) }}
       onKeyDown={event => { if (event.key === 'Escape') { dragging.current = false; anchor.current = null; onSelect(null) } }}>
       <thead className="sticky top-0 z-10 bg-white shadow-sm"><tr>
@@ -35,7 +36,7 @@ export function WeeklyTimetable({ slots, tenantId, doctorId, dates, selection, o
           const foreign = overlaps.some(slot => slot.tenant_id !== tenantId)
           const unavailable = overlaps.some(slot => slot.availability !== 'available')
           const past = start <= Date.now()
-          const selected = isSelected(selection, day, row)
+          const selected = selections.some(range => isSelected(range, day, row))
           const status = foreign ? 'Other clinic' : unavailable ? 'Unavailable' : overlaps.length ? 'Available' : past ? 'Past' : 'Empty'
           const colour = foreign ? 'bg-violet-100 text-violet-900' : unavailable ? 'bg-slate-200 text-slate-700' : overlaps.length ? 'bg-emerald-100 text-emerald-900' : past ? 'bg-slate-50 text-slate-400' : 'bg-white hover:bg-sky-50'
           return <td key={date} className="border-t border-l p-0">
@@ -45,14 +46,15 @@ export function WeeklyTimetable({ slots, tenantId, doctorId, dates, selection, o
                 if (event.button !== 0) return
                 event.preventDefault(); event.currentTarget.focus()
                 const cell = { day, row }
-                anchor.current = cell; dragging.current = true
+                anchor.current = cell; dragging.current = true; extending.current = true
                 event.currentTarget.closest('table')!.setPointerCapture(event.pointerId)
                 onSelect({ from: cell, to: cell })
               }} onClick={event => {
                 if (event.detail !== 0) return
                 const cell = { day, row }
-                onSelect({ from: event.shiftKey && anchor.current ? anchor.current : cell, to: cell })
+                onSelect({ from: event.shiftKey && anchor.current ? anchor.current : cell, to: cell }, event.shiftKey && extending.current)
                 if (!event.shiftKey || !anchor.current) anchor.current = cell
+                extending.current = true
               }} onKeyDown={event => {
                 const offsets: Record<string, [number, number]> = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }
                 const offset = offsets[event.key]
@@ -62,8 +64,9 @@ export function WeeklyTimetable({ slots, tenantId, doctorId, dates, selection, o
                 event.currentTarget.closest('table')?.querySelector<HTMLButtonElement>(`[data-day="${next.day}"][data-row="${next.row}"]`)?.focus()
                 if (event.shiftKey) {
                   if (!anchor.current) anchor.current = { day, row }
-                  onSelect({ from: anchor.current, to: next })
-                } else anchor.current = next
+                  onSelect({ from: anchor.current, to: next }, extending.current)
+                  extending.current = true
+                } else { anchor.current = next; extending.current = false }
               }}>{status === 'Empty' || status === 'Past' ? '' : status}</button>
           </td>
         })}
