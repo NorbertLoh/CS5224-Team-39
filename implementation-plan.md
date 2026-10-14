@@ -78,19 +78,19 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | A09 | Add platform approve/reject and commission-setting APIs with audit events. Completed in merged PR #69; 94 tenant tests, live Floci/platform HTTP checks and CI passed. Issue #68 closed. | A08 | M |
 | [x] | A10 | Add staff assignment/membership APIs with authorised clinic administration. Completed in merged PR #71; 205 tests, live two-service HTTP staff lifecycle/authorization checks and CI passed. Issue #70 closed. | A05, A08 | M |
 | [x] | U01 | Build branded clinic storefront using fixtures. Completed in merged PR #73; 17 frontend tests, desktop/mobile browser checks, component output parity and CI passed. Issue #72 closed; live integration remains A11. | F07, F08, C02 | M |
-| [ ] | U02 | Build clinic profile/branding editor using fixtures. | F07, F08, C02 | M |
-| [ ] | U03 | Build staff management page using fixtures. | F07, F08, C02 | M |
-| [ ] | U04 | Build platform clinic approval and commission page using fixtures. | F07, F08, C02 | M |
-| [ ] | U05 | Add role navigation, validated clinic selection and login/logout controls. | A01, A02, F07, C02 | M |
-| [ ] | A11 | Connect clinic/staff/admin pages to real identity and tenant APIs. | A08-A10, U01-U05 | M |
+| [x] | U02 | Build clinic profile/branding editor. Completed in merged PR #75; profile saves persist in PostgreSQL, logo upload/replacement/removal uses S3, and all implemented clinic pages use real APIs with local/AWS configuration. 22 frontend, 100 identity and 113 tenant tests, browser Save/Discard/reload/login checks and CI passed. Issue #74 closed; remaining staff/admin integration stays in A11. | F07, F08, C02 | M |
+| [x] | U03 | Build staff management page using real identity/tenant APIs. Completed in merged PR #79; staff assignment, role changes, revocation/reactivation and last-admin protection verified with live local services; 22 frontend tests, lint/build and CI passed. Issue #78 closed. Browser visual and AWS checks remain unverified. | F07, F08, C02 | M |
+| [x] | U04 | Build platform clinic approval and commission pages using real identity/tenant APIs. Completed in merged PR #81; compact clinic list links to individual management pages. Live review/commission persistence, validation, authorization and detail API checks passed; 22 frontend tests, lint/build and CI passed. Issue #80 closed. Browser interaction, multi-page pagination and AWS checks remain unverified. | F07, F08, C02 | M |
+| [x] | U05 | Add role navigation, validated clinic selection and login/logout controls. Completed in merged PR #83; shared auth/role navigation, clinic route validation, email staff assignment and readable memberships verified with real local APIs. 111 identity and 31 frontend tests, lint/build and CI passed. Issue #82 closed. Browser interaction/visual checks and AWS integration remain unverified. | A01, A02, F07, C02 | M |
+| [x] | A11 | Connect clinic/staff/admin pages to real identity and tenant APIs. Completed in merged PR #85; issue #84 closed. Real local HTTP integration, 32 frontend tests, focused cursor regression and CI passed. Browser login/profile/staff checks passed partially; remaining platform browser and AWS checks are unverified. Evidence: `docs/clinic-integration.md`. | A08-A10, U01-U05 | M |
 
 ## Week 2: scheduling and booking
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | S01 | Create scheduling schema/migrations: fixed availability slots and appointments. | F04, C02, C03 | M |
-| [ ] | S02 | Add doctor availability and patient slot-list APIs with access checks. | S01, A06, A08 | M |
-| [ ] | S03 | Add expiring Redis holds plus database reservation constraint/transaction. | S02, F09 | L |
+| [x] | S01 | Create scheduling schema/migrations: fixed availability slots and appointments. Completed in merged PR #89; 45 PostgreSQL tests, schema isolation, lint and CI passed. Issue #88 closed. | F04, C02, C03 | M |
+| [x] | S02 | Add doctor availability and patient slot-list APIs with access checks. Completed in merged PR #91; 94 tests, real Floci/three-service HTTP verification and CI passed. Issue #90 closed. | S01, A06, A08 | M |
+| [ ] | S03 | Add expiring Redis holds plus database reservation constraint/transaction. Assignee: NorbertLoh; status: in progress. Issue #92; PR #93. | S02, F09 | L |
 | [ ] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. | S03 | M |
 | [ ] | S05 | Consume consultation-payment success idempotently and confirm appointment. | S04, M03, C05 | M |
 | [ ] | S06 | Handle expired hold/late payment as an explicit recoverable exception. | S05 | S |

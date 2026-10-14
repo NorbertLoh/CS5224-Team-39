@@ -21,10 +21,7 @@ router = APIRouter(
 )
 
 
-def require_tenant_service(
-    request: Request,
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
-):
+def verify_tenant_service(request, credentials, audience):
     if credentials is None:
         raise HTTPException(
             401, "Service credential required", headers={"WWW-Authenticate": "Bearer"}
@@ -38,7 +35,7 @@ def require_tenant_service(
             secret.get_secret_value(),
             algorithms=["HS256"],
             issuer="telelink-service:tenant",
-            audience="telelink-identity-provisioning",
+            audience=audience,
             options={"require": ["exp", "iat", "sub", "iss", "aud"]},
         )
         if (
@@ -52,6 +49,13 @@ def require_tenant_service(
         raise HTTPException(
             401, "Invalid service credential", headers={"WWW-Authenticate": "Bearer"}
         ) from None
+
+
+def require_tenant_service(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+):
+    verify_tenant_service(request, credentials, "telelink-identity-provisioning")
 
 
 class CreatorMembership(BaseModel):

@@ -141,8 +141,15 @@ def admin_clinic(tenant_id: UUID, identity: Admin, session: DB):
 
 
 @router.patch("/clinics/{tenant_id}", response_model=ClinicAdmin)
-def update_clinic(tenant_id: UUID, body: ClinicUpdate, identity: Admin, session: DB):
-    clinic = clinic_or_404(session, tenant_id)
+def update_clinic(
+    tenant_id: UUID, body: ClinicUpdate, request: Request, identity: Admin, session: DB
+):
+    clinic = session.scalar(select(Clinic).where(Clinic.tenant_id == tenant_id).with_for_update())
+    if clinic is None:
+        raise DomainError(404, "not_found", "Resource not found.")
+    if body.branding is not None and body.branding.logo_url != clinic.logo_url:
+        if request.app.state.settings.logo_bucket:
+            raise DomainError(409, "managed_logo", "Use the logo upload/remove endpoint.")
     for key, value in editable_fields(body).items():
         setattr(clinic, key, value)
     session.flush()

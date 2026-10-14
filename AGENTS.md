@@ -23,6 +23,11 @@ Agents may create the issue needed for an explicitly assigned task as part of th
 - Keep service-specific migrations and feature routes local to their service/feature. Follow the agreed contracts and independent service boundaries.
 - Provide a short verification note and document configuration/setup changes in the PR. Use the focused prototype checks from the plan.
 
+## Code simplicity
+
+- Keep code simple, clear and easy to follow. Avoid convoluted logic and unnecessary abstractions.
+- Split code into clean, focused files when it improves readability and maintainability.
+
 ## Completion
 
 - Keep the issue **In progress** until the PR is merged and its completion criteria are met. Do not close it merely because an agent finished a local change.

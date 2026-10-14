@@ -2,6 +2,7 @@ import json
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor
+from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
@@ -11,8 +12,10 @@ import jwt
 import pytest
 from alembic import command
 from alembic.config import Config
+from botocore.exceptions import ClientError
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
+from PIL import Image
 from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -20,6 +23,7 @@ from telelink_common.access import IdentityClient
 
 from app import admin
 from app.database import create_database_engine
+from app.logos import MAX_LOGO_BYTES, LogoStorage, logo_png
 from app.main import create_app
 from app.models import AuditEvent, Clinic
 from app.settings import Settings
@@ -720,3 +724,190 @@ def test_membership_profile_rejects_user_and_other_service_tokens(api):
         ).status_code
         == 503
     )
+
+
+def logo_bytes(color="red", image_format="PNG", size=(20, 20)):
+    output = BytesIO()
+    Image.new("RGB", size, color).save(output, image_format)
+    return output.getvalue()
+
+
+class MemoryS3:
+    def __init__(self):
+        self.objects = {}
+        self.versioning = {}
+        self.fail = False
+
+    def get_bucket_versioning(self, **kwargs):
+        if self.fail:
+            raise ClientError({"Error": {"Code": "AccessDenied"}}, "GetBucketVersioning")
+        return self.versioning
+
+    def put_object(self, Bucket, Key, Body, **kwargs):
+        self.objects[(Bucket, Key)] = Body
+
+    def delete_object(self, Bucket, Key):
+        self.objects.pop((Bucket, Key), None)
+
+    def get_object(self, Bucket, Key):
+        return {"Body": BytesIO(self.objects[(Bucket, Key)])}
+
+    def close(self):
+        pass
+
+
+def configure_logo_storage(api):
+    settings = configuration(
+        logo_bucket="test-logos", logo_public_base_url="https://assets.example"
+    )
+    storage = LogoStorage(configuration())
+    storage.settings = settings
+    storage.client = MemoryS3()
+    api.app.state.logo_storage = storage
+    api.app.state.settings.logo_bucket = "test-logos"
+    return storage
+
+
+def test_logo_upload_replace_remove_and_permissions(api):
+    tenant = api.client.post("/clinics", json=body(), headers=api.user()).json()["tenant_id"]
+    storage = configure_logo_storage(api)
+    endpoint = f"/clinics/{tenant}/logo"
+    for name in ("other", "doctor"):
+        for method in ("put", "delete", "get"):
+            assert (
+                api.client.request(
+                    method, endpoint, headers=api.user(name), content=logo_bytes()
+                ).status_code
+                == 404
+            )
+    assert not storage.client.objects
+    for color in ("red", "blue"):
+        response = api.client.put(endpoint, content=logo_bytes(color), headers=api.user())
+        assert response.status_code == 200
+        assert (
+            response.json()["branding"]["logo_url"]
+            == f"https://assets.example/clinic-logos/{tenant}/logo.png"
+        )
+        assert len(storage.client.objects) == 1
+        preview = api.client.get(endpoint, headers=api.user())
+        assert preview.status_code == 200
+        with Image.open(BytesIO(preview.content)) as image:
+            assert image.getpixel((0, 0))[:3] == ((255, 0, 0) if color == "red" else (0, 0, 255))
+    before = dict(storage.client.objects)
+    storage.client.fail = True
+    assert (
+        api.client.put(endpoint, content=logo_bytes("green"), headers=api.user()).status_code == 503
+    )
+    assert api.client.delete(endpoint, headers=api.user()).status_code == 503
+    assert storage.client.objects == before
+    assert api.client.get(f"/clinics/{tenant}", headers=api.user()).json()["branding"]["logo_url"]
+    storage.client.fail = False
+    assert (
+        api.client.patch(
+            f"/clinics/{tenant}",
+            headers=api.user(),
+            json={
+                "branding": {"primary_color": "#156B63", "description": "Demo", "logo_url": None}
+            },
+        ).status_code
+        == 409
+    )
+    for _ in range(2):
+        assert (
+            api.client.delete(endpoint, headers=api.user("platform")).json()["branding"]["logo_url"]
+            is None
+        )
+        assert not storage.client.objects
+    assert api.client.get(endpoint, headers=api.user()).status_code == 404
+
+
+def test_logo_validation_storage_outage_and_versioned_bucket_preserve_metadata(api):
+    tenant = api.client.post("/clinics", json=body(), headers=api.user()).json()["tenant_id"]
+    storage = configure_logo_storage(api)
+    endpoint = f"/clinics/{tenant}/logo"
+    for content, status in [
+        (b"<svg></svg>", 422),
+        (b"fake PNG", 422),
+        (b"x" * (MAX_LOGO_BYTES + 1), 413),
+    ]:
+        assert api.client.put(endpoint, content=content, headers=api.user()).status_code == status
+    assert not storage.client.objects
+    storage.client.fail = True
+    assert api.client.put(endpoint, content=logo_bytes(), headers=api.user()).status_code == 503
+    assert (
+        api.client.get(f"/clinics/{tenant}", headers=api.user()).json()["branding"]["logo_url"]
+        is None
+    )
+    storage.client.fail = False
+    for state in ("Enabled", "Suspended"):
+        storage.client.versioning = {"Status": state}
+        assert api.client.put(endpoint, content=logo_bytes(), headers=api.user()).status_code == 503
+    assert not storage.client.objects
+
+
+@pytest.mark.parametrize("image_format", ["PNG", "JPEG", "WEBP"])
+def test_logo_decoder_limits_dimensions_and_normalizes_supported_images(image_format):
+    with Image.open(
+        BytesIO(logo_png(logo_bytes(image_format=image_format, size=(800, 400))))
+    ) as image:
+        assert image.format == "PNG" and image.size == (512, 256)
+    from telelink_common.errors import DomainError
+
+    with pytest.raises(DomainError):
+        logo_png(logo_bytes(size=(2001, 2000)))
+
+
+def test_public_doctors_enforces_clinic_state_and_forwards_scoped_request(api):
+    clinic = api.client.post("/clinics", json=body(), headers=api.user()).json()
+    tenant_id = clinic["tenant_id"]
+    endpoint = f"/clinics/{tenant_id}/doctors"
+    assert api.client.get(endpoint).status_code == 404
+    activate(api, tenant_id)
+    state = {"status": 200, "extra": False}
+
+    def directory_http(request):
+        assert request.url.path == f"/internal/clinics/{tenant_id}/doctors"
+        assert request.url.params["limit"] == "1"
+        claims = jwt.decode(
+            request.headers["Authorization"].split()[1],
+            TENANT,
+            algorithms=["HS256"],
+            issuer="telelink-service:tenant",
+            audience="telelink-identity-doctors",
+        )
+        assert claims["sub"] == "tenant" and claims["exp"] - claims["iat"] == 60
+        item = {"doctor_id": str(api.ids["doctor"]), "display_name": "Doctor"}
+        if state["extra"]:
+            item["cognito_sub"] = "private"
+        return httpx.Response(state["status"], json={"items": [item], "next_cursor": "next"})
+
+    api.app.state.identity_client.close()
+    api.app.state.identity_client = IdentityClient(
+        api.app.state.settings, transport=httpx.MockTransport(directory_http)
+    )
+    response = api.client.get(endpoint, params={"limit": 1})
+    assert response.status_code == 200 and response.json()["items"] == [
+        {"doctor_id": str(api.ids["doctor"]), "display_name": "Doctor"}
+    ]
+    state["extra"] = True
+    assert api.client.get(endpoint, params={"limit": 1}).status_code == 503
+    state["status"] = 422
+    assert api.client.get(endpoint, params={"limit": 1, "cursor": "bad"}).status_code == 422
+    state["status"] = 503
+    assert api.client.get(endpoint, params={"limit": 1}).status_code == 503
+    activate(api, tenant_id, membership_provisioned=False)
+    assert api.client.get(endpoint).status_code == 404
+
+
+def test_public_logo_only_exposes_approved_clinic_branding(api):
+    clinic = api.client.post("/clinics", json=body(), headers=api.user()).json()
+    tenant_id = clinic["tenant_id"]
+    endpoint = f"/clinics/{tenant_id}/public-logo"
+    api.app.state.logo_storage = SimpleNamespace(read=lambda tenant: b"image", close=lambda: None)
+    assert api.client.get(endpoint).status_code == 404
+    activate(api, tenant_id, logo_url="https://assets.example.com/logo.png")
+    response = api.client.get(endpoint)
+    assert response.status_code == 200 and response.content == b"image"
+    assert response.headers["cache-control"] == "no-cache"
+    activate(api, tenant_id, status="suspended")
+    assert api.client.get(endpoint).status_code == 404

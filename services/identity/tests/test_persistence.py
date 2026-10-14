@@ -108,6 +108,9 @@ def test_runtime_mapping_roles_multiclinic_and_revocation(database):
         {"cognito_sub": ""},
         {"cognito_sub": "   "},
         {"display_name": ""},
+        {"email": ""},
+        {"email": "UPPER@example.test"},
+        {"email": " padded@example.test "},
         {"global_roles": ["doctor"]},
         {"global_roles": ["clinic_admin"]},
         {"global_roles": ["patient", "patient"]},
@@ -160,6 +163,15 @@ def test_unique_sub_membership_foreign_key_and_transaction_rollback(database):
         raise RuntimeError("intentional rollback")
     with Session(database) as session:
         assert find_subject(session, rolled_back_sub) is None
+
+
+def test_email_is_unique_and_optional_for_legacy_subjects(database):
+    email = f"unique-{uuid4()}@example.test"
+    create_subject(database, email=email)
+    with pytest.raises(IntegrityError):
+        create_subject(database, email=email)
+    create_subject(database, email=None)
+    create_subject(database, email=None)
 
 
 def test_operator_updates_refresh_timestamp_and_preserve_creation(database):

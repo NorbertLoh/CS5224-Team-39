@@ -24,8 +24,8 @@ def cognito(client, action, **payload):
     return response
 
 
-def login(client, client_id, oauth=OAUTH, callback=CALLBACK):
-    """Return tokens from the seeded patient's PKCE login; also used by F16."""
+def login(client, client_id, oauth=OAUTH, callback=CALLBACK, username="patient@example.test"):
+    """Return tokens from a local account's PKCE login; also used by F16."""
     verifier = secrets.token_urlsafe(32)
     challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
     params = {
@@ -39,7 +39,7 @@ def login(client, client_id, oauth=OAUTH, callback=CALLBACK):
     assert csrf, "Login page did not contain a CSRF token"
     result = client.post(oauth + "/login", data={
         **params, "_csrf": csrf.group(1),
-        "username": "patient@example.test", "password": "LocalDemo123!",
+        "username": username, "password": "LocalDemo123!",
     })
     assert result.status_code == 302, "Patient login failed"
     query = parse_qs(urlsplit(result.headers["location"]).query)

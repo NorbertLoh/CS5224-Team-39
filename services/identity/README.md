@@ -98,6 +98,7 @@ try:
             Subject(
                 cognito_sub="REPLACE_WITH_ACTUAL_RUNTIME_SUB",
                 display_name="Synthetic patient",
+                email="patient@example.test",
                 global_roles=["patient"],
             )
         )
@@ -112,6 +113,12 @@ A05 authenticates the token with the A03 verifier first, then passes its verifie
 `sub` to `find_subject`. Unknown `sub` returns `None`; the API translates this to C02's
 `403 identity_not_provisioned`. Lookup is case-sensitive and treats `sub` as
 opaque. Global platform-admin provisioning stays operator-controlled.
+
+Email assignment uses an operator-provisioned, unique email mapping on the
+existing subject. Store the account's verified email trimmed and lowercase.
+Migration `0002` adds a nullable column so existing subjects remain usable by ID.
+Backfill legacy accounts from the configured Cognito pool before assigning them
+by email. Display names remain operator-managed; role edits do not alter them.
 
 ## Focused verification
 
