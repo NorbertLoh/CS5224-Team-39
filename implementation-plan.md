@@ -88,7 +88,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | S01 | Create scheduling schema/migrations: fixed availability slots and appointments. | F04, C02, C03 | M |
+| [ ] | S01 | Create scheduling schema/migrations: fixed availability slots and appointments. Assignee: NorbertLoh; status: in progress. Issue #88; PR #89. | F04, C02, C03 | M |
 | [ ] | S02 | Add doctor availability and patient slot-list APIs with access checks. | S01, A06, A08 | M |
 | [ ] | S03 | Add expiring Redis holds plus database reservation constraint/transaction. | S02, F09 | L |
 | [ ] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. | S03 | M |
