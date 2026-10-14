@@ -31,7 +31,7 @@ export function ClinicStorefront({ slug }: { slug: string | undefined }) {
         </div>
         <section aria-labelledby="clinic-heading" className="grid gap-10 py-12 lg:grid-cols-[1.4fr_1fr] lg:gap-16 lg:py-20">
           <ClinicIntro clinic={clinic} />
-          <ConsultationCard price={clinic.consultation_price} />
+          <ConsultationCard price={clinic.consultation_price} slug={clinic.slug} active={clinic.status === 'active'} />
         </section>
         <DoctorDirectory tenantId={clinic.tenant_id} />
       </main>
