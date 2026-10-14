@@ -18,7 +18,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.mutable import MutableList
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 SERVICE_SCHEMA = "identity"
 
@@ -43,6 +43,11 @@ class Subject(Base):
     __tablename__ = "subjects"
     __table_args__ = (
         UniqueConstraint("cognito_sub", name="uq_subjects_cognito_sub"),
+        UniqueConstraint("email", name="uq_subjects_email"),
+        CheckConstraint(
+            "email IS NULL OR (email = lower(btrim(email)) AND email <> '')",
+            name="ck_subjects_email",
+        ),
         CheckConstraint("btrim(cognito_sub) <> ''", name="ck_subjects_cognito_sub"),
         CheckConstraint("btrim(display_name) <> ''", name="ck_subjects_display_name"),
         CheckConstraint(GLOBAL_ROLES_CHECK, name="ck_subjects_global_roles"),
@@ -52,6 +57,7 @@ class Subject(Base):
     # Opaque verified runtime value, never inferred from a fixture UUID or group.
     cognito_sub: Mapped[str] = mapped_column(Text)
     display_name: Mapped[str] = mapped_column(Text)
+    email: Mapped[str | None] = mapped_column(Text)
     global_roles: Mapped[list[str]] = mapped_column(
         MutableList.as_mutable(ARRAY(Text)), default=list, server_default=text("'{}'::text[]")
     )
@@ -74,6 +80,7 @@ class Membership(Base):
             "identity.subjects.subject_id", name="fk_memberships_subject", ondelete="RESTRICT"
         ),
     )
+    subject: Mapped[Subject] = relationship(lazy="joined")
     # Tenant owns clinics; clinic existence must be checked through its API in A10.
     tenant_id: Mapped[UUID] = mapped_column(Uuid)
     roles: Mapped[list[str]] = mapped_column(MutableList.as_mutable(ARRAY(Text)))

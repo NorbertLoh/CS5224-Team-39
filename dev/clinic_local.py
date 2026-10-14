@@ -156,10 +156,15 @@ def main():
                 UserPoolId=pool, Username=f"{name}@example.test"
             )["UserAttributes"]
             sub = next(item["Value"] for item in attributes if item["Name"] == "sub")
+            email = next(
+                item["Value"] for item in attributes if item["Name"] == "email"
+            )
             db.execute(
-                "INSERT INTO identity.subjects (subject_id, cognito_sub, display_name, global_roles) "
-                "VALUES (%s, %s, %s, %s) ON CONFLICT (cognito_sub) DO NOTHING",
-                (uuid4(), sub, f"Local {name.title()}", roles),
+                "INSERT INTO identity.subjects "
+                "(subject_id, cognito_sub, display_name, global_roles, email) "
+                "VALUES (%s, %s, %s, %s, %s) "
+                "ON CONFLICT (cognito_sub) DO UPDATE SET email = EXCLUDED.email",
+                (uuid4(), sub, f"Local {name.title()}", roles, email.strip().lower()),
             )
     print(
         "Local configuration ready. Existing .env files and database profiles were preserved."

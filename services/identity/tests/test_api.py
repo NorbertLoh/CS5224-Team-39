@@ -108,6 +108,7 @@ def api(api_database, signing_key):
                     subject_id=subject_id,
                     cognito_sub=subs[name],
                     display_name=name,
+                    email=None if name == "former" else f"{name}@example.test",
                     global_roles=global_roles,
                 )
             )
@@ -301,6 +302,75 @@ def test_membership_body_validation(api, body):
     )
     assert response.status_code == 422
     assert response.json()["error"]["details"]
+
+
+def test_email_assignment_is_normalized_idempotent_and_reactivates(api):
+    body = {"email": "  TARGET@EXAMPLE.TEST  ", "roles": ["doctor"]}
+    response = api.client.post(path(), json=body, headers=headers(api, "admin_a"))
+    assert response.status_code == 201
+    original = response.json()
+    assert original["subject_id"] == str(api.ids["target"])
+    assert original["subject"] == {"display_name": "target", "email": "target@example.test"}
+    repeated = api.client.post(path(), json=body, headers=headers(api, "admin_a"))
+    assert repeated.status_code == 200
+    assert repeated.json()["membership_id"] == original["membership_id"]
+    api.client.delete(path(subject=api.ids["target"]), headers=headers(api, "admin_a"))
+    restored = api.client.post(path(), json=body, headers=headers(api, "platform"))
+    assert restored.status_code == 200
+    assert restored.json()["status"] == "active"
+    assert restored.json()["membership_id"] == original["membership_id"]
+
+
+def test_membership_list_includes_names_and_optional_email_without_cognito_sub(api):
+    response = api.client.get(path(), headers=headers(api, "admin_a"))
+    assert response.status_code == 200
+    rows = {item["subject_id"]: item for item in response.json()["items"]}
+    assert rows[str(api.ids["doctor"])]["subject"] == {
+        "display_name": "doctor",
+        "email": "doctor@example.test",
+    }
+    assert rows[str(api.ids["former"])]["subject"] == {
+        "display_name": "former",
+        "email": None,
+    }
+    assert "cognito_sub" not in response.text
+
+
+@pytest.mark.parametrize("actor", ["patient", "doctor", "former", "admin_b"])
+def test_email_assignment_rejects_unrelated_callers_without_directory_access(api, actor):
+    for email in ("target@example.test", "missing@example.test"):
+        response = api.client.post(
+            path(), json={"email": email, "roles": ["doctor"]}, headers=headers(api, actor)
+        )
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "not_found"
+    with Session(api.engine) as session:
+        assert (
+            session.scalar(select(Membership).where(Membership.subject_id == api.ids["target"]))
+            is None
+        )
+
+
+def test_email_assignment_unknown_validation_and_last_admin(api):
+    response = api.client.post(
+        path(),
+        json={"email": "missing@example.test", "roles": ["doctor"]},
+        headers=headers(api, "admin_a"),
+    )
+    assert response.status_code == 404
+    for email in ("not-email", "a@", "a b@example.test", "a" * 255 + "@example.test"):
+        response = api.client.post(
+            path(), json={"email": email, "roles": ["doctor"]}, headers=headers(api, "admin_a")
+        )
+        assert response.status_code == 422
+    api.client.delete(path(subject=api.ids["admin_a2"]), headers=headers(api, "platform"))
+    response = api.client.post(
+        path(),
+        json={"email": "admin_a@example.test", "roles": ["doctor"]},
+        headers=headers(api, "platform"),
+    )
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "last_clinic_admin"
 
 
 def test_last_admin_and_concurrent_removals(api):

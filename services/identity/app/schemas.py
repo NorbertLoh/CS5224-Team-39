@@ -34,12 +34,31 @@ class MembershipRead(ClinicMembership):
         )
 
 
+class StaffSubjectRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    display_name: str
+    email: str | None
+
+
+class StaffMembershipRead(MembershipRead):
+    subject: StaffSubjectRead
+
+
+class MembershipByEmailWrite(MembershipWrite):
+    email: str = Field(min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalized_email(cls, value):
+        return value.strip().lower() if isinstance(value, str) else value
+
+
 class IdentityRead(CurrentIdentity):
     memberships: list[MembershipRead]
 
 
 class MembershipPage(BaseModel):
-    items: list[MembershipRead]
+    items: list[StaffMembershipRead]
     next_cursor: str | None
 
 

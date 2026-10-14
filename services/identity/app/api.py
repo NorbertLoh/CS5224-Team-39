@@ -19,10 +19,12 @@ from app.schemas import (
     AccessDecision,
     AccessRequest,
     IdentityRead,
+    MembershipByEmailWrite,
     MembershipPage,
     MembershipRead,
     MembershipStatus,
     MembershipWrite,
+    StaffMembershipRead,
 )
 
 router = APIRouter(
@@ -149,14 +151,14 @@ def memberships(
         rows = rows[:limit]
         next_cursor = encode_cursor(settings, subject.subject_id, tenant_id, status, rows[-1])
     return MembershipPage(
-        items=[MembershipRead.model_validate(row) for row in rows], next_cursor=next_cursor
+        items=[StaffMembershipRead.model_validate(row) for row in rows], next_cursor=next_cursor
     )
 
 
 @router.put(
     "/clinics/{tenant_id}/memberships/{subject_id}",
-    response_model=MembershipRead,
-    responses={201: {"model": MembershipRead}},
+    response_model=StaffMembershipRead,
+    responses={201: {"model": StaffMembershipRead}},
 )
 def put_membership(
     tenant_id: UUID,
@@ -191,9 +193,39 @@ def put_membership(
         membership.roles = body.roles
         membership.status = "active"
     session.flush()
-    result = MembershipRead.model_validate(membership)
+    result = StaffMembershipRead.model_validate(membership)
     session.commit()
     return result
+
+
+@router.post(
+    "/clinics/{tenant_id}/memberships",
+    response_model=StaffMembershipRead,
+    responses={201: {"model": StaffMembershipRead}},
+)
+def assign_by_email(
+    tenant_id: UUID,
+    body: MembershipByEmailWrite,
+    request: Request,
+    response: Response,
+    principal: User,
+    session: DB,
+):
+    # Resolve accounts only after clinic authorization, without a public directory.
+    authorize_admin(session, principal, tenant_id)
+    request.app.state.clinic_directory.require_clinic(tenant_id, request.state.request_id)
+    subject = session.scalar(select(Subject).where(Subject.email == body.email))
+    if subject is None:
+        raise DomainError(404, "not_found", "Resource not found.")
+    return put_membership(
+        tenant_id,
+        subject.subject_id,
+        MembershipWrite(roles=body.roles),
+        request,
+        response,
+        principal,
+        session,
+    )
 
 
 @router.delete("/clinics/{tenant_id}/memberships/{subject_id}", status_code=204)

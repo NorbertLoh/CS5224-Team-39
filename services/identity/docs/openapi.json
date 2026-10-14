@@ -281,11 +281,42 @@
         "title": "IdentityRead",
         "type": "object"
       },
+      "MembershipByEmailWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "minLength": 3,
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+            "title": "Email",
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "enum": [
+                "doctor",
+                "clinic_admin"
+              ],
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "roles",
+          "email"
+        ],
+        "title": "MembershipByEmailWrite",
+        "type": "object"
+      },
       "MembershipPage": {
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/MembershipRead"
+              "$ref": "#/components/schemas/StaffMembershipRead"
             },
             "title": "Items",
             "type": "array"
@@ -389,6 +420,94 @@
           "roles"
         ],
         "title": "MembershipWrite",
+        "type": "object"
+      },
+      "StaffMembershipRead": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "membership_id": {
+            "format": "uuid",
+            "title": "Membership Id",
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "enum": [
+                "doctor",
+                "clinic_admin"
+              ],
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "revoked"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/StaffSubjectRead"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "membership_id",
+          "subject_id",
+          "tenant_id",
+          "roles",
+          "status",
+          "created_at",
+          "updated_at",
+          "subject"
+        ],
+        "title": "StaffMembershipRead",
+        "type": "object"
+      },
+      "StaffSubjectRead": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "required": [
+          "display_name",
+          "email"
+        ],
+        "title": "StaffSubjectRead",
         "type": "object"
       },
       "ValidationError": {
@@ -715,6 +834,132 @@
         "tags": [
           "identity"
         ]
+      },
+      "post": {
+        "operationId": "assign_by_email_clinics__tenant_id__memberships_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MembershipByEmailWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffMembershipRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffMembershipRead"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Assign By Email",
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/clinics/{tenant_id}/memberships/{subject_id}": {
@@ -866,7 +1111,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MembershipRead"
+                  "$ref": "#/components/schemas/StaffMembershipRead"
                 }
               }
             },
@@ -876,7 +1121,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MembershipRead"
+                  "$ref": "#/components/schemas/StaffMembershipRead"
                 }
               }
             },

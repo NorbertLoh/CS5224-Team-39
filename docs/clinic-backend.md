@@ -114,6 +114,24 @@ documents bucket. See [tenant logo API](../services/tenant/docs/api.md).
 
 ## Staff management
 
+Staff assignment accepts existing accounts' email addresses; memberships show
+names and emails. For existing local databases, migrate identity and backfill the
+four seeded accounts from Cognito:
+
+```powershell
+$env:SERVICE_DATABASE_URL='postgresql+psycopg://identity:local-demo-only@127.0.0.1:55411/telelink'
+Push-Location services/identity
+.venv/Scripts/python.exe -m alembic upgrade head
+Pop-Location
+Remove-Item Env:SERVICE_DATABASE_URL
+services/identity/.venv/Scripts/python.exe dev/clinic_local.py
+```
+
+Restart identity after migration. The helper updates email mappings while preserving
+display names, roles, memberships and clinic profiles. AWS operators must backfill
+verified emails from their configured pool. Accounts without email remain editable
+by ID; browser input cannot provision identities.
+
 Open **Manage staff** from Manage clinics or the profile editor. The route is
 `/clinic-admin/clinics/<tenant UUID>/staff`. Lists include active and revoked
 memberships with cursor pagination. Use an existing identity subject UUID to
@@ -122,14 +140,14 @@ role set; **Revoke access** retains the row; **Reactivate** opens the role form
 and **Save roles** restores active access. Saving waits for the backend response
 and refreshes the membership and doctor lists. No runtime fixtures are used.
 
-The membership API exposes subject IDs rather than names/emails and has no account
-creation/search endpoint. Find the provisioned UUID through the user's authenticated
-identity `/me` response or local operator provisioning. Do not substitute Cognito
-`sub` or email. Authorization is enforced by identity; the last active clinic
+The membership API returns names/emails for authorized administrators and has no
+account creation/search endpoint. Email assignment resolves an existing provisioned
+account; subsequent edits use its stable subject ID. Authorization is enforced by
+identity; the last active clinic
 administrator cannot be demoted or revoked. Local identity must use
 `SERVICE_TENANT_URL` with matching `SERVICE_IDENTITY_SECRET` in tenant; unset
 `SERVICE_CLINIC_FIXTURE_PATH`. AWS uses the same API paths/configuration described
-above; no additional frontend settings or backend changes are required.
+above; no additional frontend settings are required. Apply identity migration `0002`.
 
 ## Doctor directory
 
