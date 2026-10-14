@@ -15,3 +15,8 @@ No new configuration. Run `npm test`, `npm run lint` and `npm run build` in
 `apps/web`. Browser walkthrough: change preview context/date, select appointments,
 check empty days and multiple appointments at the same time, and use keyboard
 navigation and a narrow viewport.
+
+Verification: 48 frontend tests (including role scope, revoked membership,
+same-slot history, offset-start intervals, date boundaries and refund details),
+ESLint and TypeScript/production build passed. Browser interaction and visual
+checks remain unverified: this session has no available browser surface.
