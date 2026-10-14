@@ -55,8 +55,8 @@ Remove-Item Env:SERVICE_DATABASE_URL
 ```
 
 The service defaults to port 8003. `/health/live` checks process health;
-`/health/ready` checks required configuration, readable tables and revision `0002`.
-Readiness does not probe upstream services; actual operations handle their failures.
+`/health/ready` checks required configuration, readable tables, revision `0003`
+and Redis connectivity. It does not probe identity/tenant; actual operations handle their failures.
 Swagger is `/docs`. No root Compose, frontend proxy or routing changes are part of
 S02; use port 8003 directly until the relevant integration task wires them up.
 
@@ -65,20 +65,21 @@ S02; use port 8003 directly until the relevant integration task wires them up.
 Held, pending-payment, confirmed and in-progress appointments mark slots unavailable
 and block withdrawal. Cancelled/expired/completed/no-show history can be retained
 under a withdrawn slot. DELETE locks the slot row before checking reservations and
-marking withdrawal. S03 must use that same slot lock, reject withdrawn slots and
-add the active-reservation uniqueness constraint inside its booking/expiry transaction.
-The schema alone still permits multiple active appointments.
+marking withdrawal. S03 booking/expiry uses that same slot lock, rejects withdrawn
+slots and enforces active-reservation uniqueness in PostgreSQL. Withdrawal expires
+any elapsed holds under this lock before checking remaining reservations.
 
 Availability creation takes a per-doctor PostgreSQL transaction advisory lock
 across clinics before inserting. This prevents simultaneous overlapping GiST
 inserts from deadlocking and lets the losing request return `slot_overlap`.
 The database exclusion constraint remains the final guard, including direct SQL.
 
-Until S03 performs expiry, a held/pending appointment remains unavailable even when
-its persisted deadline has passed. Redis TTL alone will not release it. Listing is
-a snapshot; active clinic, membership, price and capacity must be revalidated at hold
-time. Legal transitions and payment integration remain S04-S06. No AWS/RDS claim is
-made from these local checks.
+The list treats held/pending appointments as unavailable only before their persisted
+deadline; confirmed/in-progress reservations remain unavailable. S03 expires elapsed
+holds transactionally before reallocation. Redis TTL alone will not release capacity.
+Listing remains a snapshot. See [holds](holds.md) for the expiry worker, Redis failure
+behavior and booking limits. Legal transitions and payment integration remain S04-S06.
+No AWS/RDS claim is made from these local checks.
 
 ## Verification
 

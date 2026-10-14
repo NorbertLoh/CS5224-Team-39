@@ -65,3 +65,45 @@ class SlotPublic(SlotCreate):
 class SlotPage(BaseModel):
     items: list[SlotPublic]
     next_cursor: str | None
+
+
+class HoldCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    tenant_id: UUID
+    slot_id: UUID
+
+
+class AppointmentPublic(BaseModel):
+    appointment_id: UUID
+    tenant_id: UUID
+    patient_id: UUID
+    doctor_id: UUID
+    slot_id: UUID
+    status: Literal[
+        "held",
+        "pending_payment",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "expired",
+        "cancelled",
+        "no_show",
+    ]
+    starts_at: datetime
+    ends_at: datetime
+    hold_expires_at: datetime | None
+    consultation_price: Money
+    payment_id: UUID | None
+    payment_resolution: Literal[
+        "none", "awaiting_payment", "confirmed", "refund_required", "refunded"
+    ]
+    created_at: datetime
+    updated_at: datetime
+
+    @field_serializer("starts_at", "ends_at", "hold_expires_at", "created_at", "updated_at")
+    def timestamp(self, value):
+        if value is None:
+            return None
+        return (
+            value.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        )

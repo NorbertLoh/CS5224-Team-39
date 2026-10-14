@@ -21,6 +21,7 @@ from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 SERVICE_SCHEMA = "scheduling"
+ACTIVE_RESERVATION_STATES = ("held", "pending_payment", "confirmed", "in_progress")
 
 
 class Base(DeclarativeBase):
@@ -102,6 +103,14 @@ class Appointment(Base):
         Index("ix_appointments_patient_time", "patient_id", "starts_at", "appointment_id"),
         Index("ix_appointments_doctor_time", "doctor_id", "starts_at", "appointment_id"),
         Index("ix_appointments_slot", "slot_id"),
+        Index(
+            "uq_appointments_active_slot",
+            "slot_id",
+            unique=True,
+            postgresql_where=text(
+                "status IN ('held', 'pending_payment', 'confirmed', 'in_progress')"
+            ),
+        ),
         Index(
             "ix_appointments_expiry",
             "hold_expires_at",

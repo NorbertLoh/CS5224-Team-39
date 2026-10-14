@@ -6,12 +6,14 @@ on:
       - 'services/scheduling/**'
       - 'packages/python_common/**'
       - 'dev/check_scheduling_integration.py'
+      - 'dev/check_booking_holds.py'
       - '.github/workflows/scheduling-checks.yml'
   pull_request:
     paths:
       - 'services/scheduling/**'
       - 'packages/python_common/**'
       - 'dev/check_scheduling_integration.py'
+      - 'dev/check_booking_holds.py'
       - '.github/workflows/scheduling-checks.yml'
 
 permissions:
@@ -19,13 +21,22 @@ permissions:
 
 jobs:
   persistence:
-    name: Scheduling PostgreSQL and Ruff
+    name: Scheduling PostgreSQL, Redis and Ruff
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
       run:
         working-directory: services/scheduling
     services:
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
       postgres:
         image: postgres:17
         env:
@@ -41,6 +52,7 @@ jobs:
           --health-retries 10
     env:
       TEST_DATABASE_URL: postgresql+psycopg://scheduling:local-demo-only@127.0.0.1:5432/telelink
+      TEST_REDIS_URL: redis://127.0.0.1:6379/0
       SCHEDULING_TEST_ALLOW_RESET: '1'
     steps:
       - uses: actions/checkout@v7
@@ -61,4 +73,6 @@ jobs:
       - run: python -m ruff format --check .
       - run: python -m ruff check ../../dev/check_scheduling_integration.py --config pyproject.toml
       - run: python -m ruff format --check ../../dev/check_scheduling_integration.py --config pyproject.toml
+      - run: python -m ruff check ../../dev/check_booking_holds.py --config pyproject.toml
+      - run: python -m ruff format --check ../../dev/check_booking_holds.py --config pyproject.toml
       - run: python -m pytest -q
