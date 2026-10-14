@@ -2,8 +2,12 @@
 
 `/clinic-admin/clinics/<tenant UUID>/staff` calls the existing identity membership
 APIs through `apiFetch` and the shared access-token refresh helper. The feature
-contains one API module and one page; there are no runtime fixtures, new backend
+contains an API module, a page and a clinic context component; there are no runtime fixtures, new backend
 endpoints, migrations, dependencies or environment settings.
+
+The page shows the clinic name beneath its heading, read from the authenticated
+tenant profile API by `ClinicContext.tsx`. A failed name lookup shows the tenant ID
+and a retry action so the clinic context remains identifiable.
 
 The list includes active/revoked memberships with cursor pagination. Assigning
 an existing subject or saving an edit replaces roles and activates access;

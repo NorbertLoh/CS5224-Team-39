@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingState } from '@/components/LoadingState'
 import { listStaff, revokeStaff, saveStaff } from './api'
+import { ClinicContext } from './ClinicContext'
 import type { Membership, StaffRole } from './api'
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -73,7 +74,7 @@ function StaffPage({ tenantId }: { tenantId: string }) {
     <main className="mx-auto max-w-6xl px-6 py-10">
       <a href={`/clinic-admin/clinics/${tenantId}/profile`} className="mb-5 inline-block text-sm underline">Clinic profile</a>
       <h1 className="text-3xl font-semibold">Staff management</h1>
-      <p className="mt-3 break-all text-sm text-slate-600">Clinic: {tenantId}</p>
+      <ClinicContext tenantId={tenantId} />
       <p className="mt-3 text-sm text-slate-600">Assign existing identity subjects to this clinic. Revoking access keeps the membership record; saving roles reactivates it.</p>
       <p role="status" className="my-5 text-sm">{message}</p>
       {staff.isPending ? <LoadingState message="Loading staff..." /> : staff.isError ? <><ErrorState message="Could not load staff. Check your administrator access and backend connection." onRetry={() => void staff.refetch()} /><a href="/" className="mt-5 inline-block underline">Return home</a></> : <>
