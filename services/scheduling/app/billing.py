@@ -20,6 +20,7 @@ class PaymentFact(BaseModel):
     purpose: str
     status: str
     amount: Money
+    resolution: str = "none"
 
 
 class BillingClient:
@@ -34,6 +35,30 @@ class BillingClient:
         self.client.close()
 
     def payment(self, payment_id):
+        return self.request("GET", f"/internal/payments/{payment_id}")
+
+    def refund_required(self, recovery):
+        payment = self.request(
+            "POST",
+            f"/internal/payments/{recovery.payment_id}/resolution",
+            json={
+                "resolution": "refund_required",
+                "resource_id": str(recovery.appointment_id),
+                "reason": recovery.reason,
+            },
+        )
+        if (
+            payment.payment_id != recovery.payment_id
+            or payment.appointment_id != recovery.appointment_id
+            or payment.tenant_id != recovery.tenant_id
+            or payment.purpose != "consultation"
+            or payment.status != "succeeded"
+            or payment.resolution != "refund_required"
+        ):
+            raise PaymentEventRejected("Billing resolution acknowledgement invalid")
+        return payment
+
+    def request(self, method, path, **kwargs):
         now = int(time.time())
         token = jwt.encode(
             {
@@ -47,9 +72,11 @@ class BillingClient:
             algorithm="HS256",
         )
         try:
-            response = self.client.get(
-                f"{self.url}/internal/payments/{payment_id}",
+            response = self.client.request(
+                method,
+                f"{self.url}{path}",
                 headers={"Authorization": "Bearer " + token},
+                **kwargs,
             )
             response.raise_for_status()
             return PaymentFact.model_validate(response.json())

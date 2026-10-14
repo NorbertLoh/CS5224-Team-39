@@ -34,6 +34,34 @@ event_inbox = inbox_table(Base.metadata)
 event_outbox = outbox_table(Base.metadata)
 
 
+class PaymentRecovery(Base):
+    """One decision per verified charge; refund rows double as a durable delivery queue."""
+
+    __tablename__ = "payment_recoveries"
+    __table_args__ = (
+        CheckConstraint("outcome IN ('recovered', 'refund_required')", name="ck_recovery_outcome"),
+        CheckConstraint(
+            "reason IN ('late_payment', 'slot_reallocated', 'appointment_cancelled', "
+            "'appointment_unavailable', 'duplicate_charge')",
+            name="ck_recovery_reason",
+        ),
+        Index("ix_recovery_pending", "delivered_at", "created_at"),
+    )
+
+    payment_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    appointment_id: Mapped[UUID] = mapped_column(Uuid)
+    tenant_id: Mapped[UUID] = mapped_column(Uuid)
+    event_id: Mapped[UUID | None] = mapped_column(Uuid)
+    outcome: Mapped[str] = mapped_column(Text)
+    reason: Mapped[str] = mapped_column(Text)
+    previous_status: Mapped[str] = mapped_column(Text)
+    hold_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    recovered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class AvailabilitySlot(Base):
     __tablename__ = "availability_slots"
     __table_args__ = (
