@@ -23,12 +23,15 @@ horizontally on narrow screens for the remaining days.
 
 Drag vertically to select a time range or horizontally to repeat the range across
 days, then choose Add availability or Remove availability. Each new drag adds a
-separate rectangle of half-hour cells, preserving earlier selections. Overlapping
+separate rectangle of half-hour cells when it starts on an unselected cell,
+preserving earlier selections. Starting on a selected cell instead deselects the
+dragged rectangle. The gesture's mode stays fixed until release. Shrinking or
+reversing the drag restores cells outside its current rectangle. Overlapping
 ranges are combined so each cell is counted and applied once; gaps remain empty.
 Clicking a selected cell deselects only that cell, including where ranges overlap.
 Enter/Space toggles a cell, arrows move focus, Shift + arrows
 extend the range, and Escape clears it. Pointer capture supports releasing outside
-the grid, and cancelled gestures clear the selection. Touch dragging is supported
+the grid, and cancelled gestures restore the selection before the drag. Touch dragging is supported
 on cells; use the time gutter or scrollbar to scroll without selecting.
 
 Every added cell becomes a future 30-minute UTC interval. Overlaps are rejected
@@ -41,7 +44,7 @@ atomic: any conflict leaves all slots unchanged. Clear selection cancels without
 editing. Data loads synchronously from the bundled fixture, so the editor does
 not simulate network loading or failures.
 
-Verification (14 October 2026): all 42 tests passed with `npm test`;
+Verification (14 October 2026): all 43 tests passed with `npm test`;
 `npm run lint` and `npm run build` (including TypeScript) passed from `apps/web`.
 Focused tests cover timezone conversion, invalid dates, interval boundaries,
 cross-clinic conflicts, membership choices, removal protection, reverse rectangular
@@ -51,7 +54,10 @@ cells using the keyboard and removing them. Separate keyboard selections and
 consecutive disjoint drags were also verified; adding both ranges preserved the
 gap between them. Pointer deselection preserved the neighbouring selected cell,
 and keyboard deselection of the last cell disabled the actions. Focused tests
-cover deselecting corners, edges and interior cells of overlapping rectangles.
+cover deselecting corners, edges and interior cells of overlapping rectangles,
+drag erasure, fixed gesture mode and restoration when shrinking a drag. Browser
+drag deselection removed the middle two cells of a four-cell selection, retaining
+the cells above and below.
 Live scheduling integration remains
 separate; S07 replaces
 fixture data and client-side validation with authenticated scheduling API calls

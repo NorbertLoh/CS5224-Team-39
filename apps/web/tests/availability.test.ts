@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AvailabilityEditor } from '../src/features/availability/AvailabilityEditor'
-import { applySelection, cellsInSelection, cellsInSelections, deselectCell, shiftDate, updateSelections, weekStart } from '../src/features/availability/timetable'
+import { applyDragSelection, applySelection, cellsInSelection, cellsInSelections, deselectCell, shiftDate, updateSelections, weekStart } from '../src/features/availability/timetable'
 import { addSlot, fixtureClinics, fixtureDoctors, initialSlots, removeSlot, singaporeDate, slotStart } from '../src/features/availability/fixtures'
 
 const now = Date.parse('2026-10-14T03:00:00Z')
@@ -121,4 +121,20 @@ test('deselecting a cell removes it from every overlapping range and preserves a
   assert.deepEqual(deselectCell(single, { day: 1, row: 19 }), [])
   assert.deepEqual(deselectCell(single, { day: 4, row: 10 }), single)
   assert.equal(cellsInSelections(ranges, dates).length, 11)
+})
+
+test('dragging from selected cells erases a rectangle and shrinking the drag restores cells', () => {
+  const dates = Array.from({ length: 7 }, (_, index) => shiftDate('2026-10-15', index))
+  const range = { from: { day: 0, row: 18 }, to: { day: 2, row: 23 } }
+  const separate = { from: { day: 5, row: 26 }, to: { day: 5, row: 27 } }
+  const before = [range, separate, range]
+  const erase = { from: { day: 2, row: 22 }, to: { day: 1, row: 20 } }
+  const remaining = cellsInSelections(applyDragSelection(before, erase), dates)
+  assert.equal(remaining.length, 14)
+  assert.ok(remaining.every(cell => !(['2026-10-16', '2026-10-17'].includes(cell.date) && ['10:00', '10:30', '11:00'].includes(cell.time))))
+  const shrunk = cellsInSelections(applyDragSelection(before, { from: erase.from, to: erase.from }), dates)
+  assert.equal(shrunk.length, 19)
+  assert.equal(cellsInSelections(before, dates).length, 20)
+  const startOutside = { from: { day: 3, row: 18 }, to: { day: 2, row: 22 } }
+  assert.equal(cellsInSelections(applyDragSelection(before, startOutside), dates).length, 25)
 })

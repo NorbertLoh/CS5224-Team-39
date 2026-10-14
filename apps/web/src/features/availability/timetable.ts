@@ -27,20 +27,34 @@ export function updateSelections(selections: Selection[], next: Selection | null
   return [...(extend ? selections.slice(0, -1) : selections), next]
 }
 
-export function deselectCell(selections: Selection[], cell: Cell): Selection[] {
+export function deselectRange(selections: Selection[], area: Selection): Selection[] {
   return selections.flatMap(range => {
-    if (!isSelected(range, cell.day, cell.row)) return [range]
     const left = Math.min(range.from.day, range.to.day)
     const right = Math.max(range.from.day, range.to.day)
     const top = Math.min(range.from.row, range.to.row)
     const bottom = Math.max(range.from.row, range.to.row)
+    const cutLeft = Math.max(left, Math.min(area.from.day, area.to.day))
+    const cutRight = Math.min(right, Math.max(area.from.day, area.to.day))
+    const cutTop = Math.max(top, Math.min(area.from.row, area.to.row))
+    const cutBottom = Math.min(bottom, Math.max(area.from.row, area.to.row))
+    if (cutLeft > cutRight || cutTop > cutBottom) return [range]
     const remaining: Selection[] = []
-    if (top < cell.row) remaining.push({ from: { day: left, row: top }, to: { day: right, row: cell.row - 1 } })
-    if (bottom > cell.row) remaining.push({ from: { day: left, row: cell.row + 1 }, to: { day: right, row: bottom } })
-    if (left < cell.day) remaining.push({ from: { day: left, row: cell.row }, to: { day: cell.day - 1, row: cell.row } })
-    if (right > cell.day) remaining.push({ from: { day: cell.day + 1, row: cell.row }, to: { day: right, row: cell.row } })
+    if (top < cutTop) remaining.push({ from: { day: left, row: top }, to: { day: right, row: cutTop - 1 } })
+    if (bottom > cutBottom) remaining.push({ from: { day: left, row: cutBottom + 1 }, to: { day: right, row: bottom } })
+    if (left < cutLeft) remaining.push({ from: { day: left, row: cutTop }, to: { day: cutLeft - 1, row: cutBottom } })
+    if (right > cutRight) remaining.push({ from: { day: cutRight + 1, row: cutTop }, to: { day: right, row: cutBottom } })
     return remaining
   })
+}
+
+export function deselectCell(selections: Selection[], cell: Cell): Selection[] {
+  return deselectRange(selections, { from: cell, to: cell })
+}
+
+// Always use the selection at pointer-down so reversing/shrinking a drag restores cells.
+export function applyDragSelection(before: Selection[], area: Selection): Selection[] {
+  return before.some(range => isSelected(range, area.from.day, area.from.row))
+    ? deselectRange(before, area) : [...before, area]
 }
 
 export function cellsInSelections(selections: Selection[], dates: string[]) {
