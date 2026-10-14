@@ -94,7 +94,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [ ] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. Assignee: NorbertLoh; status: in progress. Issue #94; PR #95. | S03 | M |
 | [ ] | S05 | Consume consultation-payment success idempotently and confirm appointment. | S04, M03, C05 | M |
 | [ ] | S06 | Handle expired hold/late payment as an explicit recoverable exception. | S05 | S |
-| [ ] | U06 | Build doctor availability editor using fixtures. | F07, F08, C02 | M |
+| [ ] | U06 | Build doctor availability editor using fixtures. Assignee: NorbertLoh; status: in progress. Issue #102. | F07, F08, C02 | M |
 | [ ] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. | F07, F08, C03 | M |
 | [ ] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. | F07, F08, C02, C03 | M |
 | [ ] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. | S04, U06-U08 | M |
@@ -138,7 +138,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [x] | M01 | Add shared event envelope validation and SDK endpoint configuration. Completed in merged PR #77. | F03, C05 | S |
-| [x] | M02 | Add minimal outbox publisher with retryable send and publication tracking. Completed in merged PR #97. | F04, F12, M01 | M |
+| [ ] | M02 | Add minimal outbox publisher with retryable send and publication tracking. | F04, F12, M01 | M |
 | [ ] | M03 | Add SQS consumer helper with acknowledgement, inbox deduplication and retries. | F12, M01 | M |
 | [ ] | M04 | Document and verify one failed job reaching DLQ and operator replay. | M03 | S |
 | [ ] | D01 | Create fulfilment schema/catalogue and prescription-linked order APIs. | F04, C04, A06 | M |
