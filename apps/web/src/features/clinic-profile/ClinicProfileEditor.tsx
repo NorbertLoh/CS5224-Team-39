@@ -75,7 +75,6 @@ function ProfileEditor({ clinic }: { clinic: EditableClinic }) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5 sm:px-8"><a href="/" className="font-semibold">TeleLink Health</a><span className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600">Clinic administration</span></div></header>
       <main className="mx-auto max-w-6xl px-6 py-10 sm:px-8">
         {<a href={`/clinics/${clinic.slug}`} className="text-sm text-slate-600 underline underline-offset-4">View storefront</a>}
         <a href={`/clinic-admin/clinics/${clinic.tenant_id}/staff`} className="ml-5 text-sm text-slate-600 underline underline-offset-4">Manage staff</a>

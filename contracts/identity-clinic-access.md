@@ -7,6 +7,14 @@ Consumer review is required before merge. Examples are synthetic.
 
 ## Identity and membership resources
 
+Staff management list/POST/PUT membership responses additionally include
+`subject: { display_name, email }`; email is nullable for legacy mappings.
+These summaries are administrator-only. Self identity keeps its existing
+membership shape. Email assignment resolves an operator-provisioned, unique,
+trimmed lowercase email to the stable subject ID and applies existing locking
+and last-administrator protections. Unknown accounts return 404; malformed input
+returns 422. UUID-based edits remain supported.
+
 Identity owns `subject_id` (application UUID), `cognito_sub` (opaque external ID),
 `display_name`, `global_roles`, and clinic memberships. A patient or doctor ID is
 the subject's application UUID, not a separate identity. `global_roles` permits
@@ -32,6 +40,7 @@ C01. Request bodies have only the writable fields explicitly listed below.
 | GET `/me` | Identity plus `memberships` array; 200 | Verified subject; unknown subject returns 403 `identity_not_provisioned` |
 | GET `/clinics/{tenant_id}/memberships` | C01 paginated memberships; optional `status`; ordered `created_at`, `membership_id` ascending | Active clinic admin of this tenant or platform admin |
 | PUT `/clinics/{tenant_id}/memberships/{subject_id}` | `{ "roles": ["doctor"] }`; returns membership, 201 for new / 200 for existing | Same administrators; target subject and clinic must exist |
+| POST `/clinics/{tenant_id}/memberships` | `{ "email": "doctor@example.test", "roles": ["doctor"] }`; 201 for new / 200 for update or reactivation | Same administrators; clinic access checked before account lookup; no new account created |
 | DELETE `/clinics/{tenant_id}/memberships/{subject_id}` | Revoke membership; 204, including repeated revoke | Same administrators |
 
 Membership mutations do not grant global roles. Platform-admin provisioning is an

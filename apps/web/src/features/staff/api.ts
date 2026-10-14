@@ -9,6 +9,7 @@ export type Membership = {
   tenant_id: string
   roles: StaffRole[]
   status: 'active' | 'revoked'
+  subject: { display_name: string; email: string | null }
 }
 
 async function request(tenantId: string, suffix: string, options: RequestInit = {}) {
@@ -31,4 +32,11 @@ export async function saveStaff(tenantId: string, subjectId: string, roles: Staf
 
 export async function revokeStaff(tenantId: string, subjectId: string): Promise<void> {
   await request(tenantId, `/${encodeURIComponent(subjectId)}`, { method: 'DELETE' })
+}
+
+export async function assignStaff(tenantId: string, email: string, roles: StaffRole[]): Promise<Membership> {
+  return (await request(tenantId, '', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim().toLowerCase(), roles }),
+  })).json()
 }

@@ -17,6 +17,7 @@ Ingress strips `/api/v1/identity`; direct service routes are:
 | GET `/me` | Cognito access token; persisted identity and active memberships only; unknown runtime sub returns 403 `identity_not_provisioned` |
 | GET `/clinics/{tenant_id}/memberships` | Active owning-clinic admin or platform admin; `status=active\|revoked`, `limit=1..100`, cursor pagination |
 | PUT `/clinics/{tenant_id}/memberships/{subject_id}` | Same admins; only `{ "roles": ["doctor"] }`; target subject and clinic must exist; 201 creates, 200 replaces roles/reactivates existing membership |
+| POST `/clinics/{tenant_id}/memberships` | Same admins; `{ "email": "doctor@example.test", "roles": ["doctor"] }`; resolves an existing account with the same locking/last-admin policy; 201 creates, 200 updates/reactivates |
 | DELETE `/clinics/{tenant_id}/memberships/{subject_id}` | Same admins; revokes and retains the row; 204 with no body, including repeated/absent-membership revocation |
 | POST `/access-decisions` | **Internal only**; scheduling service JWT, server-side action allowlist and trusted scheduling resource context; returns allow/deny with a safe reason |
 | PUT `/internal/clinic-creators` | **A08 internal only**; tenant service JWT, body `{ "tenant_id": "UUID", "subject_id": "UUID" }`. Idempotently assigns the creator's clinic-admin membership; cannot accept arbitrary roles or reactivate a revoked/demoted membership. |
@@ -58,6 +59,13 @@ headers match `error.request_id`. UTC timestamps have millisecond precision.
 Logs contain route templates/status/timing, never request bodies, credentials,
 raw resource paths or query strings. The service uses an explicit CORS origin
 allowlist; no wildcard or cookie credentials are enabled.
+
+Staff list/POST/PUT responses add `subject: { display_name, email }`. Email may be
+null on legacy subjects. `/me` retains its existing shape. These summaries require
+clinic administrator authorization and omit Cognito identifiers. Email is trimmed
+and lowercased; unknown email returns concealed 404, malformed input returns 422.
+No account creation or public user search is provided. Run migration `0002` before
+serving these routes and backfill trusted account emails (see README).
 
 ## Run locally
 
