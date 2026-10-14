@@ -55,7 +55,7 @@ Remove-Item Env:SERVICE_DATABASE_URL
 ```
 
 The service defaults to port 8003. `/health/live` checks process health;
-`/health/ready` checks required configuration, readable tables, revision `0003`
+`/health/ready` checks required configuration, readable tables, revision `0004`
 and Redis connectivity. It does not probe identity/tenant; actual operations handle their failures.
 Swagger is `/docs`. No root Compose, frontend proxy or routing changes are part of
 S02; use port 8003 directly until the relevant integration task wires them up.
@@ -78,7 +78,8 @@ The list treats held/pending appointments as unavailable only before their persi
 deadline; confirmed/in-progress reservations remain unavailable. S03 expires elapsed
 holds transactionally before reallocation. Redis TTL alone will not release capacity.
 Listing remains a snapshot. See [holds](holds.md) for the expiry worker, Redis failure
-behavior and booking limits. Legal transitions and payment integration remain S04-S06.
+behavior and booking limits, and [appointments](appointments.md) for S04 reads and
+transitions. Checkout/payment confirmation and late recovery remain B02/S05/S06.
 No AWS/RDS claim is made from these local checks.
 
 ## Verification

@@ -11,6 +11,7 @@ from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.api import router
+from app.appointments import router as appointments_router
 from app.booking import router as booking_router
 from app.database import create_database_engine
 from app.holds import HoldCache
@@ -67,6 +68,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_error_handlers(app)
     app.include_router(router)
     app.include_router(booking_router)
+    app.include_router(appointments_router)
 
     @app.get("/health/live", tags=["health"])
     def live():
@@ -95,7 +97,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         connection.scalar(
                             text("SELECT version_num FROM scheduling.alembic_version")
                         )
-                        == "0003"
+                        == "0004"
                     )
             except SQLAlchemyError:
                 available = False

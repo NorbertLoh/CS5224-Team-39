@@ -20,8 +20,8 @@ router = APIRouter(
 Patient = Annotated[CurrentIdentity, Depends(require_global_role("patient"))]
 
 
-def appointment_public(appointment):
-    return AppointmentPublic(
+def appointment_public(appointment, *, status=None):
+    result = AppointmentPublic(
         **{
             field: getattr(appointment, field)
             for field in (
@@ -44,6 +44,9 @@ def appointment_public(appointment):
             amount_minor=appointment.consultation_price_minor, currency=appointment.currency
         ),
     )
+    if status is not None:
+        result.status = status
+    return result
 
 
 @router.post("/appointments", response_model=AppointmentPublic, status_code=201)
