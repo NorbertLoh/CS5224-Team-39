@@ -1,6 +1,7 @@
 import { HomePage } from '../features/clinics/HomePage'
 import { ClinicBooking } from '../features/booking/ClinicBooking'
 import { AvailabilityEditor } from '../features/availability/AvailabilityEditor'
+import { AppointmentSchedule } from '../features/appointments/AppointmentSchedule'
 import { ClinicStorefront } from '../features/storefront/ClinicStorefront'
 import { ClinicProfileEditor } from '../features/clinic-profile/ClinicProfileEditor'
 import { StaffManagement } from '../features/staff/StaffManagement'
@@ -25,6 +26,7 @@ export function AppRoutes({ route, session }: { route: Route; session: Session |
       {route.role === 'patient' && <section className="mt-8"><h2 className="text-xl font-semibold">Explore clinics</h2><ClinicDirectory /></section>}
       {route.role === 'clinic_admin' && session && <ManagedClinics session={session} />}
       {route.role === 'doctor' && <AvailabilityEditor />}
+      {(route.role === 'patient' || route.role === 'doctor' || route.role === 'clinic_admin') && <AppointmentSchedule key={`${route.role}:${route.tenantId ?? ''}`} role={route.role} tenantId={route.tenantId} />}
     </main>
     case 'missing': return <ErrorState message="Page not found." />
   }

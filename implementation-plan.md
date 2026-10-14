@@ -95,8 +95,8 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | S05 | Consume consultation-payment success idempotently and confirm appointment. Completed in merged PR #101; 201 PostgreSQL/Redis tests, live Floci EventBridge/SQS verification and CI passed. Issue #100 closed. Billing reads/checkout remain explicit fixtures pending real billing integration; late recovery remains S06. | S04, M03, C05 | M |
 | [ ] | S06 | Handle expired hold/late payment as an explicit recoverable exception. | S05 | S |
 | [x] | U06 | Build doctor availability editor using fixtures. Completed in merged PR #103; weekly timetable supports multiple selections, click/drag deselection and protected batch edits. All 43 frontend tests, lint, build, Prettier checks, local browser checks and CI passed. Issue #102 closed; live scheduling integration remains S07. | F07, F08, C02 | M |
-| [ ] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. Assignee: NorbertLoh; status: in progress. Issue #107; PR #108. | F07, F08, C03 | M |
-| [ ] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. | F07, F08, C02, C03 | M |
+| [x] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. Completed in merged PR #108; clinic Book entry, date dropdown, 30-minute slot cells and checkout preview. 48 frontend tests, lint/build and CI passed. Issue #107 closed; live integration remains S07/B07, browser visual checks unverified. | F07, F08, C03 | M |
+| [ ] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. Assignee: NorbertLoh; status: in progress. Issue #105; PR #106. | F07, F08, C02, C03 | M |
 | [ ] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. | S04, U06-U08 | M |
 
 ## Week 2: payments
