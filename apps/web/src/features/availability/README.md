@@ -6,6 +6,28 @@ labelled fixture preview after the shell's membership check. Demo clinic/doctor
 selection is independent of the signed-in account and selected real clinic.
 It never reads or writes scheduling APIs.
 
+## Code layout
+
+- `AvailabilityEditor.tsx` owns editor state and coordinates feature components.
+- `FixtureSelectors.tsx` contains the preview notice and demo account selectors.
+- `TimetableToolbar.tsx` contains week navigation, the legend and instructions.
+- `WeeklyTimetable.tsx` renders the week grid; `TimetableCell.tsx` renders each
+  slot's state and appearance.
+- `useTimetableSelection.ts` handles pointer gestures, keyboard navigation and
+  selection changes.
+- `SelectionActions.tsx` renders the selected count and add/remove/clear buttons.
+- `timetable.ts` contains pure date, selection and batch-edit operations;
+  `fixtures.ts` supplies fixture data and slot validation.
+
+The feature and its tests are formatted with Prettier 3.6.2 using single quotes
+and no semicolons. To check formatting from `apps/web` without adding a dependency:
+
+```sh
+npm exec --yes --package=prettier@3.6.2 -- prettier --check "src/features/availability/**/*.{ts,tsx}" tests/availability.test.ts --single-quote --no-semi
+```
+
+## Running the preview
+
 Run the frontend with the existing `npm run dev` setup. Authentication/identity
 services are still needed for the protected doctor workspace; no extra environment
 variables or services are required by the editor.
@@ -57,7 +79,9 @@ and keyboard deselection of the last cell disabled the actions. Focused tests
 cover deselecting corners, edges and interior cells of overlapping rectangles,
 drag erasure, fixed gesture mode and restoration when shrinking a drag. Browser
 drag deselection removed the middle two cells of a four-cell selection, retaining
-the cells above and below.
+the cells above and below. After the component refactor, keyboard selection,
+drag deselection, separate drag selection and applying the combined selection
+were rechecked successfully in the local browser.
 Live scheduling integration remains
 separate; S07 replaces
 fixture data and client-side validation with authenticated scheduling API calls
