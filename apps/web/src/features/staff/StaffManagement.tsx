@@ -70,8 +70,8 @@ function StaffPage({ tenantId }: { tenantId: string }) {
   }
 
   return <div className="min-h-screen bg-slate-50 text-slate-900">
-    <header className="border-b bg-white"><div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-3 px-6 py-5"><a href="/" className="font-semibold">TeleLink Health</a><a href={`/clinic-admin/clinics/${tenantId}/profile`} className="text-sm underline">Clinic profile</a></div></header>
     <main className="mx-auto max-w-6xl px-6 py-10">
+      <a href={`/clinic-admin/clinics/${tenantId}/profile`} className="mb-5 inline-block text-sm underline">Clinic profile</a>
       <h1 className="text-3xl font-semibold">Staff management</h1>
       <p className="mt-3 break-all text-sm text-slate-600">Clinic: {tenantId}</p>
       <p className="mt-3 text-sm text-slate-600">Assign existing identity subjects to this clinic. Revoking access keeps the membership record; saving roles reactivates it.</p>
