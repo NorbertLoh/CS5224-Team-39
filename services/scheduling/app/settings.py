@@ -11,6 +11,9 @@ class Settings(ServiceSettings):
     scheduling_secret: SecretStr | None = None
     consultation_secret: SecretStr | None = None
     operator_secret: SecretStr | None = None
+    billing_secret: SecretStr | None = None
+    billing_url: str | None = None
+    payment_queue_name: str = Field(default="telelink-local-scheduling", pattern=r"^[\w-]{1,80}$")
     cursor_secret: SecretStr | None = None
     cors_origins: list[str] = []
     redis_url: SecretStr | None = None
@@ -18,6 +21,19 @@ class Settings(ServiceSettings):
 
     @model_validator(mode="after")
     def validate_configuration(self):
+        if self.billing_url is not None:
+            url = urlsplit(self.billing_url)
+            if (
+                url.scheme not in {"http", "https"}
+                or not url.hostname
+                or url.username
+                or url.password
+                or url.query
+                or url.fragment
+                or (url.scheme != "https" and self.environment not in {"local", "test"})
+            ):
+                raise ValueError("billing_url requires HTTPS outside local/test and no credentials")
+            self.billing_url = self.billing_url.rstrip("/")
         if self.redis_url is not None:
             url = urlsplit(self.redis_url.get_secret_value())
             if (
@@ -51,6 +67,7 @@ class Settings(ServiceSettings):
                 self.cursor_secret,
                 self.consultation_secret,
                 self.operator_secret,
+                self.billing_secret,
             )
             if secret is not None
         ]

@@ -63,6 +63,8 @@ def database():
             "alembic_version",
             "appointments",
             "availability_slots",
+            "event_inbox",
+            "event_outbox",
         ]
         yield engine
         command.downgrade(config, "base")
