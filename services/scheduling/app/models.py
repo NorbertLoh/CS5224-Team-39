@@ -40,6 +40,7 @@ class AvailabilitySlot(Base):
             (func.tstzrange(text("starts_at"), text("ends_at"), text("'[)'")), "&&"),
             name="ex_slots_doctor_overlap",
             using="gist",
+            where=text("withdrawn_at IS NULL"),
         ),
         Index("ix_slots_tenant_time", "tenant_id", "starts_at", "slot_id"),
         Index("ix_slots_tenant_doctor_time", "tenant_id", "doctor_id", "starts_at", "slot_id"),
@@ -51,6 +52,7 @@ class AvailabilitySlot(Base):
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Appointment(Base):

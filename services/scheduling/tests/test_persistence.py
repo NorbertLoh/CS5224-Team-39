@@ -37,6 +37,28 @@ def database():
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         command.check(config)
+        # Prior API tests may have replaced withdrawn slots. Clear disposable
+        # test rows before verifying rollback to S01's stricter overlap rule.
+        with engine.begin() as connection:
+            connection.execute(
+                text("TRUNCATE scheduling.appointments, scheduling.availability_slots")
+            )
+        slot = create_slot(engine)
+        appointment = create_appointment(engine, slot)
+        command.downgrade(config, "0001")
+        with engine.connect() as connection:
+            assert (
+                connection.scalar(
+                    text(
+                        "SELECT appointment_id FROM scheduling.appointments "
+                        "WHERE appointment_id=:id"
+                    ),
+                    {"id": appointment.appointment_id},
+                )
+                == appointment.appointment_id
+            )
+        command.upgrade(config, "head")
+        command.check(config)
         assert sorted(inspect(engine).get_table_names(schema="scheduling")) == [
             "alembic_version",
             "appointments",

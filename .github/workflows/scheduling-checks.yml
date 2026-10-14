@@ -5,11 +5,13 @@ on:
     paths:
       - 'services/scheduling/**'
       - 'packages/python_common/**'
+      - 'dev/check_scheduling_integration.py'
       - '.github/workflows/scheduling-checks.yml'
   pull_request:
     paths:
       - 'services/scheduling/**'
       - 'packages/python_common/**'
+      - 'dev/check_scheduling_integration.py'
       - '.github/workflows/scheduling-checks.yml'
 
 permissions:
@@ -57,4 +59,6 @@ jobs:
           psql -h 127.0.0.1 -U postgres -d telelink -v ON_ERROR_STOP=1 -f scripts/create-test-sentinel.sql
       - run: python -m ruff check .
       - run: python -m ruff format --check .
+      - run: python -m ruff check ../../dev/check_scheduling_integration.py --config pyproject.toml
+      - run: python -m ruff format --check ../../dev/check_scheduling_integration.py --config pyproject.toml
       - run: python -m pytest -q
