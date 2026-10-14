@@ -22,7 +22,7 @@ export function AppShell({ route, children }: { route: Route; children: (session
     if (!session) content = <p role="status" className="p-6">Sign in to access this page.</p>
     else if (identity.isPending) content = <LoadingState message="Checking your access..." />
     else if (identity.isError) content = <ErrorState message="Could not verify your access. Check your session and connection." onRetry={() => void identity.refetch()} />
-    else if (!canAccess(identity.data, route)) content = <ErrorState message="You do not have access to this role or clinic. Choose an available role or clinic above." />
+    else if (!canAccess(identity.data, route)) content = <ErrorState message="You do not have access to this role or clinic. Choose an available role above to return to its workspace." />
   }
   return <>
     <header className="border-b bg-white">

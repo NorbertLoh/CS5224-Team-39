@@ -21,7 +21,7 @@ export function AppRoutes({ route, session }: { route: Route; session: Session |
       <h1 className="text-3xl font-semibold">{roleLabels[route.role]}</h1>
       {route.role === 'patient' && <section className="mt-8"><h2 className="text-xl font-semibold">Explore clinics</h2><ClinicDirectory /></section>}
       {route.role === 'clinic_admin' && session && <ManagedClinics session={session} />}
-      {route.role === 'doctor' && <p className="mt-5">{route.tenantId ? `Selected clinic: ${route.tenantId}. Doctor availability and consultation pages are coming soon.` : 'Choose a clinic above to enter your doctor workspace.'}</p>}
+      {route.role === 'doctor' && <p className="mt-5">{route.tenantId && `Clinic: ${route.tenantId}. `}Doctor availability and consultation pages are coming soon.</p>}
     </main>
     case 'missing': return <ErrorState message="Page not found." />
   }

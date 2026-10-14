@@ -63,14 +63,12 @@ test('unknown and malformed paths do not fall through to an editor or homepage',
   assert.deepEqual(parseRoute('/clinics/clinic-a'), { kind: 'storefront', slug: 'clinic-a' })
 })
 
-test('navigation renders only granted roles and selectable clinics', () => {
+test('navigation renders only granted role links', () => {
   const markup = renderToStaticMarkup(createElement(RoleNavigation, { identity, route: parseRoute(`/clinic-admin/clinics/${clinicA}/staff`) }))
   assert.match(markup, /href="\/patient"/)
   assert.match(markup, /href="\/doctor"/)
   assert.match(markup, /aria-current="page"/)
-  assert.match(markup, new RegExp(`value="${clinicA}" selected=""`))
+  assert.doesNotMatch(markup, /<select|Selected clinic/)
   assert.doesNotMatch(markup, /platform-admin/)
   assert.doesNotMatch(markup, new RegExp(clinicB))
-  const stale = renderToStaticMarkup(createElement(RoleNavigation, { identity, route: parseRoute(`/clinic-admin/clinics/${clinicB}/staff`) }))
-  assert.match(stale, /value="" disabled="" selected=""/)
 })

@@ -2,7 +2,7 @@
 
 - `access.ts`: exact route parsing, role rules and active membership selection.
 - `AppShell.tsx`: one shared login/logout control and identity access gate.
-- `RoleNavigation.tsx`: granted role links and clinic selector.
+- `RoleNavigation.tsx`: granted role links.
 - `AppRoutes.tsx`: route-to-feature mapping; forms and API calls stay in their features.
 
 Roles come from `/identity/me`, never Cognito groups or browser role storage.
@@ -11,10 +11,10 @@ features wait for a successful identity lookup; a failed refresh or revoked
 membership blocks them. Backend checks still enforce every protected API operation.
 
 The clinic choice is the URL, checked against current active memberships for the
-route's role. Choices use tenant UUIDs because self identity does not provide
-clinic names; the clinic administration landing page also shows named clinic cards.
-There is no persisted clinic choice to carry between users. Switching clinics
-keeps the staff/profile section and starts a fresh page. Platform administrators
+route's role. Clinic administrators choose a named clinic from the Manage clinics
+cards in their workspace. The navigation contains role links only, without a
+duplicate clinic dropdown. There is no persisted clinic choice to carry between
+users. Platform administrators
 select clinics from the existing paginated platform list and retain the tenant
 APIs' explicit clinic administration access without a membership.
 
