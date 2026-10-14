@@ -5,6 +5,7 @@ import { LoadingState } from '@/components/LoadingState'
 import { getAdminClinic } from './api'
 import type { AdminClinic } from './api'
 import { ClinicActions } from './ClinicActions'
+import { refreshClinicViews } from '../clinics/cache'
 
 export function ClinicManagement({ token, tenantId }: { token: string; tenantId: string }) {
   const client = useQueryClient()
@@ -17,7 +18,10 @@ export function ClinicManagement({ token, tenantId }: { token: string; tenantId:
     try {
       const saved = await action()
       client.setQueryData(queryKey, saved)
-      await Promise.all(['platform-clinics', 'clinics', 'public-clinic', 'clinic-profile', 'managed-clinics'].map(key => client.invalidateQueries({ queryKey: [key] })))
+      await Promise.all([
+        refreshClinicViews(client),
+        client.invalidateQueries({ queryKey: ['clinic-doctors', tenantId] }),
+      ])
     } finally { setSaving(false) }
   }
 

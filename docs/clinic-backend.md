@@ -49,6 +49,10 @@ services/identity/.venv/Scripts/python.exe dev/clinic_local.py
 The helper creates missing service/frontend `.env` files and random local
 inter-service/cursor keys under ignored `.local/clinic/`. Existing `.env` files
 are preserved; update them manually if they contain older fixture configuration.
+Fresh tenant configuration also includes a separate `SERVICE_SCHEDULING_SECRET`.
+For existing tenant `.env` files, add a random value of at least 32 bytes, distinct
+from the other keys, and restart tenant. Tenant readiness requires this key even
+before scheduling is implemented; share it only with the scheduling service later.
 Identity uses `SERVICE_TENANT_URL`, not `SERVICE_CLINIC_FIXTURE_PATH`. Both services
 must share matching tenant/identity keys, with separate cursor keys.
 The helper explicitly provisions actual local Cognito subjects into PostgreSQL;
@@ -134,7 +138,7 @@ by ID; browser input cannot provision identities.
 
 Open **Manage staff** from Manage clinics or the profile editor. The route is
 `/clinic-admin/clinics/<tenant UUID>/staff`. Lists include active and revoked
-memberships with cursor pagination. Use an existing identity subject UUID to
+memberships with cursor pagination. Use an existing account's email address to
 assign doctor, clinic administrator, or both roles. **Edit roles** replaces the
 role set; **Revoke access** retains the row; **Reactivate** opens the role form
 and **Save roles** restores active access. Saving waits for the backend response
