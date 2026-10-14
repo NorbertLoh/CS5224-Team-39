@@ -1,9 +1,11 @@
-# Scheduling persistence (S01)
+# Scheduling service (S01-S02)
 
 S01 creates scheduling-owned fixed availability slots and appointments following
 [C02](../../contracts/identity-clinic-access.md) and
-[C03](../../contracts/booking-payment.md). APIs, access checks, Redis holds and
-booking transactions remain S02-S06.
+[C03](../../contracts/booking-payment.md). S02 implements doctor slot creation,
+withdrawal and public slot listing with current identity/tenant access checks.
+See [API setup and verification](docs/api.md). Redis holds and appointment
+transactions remain S03-S06.
 
 ## Schema
 
@@ -35,12 +37,12 @@ future hold cleanup. Slot availability is derived by S02/S03, rather than stored
 as a stale boolean. Current indicative prices come from tenant; appointments
 store the price revalidated when a hold is created.
 
-S01 validates stored values and context. S02 must enforce future slot creation,
+S01 validates stored values and context. S02 enforces future slot creation,
 active clinic/doctor eligibility and authorization. S03 must add the active-slot
 reservation constraint and atomic expiry/reservation transactions alongside
 Redis TTLs. This schema allows historical appointments on the same slot and does
 not yet prevent multiple active appointments. S04-S06 enforce legal transitions,
-payment binding, confirmation, recovery and audit events. No booking endpoint or
+payment binding, confirmation, recovery and audit events. No appointment booking endpoint or
 payment integration is implemented here.
 
 ## Fresh local setup (PowerShell)
@@ -70,8 +72,14 @@ Provisioning deliberately fails if the service role/schema already exists.
 Use `docker start telelink-s01-postgres` to reuse this container; repeat upgrades
 are safe. Alembic requires the exported URL and does not load `.env`. The shared
 engine configures UTC and `search_path=public`; ORM tables are schema-qualified.
-`alembic downgrade base` deletes scheduling data and its trigger functions,
-retaining the schema/version table and the shared extension.
+S02 migration `0002` adds nullable `withdrawn_at` and applies the overlap constraint
+only to non-withdrawn slots. Withdrawal preserves cancelled/expired/completed
+appointment history and permits replacement availability. A downgrade through
+`0002` restores S01's stricter overlap rule: if replacement slots overlap withdrawn
+history, PostgreSQL rejects the rollback atomically. Reconcile those rows explicitly
+or restore an earlier backup before rollback; the migration never deletes history
+to make it fit. On compatible data, `alembic downgrade base` deletes scheduling
+tables/functions, retaining the schema/version table and shared extension.
 
 Root Compose, routing and API contracts are unchanged. Deployment must provision
 `btree_gist` before migration, provide managed credentials/TLS and separate
