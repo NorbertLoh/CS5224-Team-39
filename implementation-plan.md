@@ -137,7 +137,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | M01 | Add shared event envelope validation and SDK endpoint configuration. | F03, C05 | S |
+| [x] | M01 | Add shared event envelope validation and SDK endpoint configuration. Completed in merged PR #77. | F03, C05 | S |
 | [ ] | M02 | Add minimal outbox publisher with retryable send and publication tracking. | F04, F12, M01 | M |
 | [ ] | M03 | Add SQS consumer helper with acknowledgement, inbox deduplication and retries. | F12, M01 | M |
 | [ ] | M04 | Document and verify one failed job reaching DLQ and operator replay. | M03 | S |
