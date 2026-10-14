@@ -11,6 +11,11 @@ and clinic previews include only the selected clinic. These frontend fixture
 filters are demonstrations; S07 must connect authenticated scheduling list/detail
 APIs and enforce server authorization. No live booking/payment actions are offered.
 
+Components: `AppointmentSchedule` owns preview context, date and selection;
+`AppointmentFilters` renders the context/date dropdowns; `AppointmentGrid`
+arranges the half-hour cells; `AppointmentCell` renders each cell's appointments;
+`AppointmentDetails` shows the selected appointment.
+
 No new configuration. Run `npm test`, `npm run lint` and `npm run build` in
 `apps/web`. Browser walkthrough: change preview context/date, select appointments,
 check empty days and multiple appointments at the same time, and use keyboard

@@ -1,16 +1,13 @@
+import { AppointmentFilters } from './AppointmentFilters'
+import { AppointmentGrid } from './AppointmentGrid'
 import { useState } from 'react'
 import { AppointmentDetails } from './AppointmentDetails'
 import {
   appointmentDates,
-  clinicName,
   dateInSingapore,
-  dayCells,
   formatDate,
-  formatTime,
   previewContexts,
-  readableStatus,
   scopedAppointments,
-  subjectName,
 } from './fixtures'
 import type { AppointmentRole } from './fixtures'
 
@@ -55,94 +52,34 @@ export function AppointmentSchedule({
           Empty cells are not booking availability.
         </p>
       </div>
-      <div className="flex flex-wrap gap-4">
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          {role === 'clinic_admin' ? 'Demo clinic' : `Demo ${role}`}
-          <select
-            className="rounded border bg-white px-3 py-2"
-            value={contextId}
-            onChange={(event) => {
-              setContextId(event.target.value)
-              setSelectedId(null)
-              setSelectedDate('')
-            }}
-          >
-            {contexts.map((context) => (
-              <option key={context.id} value={context.id}>
-                {context.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Date
-          <select
-            className="rounded border bg-white px-3 py-2"
-            value={date}
-            onChange={(event) => {
-              setSelectedDate(event.target.value)
-              setSelectedId(null)
-            }}
-          >
-            {dates.map((item) => (
-              <option key={item} value={item}>
-                {formatDate(item)}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <AppointmentFilters
+        role={role}
+        contexts={contexts}
+        contextId={contextId}
+        dates={dates}
+        date={date}
+        onContextChange={(id) => {
+          setContextId(id)
+          setSelectedId(null)
+          setSelectedDate('')
+        }}
+        onDateChange={(value) => {
+          setSelectedDate(value)
+          setSelectedId(null)
+        }}
+      />
       <p role="status" className="text-sm text-slate-600">
         {day.length
           ? `${day.length} appointments on ${formatDate(date)}.`
           : 'No appointments on this date.'}
       </p>
-      <div
-        aria-label="30-minute appointment cells"
-        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
-      >
-        {dayCells(appointments, date).map((cell) => (
-          <div
-            key={cell.startsAt}
-            className="min-h-24 rounded-lg border bg-slate-50 p-3"
-          >
-            <p className="mb-2 text-sm font-medium text-slate-600">
-              {formatTime(cell.startsAt)}–{formatTime(cell.endsAt)}
-            </p>
-            {cell.appointments.length ? (
-              <div className="space-y-2">
-                {cell.appointments.map((appointment) => (
-                  <button
-                    key={appointment.appointment_id}
-                    type="button"
-                    aria-pressed={selectedId === appointment.appointment_id}
-                    className={`w-full rounded border p-3 text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 ${selectedId === appointment.appointment_id ? 'border-teal-700 bg-teal-100' : 'border-slate-200 bg-white hover:border-teal-600'}`}
-                    onClick={() => setSelectedId(appointment.appointment_id)}
-                  >
-                    <span className="block font-medium">
-                      {subjectName(
-                        role === 'patient'
-                          ? appointment.doctor_id
-                          : appointment.patient_id,
-                      )}
-                    </span>
-                    <span className="block text-slate-600">
-                      {clinicName(appointment.tenant_id)}
-                      {role === 'clinic_admin' &&
-                        ` · ${subjectName(appointment.doctor_id)}`}
-                    </span>
-                    <span className="mt-1 block capitalize">
-                      {readableStatus(appointment.status)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <span className="text-sm text-slate-400">No appointment</span>
-            )}
-          </div>
-        ))}
-      </div>
+      <AppointmentGrid
+        appointments={appointments}
+        date={date}
+        role={role}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+      />
       {selected && (
         <AppointmentDetails
           appointment={selected}
