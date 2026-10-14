@@ -424,7 +424,7 @@ def test_rollback_refuses_to_destroy_replaced_slot_history(api):
     engine = api[-1]
     with engine.connect() as connection:
         assert (
-            connection.scalar(text("SELECT version_num FROM scheduling.alembic_version")) == "0004"
+            connection.scalar(text("SELECT version_num FROM scheduling.alembic_version")) == "0005"
         )
 
 

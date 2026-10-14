@@ -19,6 +19,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from telelink_common.inbox import inbox_table
+from telelink_common.outbox import outbox_table
 
 SERVICE_SCHEMA = "scheduling"
 ACTIVE_RESERVATION_STATES = ("held", "pending_payment", "confirmed", "in_progress")
@@ -26,6 +28,10 @@ ACTIVE_RESERVATION_STATES = ("held", "pending_payment", "confirmed", "in_progres
 
 class Base(DeclarativeBase):
     metadata = MetaData(schema=SERVICE_SCHEMA)
+
+
+event_inbox = inbox_table(Base.metadata)
+event_outbox = outbox_table(Base.metadata)
 
 
 class AvailabilitySlot(Base):

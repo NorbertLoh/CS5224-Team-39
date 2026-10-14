@@ -55,7 +55,7 @@ Remove-Item Env:SERVICE_DATABASE_URL
 ```
 
 The service defaults to port 8003. `/health/live` checks process health;
-`/health/ready` checks required configuration, readable tables, revision `0004`
+`/health/ready` checks required configuration, readable tables, revision `0005`
 and Redis connectivity. It does not probe identity/tenant; actual operations handle their failures.
 Swagger is `/docs`. No root Compose, frontend proxy or routing changes are part of
 S02; use port 8003 directly until the relevant integration task wires them up.

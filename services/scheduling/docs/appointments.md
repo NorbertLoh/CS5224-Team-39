@@ -79,7 +79,7 @@ service authentication also applies. Root routing/Compose are unchanged. These s
 actions do not grant video admission; V02 still validates participants/payment/windows.
 
 The authenticated billing checkout contract (held -> pending_payment) remains B02
-integration. Verified payment confirmation is S05; late recovery and payment-resolution
+integration. On-time payment confirmation is implemented in [S05](payments.md); late recovery and payment-resolution
 events/audit are S06. No public PATCH sets arbitrary state, payment truth, IDs or prices.
 
 ## Verification

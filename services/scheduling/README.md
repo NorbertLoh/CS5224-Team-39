@@ -1,4 +1,4 @@
-# Scheduling service (S01-S04)
+# Scheduling service (S01-S05)
 
 S01 creates scheduling-owned fixed availability slots and appointments following
 [C02](../../contracts/identity-clinic-access.md) and
@@ -9,7 +9,9 @@ atomic expiry/reallocation, plus expiring Redis mirrors and a cleanup worker.
 See [availability API](docs/api.md) and [hold setup and verification](docs/holds.md).
 S04 adds appointment list/detail/cancellation, retained cancellation metadata and
 service-only start/complete/no-show actions. See [appointment APIs](docs/appointments.md).
-Billing checkout, payment confirmation and late recovery remain B02/S05/S06.
+S05 adds idempotent payment-event confirmation and a transactional confirmation outbox.
+See [payment worker setup and scope](docs/payments.md). Its billing read adapter uses
+fixtures until billing is implemented; checkout and late recovery remain B02/S06.
 
 ## Schema
 
@@ -49,8 +51,8 @@ Historical appointments remain permitted. PostgreSQL deadlines govern expiry;
 Redis TTLs cannot release database capacity. S04 cancellation releases capacity
 under the same slot-first locks and records reason/actor/time. Cancelling a confirmed
 booking flags its payment for manual refund review, without calling a provider.
-S04 internal actions enforce legal state/time windows. Checkout, payment confirmation
-and late recovery remain B02/S05/S06; payment integration is not implemented here.
+S04 internal actions enforce legal state/time windows. S05 consumes on-time bound
+payment successes. Real billing integration and late recovery remain B02/B05/S06.
 
 ## Fresh local setup (PowerShell)
 
@@ -116,6 +118,6 @@ Tests verify fresh/repeated upgrades, downgrade/re-upgrade, Alembic model parity
 overlap/duration constraints, slot context, price/deadline guards, immutable
 fields, timestamp updates, history retention and schema isolation.
 
-Local verification on 14 October 2026: 45 tests passed on PostgreSQL 17 with
+Initial S01 verification on 14 October 2026: 45 tests passed on PostgreSQL 17 with
 Python 3.10 in a fresh scheduling virtual environment; Ruff lint/format and
 `pip check` passed. AWS/RDS compatibility and booking concurrency are unverified.
