@@ -1,4 +1,5 @@
 import { HomePage } from '../features/clinics/HomePage'
+import { ClinicBooking } from '../features/booking/ClinicBooking'
 import { AvailabilityEditor } from '../features/availability/AvailabilityEditor'
 import { ClinicStorefront } from '../features/storefront/ClinicStorefront'
 import { ClinicProfileEditor } from '../features/clinic-profile/ClinicProfileEditor'
@@ -15,6 +16,7 @@ export function AppRoutes({ route, session }: { route: Route; session: Session |
   switch (route.kind) {
     case 'home': return <HomePage />
     case 'storefront': return <ClinicStorefront slug={route.slug} />
+    case 'booking': return <ClinicBooking slug={route.slug} />
     case 'profile': return <ClinicProfileEditor tenantId={route.tenantId} />
     case 'staff': return <StaffManagement tenantId={route.tenantId} />
     case 'platform': return session && <PlatformClinics token={session.accessToken} tenantId={route.tenantId} />

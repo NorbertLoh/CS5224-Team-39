@@ -4,6 +4,7 @@ export type Role = 'patient' | 'doctor' | 'clinic_admin' | 'platform_admin'
 export type Route =
   | { kind: 'home' }
   | { kind: 'storefront'; slug: string }
+  | { kind: 'booking'; role: 'patient'; slug: string }
   | { kind: 'role'; role: Role; tenantId?: string }
   | { kind: 'profile' | 'staff'; role: 'clinic_admin'; tenantId: string }
   | { kind: 'platform'; role: 'platform_admin'; tenantId?: string }
@@ -33,7 +34,7 @@ export function canAccess(identity: Identity, route: Route) {
   // Tenant APIs explicitly permit platform administrators to manage clinics.
   if (route.role === 'clinic_admin' && identity.global_roles.includes('platform_admin')) return true
   if (!hasRole(identity, route.role)) return false
-  if (route.tenantId && (route.role === 'doctor' || route.role === 'clinic_admin')) {
+  if ((route.role === 'doctor' || route.role === 'clinic_admin') && route.tenantId) {
     return clinicIds(identity, route.role).includes(route.tenantId)
   }
   return true
@@ -45,6 +46,8 @@ export function parseRoute(path: string): Route {
   if (normalized === '/patient') return { kind: 'role', role: 'patient' }
   if (normalized === '/doctor') return { kind: 'role', role: 'doctor' }
   if (normalized === '/clinic-admin') return { kind: 'role', role: 'clinic_admin' }
+  const booking = /^\/patient\/clinics\/([^/]+)\/book$/.exec(normalized)
+  if (booking) return { kind: 'booking', role: 'patient', slug: booking[1] }
   if (normalized === '/platform-admin' || normalized === '/platform-admin/clinics') return { kind: 'platform', role: 'platform_admin' }
   const storefront = /^\/clinics\/([^/]+)$/.exec(normalized)
   if (storefront) return { kind: 'storefront', slug: storefront[1] }
