@@ -1,11 +1,13 @@
-# Scheduling service (S01-S02)
+# Scheduling service (S01-S03)
 
 S01 creates scheduling-owned fixed availability slots and appointments following
 [C02](../../contracts/identity-clinic-access.md) and
 [C03](../../contracts/booking-payment.md). S02 implements doctor slot creation,
 withdrawal and public slot listing with current identity/tenant access checks.
-See [API setup and verification](docs/api.md). Redis holds and appointment
-transactions remain S03-S06.
+S03 adds patient appointment holds, PostgreSQL active-reservation uniqueness and
+atomic expiry/reallocation, plus expiring Redis mirrors and a cleanup worker.
+See [availability API](docs/api.md) and [hold setup and verification](docs/holds.md).
+Appointment list/detail/cancel and payment workflows remain S04-S06.
 
 ## Schema
 
@@ -38,12 +40,13 @@ as a stale boolean. Current indicative prices come from tenant; appointments
 store the price revalidated when a hold is created.
 
 S01 validates stored values and context. S02 enforces future slot creation,
-active clinic/doctor eligibility and authorization. S03 must add the active-slot
-reservation constraint and atomic expiry/reservation transactions alongside
-Redis TTLs. This schema allows historical appointments on the same slot and does
-not yet prevent multiple active appointments. S04-S06 enforce legal transitions,
-payment binding, confirmation, recovery and audit events. No appointment booking endpoint or
-payment integration is implemented here.
+active clinic/doctor eligibility and authorization. S03's partial unique index
+allows one held/pending-payment/confirmed/in-progress appointment per slot.
+Booking, expiry and withdrawal share the slot-first transaction lock order.
+Historical appointments remain permitted. PostgreSQL deadlines govern expiry;
+Redis TTLs cannot release database capacity. S04-S06 implement appointment reads,
+cancellation, checkout, confirmation, recovery and audit events. S03 creates holds;
+payment integration is not implemented here.
 
 ## Fresh local setup (PowerShell)
 
@@ -94,6 +97,7 @@ Create the read-only sentinel once as administrator to check isolation:
 ```powershell
 Get-Content -Raw scripts/create-test-sentinel.sql | docker exec -i telelink-s01-postgres psql -v ON_ERROR_STOP=1 -U postgres -d telelink
 $env:TEST_DATABASE_URL = $env:SERVICE_DATABASE_URL
+$env:TEST_REDIS_URL = 'redis://127.0.0.1:56379/0'
 $env:SCHEDULING_TEST_ALLOW_RESET = '1'
 .venv\Scripts\python.exe -m pytest -q
 .venv\Scripts\python.exe -m ruff check .
@@ -101,6 +105,9 @@ $env:SCHEDULING_TEST_ALLOW_RESET = '1'
 ```
 
 The service-specific CI runs these checks on PostgreSQL 17 with Python 3.10.
+S03 also uses real Redis 7.4. Start its dedicated test container once with
+`docker run --name telelink-s03-redis -p 127.0.0.1:56379:6379 -d redis:7.4-alpine`.
+Tests remove only their own randomly identified cache keys, never the whole Redis DB.
 Tests verify fresh/repeated upgrades, downgrade/re-upgrade, Alembic model parity,
 overlap/duration constraints, slot context, price/deadline guards, immutable
 fields, timestamp updates, history retention and schema isolation.

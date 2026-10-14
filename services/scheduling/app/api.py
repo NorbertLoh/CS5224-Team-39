@@ -3,7 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, Response
-from sqlalchemy import exists, select, text, tuple_
+from sqlalchemy import exists, func, or_, select, text, tuple_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from telelink_common.access import (
@@ -15,7 +15,8 @@ from telelink_common.access import (
 from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.database import get_session
-from app.models import Appointment, AvailabilitySlot
+from app.holds import expire_slot_holds, server_now
+from app.models import ACTIVE_RESERVATION_STATES, Appointment, AvailabilitySlot
 from app.pagination import cursor_key, decode_cursor, encode_cursor
 from app.schemas import SlotCreate, SlotPage, SlotPublic, utc_instant
 
@@ -28,7 +29,7 @@ Identity = Annotated[CurrentIdentity, Depends(require_identity)]
 Doctor = Annotated[CurrentIdentity, Depends(require_tenant_role("doctor"))]
 # S03 expires held/pending reservations in a transaction. A passed Redis TTL
 # alone must not release a persisted reservation.
-OCCUPIED_STATES = ("held", "pending_payment", "confirmed", "in_progress")
+OCCUPIED_STATES = ACTIVE_RESERVATION_STATES
 
 
 def slot_public(slot, price, occupied=False):
@@ -104,6 +105,10 @@ def list_slots(
     occupied = exists().where(
         Appointment.slot_id == AvailabilitySlot.slot_id,
         Appointment.status.in_(OCCUPIED_STATES),
+        or_(
+            Appointment.status.not_in(("held", "pending_payment")),
+            Appointment.hold_expires_at > func.clock_timestamp(),
+        ),
     )
     query = select(AvailabilitySlot, occupied.label("occupied")).where(
         AvailabilitySlot.tenant_id == tenant_id,
@@ -130,7 +135,7 @@ def list_slots(
 
 
 @router.delete("/slots/{slot_id}", status_code=204)
-def delete_slot(slot_id: UUID, identity: Identity, session: DB):
+def delete_slot(slot_id: UUID, request: Request, identity: Identity, session: DB):
     slot = session.scalar(
         select(AvailabilitySlot)
         .where(
@@ -148,6 +153,7 @@ def delete_slot(slot_id: UUID, identity: Identity, session: DB):
         or not has_tenant_role(membership, slot.tenant_id, "doctor")
     ):
         raise DomainError(404, "not_found", "Resource not found.")
+    expire_slot_holds(session, slot_id, server_now(session), request.app.state.hold_cache)
     reserved = session.scalar(
         select(
             exists().where(Appointment.slot_id == slot_id, Appointment.status.in_(OCCUPIED_STATES))

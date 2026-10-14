@@ -1,6 +1,6 @@
 from urllib.parse import urlsplit
 
-from pydantic import SecretStr, model_validator
+from pydantic import Field, SecretStr, model_validator
 from telelink_common.settings import ServiceName, ServicePort, ServiceSettings
 
 
@@ -11,9 +11,24 @@ class Settings(ServiceSettings):
     scheduling_secret: SecretStr | None = None
     cursor_secret: SecretStr | None = None
     cors_origins: list[str] = []
+    redis_url: SecretStr | None = None
+    redis_timeout_seconds: float = Field(default=0.3, ge=0.05, le=5)
 
     @model_validator(mode="after")
     def validate_configuration(self):
+        if self.redis_url is not None:
+            url = urlsplit(self.redis_url.get_secret_value())
+            if (
+                url.scheme not in {"redis", "rediss"}
+                or not url.hostname
+                or url.query
+                or url.fragment
+                or (url.path and (not url.path.startswith("/") or not url.path[1:].isdigit()))
+                or (url.scheme != "rediss" and self.environment not in {"local", "test"})
+            ):
+                raise ValueError(
+                    "redis_url requires rediss outside local/test and a database number"
+                )
         if self.tenant_url is not None:
             url = urlsplit(self.tenant_url)
             if (

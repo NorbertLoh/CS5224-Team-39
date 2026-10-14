@@ -11,7 +11,9 @@ from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.api import router
+from app.booking import router as booking_router
 from app.database import create_database_engine
+from app.holds import HoldCache
 from app.models import Appointment, AvailabilitySlot
 from app.settings import Settings
 from app.tenant import TenantClient
@@ -24,6 +26,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app):
         app.state.identity_client = IdentityClient(config)
         app.state.tenant_client = TenantClient(config)
+        app.state.hold_cache = HoldCache(config)
         app.state.database_engine = (
             create_database_engine(
                 config.database_url.get_secret_value(),
@@ -37,6 +40,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         finally:
             app.state.identity_client.close()
             app.state.tenant_client.close()
+            app.state.hold_cache.close()
             if app.state.database_engine is not None:
                 app.state.database_engine.dispose()
 
@@ -62,6 +66,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestLoggingMiddleware, service="scheduling")
     install_error_handlers(app)
     app.include_router(router)
+    app.include_router(booking_router)
 
     @app.get("/health/live", tags=["health"])
     def live():
@@ -78,6 +83,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 config.tenant_url,
                 config.scheduling_secret,
                 config.cursor_secret,
+                config.redis_url,
             )
         )
         if available:
@@ -89,10 +95,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         connection.scalar(
                             text("SELECT version_num FROM scheduling.alembic_version")
                         )
-                        == "0002"
+                        == "0003"
                     )
             except SQLAlchemyError:
                 available = False
+        available = available and app.state.hold_cache.ready()
         return JSONResponse(
             {"status": "ready" if available else "not_ready", "service": "scheduling"},
             status_code=200 if available else 503,

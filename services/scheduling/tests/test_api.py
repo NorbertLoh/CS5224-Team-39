@@ -72,14 +72,17 @@ def api_database():
 def api(api_database):
     engine, url = api_database
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    ids = {name: uuid4() for name in ("doctor", "other_doctor", "patient", "admin", "platform")}
+    ids = {
+        name: uuid4()
+        for name in ("doctor", "other_doctor", "patient", "other_patient", "admin", "platform")
+    }
     tenant_a, tenant_b = uuid4(), uuid4()
     memberships = {}
     for name in ids:
         role = "doctor" if "doctor" in name else "clinic_admin"
         memberships[name] = (
             []
-            if name in {"patient", "platform"}
+            if name in {"patient", "other_patient", "platform"}
             else [
                 {
                     "membership_id": str(uuid4()),
@@ -99,8 +102,16 @@ def api(api_database):
         "doctor_error": None,
         "identity_error": None,
         "directory": [ids["doctor"], ids["other_doctor"]],
+        "roles": {
+            name: ["patient"]
+            if name in {"patient", "other_patient"}
+            else ["platform_admin"]
+            if name == "platform"
+            else []
+            for name in ids
+        },
     }
-    settings = configuration(database_url=url)
+    settings = configuration(database_url=url, redis_url=os.environ.get("TEST_REDIS_URL"))
     app = create_app(settings)
     jwk = json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(key.public_key()))
     jwk.update(kid="test-key", use="sig", alg="RS256")
@@ -123,7 +134,7 @@ def api(api_database):
                 "subject_id": str(ids[name]),
                 "cognito_sub": name,
                 "display_name": name,
-                "global_roles": ["platform_admin"] if name == "platform" else ["patient"],
+                "global_roles": state["roles"][name],
                 "memberships": memberships[name],
             },
         )
@@ -413,7 +424,7 @@ def test_rollback_refuses_to_destroy_replaced_slot_history(api):
     engine = api[-1]
     with engine.connect() as connection:
         assert (
-            connection.scalar(text("SELECT version_num FROM scheduling.alembic_version")) == "0002"
+            connection.scalar(text("SELECT version_num FROM scheduling.alembic_version")) == "0003"
         )
 
 
