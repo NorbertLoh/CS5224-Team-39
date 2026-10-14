@@ -22,7 +22,7 @@ export function ManagedClinics({ session }: { session: Session }) {
   if (!platform && !ids.length) return null
 
   let content
-  if (platform) content = <ClinicDirectory admin />
+  if (platform) content = <><a href="/platform-admin/clinics" className="mt-5 inline-block font-medium underline">Clinic approval and commission</a><ClinicDirectory admin /></>
   else if (clinics.isPending) content = <LoadingState message="Loading your clinics..." />
   else if (clinics.isError) content = <ErrorState message="Could not load your clinics." onRetry={() => void clinics.refetch()} />
   else content = <ClinicLinks clinics={clinics.data} edit />
