@@ -107,3 +107,20 @@ class AppointmentPublic(BaseModel):
         return (
             value.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
         )
+
+
+class AppointmentPage(BaseModel):
+    items: list[AppointmentPublic]
+    next_cursor: str | None
+
+
+class Cancellation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    reason: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("reason")
+    @classmethod
+    def plain_reason(cls, value):
+        if not value.strip() or "<" in value or ">" in value:
+            raise ValueError("Supply a nonblank plain-text cancellation reason")
+        return value.strip()

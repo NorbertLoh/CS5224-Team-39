@@ -9,6 +9,8 @@ class Settings(ServiceSettings):
     port: ServicePort = 8003
     tenant_url: str | None = None
     scheduling_secret: SecretStr | None = None
+    consultation_secret: SecretStr | None = None
+    operator_secret: SecretStr | None = None
     cursor_secret: SecretStr | None = None
     cors_origins: list[str] = []
     redis_url: SecretStr | None = None
@@ -44,7 +46,12 @@ class Settings(ServiceSettings):
             self.tenant_url = self.tenant_url.rstrip("/")
         secrets = [
             secret.get_secret_value()
-            for secret in (self.scheduling_secret, self.cursor_secret)
+            for secret in (
+                self.scheduling_secret,
+                self.cursor_secret,
+                self.consultation_secret,
+                self.operator_secret,
+            )
             if secret is not None
         ]
         if any(len(secret.encode()) < 32 for secret in secrets):

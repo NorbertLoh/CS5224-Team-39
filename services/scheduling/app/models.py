@@ -85,6 +85,14 @@ class Appointment(Base):
         ),
         CheckConstraint("currency = 'SGD'", name="ck_appointments_currency"),
         CheckConstraint(
+            "(cancelled_at IS NULL AND cancellation_reason IS NULL "
+            "AND cancelled_by_subject_id IS NULL) OR "
+            "(status = 'cancelled' AND cancelled_at IS NOT NULL "
+            "AND cancelled_by_subject_id IS NOT NULL AND cancellation_reason IS NOT NULL "
+            "AND btrim(cancellation_reason) <> '' AND length(cancellation_reason) <= 2000)",
+            name="ck_appointments_cancellation_record",
+        ),
+        CheckConstraint(
             "hold_expires_at IS NULL OR "
             "(hold_expires_at > created_at AND hold_expires_at <= starts_at "
             "AND hold_expires_at <= created_at + interval '10 minutes')",
@@ -132,6 +140,9 @@ class Appointment(Base):
     consultation_price_minor: Mapped[int] = mapped_column(BigInteger)
     currency: Mapped[str] = mapped_column(Text, default="SGD", server_default=text("'SGD'"))
     payment_id: Mapped[UUID | None] = mapped_column(Uuid)
+    cancellation_reason: Mapped[str | None] = mapped_column(Text)
+    cancelled_by_subject_id: Mapped[UUID | None] = mapped_column(Uuid)
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     payment_resolution: Mapped[str] = mapped_column(
         Text, default="none", server_default=text("'none'")
     )

@@ -24,7 +24,7 @@ appointments become `expired` and flush before inserting a replacement. The same
 transaction inserts the trusted price snapshot and sets
 `hold_expires_at = min(server_now + 10 minutes, starts_at)`. Equality means expiry.
 No checkout or retry extends the deadline. Repeated POST on a reserved slot
-returns 409; appointment recovery/listing is S04, not an idempotency-key API here.
+returns 409; S04 provides appointment recovery/listing, without a POST hold idempotency-key API.
 
 Migration `0003` adds a partial unique index on slot ID for states `held`,
 `pending_payment`, `confirmed`, `in_progress`. This protects capacity even for SQL
@@ -35,7 +35,8 @@ documented restriction on overlapping withdrawn history.
 
 Withdrawal takes the same slot lock and expires elapsed holds before checking active
 reservations. It either withdraws first and booking returns 404, or booking reserves
-first and withdrawal returns 409. Future checkout/cancel/payment/confirmation code
+first and withdrawal returns 409. S04 cancellation/internal actions share these locks.
+Future checkout/payment/confirmation code
 must use this same lock order and recheck state/deadline under it. The index alone
 does not enforce authorization, legal state transitions or withdrawn-slot eligibility
 for arbitrary SQL writers. Avoid taking an appointment lock before its slot lock.
@@ -86,8 +87,8 @@ can recover overdue holds after restart. For one batch:
 Booking/withdrawal also perform lazy expiry, so allocation remains correct when the
 worker is stopped. Run the worker for timely idle cleanup. No HTTP expiry bypass is
 exposed. Deploy worker credentials scoped to scheduling's database schema and Redis
-prefix. Payment success, late-payment exceptions, cancellation and audit events
-remain S04-S06; Redis does not establish payment truth.
+prefix. S04 handles cancellation. Payment success, late-payment exceptions and event publication
+remain B02/S05/S06; Redis does not establish payment truth.
 
 ## Verification
 

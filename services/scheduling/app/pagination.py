@@ -51,3 +51,44 @@ def decode_cursor(settings, scope, cursor):
             "Invalid slot cursor.",
             [{"field": "query.cursor", "code": "invalid_cursor", "message": "Reset pagination."}],
         ) from None
+
+
+def encode_appointment_cursor(settings, scope, appointment):
+    now = int(time.time())
+    return jwt.encode(
+        {
+            "iss": "telelink-scheduling-cursor",
+            "aud": "appointments",
+            "scope": scope,
+            "start": appointment.starts_at.isoformat(),
+            "id": str(appointment.appointment_id),
+            "iat": now,
+            "exp": now + 900,
+        },
+        cursor_key(settings),
+        algorithm="HS256",
+    )
+
+
+def decode_appointment_cursor(settings, scope, cursor):
+    key = cursor_key(settings)
+    try:
+        claims = jwt.decode(
+            cursor,
+            key,
+            algorithms=["HS256"],
+            issuer="telelink-scheduling-cursor",
+            audience="appointments",
+            options={"require": ["exp", "iat", "scope", "start", "id"]},
+        )
+        start = datetime.fromisoformat(claims["start"])
+        if claims["scope"] != scope or start.tzinfo is None:
+            raise ValueError("Wrong cursor scope")
+        return start, UUID(claims["id"])
+    except (jwt.InvalidTokenError, ValueError, TypeError, KeyError):
+        raise DomainError(
+            422,
+            "validation_error",
+            "Invalid appointment cursor.",
+            [{"field": "query.cursor", "code": "invalid_cursor", "message": "Reset pagination."}],
+        ) from None

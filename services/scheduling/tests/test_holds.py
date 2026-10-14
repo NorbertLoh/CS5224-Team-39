@@ -192,8 +192,13 @@ def test_exact_expiry_boundary_and_sweep_skips_locked_slot(holds):
             .where(AvailabilitySlot.slot_id == old2.slot_id)
             .with_for_update()
         )
-        assert expire_batch(engine, cache) == 0
-    assert expire_batch(engine, cache) == 1
+        # The worker may expire unrelated overdue rows left by other API checks.
+        # Only this locked slot must remain untouched.
+        expire_batch(engine, cache)
+        assert locked.get(Appointment, old2.appointment_id).status == "held"
+    expire_batch(engine, cache)
+    with Session(engine) as session:
+        assert session.get(Appointment, old2.appointment_id).status == "expired"
     assert expire_batch(engine, cache) == 0
 
 

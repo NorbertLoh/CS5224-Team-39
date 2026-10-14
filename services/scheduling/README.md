@@ -1,4 +1,4 @@
-# Scheduling service (S01-S03)
+# Scheduling service (S01-S04)
 
 S01 creates scheduling-owned fixed availability slots and appointments following
 [C02](../../contracts/identity-clinic-access.md) and
@@ -7,7 +7,9 @@ withdrawal and public slot listing with current identity/tenant access checks.
 S03 adds patient appointment holds, PostgreSQL active-reservation uniqueness and
 atomic expiry/reallocation, plus expiring Redis mirrors and a cleanup worker.
 See [availability API](docs/api.md) and [hold setup and verification](docs/holds.md).
-Appointment list/detail/cancel and payment workflows remain S04-S06.
+S04 adds appointment list/detail/cancellation, retained cancellation metadata and
+service-only start/complete/no-show actions. See [appointment APIs](docs/appointments.md).
+Billing checkout, payment confirmation and late recovery remain B02/S05/S06.
 
 ## Schema
 
@@ -44,9 +46,11 @@ active clinic/doctor eligibility and authorization. S03's partial unique index
 allows one held/pending-payment/confirmed/in-progress appointment per slot.
 Booking, expiry and withdrawal share the slot-first transaction lock order.
 Historical appointments remain permitted. PostgreSQL deadlines govern expiry;
-Redis TTLs cannot release database capacity. S04-S06 implement appointment reads,
-cancellation, checkout, confirmation, recovery and audit events. S03 creates holds;
-payment integration is not implemented here.
+Redis TTLs cannot release database capacity. S04 cancellation releases capacity
+under the same slot-first locks and records reason/actor/time. Cancelling a confirmed
+booking flags its payment for manual refund review, without calling a provider.
+S04 internal actions enforce legal state/time windows. Checkout, payment confirmation
+and late recovery remain B02/S05/S06; payment integration is not implemented here.
 
 ## Fresh local setup (PowerShell)
 
