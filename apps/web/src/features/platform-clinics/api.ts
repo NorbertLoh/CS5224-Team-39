@@ -4,6 +4,11 @@ import type { CursorPage } from '@/lib/api-types'
 
 export type AdminClinic = Clinic & { commission_bps: number; review_reason: string | null }
 export type ReviewDecision = 'approve' | 'reject' | 'suspend'
+export const clinicStatuses = { pending_review: 'Pending review', active: 'Active', rejected: 'Rejected', suspended: 'Suspended' }
+
+export async function getAdminClinic(tenantId: string, signal?: AbortSignal): Promise<AdminClinic> {
+  return (await clinicRequest(`/clinics/${encodeURIComponent(tenantId)}`, { signal }, true)).json()
+}
 
 export async function listAdminClinics(status: string, cursor: string | null, signal?: AbortSignal): Promise<CursorPage<AdminClinic>> {
   const query = new URLSearchParams({ limit: '25' })
