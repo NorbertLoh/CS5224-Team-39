@@ -6,9 +6,10 @@ import type { Cell, Selection } from './timetable'
 
 const dayLabel = (date: string) => new Intl.DateTimeFormat('en-SG', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(date))
 
-export function WeeklyTimetable({ slots, tenantId, doctorId, dates, selections, onSelect }: {
+export function WeeklyTimetable({ slots, tenantId, doctorId, dates, selections, onSelect, onDeselect }: {
   slots: Slot[]; tenantId: string; doctorId: string; dates: string[]
   selections: Selection[]; onSelect: (selection: Selection | null, extend?: boolean) => void
+  onDeselect: (cell: Cell) => void
 }) {
   const viewport = useRef<HTMLDivElement>(null)
   const anchor = useRef<Cell | null>(null)
@@ -46,12 +47,22 @@ export function WeeklyTimetable({ slots, tenantId, doctorId, dates, selections, 
                 if (event.button !== 0) return
                 event.preventDefault(); event.currentTarget.focus()
                 const cell = { day, row }
+                if (selected) {
+                  dragging.current = false; extending.current = false; anchor.current = cell
+                  onDeselect(cell)
+                  return
+                }
                 anchor.current = cell; dragging.current = true; extending.current = true
                 event.currentTarget.closest('table')!.setPointerCapture(event.pointerId)
                 onSelect({ from: cell, to: cell })
               }} onClick={event => {
                 if (event.detail !== 0) return
                 const cell = { day, row }
+                if (selected && !event.shiftKey) {
+                  extending.current = false; anchor.current = cell
+                  onDeselect(cell)
+                  return
+                }
                 onSelect({ from: event.shiftKey && anchor.current ? anchor.current : cell, to: cell }, event.shiftKey && extending.current)
                 if (!event.shiftKey || !anchor.current) anchor.current = cell
                 extending.current = true

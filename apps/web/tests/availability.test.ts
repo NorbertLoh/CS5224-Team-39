@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AvailabilityEditor } from '../src/features/availability/AvailabilityEditor'
-import { applySelection, cellsInSelection, cellsInSelections, shiftDate, updateSelections, weekStart } from '../src/features/availability/timetable'
+import { applySelection, cellsInSelection, cellsInSelections, deselectCell, shiftDate, updateSelections, weekStart } from '../src/features/availability/timetable'
 import { addSlot, fixtureClinics, fixtureDoctors, initialSlots, removeSlot, singaporeDate, slotStart } from '../src/features/availability/fixtures'
 
 const now = Date.parse('2026-10-14T03:00:00Z')
@@ -103,4 +103,22 @@ test('separate ranges retain gaps and overlapping drags do not duplicate slots',
   assert.equal(added.length, 4)
   assert.deepEqual(applySelection(added, clinicA, doctor, repeated, dates, 'remove', now), [])
   assert.deepEqual(updateSelections(ranges, null), [])
+})
+
+test('deselecting a cell removes it from every overlapping range and preserves all other cells', () => {
+  const dates = Array.from({ length: 7 }, (_, index) => shiftDate('2026-10-15', index))
+  const ranges = [
+    { from: { day: 2, row: 20 }, to: { day: 0, row: 18 } },
+    { from: { day: 1, row: 19 }, to: { day: 1, row: 19 } },
+    { from: { day: 5, row: 26 }, to: { day: 5, row: 27 } },
+  ]
+  const before = cellsInSelections(ranges, dates)
+  for (let day = 0; day < 3; day++) for (let row = 18; row <= 20; row++) {
+    const remaining = cellsInSelections(deselectCell(ranges, { day, row }), dates)
+    assert.deepEqual(remaining, before.filter(cell => cell.date !== dates[day] || cell.time !== `${String(Math.floor(row / 2)).padStart(2, '0')}:${row % 2 ? '30' : '00'}`))
+  }
+  const single = [{ from: { day: 1, row: 19 }, to: { day: 1, row: 19 } }]
+  assert.deepEqual(deselectCell(single, { day: 1, row: 19 }), [])
+  assert.deepEqual(deselectCell(single, { day: 4, row: 10 }), single)
+  assert.equal(cellsInSelections(ranges, dates).length, 11)
 })

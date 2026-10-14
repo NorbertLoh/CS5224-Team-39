@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { ErrorState } from '../../components/ErrorState'
 import { fixtureClinics, fixtureDoctors, initialSlots, singaporeDate } from './fixtures'
-import { applySelection, cellsInSelections, shiftDate, updateSelections, weekStart } from './timetable'
+import { applySelection, cellsInSelections, deselectCell, shiftDate, updateSelections, weekStart } from './timetable'
 import type { Selection } from './timetable'
 import { WeeklyTimetable } from './WeeklyTimetable'
 
@@ -59,9 +59,10 @@ export function AvailabilityEditor() {
       <span className="rounded bg-violet-100 px-2 py-1 text-violet-900">Other clinic</span>
       <span className="rounded border-2 border-sky-600 px-2 py-0.5">Selected</span>
     </div>
-    <p className="text-xs text-slate-500">Each drag adds a separate selection. Drag down for a time range or across days to repeat it. Keyboard: select with Enter or Space, use arrow keys to move, Shift + arrows to extend, and Escape to clear. Scroll for all 24 hours.</p>
+    <p className="text-xs text-slate-500">Each drag adds a separate selection. Click a selected cell again to deselect it. Drag down for a time range or across days to repeat it. Keyboard: toggle with Enter or Space, use arrow keys to move, Shift + arrows to extend, and Escape to clear. Scroll for all 24 hours.</p>
     <WeeklyTimetable key={`${tenantId}:${doctorId}:${week}`} slots={slots} tenantId={tenantId} doctorId={doctorId} dates={dates} selections={selections}
-      onSelect={(next, extend) => { setSelections(previous => updateSelections(previous, next, extend)); setError(''); setMessage('') }} />
+      onSelect={(next, extend) => { setSelections(previous => updateSelections(previous, next, extend)); setError(''); setMessage('') }}
+      onDeselect={cell => { setSelections(previous => deselectCell(previous, cell)); setError(''); setMessage('') }} />
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-slate-50 p-4">
       <p className="text-sm" role="status">{selected.length ? `${selected.length} ${selected.length === 1 ? 'slot' : 'slots'} selected · ${selected.length / 2} ${selected.length === 2 ? 'hour' : 'hours'}` : 'Select times on the timetable to get started.'}</p>
       <div className="flex flex-wrap gap-2">

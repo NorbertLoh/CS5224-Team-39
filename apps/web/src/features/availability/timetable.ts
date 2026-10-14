@@ -27,6 +27,22 @@ export function updateSelections(selections: Selection[], next: Selection | null
   return [...(extend ? selections.slice(0, -1) : selections), next]
 }
 
+export function deselectCell(selections: Selection[], cell: Cell): Selection[] {
+  return selections.flatMap(range => {
+    if (!isSelected(range, cell.day, cell.row)) return [range]
+    const left = Math.min(range.from.day, range.to.day)
+    const right = Math.max(range.from.day, range.to.day)
+    const top = Math.min(range.from.row, range.to.row)
+    const bottom = Math.max(range.from.row, range.to.row)
+    const remaining: Selection[] = []
+    if (top < cell.row) remaining.push({ from: { day: left, row: top }, to: { day: right, row: cell.row - 1 } })
+    if (bottom > cell.row) remaining.push({ from: { day: left, row: cell.row + 1 }, to: { day: right, row: bottom } })
+    if (left < cell.day) remaining.push({ from: { day: left, row: cell.row }, to: { day: cell.day - 1, row: cell.row } })
+    if (right > cell.day) remaining.push({ from: { day: cell.day + 1, row: cell.row }, to: { day: right, row: cell.row } })
+    return remaining
+  })
+}
+
 export function cellsInSelections(selections: Selection[], dates: string[]) {
   const unique = new Map<number, ReturnType<typeof cellsInSelection>[number]>()
   for (const range of selections) for (const cell of cellsInSelection(range, dates)) unique.set(cell.start, cell)
