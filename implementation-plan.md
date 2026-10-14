@@ -90,8 +90,8 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | --- | --- | --- | --- | --- |
 | [x] | S01 | Create scheduling schema/migrations: fixed availability slots and appointments. Completed in merged PR #89; 45 PostgreSQL tests, schema isolation, lint and CI passed. Issue #88 closed. | F04, C02, C03 | M |
 | [x] | S02 | Add doctor availability and patient slot-list APIs with access checks. Completed in merged PR #91; 94 tests, real Floci/three-service HTTP verification and CI passed. Issue #90 closed. | S01, A06, A08 | M |
-| [ ] | S03 | Add expiring Redis holds plus database reservation constraint/transaction. Assignee: NorbertLoh; status: in progress. Issue #92; PR #93. | S02, F09 | L |
-| [ ] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. | S03 | M |
+| [x] | S03 | Add expiring Redis holds plus database reservation constraint/transaction. Completed in merged PR #93; 127 PostgreSQL/Redis tests, real Floci/HTTP hold and expiry checks and CI passed. Issue #92 closed. | S02, F09 | L |
+| [ ] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. Assignee: NorbertLoh; status: in progress. Issue #94. | S03 | M |
 | [ ] | S05 | Consume consultation-payment success idempotently and confirm appointment. | S04, M03, C05 | M |
 | [ ] | S06 | Handle expired hold/late payment as an explicit recoverable exception. | S05 | S |
 | [ ] | U06 | Build doctor availability editor using fixtures. | F07, F08, C02 | M |
