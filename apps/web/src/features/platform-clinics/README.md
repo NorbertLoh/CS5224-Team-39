@@ -43,4 +43,4 @@ After the list/detail split, live checks also verified that a selected clinic
 loads matching admin data, its direct page URL responds, and missing-clinic and
 cancellation handling work. Frontend lint, build and 22 tests passed again.
 
-Issue #80 remains In progress until PR #81 is merged.
+Completed in merged PR #81; issue #80 closed.
