@@ -92,7 +92,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | S02 | Add doctor availability and patient slot-list APIs with access checks. Completed in merged PR #91; 94 tests, real Floci/three-service HTTP verification and CI passed. Issue #90 closed. | S01, A06, A08 | M |
 | [x] | S03 | Add expiring Redis holds plus database reservation constraint/transaction. Completed in merged PR #93; 127 PostgreSQL/Redis tests, real Floci/HTTP hold and expiry checks and CI passed. Issue #92 closed. | S02, F09 | L |
 | [x] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. Completed in merged PR #95; 174 PostgreSQL/Redis tests, live HTTP checks and CI passed. Issue #94 closed. | S03 | M |
-| [ ] | S05 | Consume consultation-payment success idempotently and confirm appointment. Assignee: NorbertLoh; status: in progress. Issue #100; PR #101. M03 dependency merged in PR #99. | S04, M03, C05 | M |
+| [x] | S05 | Consume consultation-payment success idempotently and confirm appointment. Completed in merged PR #101; 201 PostgreSQL/Redis tests, live Floci EventBridge/SQS verification and CI passed. Issue #100 closed. Billing reads/checkout remain explicit fixtures pending real billing integration; late recovery remains S06. | S04, M03, C05 | M |
 | [ ] | S06 | Handle expired hold/late payment as an explicit recoverable exception. | S05 | S |
 | [ ] | U06 | Build doctor availability editor using fixtures. | F07, F08, C02 | M |
 | [ ] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. | F07, F08, C03 | M |
