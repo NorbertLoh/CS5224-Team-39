@@ -94,7 +94,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. Completed in merged PR #95; 174 PostgreSQL/Redis tests, live HTTP checks and CI passed. Issue #94 closed. | S03 | M |
 | [x] | S05 | Consume consultation-payment success idempotently and confirm appointment. Completed in merged PR #101; 201 PostgreSQL/Redis tests, live Floci EventBridge/SQS verification and CI passed. Issue #100 closed. Billing reads/checkout remain explicit fixtures pending real billing integration; late recovery remains S06. | S04, M03, C05 | M |
 | [ ] | S06 | Handle expired hold/late payment as an explicit recoverable exception. | S05 | S |
-| [ ] | U06 | Build doctor availability editor using fixtures. Assignee: NorbertLoh; status: in progress. Issue #102. | F07, F08, C02 | M |
+| [x] | U06 | Build doctor availability editor using fixtures. Completed in merged PR #103; weekly timetable supports multiple selections, click/drag deselection and protected batch edits. All 43 frontend tests, lint, build, Prettier checks, local browser checks and CI passed. Issue #102 closed; live scheduling integration remains S07. | F07, F08, C02 | M |
 | [ ] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. | F07, F08, C03 | M |
 | [ ] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. | F07, F08, C02, C03 | M |
 | [ ] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. | S04, U06-U08 | M |
