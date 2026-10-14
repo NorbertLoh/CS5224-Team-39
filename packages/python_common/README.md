@@ -15,6 +15,7 @@ business routes and scheduling service credentials stay service-local.
 | `events` | M01 C05 event envelope, type/route registry, PutEvents entries and SQS body parsing |
 | `aws` | M01 boto3 client construction from region/endpoint settings (`aws` extra) |
 | `outbox` | M02 outbox table, transactional event staging and retrying PutEvents publisher |
+| `inbox` | M03 inbox table and SQS consumer helper with deduplication and acknowledgement |
 
 ## Install
 
@@ -87,8 +88,8 @@ It raises `EventValidationError` for malformed JSON, unknown types or versions,
 source/type mismatches, events not routed to that consumer, invalid IDs, money or
 timestamps. Do not acknowledge those messages; bounded receives move them to the
 consumer DLQ. Unknown optional fields are ignored. Error messages list field
-locations only, never payload values. Producers publish through the outbox below; inbox
-deduplication/acknowledgement (M03) remains a separate task.
+locations only, never payload values. Producers publish through the outbox and consumers receive through the inbox
+helper below.
 
 ## Transactional outbox (M02)
 
@@ -130,12 +131,57 @@ and retry after 5s, 10s, 20s ... capped at 5 minutes. Successful siblings are
 not resent. Rows stay locked (`FOR UPDATE SKIP LOCKED`) until the outcome is
 saved, so several workers never send the same row concurrently; the SDK timeouts
 bound that lock. A crash between PutEvents and saving the outcome can resend an
-event with the same `event_id`, which consumers deduplicate (M03).
+event with the same `event_id`, which consumers deduplicate with the inbox.
 
 Check publication with SQL, for example
 `SELECT detail_type, attempts, last_error FROM <schema>.event_outbox WHERE published_at IS NULL`.
 Stored rows contain IDs only, never clinical notes. Prune old published rows in
 a later reviewed migration or job if the table grows.
+
+## Consumer inbox (M03)
+
+Delivery is at least once, so a consumer records each handled event in its own
+inbox in the same transaction as its state change. Add the table to the
+service's metadata and migration, like the outbox:
+
+```python
+# app/models.py
+from telelink_common.inbox import inbox_table
+
+event_inbox = inbox_table(Base.metadata)  # SERVICE_SCHEMA.event_inbox, key (consumer, event_id)
+```
+
+Write a handler that makes the state change with the given session (do not
+commit; the helper does), then run a worker loop:
+
+```python
+def confirm_payment(session, event):
+    appointment = session.get(Appointment, event.data.appointment_id)
+    appointment.status = "confirmed"
+
+sqs = create_client("sqs", settings)
+queue_url = sqs.get_queue_url(QueueName="telelink-local-scheduling")["QueueUrl"]
+while True:
+    consume_batch(sessions, event_inbox, sqs, queue_url, "scheduling", confirm_payment)
+```
+
+`consume_batch` long-polls up to 10 messages (20s wait) and, for each one:
+
+- parses the body once with `parse_sqs_body` for that consumer;
+- skips the handler if `(consumer, event_id)` is already in the inbox (a duplicate);
+- otherwise inserts the inbox row and runs the handler in one transaction;
+- deletes the message only after that commit, or for a duplicate.
+
+Handler errors roll back both the state change and the inbox row, and the
+message is left on the queue. Malformed, unknown or misrouted events are never
+deleted. Either way SQS redelivers after the 30s visibility timeout and moves the
+message to the consumer DLQ after 3 receives (M04 covers replay). Logs record
+only `inbox_message_failed` with the exception type. If a delete fails after
+commit, the redelivered message is skipped as a duplicate. Two workers handling
+the same event at once conflict on the inbox key; the loser rolls back and later
+sees a duplicate. Keep handlers well under the visibility timeout, and give
+external side effects (email, payment, delivery calls) their own idempotency key,
+since the inbox protects database changes only.
 
 ## AWS SDK configuration (M01)
 
@@ -165,7 +211,8 @@ From `services/template`, run shared and service tests:
 
 Outbox tests use SQLite and a fake EventBridge client; with `TEST_DATABASE_URL`
 set to a disposable service database (schema named after its role), a PostgreSQL
-test also checks that concurrent publishers skip locked rows.
+test also checks that concurrent publishers skip locked rows. Inbox tests run on
+SQLite and, with `TEST_DATABASE_URL`, on PostgreSQL too.
 
 M01 also verified one live Floci PutEvents -> `telelink-local-notification`
 round trip through `create_client`, `to_put_events_entry` and `parse_sqs_body`.
