@@ -3,20 +3,33 @@ import { test } from 'node:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { DoctorRecordForm } from '../src/features/records/DoctorRecordForm'
-import { catalogue, draftPrescription, validItems } from '../src/features/records/fixtures'
+import { draftPrescription, validItems } from '../src/features/records/fixtures'
 
-test('prescription inputs reject catalogue tampering, invalid quantities and duplicate items', () => {
-  const item = { medication_id: catalogue[0].medication_id, quantity: 2, instructions: 'Synthetic placeholder.' }
+test('free-text prescription inputs accept names and reject empty names, invalid quantities and duplicate items', () => {
+  const item = {
+    display_name: '  Synthetic medication A  ',
+    quantity: 2,
+    instructions: 'Synthetic placeholder.',
+  }
   assert.ok(validItems([item]))
-  for (const quantity of [0, -1, 1.5, NaN, Infinity]) assert.equal(validItems([{ ...item, quantity }]), false)
+  for (const quantity of [0, -1, 1.5, NaN, Infinity])
+    assert.equal(validItems([{ ...item, quantity }]), false)
   assert.equal(validItems([]), false)
-  assert.equal(validItems([{ ...item, medication_id: 'untrusted-id' }]), false)
+  assert.equal(validItems([{ ...item, display_name: '  ' }]), false)
   assert.equal(validItems([{ ...item, instructions: '  ' }]), false)
   assert.equal(validItems([item, item]), false)
+  assert.equal(
+    validItems([item, { ...item, display_name: 'synthetic medication a' }]),
+    false,
+  )
+  assert.ok(
+    validItems([item, { ...item, display_name: 'Synthetic medication B' }]),
+  )
   const draft = draftPrescription([item])
   assert.equal(draft.status, 'draft')
   assert.equal(draft.issued_at, null)
-  assert.equal(draft.items[0].display_name, catalogue[0].display_name)
+  assert.equal(draft.items[0].display_name, 'Synthetic medication A')
+  assert.equal('medication_id' in draft.items[0], false)
   assert.equal('unit_price' in draft.items[0], false)
 })
 
