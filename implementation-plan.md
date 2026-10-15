@@ -120,12 +120,12 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [ ] | V01 | Create consultation service schema and session start/end/join-window rules. | F04, C02 | M |
 | [ ] | V02 | Add admission API validating actual appointment, participants and payment. | V01, A06, S04, X02 | M |
 | [ ] | V03 | Package PeerServer with admission validation and local HTTPS/WSS routing. | X02, F10 | M |
-| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. | F07, X01 | L |
+| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. PR #127 supplies role-protected patient/doctor layouts, local media controls and expanded join/leave previews; remote PeerJS/TURN calling remains blocked by X01 #56. Issue #126 stays In progress. | F07, X01 | L |
 | [ ] | V04 | Connect video room to admission and booked appointment pages. | U11, V02, V03, S07 | M |
 | [x] | R01 | Create clinical-record schema/migrations for notes and prescriptions. Completed in merged PR #125; 34 PostgreSQL tests, migration isolation, lint and CI passed. Issue #123 closed. | F04, C04 | M |
 | [x] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. Completed in merged PR #132; 81 PostgreSQL/API/adapter tests, live Floci/identity/scheduling HTTP checks and CI passed. Issue #114 closed. Real catalogue integration awaits D01; browser/AWS remain unverified. | R01, A06, S04 | M |
 | [x] | R03 | Publish prescription-issued event through outbox. Completed in merged PR #133; 101 PostgreSQL/API/adapter tests, atomic issuance/retry checks, live Floci EventBridge/SQS delivery and CI passed. Issue #117 closed. Real catalogue, PDF generation, browser and AWS integration remain unverified. | R02, M02, C05 | S |
-| [ ] | U12 | Build doctor note/prescription form using fixtures. | F07, F08, C04 | M |
+| [x] | U12 | Build doctor note/prescription form using fixtures. Completed in merged PR #118; split notes, prescription editor and medication fields, typed medication names, draft validation and issuance locking. Standalone 62 frontend tests, lint, TypeScript/build, Prettier and CI passed. Issue #115 closed. Real catalogue-linked records integration remains R04. | F07, F08, C04 | M |
 | [ ] | U13 | Build patient prescription view using fixtures. | F07, F08, C04 | S |
 | [ ] | R04 | Connect note/prescription pages to real records APIs. | R02, U12, U13 | M |
 | [x] | P01 | Create document service metadata schema and simple prescription, receipt and medical certificate (MC) PDF templates. Completed in merged PR #122; 34 PostgreSQL/PDF tests, migration round-trips, lint/format and CI passed. Issue #121 closed. Live generation/storage and downloads remain P02/P03; CJK font support remains a limitation. | F04, C04 | M |
