@@ -22,6 +22,10 @@ class NoteInput(Input):
     text: PlainText
 
 
+class IssueInput(Input):
+    """Issuance accepts an empty body; links and event metadata are server-owned."""
+
+
 class ItemInput(Input):
     medication_id: UUID
     quantity: Annotated[int, Field(strict=True, gt=0, le=10000)]
