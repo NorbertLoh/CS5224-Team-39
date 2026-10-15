@@ -18,3 +18,12 @@ DoctorRecordForm composes ConsultationNoteForm, PrescriptionEditor and Prescript
 Sign in as a patient and open `/patient`. The Prescriptions panel shows the C04 synthetic issued prescription, independent of the logged-in account. Expand View details for medication dispensing units, plain-text instructions, appointment linkage, status and issue time in Asia/Singapore. Use Preview scenario to inspect empty/unavailable states. This panel has no API calls and does not imply real access authorization or audit completion. No active download/order buttons are shown before those services exist. Real integration remains R04; document UI remains U14.
 
 U12 #118 and U11 #127 are merged; this branch targets main. No configuration changes.
+
+`PatientPrescriptions` owns preview selection and expanded-detail state.
+`PrescriptionSummary` renders the selectable summary, and `PrescriptionDetails`
+renders metadata, medication quantities and instructions. These components and
+the prescription tests use Prettier 3.6.2 with `--single-quote --no-semi`.
+
+U13 refactor verification: frontend lint, TypeScript/production build, all 67
+frontend tests, Prettier and `git diff --check` pass. Browser interaction remains
+unverified; this change preserves the existing preview behavior.
