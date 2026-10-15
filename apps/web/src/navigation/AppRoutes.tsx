@@ -10,6 +10,7 @@ import { ManagedClinics } from '../features/clinics/ManagedClinics'
 import { ClinicDirectory } from '../features/clinics/ClinicDirectory'
 import { ErrorState } from '../components/ErrorState'
 import { DoctorRecordForm } from '../features/records/DoctorRecordForm'
+import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
 import { roleLabels } from './access'
 import type { Route } from './access'
 import type { Session } from '../auth/session'
@@ -25,6 +26,7 @@ export function AppRoutes({ route, session }: { route: Route; session: Session |
     case 'role': return <main className="mx-auto max-w-6xl px-6 py-10">
       <h1 className="text-3xl font-semibold">{roleLabels[route.role]}</h1>
       {route.role === 'patient' && <section className="mt-8"><h2 className="text-xl font-semibold">Explore clinics</h2><ClinicDirectory /></section>}
+      {route.role === 'patient' && <PatientPrescriptions />}
       {route.role === 'clinic_admin' && session && <ManagedClinics session={session} />}
       {route.role === 'doctor' && <AvailabilityEditor key={route.tenantId} tenantId={route.tenantId} />}
       {route.role === 'doctor' && <DoctorRecordForm key={`records:${route.tenantId ?? ''}`} />}

@@ -9,3 +9,9 @@ Real appointment selection, server authorization, audited reads, durable saves a
 Verification: frontend lint, TypeScript/build and automated tests; browser interaction is unverified. No environment configuration changes.
 
 U13 patient prescription view: implementation in progress on a stacked branch.
+
+## Patient prescription preview (U13)
+
+Sign in as a patient and open `/patient`. The Prescriptions panel shows the C04 synthetic issued prescription, independent of the logged-in account. Expand View details for medication dispensing units, plain-text instructions, appointment linkage, status and issue time in Asia/Singapore. Use Preview scenario to inspect empty/unavailable states. This panel has no API calls and does not imply real access authorization or audit completion. No active download/order buttons are shown before those services exist. Real integration remains R04; document UI remains U14.
+
+The U13 branch is stacked on U12 for shared fixture types; merge/rebase U12 first. No configuration changes.
