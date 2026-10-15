@@ -22,10 +22,15 @@ Use the existing local frontend configuration in `apps/web/.env` (see its
 above. Both dashboards also link to the consultation preview. At desktop width,
 the doctor form sits beside the video; narrow screens stack the form below it.
 
-Enable devices to request browser permission. Mute/camera controls change local
-track availability. Leave and the explicit disconnect test stop local tracks;
-rejoin requests devices again. The note/form remains mounted across these
-preview states. Route navigation/reload resets form contents.
+Join preview expands the room to fill the browser area. Leave, Escape and the
+explicit disconnect test return it to its original position and stop local
+tracks. Rejoin expands it again; enable devices separately to request browser
+permission. Mute/camera controls change local track availability. The doctor
+form remains mounted across these transitions so notes and prescription entries
+are retained. Desktop doctors retain the form beside the video, with independent
+form scrolling; narrow screens stack the two areas. Keyboard focus stays within
+the expanded room and returns to the join/rejoin button after leaving.
+Route navigation/reload resets form contents.
 
 Verification: frontend lint, TypeScript/production build and all 65 tests pass.
 Browser checks passed for real local patient/doctor login, role denial in both
@@ -34,3 +39,6 @@ disconnect, desktop side-by-side layout and 390px mobile layout without horizont
 overflow. Physical camera/mic permissions, hardware toggles, device-loss cleanup
 and rejoin with devices were not exercised in the browser. Remote calling and
 cross-network/TURN verification remain blocked by X01, not counted as complete.
+
+Expanded-room browser checks: patient join/rejoin fills the browser area; Leave
+and Escape restore the embedded layout and focus; Tab wraps inside the room.

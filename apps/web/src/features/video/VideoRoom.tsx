@@ -18,29 +18,56 @@ function LocalVideo({ stream, camera }: { stream: MediaStream; camera: boolean }
 
 export function VideoRoom({ role }: { role: 'patient' | 'doctor' }) {
   const media = useLocalMedia()
+  const room = useRef<HTMLElement>(null)
+  const joinButton = useRef<HTMLButtonElement>(null)
+  const leaveButton = useRef<HTMLButtonElement>(null)
+  const [expanded, setExpanded] = useState(false)
   const [state, setState] = useState<'waiting' | 'disconnected' | 'left'>('waiting')
   const doctor = role === 'doctor'
   const peer = doctor ? 'patient' : 'doctor'
   const waiting = state === 'waiting'
-  const leave = (next: 'left' | 'disconnected') => { media.stop(); setState(next) }
-  const rejoin = () => { setState('waiting'); void media.start() }
+  const leave = (next: 'left' | 'disconnected') => { media.stop(); setState(next); setExpanded(false) }
+  const join = () => { setState('waiting'); setExpanded(true) }
 
-  return <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-8">
+  useEffect(() => {
+    if (!expanded) return
+    const previousOverflow = document.body.style.overflow
+    const previousFocus = document.activeElement as HTMLElement | null
+    document.body.style.overflow = 'hidden'
+    leaveButton.current?.focus()
+    return () => {
+      document.body.style.overflow = previousOverflow
+      if (room.current) (joinButton.current ?? previousFocus)?.focus()
+    }
+  }, [expanded])
+
+  return <main ref={room} role={expanded ? 'dialog' : undefined} aria-modal={expanded || undefined} aria-label={expanded ? `${doctor ? 'Doctor' : 'Patient'} consultation room` : undefined} className={expanded ? 'fixed inset-0 z-50 overflow-y-auto bg-white p-3 sm:p-5' : 'mx-auto max-w-[1600px] px-4 py-8 sm:px-8'} onKeyDown={event => {
+    if (!expanded) return
+    if (event.key === 'Escape') { event.preventDefault(); leave('left') }
+    if (event.key !== 'Tab') return
+    const controls = Array.from(room.current?.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled)') ?? []).filter(element => element.getClientRects().length && !element.closest('fieldset:disabled'))
+    const first = controls[0]
+    const last = controls[controls.length - 1]
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+  }}>
+    <div hidden={expanded}>
     <a className="text-sm text-slate-600 underline underline-offset-4" href={`/${role}`}>Back to {role} dashboard</a>
     <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
       <div><p className="text-xs font-semibold tracking-widest text-teal-700 uppercase">TeleLink consultation</p><h1 className="mt-2 text-3xl font-semibold">{doctor ? 'Doctor consultation room' : 'Your video consultation'}</h1></div>
       <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">Synthetic preview</span>
     </div>
     <p className="mt-4 max-w-4xl text-sm leading-6 text-slate-600">Check your camera and microphone here. The other participant is a placeholder; no remote call is connected and your media stays in this browser.</p>
-    <div className={`mt-6 grid items-start gap-6 ${doctor ? 'xl:grid-cols-[minmax(0,1.4fr)_minmax(360px,1fr)]' : ''}`}>
-      <section aria-label="Video call" className="min-w-0 overflow-hidden rounded-2xl bg-slate-950 text-white shadow-lg">
+    </div>
+    <div className={`grid gap-6 ${expanded ? 'min-h-full lg:h-full lg:min-h-0' : 'mt-6 items-start'} ${doctor ? 'lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)]' : expanded ? 'h-full' : ''}`}>
+      <section aria-label="Video call" className={`flex min-w-0 flex-col overflow-hidden rounded-2xl bg-slate-950 text-white shadow-lg ${expanded ? 'min-h-[calc(100dvh-1.5rem)] sm:min-h-[calc(100dvh-2.5rem)] lg:h-full lg:min-h-0' : ''}`}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4"><span className="text-sm font-medium">Consultation preview · {doctor ? 'Doctor' : 'Patient'} view</span><span role="status" className="text-sm text-slate-300">{waiting ? 'Waiting room' : state === 'left' ? 'You left the preview' : 'Disconnected preview'}</span></div>
-        <div className="relative flex min-h-[420px] items-center justify-center px-6 pt-10 pb-48 sm:min-h-[520px]">
+        <div className={`relative flex flex-1 items-center justify-center px-6 pt-10 pb-48 ${expanded ? 'min-h-[260px]' : 'min-h-[420px] sm:min-h-[520px]'}`}>
           <div className="max-w-md text-center">
             <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-slate-800 text-teal-300">{state === 'disconnected' ? <WifiOff size={30} aria-hidden="true" /> : <Video size={30} aria-hidden="true" />}</div>
             <h2 className="mt-5 text-xl font-medium">{waiting ? `Waiting for your ${peer}` : state === 'left' ? 'You have left the preview' : 'Your connection was interrupted'}</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">{waiting ? 'Remote video will appear here once live calling is available.' : 'This is a preview state. Rejoin to restart your local camera and microphone.'}</p>
-            {!waiting && <button type="button" className="mt-5 rounded-lg bg-teal-400 px-5 py-3 font-medium text-slate-950" onClick={rejoin}>Rejoin preview</button>}
+            <p className="mt-3 text-sm leading-6 text-slate-400">{waiting ? 'Remote video will appear here once live calling is available.' : 'This is a preview state. Rejoin to return to the waiting room, then enable your camera and microphone when ready.'}</p>
+            {!expanded && <button ref={joinButton} type="button" className="mt-5 rounded-lg bg-teal-400 px-5 py-3 font-medium text-slate-950" onClick={join}>{waiting ? 'Join preview' : 'Rejoin preview'}</button>}
           </div>
           <div className="absolute right-5 bottom-5 h-32 w-44 overflow-hidden rounded-xl border border-slate-600 bg-slate-800 sm:h-36 sm:w-52">
             {media.stream && <LocalVideo stream={media.stream} camera={media.camera} />}
@@ -54,13 +81,13 @@ export function VideoRoom({ role }: { role: 'patient' | 'doctor' }) {
           <div className="flex flex-wrap justify-center gap-3">
             <button type="button" className={control} disabled={!media.stream} aria-label={media.microphone ? 'Mute microphone' : 'Unmute microphone'} aria-pressed={!media.microphone} onClick={media.toggleMicrophone}>{media.microphone ? <Mic size={18} /> : <MicOff size={18} />}{media.microphone ? 'Mute' : 'Unmute'}</button>
             <button type="button" className={control} disabled={!media.stream} aria-label={media.camera ? 'Turn camera off' : 'Turn camera on'} aria-pressed={!media.camera} onClick={media.toggleCamera}>{media.camera ? <Camera size={18} /> : <CameraOff size={18} />}{media.camera ? 'Camera off' : 'Camera on'}</button>
-            <button type="button" className={`${control} border-red-600 bg-red-600 hover:bg-red-700`} disabled={state === 'left'} onClick={() => leave('left')}><PhoneOff size={18} />Leave preview</button>
+            <button ref={leaveButton} type="button" className={`${control} border-red-600 bg-red-600 hover:bg-red-700`} disabled={state === 'left'} onClick={() => leave('left')}><PhoneOff size={18} />Leave preview</button>
           </div>
           {waiting && <div className="text-center"><button type="button" className="text-xs text-slate-400 underline underline-offset-4" onClick={() => leave('disconnected')}>Test disconnected preview</button></div>}
           <p className="text-center text-xs text-slate-400">{media.stream ? 'Local devices enabled. No media is being transmitted.' : 'Your camera and microphone are off.'}</p>
         </div>
       </section>
-      {doctor && <aside aria-label="Doctor workspace"><DoctorRecordForm /></aside>}
+      {doctor && <aside aria-label="Doctor workspace" className={expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}><DoctorRecordForm /></aside>}
     </div>
   </main>
 }
