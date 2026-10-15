@@ -1,5 +1,6 @@
 import { consultationPrice } from '../../lib/money'
-import { formatBookingDate, formatBookingTime, singaporeDate } from './fixtures'
+import { formatBookingDate, formatBookingTime } from './display'
+import { singaporeDate } from '../scheduling/time'
 import type { BookingSlot } from './fixtures'
 
 export function BookingSelection({
