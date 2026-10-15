@@ -12,3 +12,25 @@ V02/V03/V04 remain responsible for admission and appointment integration.
 Local camera/microphone access requires localhost or HTTPS and browser permission.
 No media is recorded or sent to another participant by this preview. Doctor form
 saves are in memory and reset when leaving the page or reloading.
+
+## Run and review
+
+Use the existing local frontend configuration in `apps/web/.env` (see its
+`.env.example`), with Floci on 4566 and identity on 8001. From `apps/web`, run
+`npm ci` and `npm run dev`. Sign in as `patient@example.test` or
+`doctor@example.test`, password `LocalDemo123!`, and open the matching route
+above. Both dashboards also link to the consultation preview. At desktop width,
+the doctor form sits beside the video; narrow screens stack the form below it.
+
+Enable devices to request browser permission. Mute/camera controls change local
+track availability. Leave and the explicit disconnect test stop local tracks;
+rejoin requests devices again. The note/form remains mounted across these
+preview states. Route navigation/reload resets form contents.
+
+Verification: frontend lint, TypeScript/production build and all 65 tests pass.
+Browser checks passed for real local patient/doctor login, role denial in both
+directions, patient form exclusion, doctor note save and retention on simulated
+disconnect, desktop side-by-side layout and 390px mobile layout without horizontal
+overflow. Physical camera/mic permissions, hardware toggles, device-loss cleanup
+and rejoin with devices were not exercised in the browser. Remote calling and
+cross-network/TURN verification remain blocked by X01, not counted as complete.

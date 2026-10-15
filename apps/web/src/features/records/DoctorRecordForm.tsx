@@ -17,7 +17,7 @@ export function DoctorRecordForm() {
     setItems(current => current.map((item, i) => i === index ? { ...item, ...change } : item))
     setMessage('')
   }
-  return <section className="mt-8 space-y-6 rounded-xl border p-6" aria-labelledby="record-heading">
+  return <section className="space-y-6 rounded-xl border bg-white p-6" aria-labelledby="record-heading">
     <div><h2 id="record-heading" className="text-xl font-semibold">Consultation notes and prescription</h2>
       <p className="mt-2 text-sm text-amber-800">Synthetic preview. Saves and issuance last only until you leave or reload this page. No clinical record is created.</p></div>
     <dl className="grid gap-2 text-sm sm:grid-cols-2">
