@@ -6,15 +6,25 @@ import { DoctorRecordForm } from '../src/features/records/DoctorRecordForm'
 import { draftPrescription, validItems } from '../src/features/records/fixtures'
 
 test('free-text prescription inputs accept names and reject empty names, invalid quantities and duplicate items', () => {
-  const item = { display_name: '  Synthetic medication A  ', quantity: 2, instructions: 'Synthetic placeholder.' }
+  const item = {
+    display_name: '  Synthetic medication A  ',
+    quantity: 2,
+    instructions: 'Synthetic placeholder.',
+  }
   assert.ok(validItems([item]))
-  for (const quantity of [0, -1, 1.5, NaN, Infinity]) assert.equal(validItems([{ ...item, quantity }]), false)
+  for (const quantity of [0, -1, 1.5, NaN, Infinity])
+    assert.equal(validItems([{ ...item, quantity }]), false)
   assert.equal(validItems([]), false)
   assert.equal(validItems([{ ...item, display_name: '  ' }]), false)
   assert.equal(validItems([{ ...item, instructions: '  ' }]), false)
   assert.equal(validItems([item, item]), false)
-  assert.equal(validItems([item, { ...item, display_name: 'synthetic medication a' }]), false)
-  assert.ok(validItems([item, { ...item, display_name: 'Synthetic medication B' }]))
+  assert.equal(
+    validItems([item, { ...item, display_name: 'synthetic medication a' }]),
+    false,
+  )
+  assert.ok(
+    validItems([item, { ...item, display_name: 'Synthetic medication B' }]),
+  )
   const draft = draftPrescription([item])
   assert.equal(draft.status, 'draft')
   assert.equal(draft.issued_at, null)

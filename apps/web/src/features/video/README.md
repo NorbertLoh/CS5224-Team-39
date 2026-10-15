@@ -42,3 +42,15 @@ cross-network/TURN verification remain blocked by X01, not counted as complete.
 
 Expanded-room browser checks: patient join/rejoin fills the browser area; Leave
 and Escape restore the embedded layout and focus; Tab wraps inside the room.
+
+## Code structure
+
+`VideoRoom` coordinates the role layout and call state. `CallStage` displays
+participant placeholders and the local video; `CallControls` handles media and
+leave buttons. `useLocalMedia` owns devices, while `useExpandedRoom` owns focus,
+keyboard navigation and background scrolling. The doctor workspace composes
+`ConsultationNoteForm`, `PrescriptionEditor` and `PrescriptionItemFields`.
+
+These files use Prettier 3.6.2 with `--single-quote --no-semi`. After the component
+split, lint, TypeScript/build, all 65 tests and Prettier checks passed; the patient
+join/leave browser flow and focus restoration were verified again.
