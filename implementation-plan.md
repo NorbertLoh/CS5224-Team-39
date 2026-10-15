@@ -141,7 +141,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [ ] | M02 | Add minimal outbox publisher with retryable send and publication tracking. | F04, F12, M01 | M |
 | [ ] | M03 | Add SQS consumer helper with acknowledgement, inbox deduplication and retries. | F12, M01 | M |
 | [ ] | M04 | Document and verify one failed job reaching DLQ and operator replay. | M03 | S |
-| [ ] | D01 | Create fulfilment schema/catalogue and prescription-linked order APIs. | F04, C04, A06 | M |
+| [ ] | D01 | Create fulfilment schema/catalogue and prescription-linked order APIs. Assignee: NorbertLoh; status: in progress. Issue #130. | F04, C04, A06 | M |
 | [ ] | D02 | Add sandbox delivery quote adapter with expiry and trusted order total. | D01, X05 | M |
 | [ ] | D03 | Add authorised clinic medicine-ready action. | D01 | S |
 | [ ] | D04 | Consume medication-payment event and persist paid state idempotently. | D01, M03, C05 | M |
