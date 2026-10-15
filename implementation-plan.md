@@ -97,7 +97,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | U06 | Build doctor availability editor using fixtures. Completed in merged PR #103; weekly timetable supports multiple selections, click/drag deselection and protected batch edits. All 43 frontend tests, lint, build, Prettier checks, local browser checks and CI passed. Issue #102 closed; live scheduling integration remains S07. | F07, F08, C02 | M |
 | [x] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. Completed in merged PR #108; clinic Book entry, date dropdown, 30-minute slot cells and checkout preview. 48 frontend tests, lint/build and CI passed. Issue #107 closed; live integration remains S07/B07, browser visual checks unverified. | F07, F08, C03 | M |
 | [x] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. Completed in merged PR #106; role-scoped date dropdown, half-hour cells and appointment details with focused components. Combined 53 frontend tests, lint/build and CI passed. Issue #105 closed; live integration remains S07, browser visual checks unverified. | F07, F08, C02, C03 | M |
-| [ ] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. Assignee: NorbertLoh; status: in progress; issue #111, PR #112 ready for review. Real frontend adapter walkthrough and cleanup passed; awaiting merge. | S04, U06-U08 | M |
+| [x] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. Completed in merged PR #112; 60 frontend tests, lint/build, real frontend adapter walkthrough with cleanup and CI passed. Issue #111 closed. Browser interaction and AWS remain unverified; billing checkout remains B07. | S04, U06-U08 | M |
 
 ## Week 2: payments
 
