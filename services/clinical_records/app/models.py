@@ -18,12 +18,16 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from telelink_common.outbox import outbox_table
 
 SERVICE_SCHEMA = "clinical_records"
 
 
 class Base(DeclarativeBase):
     metadata = MetaData(schema=SERVICE_SCHEMA)
+
+
+event_outbox = outbox_table(Base.metadata)
 
 
 class AppointmentContext:

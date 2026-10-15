@@ -9,9 +9,11 @@ from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.access import authorize, prescription_scope
 from app.database import get_session
+from app.issuance import issue_draft
 from app.models import Note, Prescription, PrescriptionItem, ReadAudit
 from app.pagination import decode, encode, key, scope_for
 from app.schemas import (
+    IssueInput,
     ItemPublic,
     NoteInput,
     NotePublic,
@@ -196,6 +198,29 @@ def update_prescription(
         ),
         {"id": prescription_id},
     )
+    session.refresh(row)
+    result = prescription_public(session, row)
+    session.commit()
+    return result
+
+
+@router.post("/prescriptions/{prescription_id}/issue", response_model=PrescriptionPublic)
+def issue_prescription(
+    prescription_id: UUID,
+    request: Request,
+    identity: Identity,
+    session: DB,
+    body: IssueInput | None = None,
+):
+    row = session.scalar(
+        select(Prescription)
+        .where(Prescription.prescription_id == prescription_id)
+        .with_for_update()
+    )
+    if row is None:
+        not_found()
+    context(request, identity, row.appointment_id, write=True, record=row)
+    issue_draft(session, row, request.app.state.upstream, token(request), request.state.request_id)
     session.refresh(row)
     result = prescription_public(session, row)
     session.commit()

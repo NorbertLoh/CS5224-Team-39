@@ -1,9 +1,9 @@
-# Clinical records (R01/R02)
+# Clinical records (R01–R03)
 
 Clinical records owns appointment-scoped notes, prescriptions and their items.
 The service provides PostgreSQL storage, appointment-scoped note and draft
-prescription APIs, and durable read auditing. Transactional issuance/events
-follow in R03. API shapes are defined by `contracts/prescription-order-quote.md`.
+prescription APIs, durable read auditing and transactional prescription issuance.
+API shapes are defined by `contracts/prescription-order-quote.md`.
 
 From the repository root, install the service into its own virtual environment
 (its `app` package name is shared with other independently deployed services):
@@ -23,7 +23,7 @@ create roles, change shared schemas or grant itself privileges.
 Then run from `services/clinical_records`:
 
 ```powershell
-$env:SERVICE_DATABASE_URL='postgresql+psycopg://clinical_records:local-demo-only@localhost:55432/telelink'
+$env:SERVICE_DATABASE_URL='postgresql+psycopg://clinical_records:local-demo-only@localhost:55431/telelink'
 .venv/Scripts/python -m alembic upgrade head
 .venv/Scripts/python -m alembic check
 ```
@@ -63,9 +63,9 @@ Copy `.env.example` to `.env` in this service directory and replace the Floci po
 and client IDs with the bootstrap values. Configure the identity, scheduling and
 fulfilment base URLs; include their ingress API prefix when accessing them through
 a proxy. Use independent random cursor secrets and HTTPS outside local/test.
-No shared Compose or frontend routing changes are included in R02.
+No shared Compose or frontend routing changes are included in R02/R03.
 
-After migrating to revision `0002`, run from this directory:
+After migrating to revision `0003`, run from this directory:
 
 ```powershell
 .venv/Scripts/python -m app
@@ -82,12 +82,39 @@ Implemented C04 routes:
 - PUT/GET `/api/v1/clinical-records/appointments/{appointment_id}/note`
 - POST `/api/v1/clinical-records/appointments/{appointment_id}/prescriptions`
 - PATCH/GET `/api/v1/clinical-records/prescriptions/{prescription_id}`
+- POST `/api/v1/clinical-records/prescriptions/{prescription_id}/issue` (no body or `{}`)
 - GET `/api/v1/clinical-records/prescriptions` (`appointment_id`, `limit`, `cursor`)
 
-POST issuance is reserved for R03: it must commit the issued state and outbox event
-together, with idempotent retries. R02 does not expose an issuance transition that
-could lose its event. Service-only dispensing/document projections and frontend
-connection remain follow-up integration work. No changes to shared contracts.
+Issuance freezes the draft and stages `prescription_issued.v1` in the same database
+transaction. It rechecks doctor/appointment access and active catalogue items.
+Repeated issuance returns the same resource without another event or catalogue
+lookup; it still requires the assigned active doctor and an in-progress appointment.
+Service-only dispensing/document projections and frontend connection remain
+follow-up integration work. No changes to shared contracts.
+
+## Publish prescription events
+
+Run the publisher separately from the HTTP process, using the same service database
+and the event configuration in `.env.example`. For local Floci, export dummy SDK
+credentials in the worker's environment:
+
+```powershell
+$env:AWS_ACCESS_KEY_ID='test'
+$env:AWS_SECRET_ACCESS_KEY='test'
+$env:AWS_EC2_METADATA_DISABLED='true'
+.venv/Scripts/python -m app.publish_events
+# Or publish one currently due batch and exit:
+.venv/Scripts/python -m app.publish_events --once
+```
+
+AWS deployments omit `SERVICE_AWS_ENDPOINT_URL` and the dummy credentials, using
+the task role with EventBridge PutEvents permission on the configured bus. The
+worker reuses the shared M02 publisher and retries due events every second, with
+bounded SDK timeouts and exponential per-event backoff. A failed batch stays pending;
+`--once` reports its result and exits, so rerun it after backoff to retry failures.
+Events carry IDs and timestamps only. Delivery is at least once: consumers must
+deduplicate by the stored event ID. Setup, retry semantics and R03 verification:
+[docs/issuance.md](docs/issuance.md).
 
 For verification, prepare a **disposable** PostgreSQL database with the above
 role/schema plus `tests/isolation-fixture.sql` as an administrator. The latter
