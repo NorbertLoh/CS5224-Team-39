@@ -40,6 +40,7 @@ def upgrade() -> None:
         sa.Column("status", sa.Text(), nullable=False, server_default=sa.text("'draft'")),
         sa.Column("issued_at", sa.DateTime(timezone=True)),
         *context_columns(),
+        sa.UniqueConstraint("prescription_id", "tenant_id", name="uq_prescriptions_tenant_context"),
         sa.CheckConstraint(
             "status IN ('draft', 'issued', 'voided')", name="ck_prescriptions_status"
         ),
@@ -58,13 +59,18 @@ def upgrade() -> None:
         "prescription_items",
         sa.Column("prescription_item_id", sa.Uuid(), primary_key=True),
         sa.Column("prescription_id", sa.Uuid(), nullable=False),
+        sa.Column("tenant_id", sa.Uuid(), nullable=False),
         sa.Column("medication_id", sa.Uuid(), nullable=False),
         sa.Column("quantity", sa.Integer(), nullable=False),
         sa.Column("instructions", sa.Text(), nullable=False),
         sa.Column("display_name", sa.Text(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["prescription_id"],
-            ["clinical_records.prescriptions.prescription_id"],
+            ["prescription_id", "tenant_id"],
+            [
+                "clinical_records.prescriptions.prescription_id",
+                "clinical_records.prescriptions.tenant_id",
+            ],
+            name="fk_prescription_items_tenant_parent",
             ondelete="RESTRICT",
         ),
         sa.CheckConstraint("quantity > 0", name="ck_prescription_items_quantity"),

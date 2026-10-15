@@ -140,9 +140,10 @@ def test_invalid_prescription_state_rejected(database, fields):
         insert(database, Prescription, **context(), **fields)
 
 
-def item_fields(prescription_id):
+def item_fields(prescription_id, tenant_id):
     return dict(
         prescription_id=prescription_id,
+        tenant_id=tenant_id,
         medication_id=uuid4(),
         quantity=2,
         instructions="Synthetic instructions",
@@ -151,8 +152,9 @@ def item_fields(prescription_id):
 
 
 def test_item_roundtrip_and_parent_delete_restricted(database):
-    parent_id = insert(database, Prescription, **context())
-    fields = item_fields(parent_id)
+    parent_context = context()
+    parent_id = insert(database, Prescription, **parent_context)
+    fields = item_fields(parent_id, parent_context["tenant_id"])
     item_id = insert(database, PrescriptionItem, **fields)
     with Session(database) as session:
         item = session.get(PrescriptionItem, item_id)
@@ -175,12 +177,19 @@ def test_item_roundtrip_and_parent_delete_restricted(database):
         {"display_name": None},
         {"medication_id": None},
         {"prescription_id": uuid4()},
+        {"tenant_id": uuid4()},
+        {"tenant_id": None},
     ],
 )
 def test_invalid_items_rejected(database, fields):
-    parent_id = insert(database, Prescription, **context())
+    parent_context = context()
+    parent_id = insert(database, Prescription, **parent_context)
     with pytest.raises(IntegrityError):
-        insert(database, PrescriptionItem, **{**item_fields(parent_id), **fields})
+        insert(
+            database,
+            PrescriptionItem,
+            **{**item_fields(parent_id, parent_context["tenant_id"]), **fields},
+        )
 
 
 def test_no_cross_service_foreign_keys_and_restricted_role(database):

@@ -7,7 +7,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     FetchedValue,
-    ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     MetaData,
@@ -54,6 +54,7 @@ class Note(AppointmentContext, Base):
 class Prescription(AppointmentContext, Base):
     __tablename__ = "prescriptions"
     __table_args__ = (
+        UniqueConstraint("prescription_id", "tenant_id", name="uq_prescriptions_tenant_context"),
         CheckConstraint("status IN ('draft', 'issued', 'voided')", name="ck_prescriptions_status"),
         CheckConstraint(
             "(status = 'draft' AND issued_at IS NULL) OR "
@@ -92,6 +93,15 @@ class Prescription(AppointmentContext, Base):
 class PrescriptionItem(Base):
     __tablename__ = "prescription_items"
     __table_args__ = (
+        ForeignKeyConstraint(
+            ["prescription_id", "tenant_id"],
+            [
+                "clinical_records.prescriptions.prescription_id",
+                "clinical_records.prescriptions.tenant_id",
+            ],
+            name="fk_prescription_items_tenant_parent",
+            ondelete="RESTRICT",
+        ),
         CheckConstraint("quantity > 0", name="ck_prescription_items_quantity"),
         CheckConstraint("btrim(instructions) <> ''", name="ck_prescription_items_instructions"),
         CheckConstraint("btrim(display_name) <> ''", name="ck_prescription_items_display_name"),
@@ -99,10 +109,8 @@ class PrescriptionItem(Base):
     )
 
     prescription_item_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
-    prescription_id: Mapped[UUID] = mapped_column(
-        Uuid,
-        ForeignKey("clinical_records.prescriptions.prescription_id", ondelete="RESTRICT"),
-    )
+    prescription_id: Mapped[UUID] = mapped_column(Uuid)
+    tenant_id: Mapped[UUID] = mapped_column(Uuid)
     medication_id: Mapped[UUID] = mapped_column(Uuid)
     quantity: Mapped[int] = mapped_column(Integer)
     instructions: Mapped[str] = mapped_column(Text)

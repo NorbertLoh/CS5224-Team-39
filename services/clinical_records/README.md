@@ -58,7 +58,7 @@ $env:CLINICAL_RECORDS_TEST_ALLOW_RESET='1'
 .venv/Scripts/python -m ruff format --check .
 ```
 
-Verified on PostgreSQL 17: 32 focused tests covering fresh/repeated migrations,
+Verified on PostgreSQL 17: 34 focused tests covering fresh/repeated migrations,
 metadata drift, downgrade/re-upgrade, required context, state/time constraints,
 appointment uniqueness, item integrity, timestamps and schema isolation. Real
 authorization, catalogue integration and read auditing remain R02; event delivery
