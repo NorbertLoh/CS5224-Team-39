@@ -9,6 +9,7 @@ import { PlatformClinics } from '../features/platform-clinics/PlatformClinics'
 import { ManagedClinics } from '../features/clinics/ManagedClinics'
 import { ClinicDirectory } from '../features/clinics/ClinicDirectory'
 import { ErrorState } from '../components/ErrorState'
+import { DoctorRecordForm } from '../features/records/DoctorRecordForm'
 import { roleLabels } from './access'
 import type { Route } from './access'
 import type { Session } from '../auth/session'
@@ -26,6 +27,7 @@ export function AppRoutes({ route, session }: { route: Route; session: Session |
       {route.role === 'patient' && <section className="mt-8"><h2 className="text-xl font-semibold">Explore clinics</h2><ClinicDirectory /></section>}
       {route.role === 'clinic_admin' && session && <ManagedClinics session={session} />}
       {route.role === 'doctor' && <AvailabilityEditor key={route.tenantId} tenantId={route.tenantId} />}
+      {route.role === 'doctor' && <DoctorRecordForm key={`records:${route.tenantId ?? ''}`} />}
       {(route.role === 'patient' || route.role === 'doctor' || route.role === 'clinic_admin') && <AppointmentSchedule key={`${route.role}:${route.tenantId ?? ''}`} role={route.role} tenantId={route.tenantId} />}
     </main>
     case 'missing': return <ErrorState message="Page not found." />
