@@ -1,1 +1,1 @@
-"""Service-local application package; copy this template for each business service."""
+"""Fulfilment catalogue and prescription-linked orders."""
