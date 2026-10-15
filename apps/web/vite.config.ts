@@ -9,6 +9,12 @@ export default defineConfig(({ mode }) => ({
   server: {
     strictPort: true,
     proxy: {
+      '^/api/v1/scheduling(?:/|\\?|$)': {
+        target: loadEnv(mode, process.cwd(), 'SCHEDULING_').SCHEDULING_API_TARGET || 'http://127.0.0.1:8003',
+        changeOrigin: true,
+        bypass: (request) => /^\/api\/v1\/scheduling\/internal(?:\/|\?|$)/.test(request.url ?? '') ? false : undefined,
+        rewrite: (path) => path.replace(/^\/api\/v1\/scheduling(?=\/|\?|$)/, '') || '/',
+      },
       '^/api/v1/identity(?:/|\\?|$)': {
         target: loadEnv(mode, process.cwd(), 'IDENTITY_').IDENTITY_API_TARGET || 'http://127.0.0.1:8001',
         changeOrigin: true,

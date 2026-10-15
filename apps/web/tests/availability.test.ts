@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
+import { schedulingClient, renderScheduling } from './scheduling-helpers'
+import { dayStart } from '../src/features/scheduling/time'
+import { applySelection } from '../src/features/availability/fixture-selection'
 import { AvailabilityEditor } from '../src/features/availability/AvailabilityEditor'
 import {
   applyDragSelection,
-  applySelection,
   cellsInSelection,
   cellsInSelections,
   deselectCell,
@@ -128,15 +129,37 @@ test('removal protects unavailable, past and other-context slots and leaves inpu
   assert.equal(slots.length, 1)
 })
 
-test('editor identifies fixture-only data and timezone and uses accessible labelled inputs', () => {
-  const markup = renderToStaticMarkup(createElement(AvailabilityEditor))
-  assert.match(markup, /Fixture preview/)
-  assert.match(markup, /do not change real availability/)
+test('editor uses current doctor membership and live availability without demo selectors', () => {
+  const client = schedulingClient({
+    subject_id: doctor,
+    global_roles: [],
+    memberships: [
+      { tenant_id: clinicA, roles: ['doctor'], status: 'active' },
+      { tenant_id: clinicB, roles: ['doctor'], status: 'revoked' },
+    ],
+  })
+  const week = weekStart(singaporeDate())
+  client.setQueryData(
+    ['scheduling', 'availability', 's07-test', clinicA, doctor, week],
+    [],
+  )
+  const markup = renderScheduling(client, createElement(AvailabilityEditor))
+  assert.doesNotMatch(markup, /Fixture preview|Demo doctor|Demo clinic/)
   assert.match(markup, /Singapore time/)
   assert.match(markup, /Weekly availability timetable/)
   assert.match(markup, /Add availability/)
-  assert.match(markup, /Shift \+ arrows/)
-  assert.match(markup, /role="status"/)
+  assert.doesNotMatch(markup, new RegExp(clinicB))
+  const invalid = renderScheduling(
+    client,
+    createElement(AvailabilityEditor, { tenantId: clinicB }),
+  )
+  assert.match(invalid, /No active doctor memberships/)
+  assert.doesNotMatch(invalid, /Weekly availability timetable/)
+  assert.equal(
+    Date.parse(dayStart(shiftDate(week, 7))) - Date.parse(dayStart(week)),
+    7 * 86400000,
+  )
+  client.clear()
 })
 
 test('reverse rectangular selection spans half-hour cells across a week boundary', () => {

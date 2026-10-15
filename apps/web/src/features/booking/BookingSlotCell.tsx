@@ -1,4 +1,4 @@
-import { formatBookingTime } from './fixtures'
+import { formatBookingTime } from './display'
 import type { BookingSlot } from './fixtures'
 
 export function BookingSlotCell({

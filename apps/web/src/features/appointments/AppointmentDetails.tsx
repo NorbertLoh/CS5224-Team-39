@@ -1,14 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { consultationPrice } from '../../lib/money'
 import {
-  clinicName,
   dateInSingapore,
   formatDate,
   formatTime,
   readableStatus,
-  subjectName,
-} from './fixtures'
-import type { Appointment } from './fixtures'
+} from './display'
+import type { Appointment } from '../scheduling/api'
 
 export function AppointmentDetails({
   appointment,
@@ -22,9 +20,9 @@ export function AppointmentDetails({
     heading.current?.focus()
   }, [appointment.appointment_id])
   const fields = [
-    ['Patient', subjectName(appointment.patient_id)],
-    ['Doctor', subjectName(appointment.doctor_id)],
-    ['Clinic', clinicName(appointment.tenant_id)],
+    ['Patient', appointment.patient_id],
+    ['Doctor', appointment.doctor_id],
+    ['Clinic', appointment.tenant_id],
     ['Date', formatDate(dateInSingapore(appointment.starts_at))],
     [
       'Time (Singapore)',

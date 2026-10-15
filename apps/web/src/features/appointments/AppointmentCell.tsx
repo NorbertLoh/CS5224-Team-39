@@ -1,5 +1,6 @@
-import { clinicName, formatTime, readableStatus, subjectName } from './fixtures'
-import type { AppointmentRole, dayCells } from './fixtures'
+import { formatTime, readableStatus } from './display'
+import type { AppointmentRole } from './fixtures'
+import type { dayCells } from './display'
 
 export function AppointmentCell({
   cell,
@@ -28,16 +29,14 @@ export function AppointmentCell({
               onClick={() => onSelect(appointment.appointment_id)}
             >
               <span className="block font-medium">
-                {subjectName(
-                  role === 'patient'
-                    ? appointment.doctor_id
-                    : appointment.patient_id,
-                )}
+                {role === 'patient'
+                  ? appointment.doctor_id
+                  : appointment.patient_id}
               </span>
               <span className="block text-slate-600">
-                {clinicName(appointment.tenant_id)}
+                {appointment.tenant_id}
                 {role === 'clinic_admin' &&
-                  ` · ${subjectName(appointment.doctor_id)}`}
+                  ` · ${appointment.doctor_id}`}
               </span>
               <span className="mt-1 block capitalize">
                 {readableStatus(appointment.status)}

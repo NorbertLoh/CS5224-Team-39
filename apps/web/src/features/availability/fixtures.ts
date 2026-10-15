@@ -1,3 +1,5 @@
+import { slotStart } from './slot-time'
+export { slotStart } from './slot-time'
 import shared from '../../../../../dev/fixtures/telelink.json'
 
 export type Slot = {
@@ -40,20 +42,6 @@ export function initialSlots(now = Date.now()): Slot[] {
 
 export function singaporeDate(now = Date.now()) {
   return new Date(now + 8 * 3600000).toISOString().slice(0, 10)
-}
-
-export function slotStart(date: string, time: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time))
-    return NaN
-  const value = Date.parse(`${date}T${time}:00+08:00`)
-  // Reject calendar rollovers as well as malformed input.
-  if (
-    !Number.isFinite(value) ||
-    new Date(value + 8 * 3600000).toISOString().slice(0, 16) !==
-      `${date}T${time}`
-  )
-    return NaN
-  return value
 }
 
 export function addSlot(

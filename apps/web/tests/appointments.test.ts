@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { schedulingClient, renderScheduling } from './scheduling-helpers'
+import type { Appointment } from '../src/features/scheduling/api'
 import shared from '../../../dev/fixtures/telelink.json'
 import { AppointmentSchedule } from '../src/features/appointments/AppointmentSchedule'
 import { AppointmentDetails } from '../src/features/appointments/AppointmentDetails'
@@ -107,24 +109,49 @@ test('dates use Singapore time and include an empty preview day', () => {
   assert.equal(appointmentDates([]).length, 1)
 })
 
-test('all role views render labelled date selection, fixture disclosure and cells', () => {
+test('role views render server appointments and no demo identities', () => {
   for (const role of ['patient', 'doctor', 'clinic_admin'] as const) {
-    const markup = renderToStaticMarkup(
+    const appointment = shared.appointments[0]
+    const subject =
+      role === 'patient' ? appointment.patient_id : appointment.doctor_id
+    const tenantId = appointment.tenant_id
+    const client = schedulingClient({
+      subject_id: subject,
+      global_roles: ['patient'],
+      memberships: [
+        {
+          tenant_id: tenantId,
+          roles: ['doctor', 'clinic_admin'],
+          status: 'active',
+        },
+      ],
+    })
+    client.setQueryData(
+      [
+        'scheduling',
+        'appointments',
+        's07-test',
+        role === 'clinic_admin' ? tenantId : undefined,
+      ],
+      {
+        pages: [{ items: [appointment], next_cursor: null }],
+        pageParams: [null],
+      },
+    )
+    const markup = renderScheduling(
+      client,
       createElement(AppointmentSchedule, { role }),
     )
-    assert.match(markup, /Fixture preview/)
+    assert.doesNotMatch(
+      markup,
+      /Fixture preview|Demo patient|Demo doctor|Demo clinic/,
+    )
     assert.match(markup, /Date<select/)
     assert.match(markup, /30-minute appointment cells/)
     assert.match(markup, /Singapore time/)
     assert.match(markup, /aria-pressed="false"/)
+    client.clear()
   }
-  const empty = renderToStaticMarkup(
-    createElement(AppointmentSchedule, {
-      role: 'doctor',
-      tenantId: 'unrelated',
-    }),
-  )
-  assert.match(empty, /No appointments on this date/)
 })
 
 test('detail view exposes trusted fixture status and refund resolution separately', () => {
@@ -132,7 +159,10 @@ test('detail view exposes trusted fixture status and refund resolution separatel
     (item) => item.payment_resolution === 'refund_required',
   )!
   const markup = renderToStaticMarkup(
-    createElement(AppointmentDetails, { appointment, onClose: () => {} }),
+    createElement(AppointmentDetails, {
+      appointment: appointment as Appointment,
+      onClose: () => {},
+    }),
   )
   assert.match(markup, /Appointment details/)
   assert.match(markup, /expired/)

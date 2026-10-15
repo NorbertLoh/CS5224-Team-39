@@ -3,7 +3,7 @@ import type {
   MouseEventHandler,
   PointerEventHandler,
 } from 'react'
-import { slotStart } from './fixtures'
+import { slotStart } from './slot-time'
 import type { Slot } from './fixtures'
 import type { Cell } from './timetable'
 
