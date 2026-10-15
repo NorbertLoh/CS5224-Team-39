@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { catalogue, draftPrescription, prescriptionFixture, validItems } from './fixtures'
-import type { Prescription, PrescriptionInput } from './fixtures'
+import { draftPrescription, prescriptionFixture, validItems } from './fixtures'
+import type { PreviewPrescription, PrescriptionInput } from './fixtures'
 
 const field = 'rounded border px-3 py-2'
 const button = 'rounded border px-4 py-2 disabled:opacity-50'
@@ -9,10 +9,10 @@ export function DoctorRecordForm() {
   const [text, setText] = useState('')
   const [savedText, setSavedText] = useState('')
   const [items, setItems] = useState<PrescriptionInput[]>([])
-  const [saved, setSaved] = useState<Prescription | null>(null)
+  const [saved, setSaved] = useState<PreviewPrescription | null>(null)
   const [message, setMessage] = useState('')
   const issued = saved?.status === 'issued'
-  const dirty = JSON.stringify(items) !== JSON.stringify(saved?.items.map(({ medication_id, quantity, instructions }) => ({ medication_id, quantity, instructions })) ?? [])
+  const dirty = JSON.stringify(items.map(({ display_name, quantity, instructions }) => ({ display_name: display_name.trim(), quantity, instructions: instructions.trim() }))) !== JSON.stringify(saved?.items.map(({ display_name, quantity, instructions }) => ({ display_name, quantity, instructions })) ?? [])
   const updateItem = (index: number, change: Partial<PrescriptionInput>) => {
     setItems(current => current.map((item, i) => i === index ? { ...item, ...change } : item))
     setMessage('')
@@ -33,11 +33,11 @@ export function DoctorRecordForm() {
     </form>
     <form className="space-y-4" onSubmit={event => { event.preventDefault(); setSaved(draftPrescription(items)); setMessage('Prescription draft saved in this preview.') }}>
       <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">Prescription · {saved?.status ?? 'new'}</h3>
-        {!issued && <button className={button} type="button" disabled={items.length >= catalogue.length} onClick={() => setItems(current => [...current, { medication_id: catalogue[0].medication_id, quantity: 1, instructions: '' }])}>Add medication</button>}</div>
-      {!items.length && <p className="text-sm text-slate-600">No medications added. Select from the synthetic clinic catalogue to start.</p>}
+        {!issued && <button className={button} type="button" onClick={() => setItems(current => [...current, { display_name: '', quantity: 1, instructions: '' }])}>Add medication</button>}</div>
+      {!items.length && <p className="text-sm text-slate-600">No medications added. Add a medication and type its name to start.</p>}
       {items.map((item, index) => <fieldset key={index} className="space-y-3 rounded border p-4" disabled={issued}>
         <legend className="px-1">Medication {index + 1}</legend>
-        <label className="flex flex-col gap-2">Catalogue item<select className={field} value={item.medication_id} onChange={event => updateItem(index, { medication_id: event.target.value })}>{catalogue.map(medication => <option key={medication.medication_id} value={medication.medication_id}>{medication.display_name}</option>)}</select></label>
+        <label className="flex flex-col gap-2">Medication name<input className={field} type="text" placeholder="Type medication name" required value={item.display_name} onChange={event => updateItem(index, { display_name: event.target.value })} /></label>
         <label className="flex flex-col gap-2">Quantity (dispensing units)<input className={field} type="number" min="1" step="1" required value={Number.isNaN(item.quantity) ? '' : item.quantity} onChange={event => updateItem(index, { quantity: event.target.valueAsNumber })} /></label>
         <label className="flex flex-col gap-2">Instructions<textarea className={field} value={item.instructions} required onChange={event => updateItem(index, { instructions: event.target.value })} /></label>
         {!issued && <button type="button" className={button} onClick={() => setItems(current => current.filter((_, i) => i !== index))}>Remove medication {index + 1}</button>}

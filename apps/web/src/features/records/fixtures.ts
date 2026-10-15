@@ -6,25 +6,25 @@ export type Prescription = Omit<typeof prescriptionFixture, 'status' | 'issued_a
   issued_at: string | null
 }
 export type PrescriptionInput = {
-  medication_id: string
+  display_name: string
   quantity: number
   instructions: string
 }
-export const catalogue = prescriptionFixture.items.map(item => ({
-  medication_id: item.medication_id,
-  display_name: item.display_name,
-}))
+// Free-text preview entries are not catalogue-linked API prescription items.
+export type PreviewPrescription = Omit<Prescription, 'items'> & {
+  items: (PrescriptionInput & { prescription_item_id: string })[]
+}
 
 export function validItems(items: PrescriptionInput[]) {
   return items.length > 0 && items.every(item =>
-    catalogue.some(medication => medication.medication_id === item.medication_id) &&
+    Boolean(item.display_name.trim()) &&
     Number.isSafeInteger(item.quantity) && item.quantity > 0 &&
     Boolean(item.instructions.trim()),
-  ) && new Set(items.map(item => item.medication_id)).size === items.length
+  ) && new Set(items.map(item => item.display_name.trim().toLowerCase())).size === items.length
 }
 
-export function draftPrescription(items: PrescriptionInput[]): Prescription {
-  if (!validItems(items)) throw new Error('Select a catalogue item, a whole positive quantity and instructions. Each item may appear once.')
+export function draftPrescription(items: PrescriptionInput[]): PreviewPrescription {
+  if (!validItems(items)) throw new Error('Enter a medication name, a whole positive quantity and instructions. Each medication may appear once.')
   const now = new Date().toISOString()
   return {
     ...prescriptionFixture,
@@ -35,7 +35,7 @@ export function draftPrescription(items: PrescriptionInput[]): Prescription {
     items: items.map((item, index) => ({
       ...item,
       instructions: item.instructions.trim(),
-      display_name: catalogue.find(medication => medication.medication_id === item.medication_id)!.display_name,
+      display_name: item.display_name.trim(),
       prescription_item_id: prescriptionFixture.items[index]?.prescription_item_id ?? crypto.randomUUID(),
     })),
   }
