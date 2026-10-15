@@ -128,7 +128,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [ ] | U12 | Build doctor note/prescription form using fixtures. | F07, F08, C04 | M |
 | [ ] | U13 | Build patient prescription view using fixtures. | F07, F08, C04 | S |
 | [ ] | R04 | Connect note/prescription pages to real records APIs. | R02, U12, U13 | M |
-| [ ] | P01 | Create document service metadata schema and a simple prescription PDF template. | F04, C04 | M |
+| [ ] | P01 | Create document service metadata schema and simple prescription, receipt and medical certificate (MC) PDF templates. Assignee: NorbertLoh; status: in progress. Issue #121; draft PR #122. | F04, C04 | M |
 | [ ] | P02 | Consume prescription event, generate PDF once and store in private S3. | P01, R03, F11, M03 | M |
 | [ ] | P03 | Add authorised document list/download APIs with browser-reachable signed URLs. | P02, A06 | M |
 | [ ] | U14 | Build document list/download UI and connect real document APIs. | F07, P03 | S |
