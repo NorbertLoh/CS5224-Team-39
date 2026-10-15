@@ -120,16 +120,16 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [ ] | V01 | Create consultation service schema and session start/end/join-window rules. | F04, C02 | M |
 | [ ] | V02 | Add admission API validating actual appointment, participants and payment. | V01, A06, S04, X02 | M |
 | [ ] | V03 | Package PeerServer with admission validation and local HTTPS/WSS routing. | X02, F10 | M |
-| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. | F07, X01 | L |
+| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. PR #127 supplies role-protected patient/doctor layouts, local media controls and expanded join/leave previews; remote PeerJS/TURN calling remains blocked by X01 #56. Issue #126 stays In progress. | F07, X01 | L |
 | [ ] | V04 | Connect video room to admission and booked appointment pages. | U11, V02, V03, S07 | M |
-| [ ] | R01 | Create clinical-record schema/migrations for notes and prescriptions. | F04, C04 | M |
-| [ ] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. | R01, A06, S04 | M |
-| [ ] | R03 | Publish prescription-issued event through outbox. | R02, M02, C05 | S |
-| [ ] | U12 | Build doctor note/prescription form using fixtures. | F07, F08, C04 | M |
-| [ ] | U13 | Build patient prescription view using fixtures. | F07, F08, C04 | S |
+| [x] | R01 | Create clinical-record schema/migrations for notes and prescriptions. Completed in merged PR #125; 34 PostgreSQL tests, migration isolation, lint and CI passed. Issue #123 closed. | F04, C04 | M |
+| [x] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. Completed in merged PR #132; 81 PostgreSQL/API/adapter tests, live Floci/identity/scheduling HTTP checks and CI passed. Issue #114 closed. Real catalogue integration awaits D01; browser/AWS remain unverified. | R01, A06, S04 | M |
+| [x] | R03 | Publish prescription-issued event through outbox. Completed in merged PR #133; 101 PostgreSQL/API/adapter tests, atomic issuance/retry checks, live Floci EventBridge/SQS delivery and CI passed. Issue #117 closed. Real catalogue, PDF generation, browser and AWS integration remain unverified. | R02, M02, C05 | S |
+| [x] | U12 | Build doctor note/prescription form using fixtures. Completed in merged PR #118; split notes, prescription editor and medication fields, typed medication names, draft validation and issuance locking. Standalone 62 frontend tests, lint, TypeScript/build, Prettier and CI passed. Issue #115 closed. Real catalogue-linked records integration remains R04. | F07, F08, C04 | M |
+| [x] | U13 | Build patient prescription view using fixtures. Completed in merged PR #120; separate patient panel, summary and details components with Prettier formatting. All 67 frontend tests, lint, TypeScript/build, Prettier and CI passed. Issue #116 closed. Browser checks remain unverified; real records integration remains R04. | F07, F08, C04 | S |
 | [ ] | R04 | Connect note/prescription pages to real records APIs. | R02, U12, U13 | M |
-| [ ] | P01 | Create document service metadata schema and a simple prescription PDF template. | F04, C04 | M |
-| [ ] | P02 | Consume prescription event, generate PDF once and store in private S3. | P01, R03, F11, M03 | M |
+| [x] | P01 | Create document service metadata schema and simple prescription, receipt and medical certificate (MC) PDF templates. Completed in merged PR #122; 34 PostgreSQL/PDF tests, migration round-trips, lint/format and CI passed. Issue #121 closed. Live generation/storage and downloads remain P02/P03; CJK font support remains a limitation. | F04, C04 | M |
+| [ ] | P02 | Consume prescription event, generate PDF once and store in private S3. Assignee: NorbertLoh; status: in progress, blocked by incomplete R03 (#117). Claim/blocker: issue #128. | P01, R03, F11, M03 | M |
 | [ ] | P03 | Add authorised document list/download APIs with browser-reachable signed URLs. | P02, A06 | M |
 | [ ] | U14 | Build document list/download UI and connect real document APIs. | F07, P03 | S |
 
@@ -141,7 +141,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | M02 | Add minimal outbox publisher with retryable send and publication tracking. Completed in merged PR #97; transactional staging, retry/publication tracking and PostgreSQL concurrency checks passed. Issue #96 closed. | F04, F12, M01 | M |
 | [x] | M03 | Add SQS consumer helper with acknowledgement, inbox deduplication and retries. Completed in merged PR #99; SQLite/PostgreSQL checks and live Floci consumption, deduplication and failed-job DLQ delivery passed. Issue #98 closed. | F12, M01 | M |
 | [x] | M04 | Document and verify one failed job reaching DLQ and operator replay. Completed in merged PR #119; isolated live Floci checks verified three failed receives with rollback, unchanged DLQ content, successful replay and duplicate suppression; lint and CI passed. Issue #113 closed. Operator procedure: `docs/messaging-replay.md`; AWS verification remains unperformed. | M03 | S |
-| [ ] | D01 | Create fulfilment schema/catalogue and prescription-linked order APIs. | F04, C04, A06 | M |
+| [ ] | D01 | Create fulfilment schema/catalogue and prescription-linked order APIs. Assignee: NorbertLoh; status: in progress. Issue #130. | F04, C04, A06 | M |
 | [ ] | D02 | Add sandbox delivery quote adapter with expiry and trusted order total. | D01, X05 | M |
 | [ ] | D03 | Add authorised clinic medicine-ready action. | D01 | S |
 | [ ] | D04 | Consume medication-payment event and persist paid state idempotently. | D01, M03, C05 | M |
