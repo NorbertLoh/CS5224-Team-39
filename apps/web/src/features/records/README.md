@@ -10,3 +10,5 @@ Verification: frontend lint, TypeScript/build and all 65 tests pass. Browser typ
 
 
 Medication names are free-text preview entries. They are not assigned catalogue medication IDs or sent to the C04 API. R04 must reconcile this input with the catalogue-linked backend contract before real prescription integration.
+
+DoctorRecordForm composes ConsultationNoteForm, PrescriptionEditor and PrescriptionItemFields. Note and prescription state stay local to their respective forms. The records TypeScript/TSX files and tests use Prettier 3.6.2 with --single-quote --no-semi.
