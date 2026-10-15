@@ -86,12 +86,15 @@ suspends its clinics. Appointment history is retained; no existing clinic or sch
 is reset. This is a mutating local test, not a browser or billing integration test.
 
 Current evidence: 60 frontend tests, lint and production build passed. Both Python
-helpers pass Ruff; the TypeScript live-check script passes static type checking. Real Floci sign-in and the Vite identity
+helpers pass Ruff; the TypeScript live-check script passes static type checking.
+Real Floci sign-in and the Vite identity
 proxy returned 200. Read-only real TypeScript adapters through Vite passed for
 patient, doctor and clinic identity/list calls; existing patient and clinic detail
 reads also passed. Internal ingress returned 404 and protected API errors retained
-JSON responses rather than falling through to the SPA. The mutating adapter check awaits approval after automatic
-approval review rejected its clinic/membership/booking changes. Browser interaction
+JSON responses rather than falling through to the SPA. On 15 October 2026, after
+explicit user approval, the real mutating adapter check passed with exit code 0,
+including cancellation/slot withdrawal, membership/token revocation and clinic
+suspension cleanup. GitHub CI passed for the implementation. Browser interaction
 is unverified: browser automation initialization failed twice with a missing kernel
 assets path. AWS and billing remain unverified.
 
