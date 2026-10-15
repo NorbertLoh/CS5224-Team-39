@@ -122,8 +122,8 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [ ] | V03 | Package PeerServer with admission validation and local HTTPS/WSS routing. | X02, F10 | M |
 | [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. | F07, X01 | L |
 | [ ] | V04 | Connect video room to admission and booked appointment pages. | U11, V02, V03, S07 | M |
-| [ ] | R01 | Create clinical-record schema/migrations for notes and prescriptions. | F04, C04 | M |
-| [ ] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. | R01, A06, S04 | M |
+| [x] | R01 | Create clinical-record schema/migrations for notes and prescriptions. Completed in merged PR #125; 34 PostgreSQL tests, migration isolation, lint and CI passed. Issue #123 closed. | F04, C04 | M |
+| [ ] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. Assignee: NorbertLoh; status: in progress. Issue #114. | R01, A06, S04 | M |
 | [ ] | R03 | Publish prescription-issued event through outbox. | R02, M02, C05 | S |
 | [ ] | U12 | Build doctor note/prescription form using fixtures. | F07, F08, C04 | M |
 | [ ] | U13 | Build patient prescription view using fixtures. | F07, F08, C04 | S |

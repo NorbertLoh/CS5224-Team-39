@@ -115,3 +115,24 @@ class PrescriptionItem(Base):
     quantity: Mapped[int] = mapped_column(Integer)
     instructions: Mapped[str] = mapped_column(Text)
     display_name: Mapped[str] = mapped_column(Text)
+
+
+class ReadAudit(Base):
+    """Minimal durable access trail; never stores clinical text or credentials."""
+
+    __tablename__ = "read_audits"
+    __table_args__ = (
+        CheckConstraint(
+            "resource_type IN ('note', 'prescription', 'prescription_list')",
+            name="ck_read_audit_type",
+        ),
+        Index("ix_read_audits_actor_time", "actor_id", "created_at"),
+    )
+    audit_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    actor_id: Mapped[UUID] = mapped_column(Uuid)
+    tenant_id: Mapped[UUID | None] = mapped_column(Uuid)
+    appointment_id: Mapped[UUID | None] = mapped_column(Uuid)
+    resource_id: Mapped[UUID | None] = mapped_column(Uuid)
+    resource_type: Mapped[str] = mapped_column(Text)
+    request_id: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
