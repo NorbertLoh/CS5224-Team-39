@@ -138,9 +138,9 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [x] | M01 | Add shared event envelope validation and SDK endpoint configuration. Completed in merged PR #77. | F03, C05 | S |
-| [ ] | M02 | Add minimal outbox publisher with retryable send and publication tracking. | F04, F12, M01 | M |
-| [ ] | M03 | Add SQS consumer helper with acknowledgement, inbox deduplication and retries. | F12, M01 | M |
-| [ ] | M04 | Document and verify one failed job reaching DLQ and operator replay. | M03 | S |
+| [x] | M02 | Add minimal outbox publisher with retryable send and publication tracking. Completed in merged PR #97; transactional staging, retry/publication tracking and PostgreSQL concurrency checks passed. Issue #96 closed. | F04, F12, M01 | M |
+| [x] | M03 | Add SQS consumer helper with acknowledgement, inbox deduplication and retries. Completed in merged PR #99; SQLite/PostgreSQL checks and live Floci consumption, deduplication and failed-job DLQ delivery passed. Issue #98 closed. | F12, M01 | M |
+| [x] | M04 | Document and verify one failed job reaching DLQ and operator replay. Completed in merged PR #119; isolated live Floci checks verified three failed receives with rollback, unchanged DLQ content, successful replay and duplicate suppression; lint and CI passed. Issue #113 closed. Operator procedure: `docs/messaging-replay.md`; AWS verification remains unperformed. | M03 | S |
 | [ ] | D01 | Create fulfilment schema/catalogue and prescription-linked order APIs. | F04, C04, A06 | M |
 | [ ] | D02 | Add sandbox delivery quote adapter with expiry and trusted order total. | D01, X05 | M |
 | [ ] | D03 | Add authorised clinic medicine-ready action. | D01 | S |
