@@ -7,3 +7,5 @@ Run `npm ci`, `npm run dev`, sign in as a doctor, open `/doctor`, and scroll to 
 Real appointment selection, server authorization, audited reads, durable saves and API error handling remain R04 against R02. Notes remain editable during the in-progress fixture session after prescription issuance, as C04 restricts prescription edits rather than note edits.
 
 Verification: frontend lint, TypeScript/build and automated tests; browser interaction is unverified. No environment configuration changes.
+
+U13 patient prescription view: implementation in progress on a stacked branch.
