@@ -103,7 +103,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. | F04, C03, C04 | M |
+| [ ] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. Assignee: cyhni; status: in progress. Issue #137. | F04, C03, C04 | M |
 | [ ] | B02 | Add consultation checkout API with trusted price and appointment linkage. | B01, X03, A06 | M |
 | [ ] | B03 | Add raw-body webhook signature verification and event-ID deduplication. | B02, X04 | M |
 | [ ] | B04 | Save payment changes and outbox event in one transaction; publish success. | B03, M02, C05 | M |
