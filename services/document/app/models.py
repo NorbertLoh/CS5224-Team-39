@@ -90,3 +90,19 @@ class Document(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), server_onupdate=FetchedValue()
     )
+
+
+class AccessAudit(Base):
+    __tablename__ = "access_audits"
+    __table_args__ = (
+        CheckConstraint("action IN ('list', 'read', 'download')", name="ck_access_audit_action"),
+        Index("ix_access_audits_actor_time", "actor_id", "created_at"),
+    )
+    audit_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    actor_id: Mapped[UUID] = mapped_column(Uuid)
+    action: Mapped[str] = mapped_column(Text)
+    document_id: Mapped[UUID | None] = mapped_column(Uuid)
+    tenant_id: Mapped[UUID | None] = mapped_column(Uuid)
+    appointment_id: Mapped[UUID | None] = mapped_column(Uuid)
+    request_id: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
