@@ -1,0 +1,11 @@
+:root { font-family: system-ui, sans-serif; color-scheme: light dark; }
+body { margin: 0; }
+main { max-width: 1000px; margin: auto; padding: 24px; }
+label { display: block; margin: 12px 0; }
+input:not([type=checkbox]), textarea { display: block; width: min(100%, 580px); box-sizing: border-box; padding: 8px; }
+button { padding: 10px 14px; margin: 6px 4px 6px 0; }
+.videos { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
+figure { flex: 1; min-width: 260px; margin: 0; }
+video { width: 100%; background: #111; aspect-ratio: 4 / 3; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 380px; overflow: auto; padding: 12px; background: light-dark(#eee, #222); }
+output { font-weight: bold; user-select: all; }
