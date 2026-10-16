@@ -4,6 +4,11 @@ Status: architecture plan, 12 October 2026. F02 scaffold and F03 FastAPI templat
 
 Execution checklist: [implementation-plan.md](implementation-plan.md), with small unassigned tasks, effort estimates, dependencies and completion criteria for the four-week prototype. Anyone can claim a ready task.
 
+Scope clarification, 16 October 2026: X01 accepts the self-hosted two-browser
+local media spike and local forced TURN verification. AWS calls across independent
+networks are deferred to refinement RF01 (issue #155), sharing W11's deployment
+verification evidence. This does not complete W11, Q04 or the AWS integration gates.
+
 ## 1. Decisions and scope
 
 - React + TypeScript + Vite frontend.

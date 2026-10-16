@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>X01 PeerJS / TURN spike</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="/vendor/peerjs.min.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+<main>
+  <h1>X01 PeerJS / TURN spike</h1>
+  <p>Isolated feasibility harness. Use synthetic data and consenting testers. Incoming calls are answered automatically while connected.</p>
+  <fieldset id="settings">
+    <legend>Connection settings</legend>
+    <label>Network label (e.g. home Wi-Fi or mobile data) <input id="network" maxlength="80"></label>
+    <label>TURN URLs, one per line <textarea id="urls" rows="3" placeholder="turn:turn.example.com:3478?transport=udp"></textarea></label>
+    <label>Expiring TURN username <input id="username" autocomplete="off"></label>
+    <label>Expiring TURN credential <input id="credential" type="password" autocomplete="off"></label>
+    <label><input id="relay" type="checkbox"> Force TURN relay (no direct fallback)</label>
+    <p>Settings apply on Start. Leave and start again to change them. No public ICE service is configured.</p>
+  </fieldset>
+  <div class="actions">
+    <button id="start">Start camera and connect</button>
+    <button id="leave" disabled>Leave</button>
+    <button id="mic" disabled>Mute microphone</button>
+    <button id="camera" disabled>Disable camera</button>
+  </div>
+  <p id="status" role="status">Idle</p>
+  <p>My peer ID: <output id="peer-id">—</output></p>
+  <label>Other tester's peer ID <input id="remote-id" autocomplete="off"></label>
+  <button id="call" disabled>Call</button>
+  <button id="hangup" disabled>Hang up</button>
+  <div class="videos">
+    <figure><video id="local" autoplay muted playsinline></video><figcaption>Local (muted playback)</figcaption></figure>
+    <figure><video id="remote" autoplay playsinline controls></video><figcaption>Remote (use headphones; press play if blocked)</figcaption></figure>
+  </div>
+  <h2>Connection evidence</h2>
+  <p>Statistics omit ICE addresses, peer IDs and credentials. Labels are included: avoid personal information. Save each run before starting another.</p>
+  <button id="export">Download evidence JSON</button>
+  <pre id="stats">No call yet</pre>
+  <h2>Events</h2>
+  <pre id="events" aria-live="polite"></pre>
+</main>
+</body>
+</html>

@@ -1,0 +1,30 @@
+name: Signalling spike checks
+
+on:
+  push:
+    paths: ['services/signalling/spike/**', '.github/workflows/signalling-spike-checks.yml']
+  pull_request:
+    paths: ['services/signalling/spike/**', '.github/workflows/signalling-spike-checks.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  local-media:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: services/signalling/spike
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: services/signalling/spike/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - run: docker compose -f compose.turn.yaml config --quiet
