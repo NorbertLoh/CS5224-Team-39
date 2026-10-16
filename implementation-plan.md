@@ -129,7 +129,7 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | U13 | Build patient prescription view using fixtures. Completed in merged PR #120; separate patient panel, summary and details components with Prettier formatting. All 67 frontend tests, lint, TypeScript/build, Prettier and CI passed. Issue #116 closed. Browser checks remain unverified; real records integration remains R04. | F07, F08, C04 | S |
 | [ ] | R04 | Connect note/prescription pages to real records APIs. | R02, U12, U13 | M |
 | [x] | P01 | Create document service metadata schema and simple prescription, receipt and medical certificate (MC) PDF templates. Completed in merged PR #122; 34 PostgreSQL/PDF tests, migration round-trips, lint/format and CI passed. Issue #121 closed. Live generation/storage and downloads remain P02/P03; CJK font support remains a limitation. | F04, C04 | M |
-| [ ] | P02 | Consume prescription event, generate PDF once and store in private S3. Assignee: NorbertLoh; status: in progress, blocked by incomplete R03 (#117). Claim/blocker: issue #128. | P01, R03, F11, M03 | M |
+| [ ] | P02 | Consume prescription event, generate PDF once and store in private S3. Assignee: NorbertLoh; status: in progress. Listed dependencies are complete, including R03 (merged PR #133). Integration requires the C04 service-only prescription document projection and trusted PDF header details, which are not yet implemented. Claim/blocker: issue #128. | P01, R03, F11, M03 | M |
 | [ ] | P03 | Add authorised document list/download APIs with browser-reachable signed URLs. | P02, A06 | M |
 | [ ] | U14 | Build document list/download UI and connect real document APIs. | F07, P03 | S |
 
