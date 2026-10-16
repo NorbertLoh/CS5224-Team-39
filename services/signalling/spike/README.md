@@ -6,6 +6,11 @@ This standalone harness uses synthetic data and consenting testers.
 Appointment admission is X02, production packaging is V03/W11, and frontend
 integration is U11/V04. See [observed results](RESULTS.md).
 
+Accepted scope (16 October 2026): local two-browser calls and actual local TURN
+checks satisfy X01. AWS cross-network verification is deferred to refinement
+[RF01 / #155](https://github.com/NorbertLoh/CS5224-Team-39/issues/155); it is not a
+merge blocker for X01 and does not complete the AWS integration gates.
+
 ## Signalling versus media
 
 Node serves the page, the locally installed PeerJS client and PeerServer on one
@@ -152,7 +157,7 @@ turn:turn.example.com:3478?transport=tcp
 turns:turn.example.com:5349?transport=tcp
 ```
 
-## Required two-network verification
+## Deferred AWS two-network verification (RF01)
 
 Use a desktop on Wi-Fi and another device on cellular data with Wi-Fi off, or two
 independently routed networks. Two tabs, browsers or containers on one host do
@@ -183,8 +188,9 @@ Review labels and external screenshots/logs before sharing: raw coturn and
 browser ICE diagnostics may contain IP addresses or temporary usernames.
 Statistics prove neither speech audibility nor network independence.
 
-Keep X01 unchecked and #56 In progress until real normal/forced-relay observations
-across two networks are recorded and PR #57 is merged.
+Keep X01 unchecked and #56 In progress until PR #57 is merged. The local criteria
+are met; record the real AWS normal/forced-relay observations under RF01 / #155
+when AWS testing resumes. Share that evidence with W11/Q04.
 
 To automate against an actual coturn instance, set `SPIKE_TEST_TURN_URL` to one
 URL and set `SPIKE_TEST_TURN_USERNAME`/`SPIKE_TEST_TURN_CREDENTIAL` in the test

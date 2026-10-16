@@ -1,7 +1,10 @@
 # X01 observed results
 
-Status: **incomplete — real two-network call evidence is still required**.
-Issue #56 stays In progress and PR #57 stays draft. The backlog remains unchecked.
+Status: **local X01 criteria met; PR #57 merge pending**.
+On 16 October 2026 the requesting teammate accepted local two-browser calls and
+local TURN verification as sufficient for X01. AWS cross-network verification is
+deferred to [refinement RF01 / issue #155](https://github.com/NorbertLoh/CS5224-Team-39/issues/155).
+Issue #56 stays In progress and the backlog stays unchecked until PR #57 merges.
 
 ## Local verification — 16 October 2026 (Singapore)
 
@@ -35,13 +38,13 @@ Playwright attaches redacted caller evidence to the successful media test's loca
 test output. No temporary credentials, raw ICE addresses, keys or config files
 are committed. Temporary test containers are stopped after verification.
 
-## Remaining completion evidence
+## Deferred AWS refinement evidence (RF01)
 
-No approved public test host, trusted public DNS/certificates or second-network
-participant/device has been established in this session. Do not label local
-browser/Docker results as two-network success.
+No AWS cross-network test has been performed in this session. The following work
+is deferred to RF01 and does not block the accepted local X01 scope. Do not label
+local browser/Docker results as two-network or AWS success.
 
-Follow the [verification procedure](README.md#required-two-network-verification)
+Follow the [verification procedure](README.md#deferred-aws-two-network-verification-rf01)
 and fill in actual observations below. Capture evidence from both ends. A desktop
 on Wi-Fi and a phone with Wi-Fi off using mobile data is one suitable arrangement.
 
@@ -56,6 +59,6 @@ on Wi-Fi and a phone with Wi-Fi off using mobile data is one suitable arrangemen
 | Real microphone/camera controls, hang-up, rejoin, permission denial and signalling interruption | Automated local controls/rejoin only; manual cases pending |
 | Reviewed evidence attachments from both real participants | Pending |
 
-The minimum X01 gate remains the real normal and forced-relay audio/video calls
-across two networks, recorded setup/results, and merged PR. Additional transport
-and failure cases above must accurately retain any remaining limitations.
+X01's accepted gate is the verified local two-browser/forced-relay spike,
+documented setup/results and merged PR. RF01 retains the real AWS cross-network
+observations above; W11/Q04 and AWS integration gates remain unfinished.

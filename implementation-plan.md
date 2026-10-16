@@ -29,7 +29,7 @@ Current claims and remaining blockers:
 
 | Work | Current status and remaining work |
 | --- | --- |
-| X01 / U11 / consultation | X01 issue #56 / open PR #57 still needs observed cross-network audio/video and forced TURN evidence. U11's preview merged in PR #127, but issue #126 stays open until real remote calling works. X02 and V02-V04 still depend on unfinished admission/video work; V01's listed dependencies are complete. |
+| X01 / U11 / consultation | X01 issue #56 / PR #57 meets the user-accepted local scope: two-browser media, controls/rejoin and actual local forced TURN over UDP/TCP verified; merge remains pending. AWS cross-network evidence is deferred to refinement RF01 / issue #155. U11's preview merged in PR #127, but issue #126 stays open until application remote calling works. X02 and V02-V04 still depend on unfinished admission/video work; V01's listed dependencies are complete. |
 | Billing | B01 completed in merged PR #138; issue #137 closed. Its 89 PostgreSQL tests and CI passed. X03 Stripe checkout/Connect and X04 webhook verification remain unchecked. B02-B07 and the real billing handoff are unfinished; S05/S06 fixtures do not establish billing integration. |
 | Documents | P02 completed in merged PR #144; issue #128 closed. The authenticated/audited records projection, trusted current-name lookups and stored-PDF worker passed local transport/replay/recovery checks and CI. P03 completed in merged PR #148; issue #147 closed. Authorised/audited lists and signed downloads passed 89 document tests, local HTTP verification and CI. U14 completed in merged PR #151; issue #150 closed. Patient/doctor lists and downloads passed 82 frontend tests, live adapter/Vite checks, Prettier and CI. Address/registration fields remain optional prototype omissions. Browser interaction and AWS privacy/download verification remain unfinished. |
 | Records / fulfilment | D01 merged with an explicitly permitted dispensing fixture, not real order integration. C04's authenticated dispensing projection and its HTTP adapter remain missing. R04 completed in merged PR #142; issue #141 closed. Real frontend records saves, issuance and catalogue integration passed local HTTP verification. Browser/AWS and actual consultation/payment journeys remain unverified. |
@@ -68,7 +68,7 @@ prerequisites; an unchecked task is not necessarily blocked by external access.
 | [x] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. Completed in merged PR #37; amount splits, expiry boundary, late-payment recovery and C05 consistency verified. | C01 | M |
 | [x] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. Completed in merged PR #38; prescription/order links, trusted totals, commission and paid/ready delivery gating verified. | C01 | M |
 | [x] | C05 | Define event envelope, producers/consumers and sample workflow events. Completed in merged PR #27; fixtures validated and F12 consumer routing reviewed. | C01 | M |
-| [ ] | X01 | Spike self-hosted PeerJS across two networks; document TURN ports/setup. Assignee: NorbertLoh; status: in progress. Issue #56 / open PR #57; cross-network call and forced TURN evidence remain required. | none | L |
+| [ ] | X01 | Spike self-hosted PeerJS with two local browser clients; verify audio/video RTP, controls/rejoin and local forced TURN, and document TURN ports/setup. User accepted local verification on 16 October 2026; 3 Node tests, local browser checks, actual coturn UDP/TCP checks and CI passed. Assignee: NorbertLoh; issue #56 In progress until PR #57 merges. AWS cross-network verification moved to RF01 / #155. | none | L |
 | [ ] | X02 | Spike appointment-bound signalling admission; reject unrelated users. | X01 | M |
 | [ ] | X03 | Verify Stripe test checkout, Connect access and commission capability. | none | M |
 | [ ] | X04 | Verify Stripe webhook signatures against a sample raw-body callback. | X03 | S |
@@ -135,7 +135,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; X03 and X
 | [ ] | V01 | Create consultation service schema and session start/end/join-window rules. | F04, C02 | M |
 | [ ] | V02 | Add admission API validating actual appointment, participants and payment. | V01, A06, S04, X02 | M |
 | [ ] | V03 | Package PeerServer with admission validation and local HTTPS/WSS routing. | X02, F10 | M |
-| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. PR #127 supplies role-protected patient/doctor layouts, local media controls and expanded join/leave previews; remote PeerJS/TURN calling remains blocked by X01 #56. Issue #126 stays In progress. | F07, X01 | L |
+| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. PR #127 supplies role-protected patient/doctor layouts, local media controls and expanded join/leave previews; application remote PeerJS/TURN integration remains unfinished. X01 #56 supplies the verified local spike, pending PR #57 merge; AWS cross-network evidence is RF01 #155. Issue #126 stays In progress. | F07, X01 | L |
 | [ ] | V04 | Connect video room to admission and booked appointment pages. | U11, V02, V03, S07 | M |
 | [x] | R01 | Create clinical-record schema/migrations for notes and prescriptions. Completed in merged PR #125; 34 PostgreSQL tests, migration isolation, lint and CI passed. Issue #123 closed. | F04, C04 | M |
 | [x] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. Completed in merged PR #132; 81 PostgreSQL/API/adapter tests, live Floci/identity/scheduling HTTP checks and CI passed. Issue #114 closed. D01's catalogue integration was subsequently verified in R04 (merged PR #142); browser/AWS checks remain unverified. The service-only document projection subsequently completed in P02 (merged PR #144); the dispensing projection remains missing. | R01, A06, S04 | M |
@@ -184,7 +184,7 @@ Service-specific outbox/inbox migrations belong to the service using the helpers
 | [ ] | W08 | Provision private document bucket and synthetic Secrets Manager entries. | W01, F11 | M |
 | [ ] | W09 | Provision AWS event rules/queues/DLQs; verify one real delivery. | W01, F12 | M |
 | [ ] | W10 | Verify SES demo sender/recipients and one email. | W01, N01 | S |
-| [ ] | W11 | Deploy signalling ALB/ECS and TURN; verify HTTPS/WSS cross-network video. | W03, V03, X01 | L |
+| [ ] | W11 | Deploy signalling ALB/ECS and TURN; verify HTTPS/WSS cross-network video using the shared RF01 / #155 evidence task. | W03, V03, X01 | L |
 | [ ] | W12 | Create reusable service deployment command and immutable image tagging. | W03, W06 | M |
 | [ ] | W13 | Deploy identity and tenant services; verify AWS login and clinic APIs. | W05, W12, A11 | M |
 | [ ] | W14 | Deploy scheduling service; verify availability and appointment APIs. | W07, W12, S07 | M |
@@ -219,6 +219,15 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 | [ ] | E04 | Record shutdown date/resource owner and keep demo available through assessment. | W21, F01 | S |
 
 Week 4: finish essential checks in the first half; freeze features, rehearse and prepare evidence in the second half. Extensive automated tests, load benchmarks, formal usability studies, premium features and automated refunds are deferred. Record simulated integrations honestly.
+
+## Refinement
+
+Deferred verification is tracked separately from accepted local deliverables.
+These tasks do not establish AWS integration until their evidence is recorded.
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | RF01 | Verify AWS self-hosted PeerJS/TURN across two independently routed networks; record normal and forced-relay two-way human audio/video, selected relay/RTP evidence from both ends, transport/TLS and invalid/expired-credential observations, and leave/rejoin behaviour. Issue #155; planned, unassigned. Deferred from X01 by user decision on 16 October 2026. This is W11's verification portion; share evidence with W11/Q04 rather than duplicate deployment/testing. | X01, W11 deployment ready (not W11 verification complete) | M |
 
 ## Completion checklist
 
