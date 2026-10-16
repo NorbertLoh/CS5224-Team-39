@@ -12,8 +12,9 @@ server authorization. After any failed write, reload records to check the
 server outcome before continuing. Switching appointments discards unsaved edits.
 
 The adjacent video remains a local preview. It does not start a consultation,
-change appointment status or admit a remote participant. PDF/download/order UI
-remains separate work.
+change appointment status or admit a remote participant. U14 adds appointment
+document lists and downloads beside this workspace; see
+[documents](../documents/README.md). Order UI remains separate work.
 
 Configuration, service startup, integration checks and observed limitations:
 [docs/records-frontend.md](../../../../../docs/records-frontend.md).
