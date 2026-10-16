@@ -25,7 +25,11 @@ export const documentStates: Record<DocumentMetadata['status'], string> = {
 
 export function documentDate(instant: string) {
   return new Intl.DateTimeFormat('en-SG', {
-    timeZone: 'Asia/Singapore', day: 'numeric', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+    timeZone: 'Asia/Singapore',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(new Date(instant))
 }

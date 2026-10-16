@@ -25,7 +25,10 @@ export async function listDocuments(
   const page: CursorPage<DocumentMetadata> = await (
     await request(`${base}?${params}`, signal)
   ).json()
-  if (appointmentId && page.items.some((item) => item.appointment_id !== appointmentId))
+  if (
+    appointmentId &&
+    page.items.some((item) => item.appointment_id !== appointmentId)
+  )
     throw new Error('Invalid document context')
   return page
 }
@@ -35,15 +38,26 @@ export function validateDownload(
   aws = usesAws(),
 ) {
   const url = new URL(value.download_url)
-  const local = !aws && url.protocol === 'http:' &&
+  const local =
+    !aws &&
+    url.protocol === 'http:' &&
     ['localhost', '127.0.0.1'].includes(url.hostname)
-  if ((!local && url.protocol !== 'https:') || url.username || url.password || url.hash ||
-      !Number.isFinite(Date.parse(value.expires_at)) || Date.parse(value.expires_at) <= Date.now())
+  if (
+    (!local && url.protocol !== 'https:') ||
+    url.username ||
+    url.password ||
+    url.hash ||
+    !Number.isFinite(Date.parse(value.expires_at)) ||
+    Date.parse(value.expires_at) <= Date.now()
+  )
     throw new Error('Invalid or expired document download')
   return url.href
 }
 
-export async function documentDownloadUrl(documentId: string, signal?: AbortSignal) {
+export async function documentDownloadUrl(
+  documentId: string,
+  signal?: AbortSignal,
+) {
   const result = await (
     await request(`${base}/${encodeURIComponent(documentId)}/download`, signal)
   ).json()
@@ -52,7 +66,8 @@ export async function documentDownloadUrl(documentId: string, signal?: AbortSign
 
 export function documentsError(error: unknown) {
   if (error instanceof ApiError) {
-    if (error.status === 401) return 'Your session expired. Please sign in again.'
+    if (error.status === 401)
+      return 'Your session expired. Please sign in again.'
     if (error.status === 403 || error.status === 404)
       return 'These documents are unavailable to your account.'
     if (error.status === 409)

@@ -3,7 +3,11 @@ import { documentDownloadUrl, documentsError } from './api'
 import { documentDate, documentNames, documentStates } from './types'
 import type { DocumentMetadata } from './types'
 
-export function DocumentRow({ document: item }: { document: DocumentMetadata }) {
+export function DocumentRow({
+  document: item,
+}: {
+  document: DocumentMetadata
+}) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [requested, setRequested] = useState(false)
@@ -42,7 +46,9 @@ export function DocumentRow({ document: item }: { document: DocumentMetadata }) 
         <div className="min-w-0 space-y-1">
           <h3 className="font-medium">{documentNames[item.kind]}</h3>
           <p className="text-sm text-slate-600">
-            <time dateTime={item.created_at}>{documentDate(item.created_at)} SGT</time>
+            <time dateTime={item.created_at}>
+              {documentDate(item.created_at)} SGT
+            </time>
           </p>
           <p className="text-sm">{documentStates[item.status]}</p>
           <details className="text-xs text-slate-500">
@@ -65,7 +71,8 @@ export function DocumentRow({ document: item }: { document: DocumentMetadata }) 
       </div>
       {item.status === 'failed' && (
         <p className="text-sm text-slate-600">
-          This PDF could not be prepared. Contact your clinic if it remains unavailable.
+          This PDF could not be prepared. Contact your clinic if it remains
+          unavailable.
         </p>
       )}
       {error && (
