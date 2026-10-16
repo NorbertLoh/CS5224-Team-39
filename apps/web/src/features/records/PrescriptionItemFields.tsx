@@ -1,36 +1,47 @@
-import type { PrescriptionInput } from './fixtures'
-
+﻿import type { Medication, PrescriptionInput } from './types'
 const field = 'rounded border px-3 py-2'
-const button = 'rounded border px-4 py-2 disabled:opacity-50'
-
-type PrescriptionItemFieldsProps = {
-  item: PrescriptionInput
-  index: number
-  issued: boolean
-  onChange: (change: Partial<PrescriptionInput>) => void
-  onRemove: () => void
-}
-
 export function PrescriptionItemFields({
   item,
   index,
-  issued,
+  medications,
   onChange,
   onRemove,
-}: PrescriptionItemFieldsProps) {
+}: {
+  item: PrescriptionInput
+  index: number
+  medications: Medication[]
+  onChange: (change: Partial<PrescriptionInput>) => void
+  onRemove: () => void
+}) {
   return (
-    <fieldset className="space-y-3 rounded border p-4" disabled={issued}>
+    <fieldset className="space-y-3 rounded border p-4">
       <legend className="px-1">Medication {index + 1}</legend>
       <label className="flex flex-col gap-2">
-        Medication name
-        <input
+        Medication
+        <select
           className={field}
-          type="text"
-          placeholder="Type medication name"
           required
-          value={item.display_name}
-          onChange={(event) => onChange({ display_name: event.target.value })}
-        />
+          value={item.medication_id}
+          onChange={(event) => onChange({ medication_id: event.target.value })}
+        >
+          <option value="">Choose from clinic catalogue</option>
+          {item.medication_id &&
+            !medications.some(
+              (medication) => medication.medication_id === item.medication_id,
+            ) && (
+              <option value={item.medication_id}>
+                Unavailable medication — choose a replacement
+              </option>
+            )}
+          {medications.map((medication) => (
+            <option
+              key={medication.medication_id}
+              value={medication.medication_id}
+            >
+              {medication.display_name} ({medication.unit_label})
+            </option>
+          ))}
+        </select>
       </label>
       <label className="flex flex-col gap-2">
         Quantity (dispensing units)
@@ -38,6 +49,7 @@ export function PrescriptionItemFields({
           className={field}
           type="number"
           min="1"
+          max="10000"
           step="1"
           required
           value={Number.isNaN(item.quantity) ? '' : item.quantity}
@@ -52,14 +64,17 @@ export function PrescriptionItemFields({
           className={field}
           value={item.instructions}
           required
+          maxLength={20000}
           onChange={(event) => onChange({ instructions: event.target.value })}
         />
       </label>
-      {!issued && (
-        <button type="button" className={button} onClick={onRemove}>
-          Remove medication {index + 1}
-        </button>
-      )}
+      <button
+        type="button"
+        className="rounded border px-4 py-2"
+        onClick={onRemove}
+      >
+        Remove medication {index + 1}
+      </button>
     </fieldset>
   )
 }
