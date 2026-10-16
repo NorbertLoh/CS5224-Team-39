@@ -13,11 +13,12 @@ UI work can start against the agreed API fixtures after its listed contract depe
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
 Completion audit, 16 October 2026: reconciled all 127 task rows with open/closed
-GitHub issues, open/merged PRs and the current implementation. **58 tasks are complete,
-F01 is skipped by user decision, and 68 tasks remain unfinished.** The 59 checked
+GitHub issues, open/merged PRs and the current implementation. **59 tasks are complete,
+F01 is skipped by user decision, and 67 tasks remain unfinished.** The 60 checked
 rows include that skipped task. Completed work comprises F02-F16, C01-C05,
-A01-A11, U01-U08, S01-S07, R01-R04, U12-U13, P01, M01-M04 and D01.
-D01 is now recorded after merged PR #131 and closed issue #130. Open PRs and merged
+A01-A11, U01-U08, S01-S07, R01-R04, U12-U13, P01, M01-M04, D01 and B01.
+D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
+PR #138 and closed issue #137. Open PRs and merged
 partial previews do not count as completed tasks. Verification below records the
 evidence reported for each implementation; this documentation audit did not rerun
 runtime checks or establish new integration/AWS evidence.
@@ -27,7 +28,7 @@ Current claims and remaining blockers:
 | Work | Current status and remaining work |
 | --- | --- |
 | X01 / U11 / consultation | X01 issue #56 / open PR #57 still needs observed cross-network audio/video and forced TURN evidence. U11's preview merged in PR #127, but issue #126 stays open until real remote calling works. X02 and V02-V04 still depend on unfinished admission/video work; V01's listed dependencies are complete. |
-| Billing | B01 is assigned to cyhni in issue #137 / open PR #138; verification is reported but merge is pending. X03 Stripe checkout/Connect and X04 webhook verification remain unchecked. B02-B07 and the real billing handoff are unfinished; S05/S06 fixtures do not establish billing integration. |
+| Billing | B01 completed in merged PR #138; issue #137 closed. Its 89 PostgreSQL tests and CI passed. X03 Stripe checkout/Connect and X04 webhook verification remain unchecked. B02-B07 and the real billing handoff are unfinished; S05/S06 fixtures do not establish billing integration. |
 | Documents | P02 issue #128 is assigned to NorbertLoh. P01, R03, F11 and M03 are complete; the old R03 blocker is resolved. The C04 service-only records document projection and trusted clinic/patient/doctor PDF header details are missing. P03/U14 and private PDF integration remain unfinished. |
 | Records / fulfilment | D01 merged with an explicitly permitted dispensing fixture, not real order integration. C04's authenticated dispensing projection and its HTTP adapter remain missing. R04 completed in merged PR #142; issue #141 closed. Real frontend records saves, issuance and catalogue integration passed local HTTP verification. Browser/AWS and actual consultation/payment journeys remain unverified. |
 | Delivery | D02 issue #134 is assigned to NorbertLoh and blocked by unchecked X05 Lalamove sandbox verification. D01 is complete; D03/D04 have complete listed dependencies. D05-D07 still depend on quote/readiness/payment/delivery work. |
@@ -115,7 +116,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; X03 and X
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. Assignee: cyhni; status: in progress. Issue #137 / open PR #138; 89 PostgreSQL tests and passing CI reported, awaiting merge. | F04, C03, C04 | M |
+| [x] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. Completed in merged PR #138; 89 PostgreSQL tests, migration isolation/round-trips, SQL/ORM snapshot protection, lint/format and CI passed. Issue #137 closed. | F04, C03, C04 | M |
 | [ ] | B02 | Add consultation checkout API with trusted price and appointment linkage. | B01, X03, A06 | M |
 | [ ] | B03 | Add raw-body webhook signature verification and event-ID deduplication. | B02, X04 | M |
 | [ ] | B04 | Save payment changes and outbox event in one transaction; publish success. | B03, M02, C05 | M |
