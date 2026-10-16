@@ -12,9 +12,9 @@ UI work can start against the agreed API fixtures after its listed contract depe
 
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
-Completion audit, 16 October 2026: reconciled all 127 task rows with open/closed
+Completion audit, 16 October 2026: reconciled the original 127 task rows with open/closed
 GitHub issues, open/merged PRs and the current implementation. **61 tasks are complete,
-F01 is skipped by user decision, and 65 tasks remain unfinished.** The 62 checked
+F01 is skipped by user decision, and 66 tasks remain unfinished.** The 62 checked
 rows include that skipped task. Completed work comprises F02-F16, C01-C05,
 A01-A11, U01-U08, S01-S07, R01-R04, U12-U13, P01-P03, M01-M04, D01 and B01.
 D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
@@ -23,6 +23,8 @@ P03 after merged PR #148 and closed issue #147. Open PRs and merged
 partial previews do not count as completed tasks. Verification below records the
 evidence reported for each implementation; this documentation audit did not rerun
 runtime checks or establish new integration/AWS evidence.
+The backlog now has 128 tasks after adding the requested U17 MC issuance flow
+(issue #152); U17 is planned and unassigned.
 
 Current claims and remaining blockers:
 
@@ -146,6 +148,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; X03 and X
 | [x] | P02 | Consume prescription event, generate PDF once and store in private S3. Completed in merged PR #144; issue #128 closed. Implements service-only audited records/name lookups, private-bucket configuration checks, stored-object reuse, inbox/outbox and safe retry/replay. 52 document and 108 records tests plus live Floci pipeline/recovery checks passed. No additional issuance snapshot. Address/registration fields are optional; AWS privacy and downloads remain unverified (Floci limitation #54). Download APIs/UI remain P03/U14. Evidence: `services/document/docs/worker.md`. | P01, R03, F11, M03 | M |
 | [x] | P03 | Add authorised document list/download APIs with browser-reachable signed URLs. Completed in merged PR #148; issue #147 closed. Patient/assigned-active-doctor access, current appointment context, durable audits, scoped pagination and SigV4 browser-host URLs implemented. 89 document tests, live Floci/identity/scheduling HTTP checks with isolated synthetic fixtures, lint/format and CI passed. U14 browser UI and real AWS privacy/expiry verification (#54) remain unfinished. Setup/evidence: `services/document/docs/api.md`. | P02, A06 | M |
 | [ ] | U14 | Build document list/download UI and connect real document APIs. | F07, P03 | S |
+| [ ] | U17 | Add an optional **Issue MC** section to the doctor's note: MC start date, positive whole-number duration in days and optional additional notes; preview the inclusive end date. Save the draft and, only after authoritative consultation completion succeeds, finalize it once and generate a private MC PDF. Patient/assigned doctor can download it through P03/U14; retries must not duplicate issuance, and pending/failed generation must remain explicit. Includes the required MC persistence/API/event and PDF-template integration; do not copy private consultation notes into the MC. Planned, unassigned; issue #152 contains completion criteria and verification. | R04, P01-P03, U14, V01, V04, M02, M03 | L |
 
 ## Week 2-3: delivery, email and messaging
 
