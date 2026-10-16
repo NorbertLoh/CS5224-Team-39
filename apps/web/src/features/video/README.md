@@ -1,8 +1,10 @@
 # Video room (U11)
 
 Patient: `/patient/consultation`. Doctor: `/doctor/consultation`.
-These role-protected previews use synthetic consultation context. The patient
-sees a video room; the doctor also sees the U12 note and prescription form.
+The video area is a role-protected preview. The patient sees a video room; the
+doctor also sees the real R04 appointment records workspace. Select an actual
+appointment before viewing/saving records; the video preview does not admit or
+start that appointment. See [records setup](../../../../../docs/records-frontend.md).
 
 X01 (#56 / PR #57) is incomplete. Remote media, PeerJS/TURN connectivity,
 appointment admission and booked-appointment integration are not implemented.
@@ -11,7 +13,8 @@ V02/V03/V04 remain responsible for admission and appointment integration.
 
 Local camera/microphone access requires localhost or HTTPS and browser permission.
 No media is recorded or sent to another participant by this preview. Doctor form
-saves are in memory and reset when leaving the page or reloading.
+saves and issuance now use the real records API and survive reload. Unsaved edits
+are discarded when switching appointments, navigating away or reloading.
 
 ## Run and review
 
@@ -30,9 +33,9 @@ form remains mounted across these transitions so notes and prescription entries
 are retained. Desktop doctors retain the form beside the video, with independent
 form scrolling; narrow screens stack the two areas. Keyboard focus stays within
 the expanded room and returns to the join/rejoin button after leaving.
-Route navigation/reload resets form contents.
+Route navigation/reload reloads saved records; only unsaved edits are discarded.
 
-Verification: frontend lint, TypeScript/production build and all 65 tests pass.
+Historical U11 preview verification: frontend lint, TypeScript/production build and all 65 tests passed.
 Browser checks passed for real local patient/doctor login, role denial in both
 directions, patient form exclusion, doctor note save and retention on simulated
 disconnect, desktop side-by-side layout and 390px mobile layout without horizontal

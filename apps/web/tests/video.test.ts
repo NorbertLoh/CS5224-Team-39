@@ -6,12 +6,19 @@ import { VideoRoom } from '../src/features/video/VideoRoom'
 import { mediaError } from '../src/features/video/useLocalMedia'
 import { canAccess, parseRoute } from '../src/navigation/access'
 import type { Identity } from '../src/features/clinics/api'
+import { schedulingClient, renderScheduling } from './scheduling-helpers'
 
 test('patient call markup excludes the doctor workspace and clinical fixture identifiers', () => {
   const patient = renderToStaticMarkup(
     createElement(VideoRoom, { role: 'patient' }),
   )
-  const doctor = renderToStaticMarkup(
+  const client = schedulingClient({
+    subject_id: 'doctor',
+    global_roles: [],
+    memberships: [{ tenant_id: 'clinic', roles: ['doctor'], status: 'active' }],
+  })
+  const doctor = renderScheduling(
+    client,
     createElement(VideoRoom, { role: 'doctor' }),
   )
   assert.match(patient, /Your video consultation/)
@@ -23,6 +30,7 @@ test('patient call markup excludes the doctor workspace and clinical fixture ide
   assert.match(doctor, /Doctor workspace/)
   assert.match(doctor, /Consultation notes and prescription/)
   assert.match(doctor, /Waiting for your patient/)
+  client.clear()
 })
 
 test('consultation routes enforce role authorization instead of trusting a URL', () => {

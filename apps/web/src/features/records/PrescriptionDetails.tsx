@@ -1,4 +1,4 @@
-import type { Prescription } from './fixtures'
+import type { Prescription } from './types'
 
 export function PrescriptionDetails({
   prescription,

@@ -63,13 +63,15 @@ export function VideoRoom({ role }: { role: 'patient' | 'doctor' }) {
             </h1>
           </div>
           <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-            Synthetic preview
+            Video preview
           </span>
         </div>
         <p className="mt-4 max-w-4xl text-sm leading-6 text-slate-600">
           Check your camera and microphone here. The other participant is a
           placeholder; no remote call is connected and your media stays in this
           browser.
+          {doctor &&
+            ' The records workspace saves real records for the appointment you select.'}
         </p>
       </div>
       <div
