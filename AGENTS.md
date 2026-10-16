@@ -16,6 +16,13 @@ Assignment is the shared claim, not a local checkbox. When there is a simultaneo
 
 Agents may create the issue needed for an explicitly assigned task as part of this workflow. Do not independently choose additional tasks, assign work to other teammates, or create the full issue backlog without a user request.
 
+## Branch naming
+
+- All new branches must use a purpose-based prefix such as `feat/`, `fix/`, `docs/`, `refactor/`, `test/` or `chore/`.
+- Never create a branch with the `codex/` prefix, including branches created by agents or automated tools.
+- For backlog tasks, include the task ID and a short description, for example `feat/P02-document-worker` or `docs/P02-completion`.
+- Existing branches may keep their names; this rule applies to every branch created after this instruction is added.
+
 ## Scope and shared files
 
 - Work only on the task explicitly assigned by the user. Record unexpected work as a suggested follow-up task rather than expanding scope silently.
