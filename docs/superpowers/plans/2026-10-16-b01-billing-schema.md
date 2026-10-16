@@ -68,7 +68,7 @@ Proceed inline on the existing task branch; record progress in ignored
   configuration skips persistence checks explicitly.
 - [x] Run `python -m ruff check .`, `python -m ruff format --check .`,
   `python -m pip check` and `python -m pytest -q` from `services/billing`.
-- [ ] Commit the schema, migration and tests.
+- [x] Commit the schema, migration and tests.
 
 ## Task 2: Reproducible setup, CI and review
 
@@ -87,9 +87,9 @@ Proceed inline on the existing task branch; record progress in ignored
   billing credentials, explicit reset consent, Ruff and full pytest.
 - [x] Re-run the documented migration cycle and checks, verify unrelated sentinels
   survive, and record observed results without claiming provider integration.
-- [ ] Request a fresh whole-branch review against this plan/spec and C01/C03/C04;
+- [x] Request a fresh whole-branch review against this plan/spec and C01/C03/C04;
   fix actionable findings with a regression test and rerun the relevant suite.
-- [ ] Commit/push the implementation and replace PR #138's description with final
+- [x] Commit/push the implementation and replace PR #138's description with final
   behavior, setup and verification evidence. Preserve `Closes #137`.
-- [ ] Inspect GitHub checks; leave any real limitation explicit and keep the issue
+- [x] Inspect GitHub checks; leave any real limitation explicit and keep the issue
   open until merge. Stop only the specifically created B01 test container.

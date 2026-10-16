@@ -117,6 +117,13 @@ money/resource/state combinations, provider namespaces, retry history and SQL/OR
 snapshot protection. It does not prove Stripe, scheduling or fulfilment integration.
 The billing CI workflow runs these checks against PostgreSQL 17 on Python 3.10.
 
+Observed verification on 16 October 2026: PostgreSQL 17 with Windows/Python 3.13
+passed all 89 tests; Ubuntu/Python 3.10 CI passed the same 89 tests. Ruff lint and
+format checks and `pip check` passed. Missing reset consent was rejected before
+migration; without a test URL the result was 1 passed and 88 explicit skips.
+Offline migration SQL generation also succeeded without a database connection.
+These results verify the persistence foundation, not provider or AWS integration.
+
 Stop only this test container when finished:
 
 ```powershell
