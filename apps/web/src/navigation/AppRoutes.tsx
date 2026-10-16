@@ -68,14 +68,17 @@ export function AppRoutes({
             <section className="mt-8 rounded-xl border bg-slate-50 p-6">
               <h2 className="text-xl font-semibold">Video consultation</h2>
               <p className="mt-2 text-sm text-slate-600">
-                Explore the synthetic consultation room and check your camera
-                and microphone.
+                {route.role === 'doctor'
+                  ? 'Open appointment records and check your camera and microphone. Remote video remains a preview.'
+                  : 'Check your camera and microphone in the video preview.'}
               </p>
               <a
                 className="mt-4 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm text-white"
                 href={`/${route.role}/consultation`}
               >
-                Open consultation preview
+                {route.role === 'doctor'
+                  ? 'Open consultation and records'
+                  : 'Open consultation preview'}
               </a>
             </section>
           )}

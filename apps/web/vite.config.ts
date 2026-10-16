@@ -3,12 +3,34 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath } from 'node:url'
 
+function blockRecordsInternal(request: { url?: string }) {
+  try {
+    const path = decodeURIComponent((request.url ?? '').split('?')[0])
+    return /^\/api\/v1\/(?:clinical-records|fulfilment)\/internal(?:\/|$)/.test(path)
+      ? false
+      : undefined
+  } catch {
+    return false
+  }
+}
+
 export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
     strictPort: true,
     proxy: {
+      '^/api/v1/clinical-records(?:/|\\?|$)': {
+        target: loadEnv(mode, process.cwd(), 'RECORDS_').RECORDS_API_TARGET || 'http://127.0.0.1:8005',
+        changeOrigin: true,
+        bypass: blockRecordsInternal,
+      },
+      '^/api/v1/fulfilment(?:/|\\?|$)': {
+        target: loadEnv(mode, process.cwd(), 'FULFILMENT_').FULFILMENT_API_TARGET || 'http://127.0.0.1:8006',
+        changeOrigin: true,
+        bypass: blockRecordsInternal,
+        rewrite: (path) => path.replace(/^\/api\/v1\/fulfilment(?=\/|\?|$)/, '') || '/',
+      },
       '^/api/v1/scheduling(?:/|\\?|$)': {
         target: loadEnv(mode, process.cwd(), 'SCHEDULING_').SCHEDULING_API_TARGET || 'http://127.0.0.1:8003',
         changeOrigin: true,

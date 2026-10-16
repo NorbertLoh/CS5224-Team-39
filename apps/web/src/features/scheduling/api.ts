@@ -94,8 +94,13 @@ export async function listAppointments(
   if (cursor) query.set('cursor', cursor)
   return (await request(`/appointments?${query}`, { signal })).json()
 }
-export async function appointmentDetail(id: string): Promise<Appointment> {
-  return (await request(`/appointments/${encodeURIComponent(id)}`)).json()
+export async function appointmentDetail(
+  id: string,
+  signal?: AbortSignal,
+): Promise<Appointment> {
+  return (
+    await request(`/appointments/${encodeURIComponent(id)}`, { signal })
+  ).json()
 }
 export async function cancelAppointment(
   id: string,

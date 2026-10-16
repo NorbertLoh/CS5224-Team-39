@@ -1,16 +1,52 @@
-import { useState } from 'react'
-import { prescriptionFixture } from './fixtures'
-import type { Prescription } from './fixtures'
+﻿import { useState } from 'react'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
+import { listPrescriptions, readPrescription, recordsError } from './api'
 import { PrescriptionDetails } from './PrescriptionDetails'
 import { PrescriptionSummary } from './PrescriptionSummary'
+import { ErrorState } from '../../components/ErrorState'
+import { LoadingState } from '../../components/LoadingState'
 
 export function PatientPrescriptions() {
-  const [preview, setPreview] = useState('available')
-  const [selected, setSelected] = useState(false)
-  const prescription: Prescription = {
-    ...prescriptionFixture,
-    status: 'issued',
-  }
+  const identity = useSchedulingIdentity()
+  if (identity.isError)
+    return (
+      <ErrorState
+        message="Could not verify prescription access."
+        onRetry={() => void identity.refetch()}
+      />
+    )
+  if (!identity.data || !identity.token)
+    return <LoadingState message="Loading prescription access..." />
+  return (
+    <PatientList
+      key={identity.token}
+      token={identity.token}
+      subjectId={identity.data.subject_id}
+    />
+  )
+}
+function PatientList({
+  token,
+  subjectId,
+}: {
+  token: string
+  subjectId: string
+}) {
+  const [selected, setSelected] = useState<string | null>(null)
+  const query = useInfiniteQuery({
+    queryKey: ['records', 'patient', token],
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam, signal }) =>
+      listPrescriptions(undefined, pageParam, signal),
+    getNextPageParam: (page) => page.next_cursor ?? undefined,
+    retry: false,
+    gcTime: 0,
+  })
+  const prescriptions =
+    query.data?.pages
+      .flatMap((page) => page.items)
+      .filter((item) => item.patient_id === subjectId) ?? []
   return (
     <section
       className="mt-8 space-y-4 rounded-xl border p-6"
@@ -19,44 +55,92 @@ export function PatientPrescriptions() {
       <h2 id="prescription-heading" className="text-xl font-semibold">
         Prescriptions
       </h2>
-      <p className="text-sm text-amber-800">
-        Synthetic preview. These placeholder records are independent of your
-        account and are not treatment advice. No clinical API is connected.
-      </p>
-      <label className="flex max-w-sm flex-col gap-2 text-sm">
-        Preview scenario
-        <select
-          className="rounded border px-3 py-2"
-          value={preview}
-          onChange={(event) => {
-            setPreview(event.target.value)
-            setSelected(false)
-          }}
-        >
-          <option value="available">Prescription available</option>
-          <option value="empty">No prescriptions</option>
-          <option value="unavailable">Prescription unavailable</option>
-        </select>
-      </label>
-      {preview === 'empty' && (
-        <p role="status">No prescriptions for this appointment.</p>
-      )}
-      {preview === 'unavailable' && (
-        <p role="status">
-          Prescription unavailable. Return to your appointments or try again
-          later.
-        </p>
-      )}
-      {preview === 'available' && (
+      <button
+        className="rounded border px-4 py-2"
+        disabled={query.isFetching}
+        onClick={() => {
+          setSelected(null)
+          void query.refetch()
+        }}
+      >
+        Refresh prescriptions
+      </button>
+      {query.isPending ? (
+        <LoadingState message="Loading prescriptions..." />
+      ) : query.isError ? (
+        <ErrorState
+          message={recordsError(query.error)}
+          onRetry={() => void query.refetch()}
+        />
+      ) : (
         <>
-          <PrescriptionSummary
-            prescription={prescription}
-            selected={selected}
-            onToggle={() => setSelected((current) => !current)}
-          />
-          {selected && <PrescriptionDetails prescription={prescription} />}
+          {!prescriptions.length && (
+            <p role="status">No prescriptions available.</p>
+          )}
+          {prescriptions.map((prescription) => (
+            <div key={prescription.prescription_id} className="space-y-3">
+              <PrescriptionSummary
+                prescription={prescription}
+                selected={selected === prescription.prescription_id}
+                onToggle={() =>
+                  setSelected((current) =>
+                    current === prescription.prescription_id
+                      ? null
+                      : prescription.prescription_id,
+                  )
+                }
+              />
+              {selected === prescription.prescription_id && (
+                <PatientDetail
+                  key={selected}
+                  id={selected}
+                  token={token}
+                  subjectId={subjectId}
+                />
+              )}
+            </div>
+          ))}
+          {query.hasNextPage && (
+            <button
+              className="rounded border px-4 py-2"
+              disabled={query.isFetchingNextPage}
+              onClick={() => void query.fetchNextPage()}
+            >
+              Load more prescriptions
+            </button>
+          )}
         </>
       )}
     </section>
   )
+}
+function PatientDetail({
+  id,
+  token,
+  subjectId,
+}: {
+  id: string
+  token: string
+  subjectId: string
+}) {
+  const query = useQuery({
+    queryKey: ['records', 'prescription', token, id],
+    queryFn: ({ signal }) => readPrescription(id, signal),
+    retry: false,
+    gcTime: 0,
+  })
+  if (query.isError)
+    return (
+      <ErrorState
+        message={recordsError(query.error)}
+        onRetry={() => void query.refetch()}
+      />
+    )
+  if (!query.data || query.isFetching)
+    return <LoadingState message="Loading prescription details..." />
+  if (query.data.patient_id !== subjectId || query.data.prescription_id !== id)
+    return (
+      <ErrorState message="This prescription is unavailable to your account." />
+    )
+  return <PrescriptionDetails prescription={query.data} />
 }
