@@ -7,8 +7,9 @@ Draft PR: [#138](https://github.com/NorbertLoh/CS5224-Team-39/pull/138)
 Assignee: `cyhni`
 Branch: `codex/B01-billing-schema`
 
-Status: The user approved the proposed design in chat. This detailed specification
-is ready for review; implementation has not started.
+Status: The user approved the proposed design and requested implementation after
+reviewing this specification. Execution is tracked in
+`docs/superpowers/plans/2026-10-16-b01-billing-schema.md`.
 
 ## Purpose and success criteria
 
