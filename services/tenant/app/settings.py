@@ -11,6 +11,7 @@ class Settings(ServiceSettings):
     tenant_secret: SecretStr | None = None
     scheduling_secret: SecretStr | None = None
     identity_secret: SecretStr | None = None
+    records_secret: SecretStr | None = None
     cors_origins: list[str] = []
     logo_bucket: str | None = None
     logo_public_base_url: str | None = None
@@ -55,6 +56,7 @@ class Settings(ServiceSettings):
                 self.tenant_secret,
                 self.scheduling_secret,
                 self.identity_secret,
+                self.records_secret,
             )
             if value is not None
         ]

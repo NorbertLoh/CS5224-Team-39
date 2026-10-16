@@ -65,7 +65,7 @@ fulfilment base URLs; include their ingress API prefix when accessing them throu
 a proxy. Use independent random cursor secrets and HTTPS outside local/test.
 No shared Compose or frontend routing changes are included in R02/R03.
 
-After migrating to revision `0003`, run from this directory:
+After migrating to head (`0004`, including P02 service read audits), run from this directory:
 
 ```powershell
 .venv/Scripts/python -m app

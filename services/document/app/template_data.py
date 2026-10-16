@@ -28,12 +28,13 @@ class Header(Snapshot):
 class PrescriptionItem(Snapshot):
     display_name: str = Field(min_length=1, max_length=200)
     quantity: PositiveInt
-    instructions: str = Field(min_length=1, max_length=2000)
+    instructions: str = Field(min_length=1, max_length=20000)
 
 
 class Prescription(Header):
+    clinic_address: str | None = Field(default=None, min_length=1, max_length=500)
     doctor_name: str = Field(min_length=1, max_length=200)
-    doctor_registration: str = Field(min_length=1, max_length=100)
+    doctor_registration: str | None = Field(default=None, min_length=1, max_length=100)
     items: tuple[PrescriptionItem, ...] = Field(min_length=1, max_length=100)
 
 

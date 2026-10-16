@@ -140,3 +140,15 @@ class ReadAudit(Base):
     resource_type: Mapped[str] = mapped_column(Text)
     request_id: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ServiceReadAudit(Base):
+    __tablename__ = "service_read_audits"
+    audit_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    caller: Mapped[str] = mapped_column(Text)
+    purpose: Mapped[str] = mapped_column(Text)
+    prescription_id: Mapped[UUID] = mapped_column(Uuid)
+    tenant_id: Mapped[UUID] = mapped_column(Uuid)
+    appointment_id: Mapped[UUID] = mapped_column(Uuid)
+    request_id: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

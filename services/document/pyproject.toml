@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Document metadata and prescription, receipt and MC PDF templates"
 requires-python = ">=3.10"
 dependencies = [
-    "telelink-python-common==0.1.0",
+    "telelink-python-common[aws]==0.1.0",
     "SQLAlchemy>=2.0,<2.1", "alembic>=1.13,<2", "psycopg[binary]>=3.2,<4",
     "pydantic>=2.10,<3", "reportlab>=4.2,<5", "tzdata>=2024.2",
 ]
