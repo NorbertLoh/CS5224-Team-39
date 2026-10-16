@@ -1,9 +1,10 @@
-# Document service (P01)
+# Document service (P01/P02)
 
 Metadata persistence and simple PDF templates for prescriptions, receipts and
-medical certificates (MC). Work tracked in issue #121. Queue processing, private
-S3 storage and authorised download APIs follow in P02/P03. No HTTP service or
-root Compose changes are needed for P01.
+medical certificates (MC). P02 (issue #128) adds prescription queue processing,
+private S3 storage and a document-ready outbox. Authorised download APIs remain
+P03. No HTTP service or root Compose changes are included. Worker setup, recovery
+and verification: [P02 worker](docs/worker.md).
 
 ## Setup and migrations
 

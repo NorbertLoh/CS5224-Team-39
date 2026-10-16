@@ -13,6 +13,7 @@ from app.api import router
 from app.clinics import ClinicDirectory
 from app.database import create_database_engine
 from app.doctors import router as doctors_router
+from app.document_profiles import router as document_profiles_router
 from app.models import Membership, Subject
 from app.provisioning import router as provisioning_router
 from app.settings import Settings
@@ -64,6 +65,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(router)
     app.include_router(provisioning_router)
     app.include_router(doctors_router)
+    app.include_router(document_profiles_router)
 
     @app.get("/health/live", tags=["health"])
     def live():

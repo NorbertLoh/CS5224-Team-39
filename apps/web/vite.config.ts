@@ -3,10 +3,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath } from 'node:url'
 
-function blockRecordsInternal(request: { url?: string }) {
+function blockInternal(request: { url?: string }) {
   try {
     const path = decodeURIComponent((request.url ?? '').split('?')[0])
-    return /^\/api\/v1\/(?:clinical-records|fulfilment)\/internal(?:\/|$)/.test(
+    return /^\/api\/v1\/(?:clinical-records|fulfilment|identity|tenant)\/internal(?:\/|$)/.test(
       path,
     )
       ? false
@@ -27,14 +27,14 @@ export default defineConfig(({ mode }) => ({
           loadEnv(mode, process.cwd(), 'RECORDS_').RECORDS_API_TARGET ||
           'http://127.0.0.1:8005',
         changeOrigin: true,
-        bypass: blockRecordsInternal,
+        bypass: blockInternal,
       },
       '^/api/v1/fulfilment(?:/|\\?|$)': {
         target:
           loadEnv(mode, process.cwd(), 'FULFILMENT_').FULFILMENT_API_TARGET ||
           'http://127.0.0.1:8006',
         changeOrigin: true,
-        bypass: blockRecordsInternal,
+        bypass: blockInternal,
         rewrite: (path) =>
           path.replace(/^\/api\/v1\/fulfilment(?=\/|\?|$)/, '') || '/',
       },
@@ -51,6 +51,7 @@ export default defineConfig(({ mode }) => ({
           path.replace(/^\/api\/v1\/scheduling(?=\/|\?|$)/, '') || '/',
       },
       '^/api/v1/identity(?:/|\\?|$)': {
+        bypass: blockInternal,
         target:
           loadEnv(mode, process.cwd(), 'IDENTITY_').IDENTITY_API_TARGET ||
           'http://127.0.0.1:8001',
@@ -59,6 +60,7 @@ export default defineConfig(({ mode }) => ({
           path.replace(/^\/api\/v1\/identity(?=\/|\?|$)/, '') || '/',
       },
       '^/api/v1/tenant(?:/|\\?|$)': {
+        bypass: blockInternal,
         target:
           loadEnv(mode, process.cwd(), 'TENANT_').TENANT_API_TARGET ||
           'http://127.0.0.1:8002',

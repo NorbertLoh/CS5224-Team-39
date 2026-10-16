@@ -51,7 +51,7 @@ def _render(title, snapshot, body) -> bytes:
     output = BytesIO()
     story = [
         _paragraph(snapshot.clinic_name, heading=True),
-        _paragraph(snapshot.clinic_address),
+        *([_paragraph(snapshot.clinic_address)] if snapshot.clinic_address else []),
         Spacer(1, 12),
         _paragraph(title, heading=True),
         _paragraph(f"Reference: {snapshot.reference}"),
@@ -81,7 +81,8 @@ def _render(title, snapshot, body) -> bytes:
 
 
 def render_prescription(data: Prescription) -> bytes:
-    body = [_paragraph(f"Doctor: {data.doctor_name} ({data.doctor_registration})")]
+    registration = f" ({data.doctor_registration})" if data.doctor_registration else ""
+    body = [_paragraph(f"Doctor: {data.doctor_name}{registration}")]
     for number, item in enumerate(data.items, 1):
         body.extend(
             [
