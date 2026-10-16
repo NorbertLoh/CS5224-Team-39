@@ -22,6 +22,12 @@ export default defineConfig(({ mode }) => ({
   server: {
     strictPort: true,
     proxy: {
+      '^/api/v1/document(?:/|\\?|$)': {
+        target:
+          loadEnv(mode, process.cwd(), 'DOCUMENT_').DOCUMENT_API_TARGET ||
+          'http://127.0.0.1:8007',
+        changeOrigin: true,
+      },
       '^/api/v1/clinical-records(?:/|\\?|$)': {
         target:
           loadEnv(mode, process.cwd(), 'RECORDS_').RECORDS_API_TARGET ||

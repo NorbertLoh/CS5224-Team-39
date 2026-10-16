@@ -36,9 +36,9 @@ Current claims and remaining blockers:
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
 Unclaimed tasks with complete listed dependencies: X03, X05, U09, U10, V01,
-D03, D04, U14, U15, U16, N01 and Q02. These are candidates to claim, not new
+D03, D04, U15, U16, N01 and Q02. These are candidates to claim, not new
 assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
-U14 document list/download UI is now ready to claim.
+U14 is claimed by NorbertLoh in issue #150 / PR #151; review/merge pending.
 For every other unchecked task, the Depends on column identifies unfinished
 prerequisites; an unchecked task is not necessarily blocked by external access.
 
@@ -145,7 +145,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; X03 and X
 | [x] | P01 | Create document service metadata schema and simple prescription, receipt and medical certificate (MC) PDF templates. Completed in merged PR #122; 34 PostgreSQL/PDF tests, migration round-trips, lint/format and CI passed. Issue #121 closed. Live generation/storage subsequently completed in P02 (merged PR #144); downloads remain P03; CJK font support remains a limitation. | F04, C04 | M |
 | [x] | P02 | Consume prescription event, generate PDF once and store in private S3. Completed in merged PR #144; issue #128 closed. Implements service-only audited records/name lookups, private-bucket configuration checks, stored-object reuse, inbox/outbox and safe retry/replay. 52 document and 108 records tests plus live Floci pipeline/recovery checks passed. No additional issuance snapshot. Address/registration fields are optional; AWS privacy and downloads remain unverified (Floci limitation #54). Download APIs/UI remain P03/U14. Evidence: `services/document/docs/worker.md`. | P01, R03, F11, M03 | M |
 | [x] | P03 | Add authorised document list/download APIs with browser-reachable signed URLs. Completed in merged PR #148; issue #147 closed. Patient/assigned-active-doctor access, current appointment context, durable audits, scoped pagination and SigV4 browser-host URLs implemented. 89 document tests, live Floci/identity/scheduling HTTP checks with isolated synthetic fixtures, lint/format and CI passed. U14 browser UI and real AWS privacy/expiry verification (#54) remain unfinished. Setup/evidence: `services/document/docs/api.md`. | P02, A06 | M |
-| [ ] | U14 | Build document list/download UI and connect real document APIs. | F07, P03 | S |
+| [ ] | U14 | Build document list/download UI and connect real document APIs. Assignee: NorbertLoh; status: in progress. Issue #150 / PR #151; implementation and local verification complete, review/merge pending. | F07, P03 | S |
 
 ## Week 2-3: delivery, email and messaging
 

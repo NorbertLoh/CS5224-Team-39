@@ -6,6 +6,7 @@ import { ConsultationNoteForm } from './ConsultationNoteForm'
 import { PrescriptionEditor } from './PrescriptionEditor'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
+import { DocumentList } from '../documents/DocumentList'
 
 export function RecordWorkspace({
   appointmentId,
@@ -72,6 +73,11 @@ export function RecordWorkspace({
         tenantId={context.tenant_id}
         token={token}
         editable={context.status === 'in_progress'}
+      />
+      <DocumentList
+        role="doctor"
+        appointmentId={appointmentId}
+        tenantId={context.tenant_id}
       />
     </div>
   )
