@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telelink-document"
+version = "0.1.0"
+description = "Document metadata and prescription, receipt and MC PDF templates"
+requires-python = ">=3.10"
+dependencies = [
+    "telelink-python-common[aws]==0.1.0",
+    "SQLAlchemy>=2.0,<2.1", "alembic>=1.13,<2", "psycopg[binary]>=3.2,<4",
+    "pydantic>=2.10,<3", "reportlab>=4.2,<5", "tzdata>=2024.2",
+    "uvicorn>=0.32,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "ruff>=0.8,<1", "pypdf>=6,<7"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]

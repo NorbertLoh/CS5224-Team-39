@@ -32,3 +32,22 @@ Each business service owns its database schema and Alembic migrations. Do not wr
 Commit dependency lockfiles, migrations and sanitized configuration examples. Keep credentials, local environment overrides, generated output, Terraform state and runtime data out of Git. Use synthetic records only.
 
 F01 is skipped by team decision. The exact demo date, AWS budget/access and infrastructure tool still need to be confirmed when relevant tasks begin.
+
+## Local sign-in accounts
+
+All four roles use the same **Sign in** button at http://localhost:5173 or
+http://127.0.0.1:5173. Each local account uses the password `LocalDemo123!`.
+
+| Role | Email |
+| --- | --- |
+| Patient | `patient@example.test` |
+| Doctor | `doctor@example.test` |
+| Clinic administrator | `clinic@example.test` |
+| Platform administrator | `platform@example.test` |
+
+Follow [clinic backend setup](docs/clinic-backend.md) to create the local Cognito
+accounts, provision their backend roles and link the doctor to the local clinic.
+These accounts are for local Floci development only. Backend roles and clinic
+memberships determine access; Cognito groups alone do not grant permissions.
+Currently, the clinic list, storefront and profile editor are implemented; the
+remaining role pages are still planned.

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telelink-identity"
+version = "0.1.0"
+description = "Identity-owned subjects, roles and clinic membership persistence"
+requires-python = ">=3.10"
+dependencies = [
+    "telelink-python-common==0.1.0",
+    "SQLAlchemy>=2.0,<2.1", "alembic>=1.13,<2", "psycopg[binary]>=3.2,<4",
+    "fastapi>=0.115,<1", "pydantic-settings>=2.6,<3", "uvicorn>=0.30,<1",
+    "PyJWT[crypto]>=2.10,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "ruff>=0.8,<1", "httpx>=0.27,<1"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]

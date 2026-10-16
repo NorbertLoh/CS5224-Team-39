@@ -8,7 +8,7 @@ from uuid import uuid4
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from app.logging import request_id_context
+from telelink_common.logging import request_id_context
 
 logger = logging.getLogger("telelink.request")
 REQUEST_ID_PATTERN = re.compile(r"[A-Za-z0-9._-]{1,64}")

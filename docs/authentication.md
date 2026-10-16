@@ -30,7 +30,9 @@ npm run dev -- --host localhost
 Use **http://localhost:5173/**. Callback `/auth/callback` and logout `/` are
 registered by F13. `127.0.0.1` is a different origin and requires its own exact
 callback/logout/CORS configuration. Root `COGNITO_CORS_ORIGINS` allows only
-`http://localhost:5173` by default. Recreate Floci after changing that setting.
+`http://localhost:5173` and `http://127.0.0.1:5173` by default. Recreate Floci
+after changing that setting. If an existing root `.env` overrides it, include
+both origins in `COGNITO_CORS_ORIGINS`.
 When changing ports, update callback, logout and CORS origins together.
 
 Sign in with a seeded `patient@example.test`, `doctor@example.test`,

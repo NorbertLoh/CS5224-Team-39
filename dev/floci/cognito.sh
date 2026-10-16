@@ -38,7 +38,8 @@ aws_local cognito-idp update-user-pool-client --user-pool-id "$pool_id" \
   --supported-identity-providers COGNITO \
   --allowed-o-auth-flows-user-pool-client --allowed-o-auth-flows code \
   --allowed-o-auth-scopes openid email profile \
-  --callback-urls "$COGNITO_CALLBACK_URL" --logout-urls "$COGNITO_LOGOUT_URL" \
+  --callback-urls "$COGNITO_CALLBACK_URL" http://127.0.0.1:5173/auth/callback \
+  --logout-urls "$COGNITO_LOGOUT_URL" http://127.0.0.1:5173/ \
   --explicit-auth-flows ALLOW_REFRESH_TOKEN_AUTH \
   --prevent-user-existence-errors ENABLED > /dev/null
 

@@ -1,0 +1,138 @@
+"""C03 payment attempts and immutable trusted C03/C04 financial snapshots."""
+
+from datetime import datetime
+from uuid import UUID, uuid4
+
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    FetchedValue,
+    Index,
+    Integer,
+    MetaData,
+    Text,
+    Uuid,
+    func,
+    text,
+)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+SERVICE_SCHEMA = "billing"
+
+
+class Base(DeclarativeBase):
+    metadata = MetaData(schema=SERVICE_SCHEMA)
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+    __table_args__ = (
+        CheckConstraint(
+            "(purpose = 'consultation' AND appointment_id IS NOT NULL "
+            "AND order_id IS NULL AND quote_id IS NULL) OR "
+            "(purpose = 'medication_delivery' AND appointment_id IS NULL "
+            "AND order_id IS NOT NULL AND quote_id IS NOT NULL)",
+            name="ck_payments_resource_links",
+        ),
+        CheckConstraint(
+            "status IN ('pending', 'succeeded', 'failed', "
+            "'refund_pending', 'refunded', 'refund_failed')",
+            name="ck_payments_status",
+        ),
+        CheckConstraint(
+            "resolution = 'none' OR (resolution = 'refund_required' "
+            "AND status IN ('succeeded', 'refund_pending', 'refund_failed'))",
+            name="ck_payments_resolution",
+        ),
+        CheckConstraint("currency = 'SGD'", name="ck_payments_currency"),
+        CheckConstraint(
+            "amount_minor = commissionable_minor + delivery_fee_minor",
+            name="ck_payments_total",
+        ),
+        CheckConstraint(
+            "purpose <> 'consultation' OR delivery_fee_minor = 0",
+            name="ck_payments_consultation_fee",
+        ),
+        CheckConstraint("commission_bps BETWEEN 0 AND 10000", name="ck_payments_rate"),
+        CheckConstraint(
+            "commission_amount_minor = "
+            "floor(commissionable_minor::numeric * commission_bps / 10000)",
+            name="ck_payments_commission",
+        ),
+        CheckConstraint(
+            "clinic_amount_minor = amount_minor - commission_amount_minor",
+            name="ck_payments_clinic_amount",
+        ),
+        *(
+            CheckConstraint(
+                f"{column} BETWEEN 0 AND 9007199254740991", name=f"ck_payments_{column}"
+            )
+            for column in (
+                "amount_minor",
+                "commissionable_minor",
+                "delivery_fee_minor",
+                "commission_amount_minor",
+                "clinic_amount_minor",
+            )
+        ),
+        CheckConstraint("provider ~ '[^[:space:]]'", name="ck_payments_provider"),
+        *(
+            CheckConstraint(
+                f"{column} IS NULL OR {column} ~ '[^[:space:]]'", name=f"ck_payments_{column}"
+            )
+            for column in (
+                "provider_account_id",
+                "provider_checkout_id",
+                "provider_payment_id",
+                "provider_idempotency_key",
+            )
+        ),
+        *(
+            Index(
+                f"uq_payments_{column}",
+                "provider",
+                "provider_account_id",
+                column,
+                unique=True,
+                postgresql_where=text(f"{column} IS NOT NULL"),
+                postgresql_nulls_not_distinct=True,
+            )
+            for column in (
+                "provider_checkout_id",
+                "provider_payment_id",
+                "provider_idempotency_key",
+            )
+        ),
+        Index("ix_payments_patient_page", "patient_id", "created_at", "payment_id"),
+        Index("ix_payments_tenant_page", "tenant_id", "created_at", "payment_id"),
+        Index("ix_payments_appointment", "appointment_id"),
+        Index("ix_payments_order", "order_id"),
+    )
+    __mapper_args__ = {"eager_defaults": True}
+
+    payment_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    tenant_id: Mapped[UUID] = mapped_column(Uuid)
+    patient_id: Mapped[UUID] = mapped_column(Uuid)
+    purpose: Mapped[str] = mapped_column(Text)
+    appointment_id: Mapped[UUID | None] = mapped_column(Uuid)
+    order_id: Mapped[UUID | None] = mapped_column(Uuid)
+    quote_id: Mapped[UUID | None] = mapped_column(Uuid)
+    status: Mapped[str] = mapped_column(Text, server_default=text("'pending'"))
+    resolution: Mapped[str] = mapped_column(Text, server_default=text("'none'"))
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(Text)
+    commissionable_minor: Mapped[int] = mapped_column(BigInteger)
+    delivery_fee_minor: Mapped[int] = mapped_column(BigInteger)
+    commission_bps: Mapped[int] = mapped_column(Integer)
+    commission_amount_minor: Mapped[int] = mapped_column(BigInteger)
+    clinic_amount_minor: Mapped[int] = mapped_column(BigInteger)
+    provider: Mapped[str] = mapped_column(Text)
+    provider_account_id: Mapped[str | None] = mapped_column(Text)
+    provider_checkout_id: Mapped[str | None] = mapped_column(Text)
+    provider_payment_id: Mapped[str | None] = mapped_column(Text)
+    provider_idempotency_key: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), server_onupdate=FetchedValue()
+    )

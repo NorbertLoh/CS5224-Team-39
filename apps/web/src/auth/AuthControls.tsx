@@ -17,11 +17,12 @@ let callback: Promise<Session> | undefined
 const logoutWarning = sessionStorage.getItem('telelink.logout-warning') || ''
 sessionStorage.removeItem('telelink.logout-warning')
 
-export function AuthControls() {
+export function AuthControls({ onSessionChange }: { onSessionChange?: (session: Session | null) => void }) {
   const queryClient = useQueryClient()
   const [session, setSession] = useState(readSession)
   const [message, setMessage] = useState(logoutWarning)
   const [busy, setBusy] = useState(false)
+  useEffect(() => { onSessionChange?.(session) }, [session, onSessionChange])
 
   const signOut = useCallback(
     (notice = '') => {

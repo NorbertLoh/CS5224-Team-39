@@ -52,13 +52,14 @@ Invoke-RestMethod http://localhost:5173/api/v1/template/health/ready
 Expected result: `status: ready`, `service: template`. Swagger UI is at
 `http://localhost:5173/api/v1/template/docs`. Vite strips `/api/v1/template`
 before forwarding; the API uses this root path for generated docs URLs.
-Only the template prefix is wired; other service routes are added by their tasks.
+Identity and tenant prefixes are also wired to local ports 8001 and 8002.
+See [real clinic backend setup](clinic-backend.md) to run those services.
 Vite preview also uses this proxy for local build checks. Production routing
 remains W04; the proxy is not included in the static frontend build.
 
 If port 8000 is occupied, change `TEMPLATE_HOST_PORT` in the root `.env` and set
 `TEMPLATE_API_TARGET=http://127.0.0.1:<port>` in `apps/web/.env`, then restart
-Compose and Vite. Keep `VITE_API_BASE_URL=/api/v1` for same-origin requests.
+Compose and Vite. Keep `VITE_LOCAL_API_BASE_URL=/api/v1` for same-origin requests.
 The template runs the production image locally with docs enabled, without hot
 reload. For API reload, use the [standalone development override](../services/template/docs/containers.md).
 

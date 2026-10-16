@@ -7,6 +7,14 @@ Consumer review is required before merge. Examples are synthetic.
 
 ## Identity and membership resources
 
+Staff management list/POST/PUT membership responses additionally include
+`subject: { display_name, email }`; email is nullable for legacy mappings.
+These summaries are administrator-only. Self identity keeps its existing
+membership shape. Email assignment resolves an operator-provisioned, unique,
+trimmed lowercase email to the stable subject ID and applies existing locking
+and last-administrator protections. Unknown accounts return 404; malformed input
+returns 422. UUID-based edits remain supported.
+
 Identity owns `subject_id` (application UUID), `cognito_sub` (opaque external ID),
 `display_name`, `global_roles`, and clinic memberships. A patient or doctor ID is
 the subject's application UUID, not a separate identity. `global_roles` permits
@@ -32,6 +40,7 @@ C01. Request bodies have only the writable fields explicitly listed below.
 | GET `/me` | Identity plus `memberships` array; 200 | Verified subject; unknown subject returns 403 `identity_not_provisioned` |
 | GET `/clinics/{tenant_id}/memberships` | C01 paginated memberships; optional `status`; ordered `created_at`, `membership_id` ascending | Active clinic admin of this tenant or platform admin |
 | PUT `/clinics/{tenant_id}/memberships/{subject_id}` | `{ "roles": ["doctor"] }`; returns membership, 201 for new / 200 for existing | Same administrators; target subject and clinic must exist |
+| POST `/clinics/{tenant_id}/memberships` | `{ "email": "doctor@example.test", "roles": ["doctor"] }`; 201 for new / 200 for update or reactivation | Same administrators; clinic access checked before account lookup; no new account created |
 | DELETE `/clinics/{tenant_id}/memberships/{subject_id}` | Revoke membership; 204, including repeated revoke | Same administrators |
 
 Membership mutations do not grant global roles. Platform-admin provisioning is an
@@ -62,12 +71,20 @@ administrative review details. An admin profile includes all clinic fields plus
 | GET `/clinics` | Public active profiles, C01 pagination; order `name`, `tenant_id` ascending | Public |
 | GET `/clinics/by-slug/{slug}` | Active public profile; 200, otherwise 404 | Public |
 | GET `/clinics/{tenant_id}/doctors` | Active doctors: `doctor_id`, `display_name`; C01 pagination, order `display_name`, `doctor_id` ascending | Public for active clinic; no membership IDs or private identity fields |
-| POST `/clinics` | `slug`, `name`, `branding`, `consultation_price`; admin profile, 201; server sets pending_review, commission default 0 | Verified subject; server assigns creator's admin membership |
+| POST `/clinics` | `slug`, `name`, `branding`, `consultation_price`; admin profile, 201 (200 for identical same-creator retry); server sets pending_review, commission default 0 | Verified subject; server assigns creator's admin membership |
 | GET `/clinics/{tenant_id}` | Admin profile; 200 | Active clinic admin or platform admin |
 | PATCH `/clinics/{tenant_id}` | Optional `name`, complete `branding`, `consultation_price`; admin profile, 200 | Active clinic admin or platform admin; no status/commission input |
 | GET `/admin/clinics` | Admin profiles; optional `status`, C01 pagination ordered `created_at`, `tenant_id` ascending | Platform admin |
 | POST `/clinics/{tenant_id}/review` | `decision` (`approve`, `reject`, `suspend`), `reason` (required nonempty text for reject/suspend, otherwise null); admin profile, 200 | Platform admin |
 | PUT `/clinics/{tenant_id}/commission` | `{ "commission_bps": 1000 }`; admin profile, 200 | Platform admin; audit previous/new value |
+
+A08 creation commits a pending clinic before provisioning the creator membership.
+If provisioning fails, 503 instructs the same creator to retry the identical slug
+and payload; the clinic stays hidden and non-bookable until acknowledged.
+Identical retries reuse the clinic/membership; after successful provisioning they
+also require the creator's current admin access. Other duplicate slugs or changed
+creation payloads return 409 `slug_taken`. Revoked creators cannot use this retry
+to restore membership or read the admin profile.
 
 Review transitions: pending_review -> active/rejected; rejected -> active on
 explicit approval; active -> suspended; suspended -> active on approval. A

@@ -12,13 +12,36 @@ UI work can start against the agreed API fixtures after its listed contract depe
 
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
-Completion audit, 13 October 2026: checked all 127 task rows against merged PRs,
-closed issues and repository contents. F02-F16, C01-C05 and A01-A03 are complete (23 tasks);
-F01 is skipped by user decision. F16's API/restart checks and accepted emulator
-limitations are recorded in merged PR #53; AWS follow-up stays open in issue #54.
-The remaining 103
-tasks stay unchecked; contract documentation, shared fixtures and route previews
-do not count as implemented services, authentication, feature pages or integrations.
+Completion audit, 16 October 2026: reconciled all 127 task rows with open/closed
+GitHub issues, open/merged PRs and the current implementation. **62 tasks are complete,
+F01 is skipped by user decision, and 64 tasks remain unfinished.** The 63 checked
+rows include that skipped task. Completed work comprises F02-F16, C01-C05,
+A01-A11, U01-U08, S01-S07, R01-R04, U12-U14, P01-P03, M01-M04, D01 and B01.
+D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
+PR #138 and closed issue #137; P02 after merged PR #144 and closed issue #128;
+P03 after merged PR #148 and closed issue #147; U14 after merged PR #151 and
+closed issue #150. Open PRs and merged
+partial previews do not count as completed tasks. Verification below records the
+evidence reported for each implementation; this documentation audit did not rerun
+runtime checks or establish new integration/AWS evidence.
+
+Current claims and remaining blockers:
+
+| Work | Current status and remaining work |
+| --- | --- |
+| X01 / U11 / consultation | X01 issue #56 / open PR #57 still needs observed cross-network audio/video and forced TURN evidence. U11's preview merged in PR #127, but issue #126 stays open until real remote calling works. X02 and V02-V04 still depend on unfinished admission/video work; V01's listed dependencies are complete. |
+| Billing | B01 completed in merged PR #138; issue #137 closed. Its 89 PostgreSQL tests and CI passed. X03 Stripe checkout/Connect and X04 webhook verification remain unchecked. B02-B07 and the real billing handoff are unfinished; S05/S06 fixtures do not establish billing integration. |
+| Documents | P02 completed in merged PR #144; issue #128 closed. The authenticated/audited records projection, trusted current-name lookups and stored-PDF worker passed local transport/replay/recovery checks and CI. P03 completed in merged PR #148; issue #147 closed. Authorised/audited lists and signed downloads passed 89 document tests, local HTTP verification and CI. U14 completed in merged PR #151; issue #150 closed. Patient/doctor lists and downloads passed 82 frontend tests, live adapter/Vite checks, Prettier and CI. Address/registration fields remain optional prototype omissions. Browser interaction and AWS privacy/download verification remain unfinished. |
+| Records / fulfilment | D01 merged with an explicitly permitted dispensing fixture, not real order integration. C04's authenticated dispensing projection and its HTTP adapter remain missing. R04 completed in merged PR #142; issue #141 closed. Real frontend records saves, issuance and catalogue integration passed local HTTP verification. Browser/AWS and actual consultation/payment journeys remain unverified. |
+| Delivery | D02 issue #134 is assigned to NorbertLoh and blocked by unchecked X05 Lalamove sandbox verification. D01 is complete; D03/D04 have complete listed dependencies. D05-D07 still depend on quote/readiness/payment/delivery work. |
+| AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
+
+Unclaimed tasks with complete listed dependencies: X03, X05, U09, U10, V01,
+D03, D04, U15, U16, N01 and Q02. These are candidates to claim, not new
+assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
+U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
+For every other unchecked task, the Depends on column identifies unfinished
+prerequisites; an unchecked task is not necessarily blocked by external access.
 
 ## Week 1: setup and contracts
 
@@ -45,7 +68,7 @@ do not count as implemented services, authentication, feature pages or integrati
 | [x] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. Completed in merged PR #37; amount splits, expiry boundary, late-payment recovery and C05 consistency verified. | C01 | M |
 | [x] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. Completed in merged PR #38; prescription/order links, trusted totals, commission and paid/ready delivery gating verified. | C01 | M |
 | [x] | C05 | Define event envelope, producers/consumers and sample workflow events. Completed in merged PR #27; fixtures validated and F12 consumer routing reviewed. | C01 | M |
-| [ ] | X01 | Spike self-hosted PeerJS across two networks; document TURN ports/setup. | none | L |
+| [ ] | X01 | Spike self-hosted PeerJS across two networks; document TURN ports/setup. Assignee: NorbertLoh; status: in progress. Issue #56 / open PR #57; cross-network call and forced TURN evidence remain required. | none | L |
 | [ ] | X02 | Spike appointment-bound signalling admission; reject unrelated users. | X01 | M |
 | [ ] | X03 | Verify Stripe test checkout, Connect access and commission capability. | none | M |
 | [ ] | X04 | Verify Stripe webhook signatures against a sample raw-body callback. | X03 | S |
@@ -53,7 +76,7 @@ do not count as implemented services, authentication, feature pages or integrati
 
 C02-C05 each need a quick review by someone building a consuming feature. They do not need a meeting with all five people. Use temporary fixtures for feasibility spikes and keep credentials out of Git. If sandbox access is blocked, record it immediately and implement an explicitly labelled adapter for demo continuity.
 
-Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01-C05 and X05 should follow early, before dependent features grow.
+Setup/contracts are complete. Claim a ready task from the audit above; X03 and X05 verification unblock billing and delivery respectively. X01 is already claimed and must not be duplicated.
 
 ## Week 1-2: authentication and clinics
 
@@ -62,40 +85,40 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [x] | A01 | Add React PKCE login/return flow against Floci; obtain access token. Completed in merged PR #49; four-role browser PKCE, callback cleanup/reload and signed API access verified. Issue #46 closed. | F07, F13 | M |
 | [x] | A02 | Add refresh/logout handling and expiry UX; verify pinned emulator behaviour. Completed in merged PR #49; automatic refresh, expiry UX, revocation and hosted logout verified on Floci 2.2.0; OAuth refresh limitation documented. Issue #47 closed. | A01 | M |
 | [x] | A03 | Add FastAPI token verification: JWKS, issuer, expiry, token use and client. Completed in merged PR #49; strict RS256/JWKS access-token verification, invalid-token tests, non-local config guards and container/browser integration passed. Issue #48 closed. | F03, F13 | M |
-| [ ] | A04 | Create identity service schema/migrations for subjects, roles and memberships. | F04, C02 | M |
-| [ ] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. | A03, A04 | M |
-| [ ] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. | A05 | M |
-| [ ] | A07 | Create tenant service schema/migrations for clinic, branding and activation. | F04, C02 | M |
-| [ ] | A08 | Add clinic create/update/public-profile APIs; inactive clinics cannot accept bookings. | A06, A07 | M |
-| [ ] | A09 | Add platform approve/reject and commission-setting APIs with audit events. | A08 | M |
-| [ ] | A10 | Add staff assignment/membership APIs with authorised clinic administration. | A05, A08 | M |
-| [ ] | U01 | Build branded clinic storefront using fixtures. | F07, F08, C02 | M |
-| [ ] | U02 | Build clinic profile/branding editor using fixtures. | F07, F08, C02 | M |
-| [ ] | U03 | Build staff management page using fixtures. | F07, F08, C02 | M |
-| [ ] | U04 | Build platform clinic approval and commission page using fixtures. | F07, F08, C02 | M |
-| [ ] | U05 | Add role navigation, validated clinic selection and login/logout controls. | A01, A02, F07, C02 | M |
-| [ ] | A11 | Connect clinic/staff/admin pages to real identity and tenant APIs. | A08-A10, U01-U05 | M |
+| [x] | A04 | Create identity service schema/migrations for subjects, roles and memberships. Completed in merged PR #59; 29 PostgreSQL tests, schema isolation, lint and CI passed. Issue #58 closed. | F04, C02 | M |
+| [x] | A05 | Add membership/access APIs and service authentication; reject arbitrary identity headers. Completed in merged PR #61; 81 tests, live Floci identity mapping and CI passed. Issue #60 closed; subsequent tenant/membership integration completed in A08/A10 and A11. | A03, A04 | M |
+| [x] | A06 | Add reusable tenant/role checks and apply them to one template endpoint. Completed in merged PR #63; shared foundations, 124 local tests, real HTTP authorization, container checks and CI passed. Issue #62 closed. | A05 | M |
+| [x] | A07 | Create tenant service schema/migrations for clinic, branding and activation. Completed in merged PR #65; 30 PostgreSQL tests, migration isolation, lint and CI passed. Issue #64 closed. | F04, C02 | M |
+| [x] | A08 | Add clinic create/update/public-profile APIs; inactive clinics cannot accept bookings. Completed in merged PR #67; 165 tests, real Floci/two-service HTTP checks and CI passed. Issue #66 closed. | A06, A07 | M |
+| [x] | A09 | Add platform approve/reject and commission-setting APIs with audit events. Completed in merged PR #69; 94 tenant tests, live Floci/platform HTTP checks and CI passed. Issue #68 closed. | A08 | M |
+| [x] | A10 | Add staff assignment/membership APIs with authorised clinic administration. Completed in merged PR #71; 205 tests, live two-service HTTP staff lifecycle/authorization checks and CI passed. Issue #70 closed. | A05, A08 | M |
+| [x] | U01 | Build branded clinic storefront using fixtures. Completed in merged PR #73; 17 frontend tests, desktop/mobile browser checks, component output parity and CI passed. Issue #72 closed; live integration remains A11. | F07, F08, C02 | M |
+| [x] | U02 | Build clinic profile/branding editor. Completed in merged PR #75; profile saves persist in PostgreSQL, logo upload/replacement/removal uses S3, and all implemented clinic pages use real APIs with local/AWS configuration. 22 frontend, 100 identity and 113 tenant tests, browser Save/Discard/reload/login checks and CI passed. Issue #74 closed; remaining staff/admin integration stays in A11. | F07, F08, C02 | M |
+| [x] | U03 | Build staff management page using real identity/tenant APIs. Completed in merged PR #79; staff assignment, role changes, revocation/reactivation and last-admin protection verified with live local services; 22 frontend tests, lint/build and CI passed. Issue #78 closed. Browser visual and AWS checks remain unverified. | F07, F08, C02 | M |
+| [x] | U04 | Build platform clinic approval and commission pages using real identity/tenant APIs. Completed in merged PR #81; compact clinic list links to individual management pages. Live review/commission persistence, validation, authorization and detail API checks passed; 22 frontend tests, lint/build and CI passed. Issue #80 closed. Browser interaction, multi-page pagination and AWS checks remain unverified. | F07, F08, C02 | M |
+| [x] | U05 | Add role navigation, validated clinic selection and login/logout controls. Completed in merged PR #83; shared auth/role navigation, clinic route validation, email staff assignment and readable memberships verified with real local APIs. 111 identity and 31 frontend tests, lint/build and CI passed. Issue #82 closed. Browser interaction/visual checks and AWS integration remain unverified. | A01, A02, F07, C02 | M |
+| [x] | A11 | Connect clinic/staff/admin pages to real identity and tenant APIs. Completed in merged PR #85; issue #84 closed. Real local HTTP integration, 32 frontend tests, focused cursor regression and CI passed. Browser login/profile/staff checks passed partially; remaining platform browser and AWS checks are unverified. Evidence: `docs/clinic-integration.md`. | A08-A10, U01-U05 | M |
 
 ## Week 2: scheduling and booking
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | S01 | Create scheduling schema/migrations: fixed availability slots and appointments. | F04, C02, C03 | M |
-| [ ] | S02 | Add doctor availability and patient slot-list APIs with access checks. | S01, A06, A08 | M |
-| [ ] | S03 | Add expiring Redis holds plus database reservation constraint/transaction. | S02, F09 | L |
-| [ ] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. | S03 | M |
-| [ ] | S05 | Consume consultation-payment success idempotently and confirm appointment. | S04, M03, C05 | M |
-| [ ] | S06 | Handle expired hold/late payment as an explicit recoverable exception. | S05 | S |
-| [ ] | U06 | Build doctor availability editor using fixtures. | F07, F08, C02 | M |
-| [ ] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. | F07, F08, C03 | M |
-| [ ] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. | F07, F08, C02, C03 | M |
-| [ ] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. | S04, U06-U08 | M |
+| [x] | S01 | Create scheduling schema/migrations: fixed availability slots and appointments. Completed in merged PR #89; 45 PostgreSQL tests, schema isolation, lint and CI passed. Issue #88 closed. | F04, C02, C03 | M |
+| [x] | S02 | Add doctor availability and patient slot-list APIs with access checks. Completed in merged PR #91; 94 tests, real Floci/three-service HTTP verification and CI passed. Issue #90 closed. | S01, A06, A08 | M |
+| [x] | S03 | Add expiring Redis holds plus database reservation constraint/transaction. Completed in merged PR #93; 127 PostgreSQL/Redis tests, real Floci/HTTP hold and expiry checks and CI passed. Issue #92 closed. | S02, F09 | L |
+| [x] | S04 | Add appointment list/detail/cancel APIs and legal state transitions. Completed in merged PR #95; 174 PostgreSQL/Redis tests, live HTTP checks and CI passed. Issue #94 closed. | S03 | M |
+| [x] | S05 | Consume consultation-payment success idempotently and confirm appointment. Completed in merged PR #101; 201 PostgreSQL/Redis tests, live Floci EventBridge/SQS verification and CI passed. Issue #100 closed. Billing reads/checkout remain explicit fixtures pending real billing integration; late recovery subsequently completed in S06 (PR #110). | S04, M03, C05 | M |
+| [x] | S06 | Handle expired hold/late payment as an explicit recoverable exception. Completed in merged PR #110; guarded recovery, audit and durable billing exception delivery verified with 217 PostgreSQL/Redis tests, live Floci transport and passing CI. Issue #109 closed. Billing adapters remain explicit fixtures pending real billing integration; provider refunds and AWS integration remain unverified. | S05 | S |
+| [x] | U06 | Build doctor availability editor using fixtures. Completed in merged PR #103; weekly timetable supports multiple selections, click/drag deselection and protected batch edits. All 43 frontend tests, lint, build, Prettier checks, local browser checks and CI passed. Issue #102 closed; live scheduling integration remains S07. | F07, F08, C02 | M |
+| [x] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. Completed in merged PR #108; clinic Book entry, date dropdown, 30-minute slot cells and checkout preview. 48 frontend tests, lint/build and CI passed. Issue #107 closed; live integration remains S07/B07, browser visual checks unverified. | F07, F08, C03 | M |
+| [x] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. Completed in merged PR #106; role-scoped date dropdown, half-hour cells and appointment details with focused components. Combined 53 frontend tests, lint/build and CI passed. Issue #105 closed; live integration remains S07, browser visual checks unverified. | F07, F08, C02, C03 | M |
+| [x] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. Completed in merged PR #112; 60 frontend tests, lint/build, real frontend adapter walkthrough with cleanup and CI passed. Issue #111 closed. Browser interaction and AWS remain unverified; billing checkout remains B07. | S04, U06-U08 | M |
 
 ## Week 2: payments
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. | F04, C03, C04 | M |
+| [x] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. Completed in merged PR #138; 89 PostgreSQL tests, migration isolation/round-trips, SQL/ORM snapshot protection, lint/format and CI passed. Issue #137 closed. | F04, C03, C04 | M |
 | [ ] | B02 | Add consultation checkout API with trusted price and appointment linkage. | B01, X03, A06 | M |
 | [ ] | B03 | Add raw-body webhook signature verification and event-ID deduplication. | B02, X04 | M |
 | [ ] | B04 | Save payment changes and outbox event in one transaction; publish success. | B03, M02, C05 | M |
@@ -112,29 +135,29 @@ Suggested first picks for five available teammates: F03, F06, F09, X03, X01. C01
 | [ ] | V01 | Create consultation service schema and session start/end/join-window rules. | F04, C02 | M |
 | [ ] | V02 | Add admission API validating actual appointment, participants and payment. | V01, A06, S04, X02 | M |
 | [ ] | V03 | Package PeerServer with admission validation and local HTTPS/WSS routing. | X02, F10 | M |
-| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. | F07, X01 | L |
+| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. PR #127 supplies role-protected patient/doctor layouts, local media controls and expanded join/leave previews; remote PeerJS/TURN calling remains blocked by X01 #56. Issue #126 stays In progress. | F07, X01 | L |
 | [ ] | V04 | Connect video room to admission and booked appointment pages. | U11, V02, V03, S07 | M |
-| [ ] | R01 | Create clinical-record schema/migrations for notes and prescriptions. | F04, C04 | M |
-| [ ] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. | R01, A06, S04 | M |
-| [ ] | R03 | Publish prescription-issued event through outbox. | R02, M02, C05 | S |
-| [ ] | U12 | Build doctor note/prescription form using fixtures. | F07, F08, C04 | M |
-| [ ] | U13 | Build patient prescription view using fixtures. | F07, F08, C04 | S |
-| [ ] | R04 | Connect note/prescription pages to real records APIs. | R02, U12, U13 | M |
-| [ ] | P01 | Create document service metadata schema and a simple prescription PDF template. | F04, C04 | M |
-| [ ] | P02 | Consume prescription event, generate PDF once and store in private S3. | P01, R03, F11, M03 | M |
-| [ ] | P03 | Add authorised document list/download APIs with browser-reachable signed URLs. | P02, A06 | M |
-| [ ] | U14 | Build document list/download UI and connect real document APIs. | F07, P03 | S |
+| [x] | R01 | Create clinical-record schema/migrations for notes and prescriptions. Completed in merged PR #125; 34 PostgreSQL tests, migration isolation, lint and CI passed. Issue #123 closed. | F04, C04 | M |
+| [x] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. Completed in merged PR #132; 81 PostgreSQL/API/adapter tests, live Floci/identity/scheduling HTTP checks and CI passed. Issue #114 closed. D01's catalogue integration was subsequently verified in R04 (merged PR #142); browser/AWS checks remain unverified. The service-only document projection subsequently completed in P02 (merged PR #144); the dispensing projection remains missing. | R01, A06, S04 | M |
+| [x] | R03 | Publish prescription-issued event through outbox. Completed in merged PR #133; 101 PostgreSQL/API/adapter tests, atomic issuance/retry checks, live Floci EventBridge/SQS delivery and CI passed. Issue #117 closed. Real catalogue integration was subsequently verified in R04 (merged PR #142); PDF generation subsequently completed in P02 (merged PR #144); browser and AWS integration remain unverified. | R02, M02, C05 | S |
+| [x] | U12 | Build doctor note/prescription form using fixtures. Completed in merged PR #118; split notes, prescription editor and medication fields, typed medication names, draft validation and issuance locking. Standalone 62 frontend tests, lint, TypeScript/build, Prettier and CI passed. Issue #115 closed. Real catalogue-linked records integration subsequently completed in R04 (merged PR #142). | F07, F08, C04 | M |
+| [x] | U13 | Build patient prescription view using fixtures. Completed in merged PR #120; separate patient panel, summary and details components with Prettier formatting. All 67 frontend tests, lint, TypeScript/build, Prettier and CI passed. Issue #116 closed. Browser checks remain unverified; real records integration subsequently completed in R04 (merged PR #142). | F07, F08, C04 | S |
+| [x] | R04 | Connect note/prescription pages to real records APIs. Completed in merged PR #142; issue #141 closed. Real appointment selection, catalogue-linked drafts, note saves, issuance and patient list/details implemented; 74 frontend tests, lint/build and real Floci/five-service HTTP adapter checks passed with synthetic cleanup. Browser/AWS and actual payment/consultation journeys remain unverified. Evidence: `docs/records-frontend.md`. | R02, U12, U13 | M |
+| [x] | P01 | Create document service metadata schema and simple prescription, receipt and medical certificate (MC) PDF templates. Completed in merged PR #122; 34 PostgreSQL/PDF tests, migration round-trips, lint/format and CI passed. Issue #121 closed. Live generation/storage subsequently completed in P02 (merged PR #144); downloads remain P03; CJK font support remains a limitation. | F04, C04 | M |
+| [x] | P02 | Consume prescription event, generate PDF once and store in private S3. Completed in merged PR #144; issue #128 closed. Implements service-only audited records/name lookups, private-bucket configuration checks, stored-object reuse, inbox/outbox and safe retry/replay. 52 document and 108 records tests plus live Floci pipeline/recovery checks passed. No additional issuance snapshot. Address/registration fields are optional; AWS privacy and downloads remain unverified (Floci limitation #54). Download APIs/UI remain P03/U14. Evidence: `services/document/docs/worker.md`. | P01, R03, F11, M03 | M |
+| [x] | P03 | Add authorised document list/download APIs with browser-reachable signed URLs. Completed in merged PR #148; issue #147 closed. Patient/assigned-active-doctor access, current appointment context, durable audits, scoped pagination and SigV4 browser-host URLs implemented. 89 document tests, live Floci/identity/scheduling HTTP checks with isolated synthetic fixtures, lint/format and CI passed. U14 UI subsequently merged in PR #151; browser interaction and real AWS privacy/expiry verification (#54) remain unfinished. Setup/evidence: `services/document/docs/api.md`. | P02, A06 | M |
+| [x] | U14 | Build document list/download UI and connect real document APIs. Completed in merged PR #151; issue #150 closed. Patient dashboard and patient/doctor appointment/records views use real P03 lists and fresh signed PDF downloads, with explicit pending/failed states and context-isolated caches. 82 frontend tests, live adapter/render/Vite checks against real local APIs with isolated fixtures, Prettier, lint/type/build and CI passed. Browser interaction/layout and AWS privacy enforcement remain unverified. Setup/evidence: `docs/document-frontend.md`. | F07, P03 | S |
 
 ## Week 2-3: delivery, email and messaging
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | M01 | Add shared event envelope validation and SDK endpoint configuration. | F03, C05 | S |
-| [ ] | M02 | Add minimal outbox publisher with retryable send and publication tracking. | F04, F12, M01 | M |
-| [ ] | M03 | Add SQS consumer helper with acknowledgement, inbox deduplication and retries. | F12, M01 | M |
-| [ ] | M04 | Document and verify one failed job reaching DLQ and operator replay. | M03 | S |
-| [ ] | D01 | Create fulfilment schema/catalogue and prescription-linked order APIs. | F04, C04, A06 | M |
-| [ ] | D02 | Add sandbox delivery quote adapter with expiry and trusted order total. | D01, X05 | M |
+| [x] | M01 | Add shared event envelope validation and SDK endpoint configuration. Completed in merged PR #77. | F03, C05 | S |
+| [x] | M02 | Add minimal outbox publisher with retryable send and publication tracking. Completed in merged PR #97; transactional staging, retry/publication tracking and PostgreSQL concurrency checks passed. Issue #96 closed. | F04, F12, M01 | M |
+| [x] | M03 | Add SQS consumer helper with acknowledgement, inbox deduplication and retries. Completed in merged PR #99; SQLite/PostgreSQL checks and live Floci consumption, deduplication and failed-job DLQ delivery passed. Issue #98 closed. | F12, M01 | M |
+| [x] | M04 | Document and verify one failed job reaching DLQ and operator replay. Completed in merged PR #119; isolated live Floci checks verified three failed receives with rollback, unchanged DLQ content, successful replay and duplicate suppression; lint and CI passed. Issue #113 closed. Operator procedure: `docs/messaging-replay.md`; AWS verification remains unperformed. | M03 | S |
+| [x] | D01 | Create fulfilment schema/catalogue and prescription-linked order APIs. Completed in merged PR #131; 59 PostgreSQL/API tests, schema isolation, concurrency/idempotency, access checks, lint and CI passed. Issue #130 closed. Uses the explicitly permitted C04 dispensing fixture; real authenticated records dispensing projection/adapter and pricing/payment integration remain unfinished. | F04, C04, A06 | M |
+| [ ] | D02 | Add sandbox delivery quote adapter with expiry and trusted order total. Assignee: NorbertLoh; status: in progress, blocked by unchecked X05 Lalamove sandbox verification. D01 is complete. Claim/blocker: issue #134. | D01, X05 | M |
 | [ ] | D03 | Add authorised clinic medicine-ready action. | D01 | S |
 | [ ] | D04 | Consume medication-payment event and persist paid state idempotently. | D01, M03, C05 | M |
 | [ ] | D05 | Submit one delivery only after paid AND ready; handle uncertain provider outcomes. | D02-D04 | L |

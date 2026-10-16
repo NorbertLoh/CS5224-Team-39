@@ -17,7 +17,24 @@ Development runs at http://127.0.0.1:5173. Preview serves the built `dist/` at h
 
 `dist/` contains static assets suitable for S3/CloudFront; the Vite development/preview servers are local tools, not production hosting. Configure cloud routing in W04. Browser-visible `VITE_*` environment variables are substituted at build time, so never put credentials or secrets in them.
 
-F08 provides the query provider, a small fetch helper and shared loading/error states. F07 adds route modules/layouts. This scaffold has no authentication or live business API integration yet. Planned feature groups: storefront, patient, doctor, clinic administration and platform administration.
+The clinic list, public storefront at `/clinics/<slug>` and profile editor at
+`/clinic-admin/clinics/<tenant UUID>/profile` always use real identity/tenant APIs.
+Profile fields persist in PostgreSQL; logo files persist in S3. There are no
+runtime fixtures, browser-only saves or fallback data. Booking remains a later task.
+
+Staff management at `/clinic-admin/clinics/<tenant UUID>/staff` uses the real
+identity GET/PUT/DELETE membership APIs with the same local/AWS configuration.
+Open **Manage staff** from the clinic list or profile editor. Clinic administrators
+and platform administrators can assign existing subjects, replace doctor/admin
+roles, revoke access and reactivate memberships. The backend protects the last
+active administrator. Staff are shown by identity subject UUID because the
+membership API does not expose names or account search. This page does not create
+accounts; provision subjects first using the existing backend setup.
+
+`VITE_USE_AWS=false` selects local API/Cognito configuration; `true` selects
+`VITE_AWS_API_BASE_URL` and `VITE_AWS_COGNITO_*`. Missing AWS values show errors.
+Copy `.env.example` and restart Vite (or rebuild) after changing settings.
+See [complete local backend setup and AWS configuration](../../docs/clinic-backend.md).
 
 ## Calling an API
 
@@ -44,16 +61,12 @@ strings with URLSearchParams and encode dynamic IDs with encodeURIComponent.
 Response types describe [C01 wire shapes](../../contracts/api-conventions.md);
 feature pages handle domain validation and field errors when needed.
 
-Copy `.env.example` to `.env` if needed. `VITE_API_BASE_URL` defaults to `/api/v1`;
-for a separate trusted origin use a URL ending in `/api/v1`. Restart Vite or
-rebuild after changes. Vite forwards `/api/v1/template` to the Compose API at
-`http://127.0.0.1:8000`, stripping the prefix. If its host port changes, set
-`TEMPLATE_API_TARGET` in this app's `.env` and restart Vite. This server-only
-setting is not bundled into the frontend. See [local startup](../../docs/local-development.md).
-Dev and preview support this forwarding; production routing belongs to W04.
-Other service prefixes are not wired yet; cross-origin servers need CORS
-configuration. Authentication/token refresh belongs to A01/A02.
-Never attach API tokens to external signed download URLs.
+The local API base defaults to `/api/v1`. Vite forwards identity, tenant and
+template prefixes to ports 8001, 8002 and 8000, stripping the service prefix.
+Server-only `IDENTITY_API_TARGET`, `TENANT_API_TARGET` and `TEMPLATE_API_TARGET`
+can override those addresses. Preview supports local forwarding too. The static
+production build needs deployed gateway routing and explicit CORS for a separate
+origin. Never attach API tokens to external signed download URLs.
 
 The root query provider is available for feature pages that use `useQuery`.
 Automatic retries are off. Use keys such as
