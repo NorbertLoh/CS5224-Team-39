@@ -97,3 +97,13 @@ test payment, capture sanitized inspection evidence, and record decline/cancel
 behaviour. Keep issue #158 In progress, PR #159 draft and X03 unchecked until
 provider verification is complete and the PR is merged. Access blockers belong
 on the issue; do not unblock B02 with offline fixture evidence.
+
+Provider check on 17 October 2026: both local variables are now configured.
+The platform test key successfully retrieved the connected SG account. Its
+`transfers` and `card_payments` capabilities were `inactive`, with
+`details_submitted: false` and `requirements.disabled_reason: requirements.past_due`.
+Missing requirements include the business profile, test representative details,
+external account and terms acceptance. A real test Checkout creation attempt was
+rejected with HTTP 400 / `insufficient_capabilities_for_transfer`; no Checkout URL
+or completed payment was produced. Finish the clinic's sandbox onboarding before
+retrying. All PR checks passed, including billing PostgreSQL tests and Ruff.
