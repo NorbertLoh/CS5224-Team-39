@@ -11,6 +11,9 @@ The isolated [X03 Stripe spike](../../docs/stripe-spike.md) provides test-mode
 Checkout/Connect verification commands and an explicitly labelled offline demo.
 It does not implement billing application APIs or webhook verification.
 
+The separate [X04 webhook spike](../../docs/stripe-webhook-spike.md) verifies
+sample raw-body signatures using the Stripe SDK, without processing payments.
+
 ## Install
 
 From `services/billing`, with Python 3.10+:
