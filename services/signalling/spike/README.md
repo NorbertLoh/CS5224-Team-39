@@ -3,7 +3,7 @@
 Continuation of [issue #56](https://github.com/NorbertLoh/CS5224-Team-39/issues/56)
 and [draft PR #57](https://github.com/NorbertLoh/CS5224-Team-39/pull/57).
 This standalone harness uses synthetic data and consenting testers.
-Appointment admission is X02, production packaging is V03/W11, and frontend
+Appointment admission is the [X02 fixture spike](ADMISSION.md), production packaging is V03/W11, and frontend
 integration is U11/V04. See [observed results](RESULTS.md).
 
 Accepted scope (16 October 2026): local two-browser calls and actual local TURN
