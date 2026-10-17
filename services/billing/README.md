@@ -7,6 +7,10 @@ provider references and immutable financial snapshots. Contracts define
 [orders/quotes (C04)](../../contracts/prescription-order-quote.md).
 Checkout, webhooks, APIs, refunds and event workers follow in B02–B06.
 
+The isolated [X03 Stripe spike](../../docs/stripe-spike.md) provides test-mode
+Checkout/Connect verification commands and an explicitly labelled offline demo.
+It does not implement billing application APIs or webhook verification.
+
 ## Install
 
 From `services/billing`, with Python 3.10+:
