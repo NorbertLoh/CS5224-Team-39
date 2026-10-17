@@ -13,14 +13,14 @@ UI work can start against the agreed API fixtures after its listed contract depe
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
 Completion audit, 17 October 2026: reconciled the backlog with open/closed
-GitHub issues, open/merged PRs and the current implementation. **63 tasks are complete,
-F01 is skipped by user decision, and 65 tasks remain unfinished.** The 64 checked
+GitHub issues, open/merged PRs and the current implementation. **64 tasks are complete,
+F01 is skipped by user decision, and 64 tasks remain unfinished.** The 65 checked
 rows include that skipped task. Completed work comprises F02-F16, C01-C05,
-A01-A11, U01-U08, S01-S07, R01-R04, U12-U14, P01-P03, M01-M04, D01, B01 and X01.
+A01-A11, U01-U08, S01-S07, R01-R04, U12-U14, P01-P03, M01-M04, D01, B01, X01 and X02.
 D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
 PR #138 and closed issue #137; P02 after merged PR #144 and closed issue #128;
 P03 after merged PR #148 and closed issue #147; U14 after merged PR #151 and
-closed issue #150; X01 after merged PR #57 and closed issue #56. Open PRs and merged
+closed issue #150; X01 after merged PR #57 and closed issue #56; X02 after merged PR #157 and closed issue #156. Open PRs and merged
 partial previews do not count as completed tasks. Verification below records the
 evidence reported for each implementation; this documentation audit did not rerun
 runtime checks or establish new integration/AWS evidence.
@@ -31,7 +31,7 @@ Current claims and remaining blockers:
 
 | Work | Current status and remaining work |
 | --- | --- |
-| X01 / U11 / consultation | X01 completed in merged PR #57; issue #56 closed. It meets the user-accepted local scope: two-browser media, controls/rejoin and actual local forced TURN over UDP/TCP verified. AWS cross-network evidence is deferred to refinement RF01 / issue #155. U11's preview merged in PR #127, but issue #126 stays open until application remote calling works. X02 is claimed by NorbertLoh in issue #156; V02-V04 still depend on unfinished admission/video work; V01's listed dependencies are complete. |
+| X01 / U11 / consultation | X01 completed in merged PR #57; issue #56 closed. It meets the user-accepted local scope: two-browser media, controls/rejoin and actual local forced TURN over UDP/TCP verified. AWS cross-network evidence is deferred to refinement RF01 / issue #155. U11's preview merged in PR #127, but issue #126 stays open until application remote calling works. X02 is complete in merged PR #157; issue #156 closed; V02-V04 still depend on unfinished admission/video work; V01's listed dependencies are complete. |
 | Billing | B01 completed in merged PR #138; issue #137 closed. Its 89 PostgreSQL tests and CI passed. X03 Stripe checkout/Connect and X04 webhook verification remain unchecked. B02-B07 and the real billing handoff are unfinished; S05/S06 fixtures do not establish billing integration. |
 | Documents | P02 completed in merged PR #144; issue #128 closed. The authenticated/audited records projection, trusted current-name lookups and stored-PDF worker passed local transport/replay/recovery checks and CI. P03 completed in merged PR #148; issue #147 closed. Authorised/audited lists and signed downloads passed 89 document tests, local HTTP verification and CI. U14 completed in merged PR #151; issue #150 closed. Patient/doctor lists and downloads passed 82 frontend tests, live adapter/Vite checks, Prettier and CI. Address/registration fields remain optional prototype omissions. Browser interaction and AWS privacy/download verification remain unfinished. |
 | Records / fulfilment | D01 merged with an explicitly permitted dispensing fixture, not real order integration. C04's authenticated dispensing projection and its HTTP adapter remain missing. R04 completed in merged PR #142; issue #141 closed. Real frontend records saves, issuance and catalogue integration passed local HTTP verification. Browser/AWS and actual consultation/payment journeys remain unverified. |
@@ -71,14 +71,14 @@ prerequisites; an unchecked task is not necessarily blocked by external access.
 | [x] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. Completed in merged PR #38; prescription/order links, trusted totals, commission and paid/ready delivery gating verified. | C01 | M |
 | [x] | C05 | Define event envelope, producers/consumers and sample workflow events. Completed in merged PR #27; fixtures validated and F12 consumer routing reviewed. | C01 | M |
 | [x] | X01 | Spike self-hosted PeerJS with two local browser clients; verify audio/video RTP, controls/rejoin and local forced TURN, and document TURN ports/setup. User accepted local verification on 16 October 2026; 3 Node tests, local browser checks, actual coturn UDP/TCP checks and CI passed. Completed in merged PR #57; issue #56 closed. AWS cross-network verification moved to RF01 / #155. | none | L |
-| [ ] | X02 | Spike appointment-bound signalling admission; reject unrelated users. Assignee: NorbertLoh; status: in progress. Issue #156 / PR #157; local fixture spike implemented with single-use expiring participant/appointment/peer-bound admission, pre-registration checks and same-appointment frame filtering. 11 Node checks and 3 browser checks passed (1 existing TURN-dependent check skipped). Keep unchecked until merge; real service integration remains V02/V03. Setup/evidence: `services/signalling/spike/ADMISSION.md`. | X01 | M |
+| [x] | X02 | Spike appointment-bound signalling admission; reject unrelated users. Completed in merged PR #157; issue #156 closed. Local fixture spike implemented with single-use expiring participant/appointment/peer-bound admission, pre-registration checks and same-appointment frame filtering. 11 Node checks and 3 browser checks passed (1 existing TURN-dependent check skipped). All eight CI checks passed; real service integration remains V02/V03. Setup/evidence: `services/signalling/spike/ADMISSION.md`. | X01 | M |
 | [ ] | X03 | Verify Stripe test checkout, Connect access and commission capability. | none | M |
 | [ ] | X04 | Verify Stripe webhook signatures against a sample raw-body callback. | X03 | S |
 | [ ] | X05 | Verify Lalamove sandbox quote/order/status and callback verification. | none | M |
 
 C02-C05 each need a quick review by someone building a consuming feature. They do not need a meeting with all five people. Use temporary fixtures for feasibility spikes and keep credentials out of Git. If sandbox access is blocked, record it immediately and implement an explicitly labelled adapter for demo continuity.
 
-Setup/contracts are complete. Claim a ready task from the audit above; X03 and X05 verification unblock billing and delivery respectively. X01 is complete; X02 is claimed by NorbertLoh in issue #156.
+Setup/contracts are complete. Claim a ready task from the audit above; X03 and X05 verification unblock billing and delivery respectively. X01 is complete; X02 is complete in merged PR #157; issue #156 closed.
 
 ## Week 1-2: authentication and clinics
 
