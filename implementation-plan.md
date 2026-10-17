@@ -12,31 +12,33 @@ UI work can start against the agreed API fixtures after its listed contract depe
 
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
-Completion audit, 16 October 2026: reconciled all 127 task rows with open/closed
-GitHub issues, open/merged PRs and the current implementation. **62 tasks are complete,
-F01 is skipped by user decision, and 64 tasks remain unfinished.** The 63 checked
+Completion audit, 17 October 2026: reconciled the backlog with open/closed
+GitHub issues, open/merged PRs and the current implementation. **63 tasks are complete,
+F01 is skipped by user decision, and 65 tasks remain unfinished.** The 64 checked
 rows include that skipped task. Completed work comprises F02-F16, C01-C05,
-A01-A11, U01-U08, S01-S07, R01-R04, U12-U14, P01-P03, M01-M04, D01 and B01.
+A01-A11, U01-U08, S01-S07, R01-R04, U12-U14, P01-P03, M01-M04, D01, B01 and X01.
 D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
 PR #138 and closed issue #137; P02 after merged PR #144 and closed issue #128;
 P03 after merged PR #148 and closed issue #147; U14 after merged PR #151 and
-closed issue #150. Open PRs and merged
+closed issue #150; X01 after merged PR #57 and closed issue #56. Open PRs and merged
 partial previews do not count as completed tasks. Verification below records the
 evidence reported for each implementation; this documentation audit did not rerun
 runtime checks or establish new integration/AWS evidence.
+The backlog now has 129 tasks including refinement RF01 (#155) and the requested U17 MC issuance flow
+(issue #152); U17 is planned and unassigned.
 
 Current claims and remaining blockers:
 
 | Work | Current status and remaining work |
 | --- | --- |
-| X01 / U11 / consultation | X01 issue #56 / PR #57 meets the user-accepted local scope: two-browser media, controls/rejoin and actual local forced TURN over UDP/TCP verified; merge remains pending. AWS cross-network evidence is deferred to refinement RF01 / issue #155. U11's preview merged in PR #127, but issue #126 stays open until application remote calling works. X02 and V02-V04 still depend on unfinished admission/video work; V01's listed dependencies are complete. |
+| X01 / U11 / consultation | X01 completed in merged PR #57; issue #56 closed. It meets the user-accepted local scope: two-browser media, controls/rejoin and actual local forced TURN over UDP/TCP verified. AWS cross-network evidence is deferred to refinement RF01 / issue #155. U11's preview merged in PR #127, but issue #126 stays open until application remote calling works. X02 is ready to claim; V02-V04 still depend on unfinished admission/video work; V01's listed dependencies are complete. |
 | Billing | B01 completed in merged PR #138; issue #137 closed. Its 89 PostgreSQL tests and CI passed. X03 Stripe checkout/Connect and X04 webhook verification remain unchecked. B02-B07 and the real billing handoff are unfinished; S05/S06 fixtures do not establish billing integration. |
 | Documents | P02 completed in merged PR #144; issue #128 closed. The authenticated/audited records projection, trusted current-name lookups and stored-PDF worker passed local transport/replay/recovery checks and CI. P03 completed in merged PR #148; issue #147 closed. Authorised/audited lists and signed downloads passed 89 document tests, local HTTP verification and CI. U14 completed in merged PR #151; issue #150 closed. Patient/doctor lists and downloads passed 82 frontend tests, live adapter/Vite checks, Prettier and CI. Address/registration fields remain optional prototype omissions. Browser interaction and AWS privacy/download verification remain unfinished. |
 | Records / fulfilment | D01 merged with an explicitly permitted dispensing fixture, not real order integration. C04's authenticated dispensing projection and its HTTP adapter remain missing. R04 completed in merged PR #142; issue #141 closed. Real frontend records saves, issuance and catalogue integration passed local HTTP verification. Browser/AWS and actual consultation/payment journeys remain unverified. |
 | Delivery | D02 issue #134 is assigned to NorbertLoh and blocked by unchecked X05 Lalamove sandbox verification. D01 is complete; D03/D04 have complete listed dependencies. D05-D07 still depend on quote/readiness/payment/delivery work. |
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
-Unclaimed tasks with complete listed dependencies: X03, X05, U09, U10, V01,
+Unclaimed tasks with complete listed dependencies: X02, X03, X05, U09, U10, V01,
 D03, D04, U15, U16, N01 and Q02. These are candidates to claim, not new
 assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
@@ -68,7 +70,7 @@ prerequisites; an unchecked task is not necessarily blocked by external access.
 | [x] | C03 | Define booking/payment states, hold expiry and late-payment behaviour. Completed in merged PR #37; amount splits, expiry boundary, late-payment recovery and C05 consistency verified. | C01 | M |
 | [x] | C04 | Define prescription/order/quote APIs and ownership of trusted prices. Completed in merged PR #38; prescription/order links, trusted totals, commission and paid/ready delivery gating verified. | C01 | M |
 | [x] | C05 | Define event envelope, producers/consumers and sample workflow events. Completed in merged PR #27; fixtures validated and F12 consumer routing reviewed. | C01 | M |
-| [ ] | X01 | Spike self-hosted PeerJS with two local browser clients; verify audio/video RTP, controls/rejoin and local forced TURN, and document TURN ports/setup. User accepted local verification on 16 October 2026; 3 Node tests, local browser checks, actual coturn UDP/TCP checks and CI passed. Assignee: NorbertLoh; issue #56 In progress until PR #57 merges. AWS cross-network verification moved to RF01 / #155. | none | L |
+| [x] | X01 | Spike self-hosted PeerJS with two local browser clients; verify audio/video RTP, controls/rejoin and local forced TURN, and document TURN ports/setup. User accepted local verification on 16 October 2026; 3 Node tests, local browser checks, actual coturn UDP/TCP checks and CI passed. Completed in merged PR #57; issue #56 closed. AWS cross-network verification moved to RF01 / #155. | none | L |
 | [ ] | X02 | Spike appointment-bound signalling admission; reject unrelated users. | X01 | M |
 | [ ] | X03 | Verify Stripe test checkout, Connect access and commission capability. | none | M |
 | [ ] | X04 | Verify Stripe webhook signatures against a sample raw-body callback. | X03 | S |
@@ -76,7 +78,7 @@ prerequisites; an unchecked task is not necessarily blocked by external access.
 
 C02-C05 each need a quick review by someone building a consuming feature. They do not need a meeting with all five people. Use temporary fixtures for feasibility spikes and keep credentials out of Git. If sandbox access is blocked, record it immediately and implement an explicitly labelled adapter for demo continuity.
 
-Setup/contracts are complete. Claim a ready task from the audit above; X03 and X05 verification unblock billing and delivery respectively. X01 is already claimed and must not be duplicated.
+Setup/contracts are complete. Claim a ready task from the audit above; X03 and X05 verification unblock billing and delivery respectively. X01 is complete; X02 is ready to claim.
 
 ## Week 1-2: authentication and clinics
 
@@ -135,7 +137,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; X03 and X
 | [ ] | V01 | Create consultation service schema and session start/end/join-window rules. | F04, C02 | M |
 | [ ] | V02 | Add admission API validating actual appointment, participants and payment. | V01, A06, S04, X02 | M |
 | [ ] | V03 | Package PeerServer with admission validation and local HTTPS/WSS routing. | X02, F10 | M |
-| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. PR #127 supplies role-protected patient/doctor layouts, local media controls and expanded join/leave previews; application remote PeerJS/TURN integration remains unfinished. X01 #56 supplies the verified local spike, pending PR #57 merge; AWS cross-network evidence is RF01 #155. Issue #126 stays In progress. | F07, X01 | L |
+| [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. PR #127 supplies role-protected patient/doctor layouts, local media controls and expanded join/leave previews; application remote PeerJS/TURN integration remains unfinished. X01 #56 supplies the verified local spike in merged PR #57; AWS cross-network evidence is RF01 #155. Issue #126 stays In progress. | F07, X01 | L |
 | [ ] | V04 | Connect video room to admission and booked appointment pages. | U11, V02, V03, S07 | M |
 | [x] | R01 | Create clinical-record schema/migrations for notes and prescriptions. Completed in merged PR #125; 34 PostgreSQL tests, migration isolation, lint and CI passed. Issue #123 closed. | F04, C04 | M |
 | [x] | R02 | Add appointment-scoped doctor write and patient read APIs; audit reads. Completed in merged PR #132; 81 PostgreSQL/API/adapter tests, live Floci/identity/scheduling HTTP checks and CI passed. Issue #114 closed. D01's catalogue integration was subsequently verified in R04 (merged PR #142); browser/AWS checks remain unverified. The service-only document projection subsequently completed in P02 (merged PR #144); the dispensing projection remains missing. | R01, A06, S04 | M |
@@ -147,6 +149,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; X03 and X
 | [x] | P02 | Consume prescription event, generate PDF once and store in private S3. Completed in merged PR #144; issue #128 closed. Implements service-only audited records/name lookups, private-bucket configuration checks, stored-object reuse, inbox/outbox and safe retry/replay. 52 document and 108 records tests plus live Floci pipeline/recovery checks passed. No additional issuance snapshot. Address/registration fields are optional; AWS privacy and downloads remain unverified (Floci limitation #54). Download APIs/UI remain P03/U14. Evidence: `services/document/docs/worker.md`. | P01, R03, F11, M03 | M |
 | [x] | P03 | Add authorised document list/download APIs with browser-reachable signed URLs. Completed in merged PR #148; issue #147 closed. Patient/assigned-active-doctor access, current appointment context, durable audits, scoped pagination and SigV4 browser-host URLs implemented. 89 document tests, live Floci/identity/scheduling HTTP checks with isolated synthetic fixtures, lint/format and CI passed. U14 UI subsequently merged in PR #151; browser interaction and real AWS privacy/expiry verification (#54) remain unfinished. Setup/evidence: `services/document/docs/api.md`. | P02, A06 | M |
 | [x] | U14 | Build document list/download UI and connect real document APIs. Completed in merged PR #151; issue #150 closed. Patient dashboard and patient/doctor appointment/records views use real P03 lists and fresh signed PDF downloads, with explicit pending/failed states and context-isolated caches. 82 frontend tests, live adapter/render/Vite checks against real local APIs with isolated fixtures, Prettier, lint/type/build and CI passed. Browser interaction/layout and AWS privacy enforcement remain unverified. Setup/evidence: `docs/document-frontend.md`. | F07, P03 | S |
+| [ ] | U17 | Add an optional **Issue MC** section to the doctor's note: MC start date, positive whole-number duration in days and optional additional notes; preview the inclusive end date. Save the draft and, only after authoritative consultation completion succeeds, finalize it once and generate a private MC PDF. Patient/assigned doctor can download it through P03/U14; retries must not duplicate issuance, and pending/failed generation must remain explicit. Includes the required MC persistence/API/event and PDF-template integration; do not copy private consultation notes into the MC. Planned, unassigned; issue #152 contains completion criteria and verification. | R04, P01-P03, U14, V01, V04, M02, M03 | L |
 
 ## Week 2-3: delivery, email and messaging
 
