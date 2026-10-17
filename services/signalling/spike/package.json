@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "start": "node server.mjs",
+    "start:admission": "node admission-server.mjs",
     "credentials": "node credentials.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:browser": "playwright test"
@@ -13,7 +16,10 @@
   "dependencies": {
     "express": "5.3.0",
     "peer": "1.0.2",
-    "peerjs": "1.5.5"
+    "peerjs": "1.5.5",
+    "ws": "8.22.0"
   },
-  "devDependencies": { "@playwright/test": "1.64.1" }
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
 }
