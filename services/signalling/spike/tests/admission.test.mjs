@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
+import { setTimeout as delay } from 'node:timers/promises';
 import { WebSocket } from 'ws';
 import { createAdmissions } from '../admission.mjs';
 import { fixtureAppointments } from '../admission-server.mjs';
@@ -53,11 +54,21 @@ test('real PeerServer enforces admission and appointment isolation', { timeout: 
       });
     });
     const issue = async (subject = 'patient-a', appointmentId = 'appointment-a', expected = 200) => {
-      const response = await fetch(`${base}/fixture/admissions`, {
+      const request = () => fetch(`${base}/fixture/admissions`, {
         method: 'POST', headers: { authorization: `Bearer fixture-${subject}`, 'content-type': 'application/json' },
         // Spoofed body identity must not override the fixture-authenticated subject.
         body: JSON.stringify({ appointmentId, subject: 'doctor-a', peerId: 'chosen-id' }),
       });
+      let response = await request();
+      // A client-side close event can precede server-side slot release. Poll
+      // expected admissions briefly; never retry an expected denial. The bound
+      // is shorter than the 2s lease, so expiry cannot hide a missing release.
+      const deadline = Date.now() + 750;
+      while (expected === 200 && response.status === 403 && Date.now() < deadline) {
+        await response.arrayBuffer();
+        await delay(10);
+        response = await request();
+      }
       assert.equal(response.status, expected);
       return expected === 200 ? response.json() : response.text();
     };
@@ -108,9 +119,11 @@ test('real PeerServer enforces admission and appointment isolation', { timeout: 
         });
       }
       await close(caller);
-      const fresh = await issue();
-      assert.notEqual(fresh.peerId, a.peerId);
-      await close(await connect(fresh));
+      for (let cycle = 0; cycle < 5; cycle++) {
+        const fresh = await issue();
+        assert.notEqual(fresh.peerId, a.peerId);
+        await close(await connect(fresh));
+      }
       await close(receiver);
     });
     await t.test('cross-appointment frames never reach the target or the PeerServer queue', async () => {
