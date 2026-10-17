@@ -124,6 +124,6 @@ Playwright 1.64.1 Chromium:
   and missing-TURN validation checks passed. The existing invalid-TURN-credential
   check was skipped because no actual TURN settings were supplied for this run.
 
-The existing CI workflow runs the Node suite and all browser checks. Final CI
-results are linked from the PR. Keep issue #156 In progress and X02 unchecked
-until the PR merges.
+The existing CI workflow runs the Node suite and all browser checks. All eight CI
+checks passed. PR #157 merged on 17 October 2026; issue #156 is closed and X02
+is checked in the backlog. Real service/AWS integration remains separate.
