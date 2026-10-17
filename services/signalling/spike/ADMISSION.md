@@ -120,6 +120,9 @@ Playwright 1.64.1 Chromium:
   exchange, echoed data in both directions and fresh-credential rejoin. Fake camera
   and microphone permission makes local host ICE candidates available on Windows;
   no real devices, independent networks or TURN are claimed by this check.
+- Full `npm run test:browser`: 3 passed, 1 skipped. Existing X01 media/control/rejoin
+  and missing-TURN validation checks passed. The existing invalid-TURN-credential
+  check was skipped because no actual TURN settings were supplied for this run.
 
 The existing CI workflow runs the Node suite and all browser checks. Final CI
 results are linked from the PR. Keep issue #156 In progress and X02 unchecked
