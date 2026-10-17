@@ -9,6 +9,7 @@ import {
 } from '../scheduling/api'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
+import { DocumentList } from '../documents/DocumentList'
 import type { AppointmentRole } from './fixtures'
 
 export function LiveAppointmentDetails({
@@ -60,6 +61,15 @@ export function LiveAppointmentDetails({
   return (
     <div className="space-y-4">
       <AppointmentDetails appointment={appointment} onClose={onClose} />
+      {((role === 'patient' && appointment.patient_id === subjectId) ||
+        (role === 'doctor' && appointment.doctor_id === subjectId)) && (
+        <DocumentList
+          key={appointment.appointment_id}
+          role={role as 'patient' | 'doctor'}
+          appointmentId={appointment.appointment_id}
+          tenantId={appointment.tenant_id}
+        />
+      )}
       {allowed && (
         <form
           className="space-y-3 rounded border p-4"

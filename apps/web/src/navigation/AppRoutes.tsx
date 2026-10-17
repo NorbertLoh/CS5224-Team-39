@@ -10,6 +10,7 @@ import { ManagedClinics } from '../features/clinics/ManagedClinics'
 import { ClinicDirectory } from '../features/clinics/ClinicDirectory'
 import { ErrorState } from '../components/ErrorState'
 import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
+import { DocumentList } from '../features/documents/DocumentList'
 import { VideoRoom } from '../features/video/VideoRoom'
 import { roleLabels } from './access'
 import type { Route } from './access'
@@ -55,6 +56,7 @@ export function AppRoutes({
             </section>
           )}
           {route.role === 'patient' && <PatientPrescriptions />}
+          {route.role === 'patient' && <DocumentList role="patient" />}
           {route.role === 'clinic_admin' && session && (
             <ManagedClinics session={session} />
           )}
