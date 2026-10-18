@@ -13,6 +13,7 @@ from telelink_common.middleware import RequestLoggingMiddleware
 from app.api import router
 from app.appointments import router as appointments_router
 from app.booking import router as booking_router
+from app.checkout import router as checkout_router
 from app.database import create_database_engine
 from app.holds import HoldCache
 from app.models import Appointment, AvailabilitySlot
@@ -69,6 +70,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(router)
     app.include_router(booking_router)
     app.include_router(appointments_router)
+    app.include_router(checkout_router)
 
     @app.get("/health/live", tags=["health"])
     def live():
