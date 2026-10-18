@@ -1,0 +1,7 @@
+# Optional application entry point, layered on compose.yaml.
+services:
+  tls:
+    environment:
+      WEB_UPSTREAM: ${WEB_UPSTREAM:-host.docker.internal:5173}
+    volumes:
+      - ./local/App.Caddyfile:/etc/caddy/Caddyfile:ro

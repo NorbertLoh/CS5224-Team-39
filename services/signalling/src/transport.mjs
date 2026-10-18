@@ -110,6 +110,24 @@ export function admissionTransport(options, admissions, config) {
     } finally { pending--; }
   });
   wss.on('error', () => {});
+  // Discovery uses the consumed admission as a scoped bearer capability. Never
+  // expose PeerServer's global peer list or accept appointment/participant IDs.
+  transport.counterpart = async (token, peerId) => {
+    const grant = active.get(peerId)?.grant;
+    if (!validCredential(token, peerId) || !grant || grant.token !== token || !live(grant)) {
+      throw new Error('Admission denied');
+    }
+    await admissions.check(grant);
+    if (!live(grant)) throw new Error('Admission denied');
+    const target = [...active.values()].map((entry) => entry.grant).find((other) =>
+      other.subject !== grant.subject && other.sessionId === grant.sessionId
+      && other.tenantId === grant.tenantId && other.appointmentId === grant.appointmentId
+      && live(other));
+    if (!target) return null;
+    await admissions.check(target);
+    if (!live(grant)) throw new Error('Admission denied');
+    return live(target) ? target.peerId : null;
+  };
   transport.drain = () => {
     draining = true;
     for (const { deny } of [...active.values()]) deny();

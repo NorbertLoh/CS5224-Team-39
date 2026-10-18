@@ -6,7 +6,7 @@ import { createServer } from 'vite'
 import { schedulingClient } from './scheduling-helpers'
 import { createCheckout, listPayments } from '../src/features/payments/api'
 
-test('real Vite HTTP proxy strips billing prefix and blocks internal routes', async (context) => {
+test('real Vite HTTP proxy strips billing/consultation prefixes and blocks internal routes', async (context) => {
   const calls: { path: string; auth?: string; key?: string; body: string }[] =
     []
   const upstream = httpServer(async (request, response) => {
@@ -23,7 +23,9 @@ test('real Vite HTTP proxy strips billing prefix and blocks internal routes', as
   })
   await new Promise<void>((resolve) => upstream.listen(0, '127.0.0.1', resolve))
   const previous = process.env.BILLING_API_TARGET
+  const previousConsultation = process.env.CONSULTATION_API_TARGET
   process.env.BILLING_API_TARGET = `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`
+  process.env.CONSULTATION_API_TARGET = process.env.BILLING_API_TARGET
   const client = schedulingClient()
   let vite: Awaited<ReturnType<typeof createServer>> | undefined
   try {
@@ -53,14 +55,23 @@ test('real Vite HTTP proxy strips billing prefix and blocks internal routes', as
     assert.deepEqual(JSON.parse(calls[1].body), {
       appointment_id: 'appointment-a',
     })
+    await nativeFetch(`${origin}/api/v1/consultation/admissions`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer consultation-user' },
+    })
+    assert.equal(calls[2].path, '/admissions')
+    assert.equal(calls[2].auth, 'Bearer consultation-user')
     for (const path of [
       '/api/v1/billing/internal/payments/x',
       '/api/v1/billing/internal?x=1',
       '/api/v1/billing/%69nternal/payments/x',
+      '/api/v1/consultation/internal/admissions/consume',
+      '/api/v1/consultation/%69nternal/admissions/check',
+      '/api/v1/consultation/internal?x=1',
     ]) {
       assert.equal((await nativeFetch(`${origin}${path}`)).status, 404)
     }
-    assert.equal(calls.length, 2, 'internal requests never reach the service')
+    assert.equal(calls.length, 3, 'internal requests never reach the service')
   } finally {
     client.clear()
     await vite?.close()
@@ -69,5 +80,8 @@ test('real Vite HTTP proxy strips billing prefix and blocks internal routes', as
     )
     if (previous === undefined) delete process.env.BILLING_API_TARGET
     else process.env.BILLING_API_TARGET = previous
+    if (previousConsultation === undefined)
+      delete process.env.CONSULTATION_API_TARGET
+    else process.env.CONSULTATION_API_TARGET = previousConsultation
   }
 })

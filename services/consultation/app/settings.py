@@ -15,9 +15,25 @@ class Settings(ServiceSettings):
     signalling_secret: SecretStr | None = None
     upstream_timeout_seconds: float = Field(default=3, ge=0.1, le=30)
     admission_ttl_seconds: int = Field(default=60, ge=1, le=300)
+    turn_urls: list[str] = Field(default_factory=list)
+    turn_secret: SecretStr | None = None
+    relay_only: bool = False
 
     @model_validator(mode="after")
     def validate_admission(self):
+        if any(
+            not url.startswith(("turn:", "turns:")) or any(c.isspace() for c in url)
+            for url in self.turn_urls
+        ):
+            raise ValueError("TURN URLs must use turn: or turns:")
+        if bool(self.turn_urls) != bool(self.turn_secret) or (
+            self.relay_only and not self.turn_urls
+        ):
+            raise ValueError(
+                "TURN URLs and secret must be configured together; relay requires TURN"
+            )
+        if self.turn_secret and len(self.turn_secret.get_secret_value().encode()) < 32:
+            raise ValueError("TURN secret must contain at least 32 bytes")
         for field in ("scheduling_url", "billing_url"):
             value = getattr(self, field)
             if value is None:
@@ -43,6 +59,7 @@ class Settings(ServiceSettings):
                 self.billing_secret,
                 self.identity_secret,
                 self.signalling_secret,
+                self.turn_secret,
             )
             if s is not None
         ]

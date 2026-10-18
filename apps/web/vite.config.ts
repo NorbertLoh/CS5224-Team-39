@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 function blockInternal(request: { url?: string }) {
   try {
     const path = decodeURIComponent((request.url ?? '').split('?')[0])
-    return /^\/api\/v1\/(?:billing|clinical-records|fulfilment|identity|tenant)\/internal(?:\/|$)/.test(
+    return /^\/api\/v1\/(?:billing|clinical-records|consultation|fulfilment|identity|tenant)\/internal(?:\/|$)/.test(
       path,
     )
       ? false
@@ -22,6 +22,15 @@ export default defineConfig(({ mode }) => ({
   server: {
     strictPort: true,
     proxy: {
+      '^/api/v1/consultation(?:/|\\?|$)': {
+        target:
+          loadEnv(mode, process.cwd(), 'CONSULTATION_')
+            .CONSULTATION_API_TARGET || 'http://127.0.0.1:8004',
+        changeOrigin: true,
+        bypass: blockInternal,
+        rewrite: (path) =>
+          path.replace(/^\/api\/v1\/consultation(?=\/|\?|$)/, '') || '/',
+      },
       '^/api/v1/billing(?:/|\\?|$)': {
         target:
           loadEnv(mode, process.cwd(), 'BILLING_').BILLING_API_TARGET ||

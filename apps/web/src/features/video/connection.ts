@@ -38,6 +38,8 @@ type PeerFactory = (
   connection: RoomConnection,
 ) => Promise<Peer>
 
+export class RoomAccessError extends Error {}
+
 export function validateAdmission(admission: CallAdmission, now = Date.now()) {
   if (
     !admission.peerId ||
@@ -163,8 +165,12 @@ export class RoomCall {
       peer.on('disconnected', this.fail)
       peer.on('close', this.fail)
       peer.on('error', this.fail)
-    } catch {
-      if (this.live()) this.fail()
+    } catch (error) {
+      if (this.live()) {
+        if (error instanceof RoomAccessError)
+          this.stop('disconnected', error.message)
+        else this.fail()
+      }
     }
   }
 

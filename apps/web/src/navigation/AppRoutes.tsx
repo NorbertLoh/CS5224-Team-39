@@ -11,7 +11,7 @@ import { ClinicDirectory } from '../features/clinics/ClinicDirectory'
 import { ErrorState } from '../components/ErrorState'
 import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
 import { DocumentList } from '../features/documents/DocumentList'
-import { VideoRoom } from '../features/video/VideoRoom'
+import { BookedConsultation } from '../features/video/BookedConsultation'
 import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
 import { CheckoutPreview } from '../features/checkout/CheckoutPreview'
 import { ClinicPayments } from '../features/payments/ClinicPayments'
@@ -38,7 +38,7 @@ export function AppRoutes({
     case 'checkout-preview':
       return <CheckoutPreview />
     case 'consultation':
-      return <VideoRoom role={route.role} />
+      return <BookedConsultation role={route.role} />
     case 'profile':
       return <ClinicProfileEditor tenantId={route.tenantId} />
     case 'staff':
@@ -86,17 +86,13 @@ export function AppRoutes({
             <section className="mt-8 rounded-xl border bg-slate-50 p-6">
               <h2 className="text-xl font-semibold">Video consultation</h2>
               <p className="mt-2 text-sm text-slate-600">
-                {route.role === 'doctor'
-                  ? 'Open appointment records and check your camera and microphone. Remote video remains a preview.'
-                  : 'Check your camera and microphone in the video preview.'}
+                Open a booked appointment to join its video consultation.
               </p>
               <a
                 className="mt-4 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm text-white"
                 href={`/${route.role}/consultation`}
               >
-                {route.role === 'doctor'
-                  ? 'Open consultation and records'
-                  : 'Open consultation preview'}
+                Choose a consultation
               </a>
             </section>
           )}

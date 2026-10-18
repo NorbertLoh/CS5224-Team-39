@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
@@ -6,9 +7,10 @@ from telelink_common.access import CurrentIdentity, require_identity
 from telelink_common.errors import ErrorEnvelope
 from telelink_common.service_auth import require_service
 
-from app import admissions
+from app import admissions, ice
 from app.database import get_session
 from app.schemas import AdmissionPublic, AdmissionRequest, LeasePublic, LeaseRequest
+from app.session_actions import act
 
 router = APIRouter(
     responses={s: {"model": ErrorEnvelope} for s in (401, 403, 404, 409, 422, 502, 503)}
@@ -19,6 +21,30 @@ Signalling = Annotated[
     str,
     Depends(require_service("signalling", "telelink-consultation-admission", "signalling_secret")),
 ]
+
+
+@router.post("/appointments/{appointment_id}/start")
+def start(appointment_id: UUID, request: Request, identity: Identity, session: DB):
+    return act(
+        session,
+        request.app.state.sources,
+        appointment_id,
+        identity,
+        request.state.request_id,
+        "start",
+    )
+
+
+@router.post("/appointments/{appointment_id}/complete")
+def complete(appointment_id: UUID, request: Request, identity: Identity, session: DB):
+    return act(
+        session,
+        request.app.state.sources,
+        appointment_id,
+        identity,
+        request.state.request_id,
+        "complete",
+    )
 
 
 @router.post("/admissions", response_model=AdmissionPublic, status_code=201)
@@ -33,7 +59,7 @@ def issue(body: AdmissionRequest, request: Request, identity: Identity, session:
         request.state.request_id,
     )
     session.commit()
-    return result
+    return {**result, **ice.configuration(state.settings, result)}
 
 
 @router.post("/internal/admissions/consume", response_model=LeasePublic, tags=["internal"])

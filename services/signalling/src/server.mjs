@@ -27,9 +27,25 @@ export function createServer(config, admissions = new Admissions(config)) {
     },
   });
   peer.on('error', () => {});
+  let discovering = 0;
+  app.post('/peerjs/counterpart', express.json({ limit: '1kb' }), async (request, response) => {
+    if (draining || !config.origins.includes(request.headers.origin)
+      || discovering >= config.maxConnections || !request.body
+      || Object.keys(request.body).sort().join(',') !== 'peer_id,token') {
+      return response.sendStatus(403);
+    }
+    discovering++;
+    try {
+      const peerId = await transport.counterpart(request.body.token, request.body.peer_id);
+      response.json({ peer_id: peerId });
+    } catch { response.sendStatus(403); }
+    finally { discovering--; }
+  });
   // Clients must use issued IDs; block unauthenticated ID allocation/discovery.
   app.use('/peerjs', (_request, response) => response.sendStatus(403), peer);
   app.use((_request, response) => response.sendStatus(404));
+  // Parser/limit errors must not reflect bodies or use Express's raw error logger.
+  app.use((_error, _request, response, _next) => response.sendStatus(400));
   server.drain = () => { draining = true; transport?.drain(); };
   return server;
 }

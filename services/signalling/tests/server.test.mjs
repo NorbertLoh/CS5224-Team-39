@@ -73,6 +73,37 @@ test('real HTTP admission consumption precedes PeerServer registration and preve
   await assert.rejects(api.connect(grant), /403/);
 });
 
+test('V04 discovery returns only the live distinct participant in the same appointment', async (t) => {
+  const api = await setup(t);
+  const patient = api.issue();
+  const doctor = api.issue('doctor-a');
+  const discover = (grant, origin = 'https://localhost:8443', extra = {}) => fetch(`${api.base}/peerjs/counterpart`, {
+    method: 'POST', headers: { origin, 'content-type': 'application/json' },
+    body: JSON.stringify({ token: grant.token, peer_id: grant.peer_id, ...extra }),
+  });
+  assert.equal((await discover(patient)).status, 403); // Unconsumed is not online.
+  await api.connect(patient);
+  assert.deepEqual(await (await discover(patient)).json(), { peer_id: null });
+  const foreign = api.issue('doctor-b', 'b');
+  await api.connect(foreign);
+  assert.deepEqual(await (await discover(patient)).json(), { peer_id: null });
+  assert.equal((await discover(patient, 'https://evil.test')).status, 403);
+  assert.equal((await discover(patient, undefined, { appointment_id: 'b' })).status, 403);
+  assert.equal((await discover({ ...patient, token: doctor.token })).status, 403);
+  const wire = await api.connect(doctor);
+  assert.deepEqual(await (await discover(patient)).json(), { peer_id: doctor.peer_id });
+  assert.deepEqual(await (await discover(doctor)).json(), { peer_id: patient.peer_id });
+  await close(wire);
+  await released(api, doctor);
+  assert.deepEqual(await (await discover(patient)).json(), { peer_id: null });
+  const fresh = api.issue('doctor-a');
+  await api.connect(fresh);
+  assert.deepEqual(await (await discover(patient)).json(), { peer_id: fresh.peer_id });
+  assert.equal((await discover(doctor)).status, 403);
+  api.state.revoked = true;
+  assert.equal((await discover(patient)).status, 403);
+});
+
 test('same-appointment frames pass; cross-appointment, forged and malformed frames close before routing', async (t) => {
   const api = await setup(t);
   const target = api.issue('doctor-a');

@@ -2,11 +2,12 @@
 
 `VideoRoom` supplies patient call-only and doctor call-plus-records layouts. It
 supports real PeerJS 1.5.5 audio/video when given a `RoomConnection` adapter. The
-existing role-protected `/patient/consultation` and `/doctor/consultation` routes
-remain camera checks until V04 supplies booked-appointment admission/discovery.
+role-protected `/patient/consultation` and `/doctor/consultation` routes use
+`BookedConsultation` with real appointment admission and scoped live discovery.
+Choose a booking in appointment details; a route without an ID links back there.
 No manual peer-ID/token fields or fixture authentication are added to production.
 
-## V04 integration boundary
+## Adapter boundary
 
 Pass a stable `connection` prop, and key the room by appointment and user so
 switching context unmounts the previous call. Its contract is in `connection.ts`:
@@ -20,9 +21,9 @@ switching context unmounts the previous call. Its contract is in `connection.ts`
   currently registered peer, or null while waiting. It must never return an
   unrelated, offline or stale peer. Respect cancellation and bound HTTP timeouts.
 
-V02/V03 provide admission enforcement and signalling. V04 still owns the real
-adapter, secure peer discovery, booked-appointment navigation and coordination of
-consultation/scheduling lifecycle actions. Neither a URL role nor an incoming
+V02/V03 provide admission enforcement and signalling. V04 supplies the real
+adapter, scoped discovery, booking navigation and explicit doctor start/complete
+actions. Setup: `docs/V04-booked-video.md`. Neither a URL role nor an incoming
 call's metadata establishes identity. Admission fixtures in the browser tests do
 not complete V04 or a real patient booking/payment journey.
 
@@ -45,7 +46,8 @@ and peer startup, plus media negotiation, each have bounded 15-second waits.
 The expanded room traps keyboard focus, restores focus on leave/disconnect, and
 keeps the doctor workspace mounted so unsaved notes survive call transitions.
 Desktop uses side-by-side panels; mobile stacks them without horizontal overflow.
-Records retain their own real authorization and appointment selection; joining
+Booked rooms pin records to the selected appointment. Records retain their own
+authorization; joining
 video never independently grants clinical write access. Saved records survive
 reload; unsaved edits are discarded by navigation or changing records context.
 Media is not recorded. PeerJS debugging is disabled; errors shown to users never
@@ -92,4 +94,4 @@ denial, device loss, mobile layout and navigation. Separate lifecycle regression
 checks cover cancellation races, late PeerJS creation, verified incoming-call
 answer order and forced-relay validation. TURN/CI results are recorded in PR #199.
 Independent-network, physical-device and AWS observations remain RF01; application
-admission/booking/clinical lifecycle integration remains V04.
+admission/booking/clinical lifecycle integration is documented in `docs/V04-booked-video.md`.
