@@ -13,6 +13,7 @@ class Settings(ServiceSettings):
     tenant_url: str | None = None
     tenant_secret: SecretStr | None = None
     stripe_secret_key: SecretStr | None = None
+    stripe_webhook_secret: SecretStr | None = None
     stripe_destinations: dict[UUID, str] = {}
     checkout_success_url: str = "http://localhost:5173/payments/return"
     checkout_cancel_url: str = "http://localhost:5173/appointments"
@@ -63,6 +64,10 @@ class Settings(ServiceSettings):
             r"sk_test_[A-Za-z0-9]+", self.stripe_secret_key.get_secret_value()
         ):
             raise ValueError("Only Stripe test secret keys are supported")
+        if self.stripe_webhook_secret and not re.fullmatch(
+            r"whsec_[A-Za-z0-9_]+", self.stripe_webhook_secret.get_secret_value()
+        ):
+            raise ValueError("Stripe webhook signing secret must start with whsec_")
         if any(
             not re.fullmatch(r"acct_[A-Za-z0-9]+", a) for a in self.stripe_destinations.values()
         ):

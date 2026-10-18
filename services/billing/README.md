@@ -1,12 +1,13 @@
-# Billing persistence and consultation checkout (B01/B02)
+# Billing persistence, consultation checkout and webhook inbox (B01-B03)
 
 Billing owns `billing.payments` for consultation and medication/delivery attempts,
 provider references and immutable financial snapshots. Contracts define
 [API conventions (C01)](../../contracts/api-conventions.md),
 [payments (C03)](../../contracts/booking-payment.md) and
 [orders/quotes (C04)](../../contracts/prescription-order-quote.md).
-Consultation checkout is implemented in B02. Webhooks, payment status/list APIs,
-refunds, success events and medication checkout follow in B03–B06.
+Consultation checkout is implemented in B02. B03 adds the verified webhook inbox;
+payment processing, status/list APIs, refunds, success events and medication
+checkout follow in B04–B06.
 
 The isolated [X03 Stripe spike](../../docs/stripe-spike.md) provides test-mode
 Checkout/Connect verification commands and an explicitly labelled offline demo.
@@ -17,6 +18,8 @@ sample raw-body signatures using the Stripe SDK, without processing payments.
 
 For B02 routes, service credentials, API/expiry-worker startup, idempotency and
 the approved Stripe hosted-session expiry limitation, see [CHECKOUT.md](CHECKOUT.md).
+For the B03 endpoint, signing secret, receipt semantics and B04 handoff, see
+[WEBHOOKS.md](WEBHOOKS.md).
 
 ## Install
 

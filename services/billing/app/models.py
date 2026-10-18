@@ -162,3 +162,23 @@ class CheckoutKey(Base):
     payment_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("billing.checkout_attempts.payment_id", ondelete="CASCADE")
     )
+
+
+class StripeWebhookEvent(Base):
+    """Durable verified receipt; B04 processes pending rows independently of delivery."""
+
+    __tablename__ = "stripe_webhook_events"
+    __table_args__ = (
+        CheckConstraint("status IN ('pending', 'ignored', 'processed')", name="ck_webhook_status"),
+        Index("ix_stripe_webhook_pending", "status", "received_at"),
+    )
+    event_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    event_type: Mapped[str] = mapped_column(Text)
+    account_id: Mapped[str | None] = mapped_column(Text)
+    api_version: Mapped[str | None] = mapped_column(Text)
+    provider_created_at: Mapped[int] = mapped_column(BigInteger)
+    object_data: Mapped[dict] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(Text)
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
