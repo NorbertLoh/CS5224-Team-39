@@ -62,6 +62,18 @@ class CheckoutPublic(BaseModel):
     expires_at: datetime
 
 
+class PaymentPage(BaseModel):
+    items: list[PaymentPublic]
+    next_cursor: str | None
+
+
+class CommissionTotals(BaseModel):
+    payment_count: int
+    amount: Money
+    commission_amount: Money
+    clinic_amount: Money
+
+
 def payment_public(payment):
     return PaymentPublic(
         **{

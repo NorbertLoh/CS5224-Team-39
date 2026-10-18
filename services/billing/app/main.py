@@ -13,6 +13,7 @@ from telelink_common.middleware import RequestLoggingMiddleware
 from app.api import router
 from app.database import create_database_engine
 from app.provider import StripeCheckout
+from app.queries import router as query_router
 from app.settings import Settings
 from app.upstream import CheckoutSources
 from app.webhooks import router as webhook_router
@@ -72,6 +73,7 @@ def create_app(settings: Settings | None = None):
 
     install_error_handlers(app)
     app.include_router(router)
+    app.include_router(query_router)
     app.include_router(webhook_router)
 
     @app.get("/health/live")
@@ -85,6 +87,7 @@ def create_app(settings: Settings | None = None):
                 app.state.database_engine is not None,
                 config.auth_issuer,
                 config.identity_url,
+                config.cursor_secret,
                 config.scheduling_url,
                 config.scheduling_secret,
                 config.tenant_url,

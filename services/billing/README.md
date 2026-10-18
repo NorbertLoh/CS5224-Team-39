@@ -1,4 +1,4 @@
-# Billing persistence, checkout and payment processing (B01-B04)
+# Billing persistence, checkout, processing and queries (B01-B05)
 
 Billing owns `billing.payments` for consultation and medication/delivery attempts,
 provider references and immutable financial snapshots. Contracts define
@@ -7,7 +7,8 @@ provider references and immutable financial snapshots. Contracts define
 [orders/quotes (C04)](../../contracts/prescription-order-quote.md).
 Consultation checkout is implemented in B02. B03 adds the verified webhook inbox;
 B04 processes validated payments and publishes transactional success events.
-Status/list APIs, refunds and medication checkout follow in later tasks.
+B05 adds authorised status/list APIs and basic commission totals. Refunds and
+medication checkout follow in later tasks.
 
 The isolated [X03 Stripe spike](../../docs/stripe-spike.md) provides test-mode
 Checkout/Connect verification commands and an explicitly labelled offline demo.
@@ -22,6 +23,8 @@ For the B03 endpoint, signing secret, receipt semantics and B04 handoff, see
 [WEBHOOKS.md](WEBHOOKS.md).
 For the B04 processor/publisher commands, retry/review rules and integration limits,
 see [PAYMENT_PROCESSING.md](PAYMENT_PROCESSING.md).
+For B05 routes, access policy, pagination and commission semantics, see
+[PAYMENT_QUERIES.md](PAYMENT_QUERIES.md).
 
 ## Install
 
