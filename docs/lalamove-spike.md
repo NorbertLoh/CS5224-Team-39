@@ -1,6 +1,6 @@
 # X05 Lalamove sandbox feasibility spike
 
-Tracking: issue #166. Assigned to NorbertLoh; In progress.
+Completed in merged PR #167; issue #166 closed. Verified by NorbertLoh.
 
 Scope: isolated SG sandbox quotation, order, status and callback verification.
 No application delivery or payment integration is implemented by this spike.
@@ -109,7 +109,7 @@ Consumers must use the actual provider expiry, avoid assuming a fixed lifetime,
 and handle provider expiry errors. This evidence establishes
 sandbox feasibility only, not real driver pickup/completion, production access,
 medication handling, application integration or AWS callback reachability.
-X05 stays unchecked and issue #166 stays In progress until PR #167 is merged.
+X05 is complete after merged PR #167; all ten push/PR CI checks passed.
 
 References: [API](https://developers.lalamove.com/) and
 [webhook tutorial](https://developers.lalamove.com/files/v3_Webhook_v1.5.pdf).
