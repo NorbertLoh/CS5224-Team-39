@@ -1,0 +1,23 @@
+name: Lalamove sandbox spike
+on:
+  push:
+    paths:
+      - 'services/fulfilment/scripts/lalamove-spike*.mjs'
+      - '.github/workflows/lalamove-spike-checks.yml'
+  pull_request:
+    paths:
+      - 'services/fulfilment/scripts/lalamove-spike*.mjs'
+      - '.github/workflows/lalamove-spike-checks.yml'
+permissions:
+  contents: read
+jobs:
+  spike:
+    name: X05 signing, verification and HTTP callback
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - run: node --test services/fulfilment/scripts/lalamove-spike.test.mjs
