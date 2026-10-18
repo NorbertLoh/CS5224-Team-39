@@ -1,4 +1,4 @@
-import type { Payment } from './fixtures'
+import type { Payment } from './api'
 import { consultationPrice } from '../../lib/money'
 import { paymentTime, purposeLabels, statusLabels } from './model'
 import { PaymentDetails } from './PaymentDetails'
@@ -14,7 +14,7 @@ export function PaymentHistory({ payments }: { payments: Payment[] }) {
     <div className="overflow-x-auto rounded-xl border">
       <table className="w-full text-left text-sm">
         <caption className="px-4 py-3 text-left text-slate-600">
-          {payments.length} fixture payments · oldest first · all amounts in SGD
+          {payments.length} payments · oldest first · all amounts in SGD
         </caption>
         <thead className="bg-slate-50">
           <tr>

@@ -47,7 +47,7 @@ export function ClinicLinks({
             )}
             {edit && (
               <a href={`/clinic-admin/clinics/${clinic.tenant_id}/payments`}>
-                Payments preview
+                Payments
               </a>
             )}
           </div>

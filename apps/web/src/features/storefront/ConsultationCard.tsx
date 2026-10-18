@@ -15,7 +15,7 @@ export function ConsultationCard({ price, slug, active }: { price: Clinic['consu
         <p className="mt-2 text-4xl font-semibold tracking-tight">{consultationPrice(price.amount_minor, price.currency)} <span className="text-sm font-normal text-slate-500">SGD</span></p>
         <p className="mt-4 text-sm leading-relaxed text-slate-600">Get to know the clinic's doctors below before choosing your consultation.</p>
         {active ? <Button asChild className="mt-6 h-11 w-full"><a href={`/patient/clinics/${encodeURIComponent(slug)}/book`}>Book a consultation</a></Button> : <Button disabled className="mt-6 h-11 w-full">Booking unavailable</Button>}
-        <p className="mt-3 text-xs leading-relaxed text-slate-500">{active ? 'Choose a date and a 30-minute time slot. Booking and checkout currently use a demo preview.' : 'This clinic is not accepting bookings.'}</p>
+        <p className="mt-3 text-xs leading-relaxed text-slate-500">{active ? 'Choose a date and a 30-minute time slot. Reserve your time and continue to secure payment.' : 'This clinic is not accepting bookings.'}</p>
       </div>
     </aside>
   )

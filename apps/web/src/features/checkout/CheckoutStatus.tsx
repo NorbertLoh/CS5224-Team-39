@@ -1,11 +1,18 @@
 import { consultationPrice } from '../../lib/money'
-import { checkoutSummary } from './fixtures'
 import type { CheckoutState } from './status'
 
 const messages: Record<
-  CheckoutState | 'return' | 'error' | 'missing',
+  CheckoutState | 'ready' | 'return' | 'error' | 'missing',
   [string, string]
 > = {
+  ready: [
+    'Ready for payment',
+    'Your booking is held until its original deadline. Continue to secure checkout to pay the consultation fee.',
+  ],
+  no_show: [
+    'Appointment marked no-show',
+    'Contact the clinic about this booking. Review the payment details below before making another booking.',
+  ],
   return: [
     'Welcome back from checkout',
     'Your return does not confirm payment. Check the payment and booking status before trying again.',
@@ -58,10 +65,19 @@ const messages: Record<
 
 export function CheckoutStatus({
   state,
+  summary,
+  busy = false,
   cancelledReturn = false,
   onCheck,
   onRetry,
 }: {
+  summary?: {
+    appointmentId: string
+    paymentId: string | null
+    startsAt: string
+    amount: { amount_minor: number; currency: string }
+  }
+  busy?: boolean
   state: keyof typeof messages
   cancelledReturn?: boolean
   onCheck: () => void
@@ -85,12 +101,12 @@ export function CheckoutStatus({
           </p>
         )}
       </div>
-      {state !== 'missing' && (
+      {summary && (
         <dl className="my-6 space-y-3 rounded-xl bg-slate-50 p-4 text-sm">
           <div>
             <dt className="text-slate-500">Consultation</dt>
             <dd>
-              {new Date(checkoutSummary.startsAt).toLocaleString('en-SG', {
+              {new Date(summary.startsAt).toLocaleString('en-SG', {
                 timeZone: 'Asia/Singapore',
               })}{' '}
               SGT
@@ -100,19 +116,21 @@ export function CheckoutStatus({
             <dt className="text-slate-500">Total</dt>
             <dd>
               {consultationPrice(
-                checkoutSummary.amount.amount_minor,
-                checkoutSummary.amount.currency,
+                summary.amount.amount_minor,
+                summary.amount.currency,
               )}
             </dd>
           </div>
           <div>
             <dt className="text-slate-500">Appointment reference</dt>
-            <dd className="break-all">{checkoutSummary.appointmentId}</dd>
+            <dd className="break-all">{summary.appointmentId}</dd>
           </div>
-          <div>
-            <dt className="text-slate-500">Payment reference</dt>
-            <dd className="break-all">{checkoutSummary.paymentId}</dd>
-          </div>
+          {summary.paymentId && (
+            <div>
+              <dt className="text-slate-500">Payment reference</dt>
+              <dd className="break-all">{summary.paymentId}</dd>
+            </div>
+          )}
         </dl>
       )}
       <div className="mt-6 flex flex-wrap gap-3">
@@ -120,18 +138,20 @@ export function CheckoutStatus({
           <button
             type="button"
             className="rounded-lg bg-slate-900 px-4 py-3 text-white"
+            disabled={busy}
             onClick={onCheck}
           >
-            Check fixture status
+            Check payment status
           </button>
         )}
         {state === 'failed' && (
           <button
             type="button"
             className="rounded-lg border px-4 py-3"
+            disabled={busy}
             onClick={onRetry}
           >
-            Preview payment retry
+            Retry payment
           </button>
         )}
         <a className="rounded-lg border px-4 py-3" href="/patient">

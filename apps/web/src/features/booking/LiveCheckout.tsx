@@ -87,10 +87,15 @@ export function LiveCheckout({
           : `Appointment status: ${current.status.replaceAll('_', ' ')}`}
       </p>
       <p className="text-sm text-slate-600">
-        Your time is reserved until the server deadline. Billing checkout is not
-        connected yet (B07). No payment has been taken here. Check Appointments
-        to recover this booking after leaving this page.
+        Your time is reserved until the server deadline. Continue to payment to
+        open secure checkout or check its latest status.
       </p>
+      <a
+        className="inline-block rounded border px-4 py-3"
+        href={`/patient/checkout?appointment_id=${current.appointment_id}`}
+      >
+        Continue to payment
+      </a>
       {detail.isError && (
         <ErrorState
           message={schedulingError(detail.error)}

@@ -178,7 +178,7 @@ test('cancellation respects exact deadline and start boundaries', () => {
     assert.equal(canCancel({ ...appointment, status }, deadline - 1), false)
 })
 
-test('checkout displays server hold, trusted snapshot and explicit billing boundary', () => {
+test('checkout displays server hold, trusted snapshot and live billing handoff', () => {
   const client = schedulingClient()
   client.setQueryData(
     ['scheduling', 'appointment', 's07-test', appointment.appointment_id],
@@ -197,7 +197,8 @@ test('checkout displays server hold, trusted snapshot and explicit billing bound
   assert.match(markup, /real-appointment/)
   assert.match(markup, /32.10/)
   assert.match(markup, /Hold expires in/)
-  assert.match(markup, /Billing checkout is not connected/)
+  assert.match(markup, /Continue to payment/)
+  assert.match(markup, /href="\/patient\/checkout\?appointment_id=real-appointment"/)
   assert.match(markup, /Release booking and change time/)
   assert.doesNotMatch(
     markup,
