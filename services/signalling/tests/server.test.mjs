@@ -82,6 +82,13 @@ test('V04 discovery returns only the live distinct participant in the same appoi
     body: JSON.stringify({ token: grant.token, peer_id: grant.peer_id, ...extra }),
   });
   assert.equal((await discover(patient)).status, 403); // Unconsumed is not online.
+  const malformed = await fetch(`${api.base}/peerjs/counterpart`, {
+    method: 'POST', headers: { origin: 'https://localhost:8443', 'content-type': 'application/json' },
+    body: `{"token":"${patient.token}",`,
+  });
+  assert.equal(malformed.status, 400);
+  assert.equal(malformed.headers.get('cache-control'), 'no-store');
+  assert.equal((await malformed.text()).includes(patient.token), false);
   await api.connect(patient);
   assert.deepEqual(await (await discover(patient)).json(), { peer_id: null });
   const foreign = api.issue('doctor-b', 'b');
