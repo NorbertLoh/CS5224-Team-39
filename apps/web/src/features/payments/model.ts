@@ -1,4 +1,4 @@
-import type { Payment } from './fixtures'
+import type { Payment } from './api'
 
 export const purposeLabels: Record<string, string> = {
   consultation: 'Consultation',

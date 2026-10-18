@@ -12,6 +12,7 @@ import { ErrorState } from '../components/ErrorState'
 import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
 import { DocumentList } from '../features/documents/DocumentList'
 import { VideoRoom } from '../features/video/VideoRoom'
+import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
 import { CheckoutPreview } from '../features/checkout/CheckoutPreview'
 import { ClinicPayments } from '../features/payments/ClinicPayments'
 import { roleLabels } from './access'
@@ -32,6 +33,8 @@ export function AppRoutes({
       return <ClinicStorefront slug={route.slug} />
     case 'booking':
       return <ClinicBooking slug={route.slug} />
+    case 'checkout':
+      return <LiveCheckoutPage />
     case 'checkout-preview':
       return <CheckoutPreview />
     case 'consultation':

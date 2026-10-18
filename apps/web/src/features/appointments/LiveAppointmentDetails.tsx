@@ -70,6 +70,14 @@ export function LiveAppointmentDetails({
           tenantId={appointment.tenant_id}
         />
       )}
+      {role === 'patient' && appointment.patient_id === subjectId && (
+        <a
+          className="inline-block rounded border px-4 py-3"
+          href={`/patient/checkout?appointment_id=${appointment.appointment_id}`}
+        >
+          Payment status and checkout
+        </a>
+      )}
       {allowed && (
         <form
           className="space-y-3 rounded border p-4"

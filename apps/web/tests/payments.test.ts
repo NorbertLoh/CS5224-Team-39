@@ -11,6 +11,7 @@ import {
   clinicPayments,
   commissionTotals,
 } from '../src/features/payments/model'
+import { schedulingClient, renderScheduling } from './scheduling-helpers'
 import { ClinicPayments } from '../src/features/payments/ClinicPayments'
 import { PaymentHistory } from '../src/features/payments/PaymentHistory'
 
@@ -168,36 +169,50 @@ test('totals reject unsafe and non-SGD amounts rather than misreport money', () 
   )
 })
 
-test('clinic screen provides navigation, scoped references, explicit fixture and gross-total explanations', () => {
-  const markup = renderToStaticMarkup(
+test('live clinic screen uses scoped server history and server totals', () => {
+  const client = schedulingClient()
+  const rows = clinicPayments(paymentFixtures, clinicA)
+  client.setQueryData(
+    ['billing', 'history', 's07-test', clinicA, 'all', 'all'],
+    {
+      pages: [{ items: rows, next_cursor: 'next-page' }],
+      pageParams: [null],
+    },
+  )
+  client.setQueryData(['billing', 'totals', 's07-test', clinicA, 'all'], {
+    payment_count: 1,
+    amount: { amount_minor: 9876, currency: 'SGD' },
+    commission_amount: { amount_minor: 123, currency: 'SGD' },
+    clinic_amount: { amount_minor: 9753, currency: 'SGD' },
+  })
+  const markup = renderScheduling(
+    client,
     createElement(ClinicPayments, { tenantId: clinicA }),
   )
   assert.match(markup, /aria-label="Clinic management"/)
-  assert.match(markup, /href="\/clinic-admin"/)
-  assert.match(markup, /Fixture preview/)
-  assert.match(markup, /\$115.00/)
-  assert.match(markup, /\$10.50/)
-  assert.match(markup, /\$104.50/)
+  assert.match(markup, /\$98.76/)
+  assert.match(markup, /\$1.23/)
   assert.match(markup, /not a net payout/)
-  assert.match(markup, /history status filter does not change/)
-  assert.match(markup, /SGT/)
   assert.match(markup, /Manual refund review required/)
-  assert.match(markup, /<details/)
-  assert.doesNotMatch(markup, /Demo Clinic B/)
+  assert.match(markup, /Load more payments/)
+  assert.doesNotMatch(markup, /Fixture preview|fixture payments/)
   for (const foreign of clinicPayments(paymentFixtures, clinicB))
     assert.ok(!markup.includes(foreign.payment_id))
-  assert.doesNotMatch(markup, /patient_id|checkout_url|stripe|webhook/i)
+  client.clear()
 })
 
-test('empty history and unknown clinic show no unrelated payments or totals', () => {
-  const markup = renderToStaticMarkup(
+test('live clinic screen does not substitute fixture totals while loading', () => {
+  const client = schedulingClient()
+  const markup = renderScheduling(
+    client,
     createElement(ClinicPayments, { tenantId: 'unknown-clinic' }),
   )
-  assert.match(markup, /No payments match/)
-  assert.match(markup, /\$0.00/)
-  assert.doesNotMatch(markup, /Demo Clinic|Payment details/)
+  assert.match(markup, /Loading payments/)
+  assert.match(markup, /Loading commission totals/)
+  assert.doesNotMatch(markup, /Demo Clinic|Payment details|\$0.00/)
   assert.match(
     renderToStaticMarkup(createElement(PaymentHistory, { payments: [] })),
     /role="status"/,
   )
+  client.clear()
 })

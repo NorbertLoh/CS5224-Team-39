@@ -1,4 +1,4 @@
-import type { Payment } from './fixtures'
+import type { Payment } from './api'
 import { consultationPrice } from '../../lib/money'
 import { paymentTime } from './model'
 

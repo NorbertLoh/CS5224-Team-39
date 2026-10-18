@@ -6,7 +6,15 @@ export type CheckoutSnapshot = {
     | 'refund_pending'
     | 'refunded'
     | 'refund_failed'
-  appointment: 'pending_payment' | 'confirmed' | 'expired' | 'cancelled'
+  appointment:
+    | 'held'
+    | 'pending_payment'
+    | 'confirmed'
+    | 'in_progress'
+    | 'completed'
+    | 'no_show'
+    | 'expired'
+    | 'cancelled'
   resolution: 'awaiting_payment' | 'confirmed' | 'refund_required' | 'refunded'
   holdExpiresAt: string | null
 }
@@ -21,8 +29,9 @@ export type CheckoutState =
   | 'refund_required'
   | 'refund_pending'
   | 'refunded'
+  | 'no_show'
 
-// B07 must supply authenticated billing/scheduling reads here, never redirect data.
+// Live callers supply authenticated billing/scheduling reads, never redirect data.
 export function checkoutState(
   snapshot: CheckoutSnapshot,
   now: number,
@@ -35,9 +44,11 @@ export function checkoutState(
     snapshot.payment === 'refund_failed'
   )
     return 'refund_required'
+  if (snapshot.appointment === 'no_show') return 'no_show'
   if (snapshot.payment === 'succeeded') {
-    return snapshot.appointment === 'confirmed' &&
-      snapshot.resolution === 'confirmed'
+    return ['confirmed', 'in_progress', 'completed'].includes(
+      snapshot.appointment,
+    ) && snapshot.resolution === 'confirmed'
       ? 'success'
       : 'confirming'
   }

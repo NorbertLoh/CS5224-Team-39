@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { checkoutState } from '../src/features/checkout/status'
-import { fixtureNow, scenarios } from '../src/features/checkout/fixtures'
+import { checkoutSummary, fixtureNow, scenarios } from '../src/features/checkout/fixtures'
 import { CheckoutStatus } from '../src/features/checkout/CheckoutStatus'
 import { CheckoutPreview } from '../src/features/checkout/CheckoutPreview'
 import { canAccess, parseRoute } from '../src/navigation/access'
@@ -94,6 +94,7 @@ function screen(state: Parameters<typeof CheckoutStatus>[0]['state']) {
   return renderToStaticMarkup(
     createElement(CheckoutStatus, {
       state,
+      summary: state === 'missing' ? undefined : checkoutSummary,
       onCheck() {},
       onRetry() {},
       cancelledReturn: true,
@@ -115,10 +116,10 @@ test('unknown, pending and paid outcomes never offer a payment retry', () => {
     'refunded',
   ] as const) {
     const markup = screen(state)
-    assert.doesNotMatch(markup, /Preview payment retry/)
+    assert.doesNotMatch(markup, /Retry payment/)
     assert.match(markup, /href="\/patient"/)
   }
-  assert.match(screen('failed'), /Preview payment retry/)
+  assert.match(screen('failed'), /Retry payment/)
   assert.match(screen('pending'), /Do not start another payment/)
   assert.match(screen('error'), /outcome is unknown/)
   assert.match(screen('return'), /does not mean the payment failed/)

@@ -5,6 +5,7 @@ export type Route =
   | { kind: 'home' }
   | { kind: 'storefront'; slug: string }
   | { kind: 'booking'; role: 'patient'; slug: string }
+  | { kind: 'checkout'; role: 'patient' }
   | { kind: 'checkout-preview'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
@@ -69,6 +70,12 @@ export function parseRoute(path: string): Route {
   const normalized = path.replace(/\/$/, '') || '/'
   if (normalized === '/' || normalized === '/auth/callback')
     return { kind: 'home' }
+  if (
+    normalized === '/patient/checkout' ||
+    normalized === '/payments/return' ||
+    normalized === '/appointments'
+  )
+    return { kind: 'checkout', role: 'patient' }
   if (normalized === '/patient') return { kind: 'role', role: 'patient' }
   if (normalized === '/patient/checkout-preview')
     return { kind: 'checkout-preview', role: 'patient' }

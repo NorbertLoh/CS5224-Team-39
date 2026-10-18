@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CheckoutStatus } from './CheckoutStatus'
-import { fixtureNow, scenarios } from './fixtures'
+import { checkoutSummary, fixtureNow, scenarios } from './fixtures'
 import type { Scenario } from './fixtures'
 import { checkoutState } from './status'
 
@@ -22,8 +22,7 @@ export function CheckoutPreview() {
         <p className="font-semibold">Checkout preview · synthetic data</p>
         <p className="mt-2">
           No payment is taken and no appointment is changed. These historical
-          examples use a fixed server time. Live billing will be connected in
-          B07.
+          examples use a fixed server time. Open a booking from Appointments to view live billing.
         </p>
         <label className="mt-4 block">
           Preview scenario
@@ -45,6 +44,7 @@ export function CheckoutPreview() {
       </aside>
       <CheckoutStatus
         state={state}
+        summary={checkoutSummary}
         cancelledReturn={scenario === 'cancelled'}
         onCheck={() => setChecked(true)}
         onRetry={() => {
