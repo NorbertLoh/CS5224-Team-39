@@ -141,9 +141,12 @@ def verify_evidence(session, intent, charge, fee, transfer, destination):
         and charge.get("payment_intent") == intent.get("id"),
         "Payment linkage mismatch",
     )
+    # Destination fees reference the platform charge and the clinic payment separately.
     require(
         charge.get("application_fee") == fee.get("id")
-        and fee.get("charge") == charge.get("id")
+        and fee.get("originating_transaction") == charge.get("id")
+        and bool(transfer.get("destination_payment"))
+        and fee.get("charge") == transfer.get("destination_payment")
         and charge.get("transfer") == transfer.get("id")
         and transfer.get("source_transaction") == charge.get("id"),
         "Fee/transfer linkage mismatch",

@@ -54,7 +54,8 @@ def objects():
         base
         | {
             "id": "fee_example",
-            "charge": "ch_example",
+            "charge": "py_example",
+            "originating_transaction": "ch_example",
             "amount": 500,
             "account": "acct_example",
             "refunded": False,
@@ -64,6 +65,7 @@ def objects():
         | {
             "id": "tr_example",
             "source_transaction": "ch_example",
+            "destination_payment": "py_example",
             "amount": 5000,
             "destination": "acct_example",
             "amount_reversed": 0,
@@ -111,9 +113,12 @@ class StripeSpikeTests(unittest.TestCase):
             [
                 (0, "payment_status", "unpaid"),
                 (0, "status", "open"),
+                (0, "status", "expired"),
                 (0, "metadata", {}),
                 (0, "amount_total", 1),
                 (1, "status", "processing"),
+                (1, "status", "canceled"),
+                (1, "status", "requires_payment_method"),
                 (1, "application_fee_amount", 1),
                 (1, "latest_charge", "ch_unrelated"),
                 (2, "captured", False),
@@ -121,7 +126,11 @@ class StripeSpikeTests(unittest.TestCase):
                 (3, "amount", 1),
                 (3, "refunded", True),
                 (3, "charge", "ch_unrelated"),
+                (3, "originating_transaction", "ch_unrelated"),
+                (3, "originating_transaction", None),
                 (4, "destination", "acct_other"),
+                (4, "destination_payment", "py_unrelated"),
+                (4, "destination_payment", None),
                 (4, "amount_reversed", 1),
                 (4, "source_transaction", "ch_other"),
             ]
@@ -133,6 +142,15 @@ class StripeSpikeTests(unittest.TestCase):
                 data = deepcopy(objects())
                 data[index][key] = value
                 with self.assertRaises(SpikeError):
+                    verify_evidence(*data, "acct_example")
+
+    def test_fee_must_link_both_platform_charge_and_destination_payment(self):
+        for fee_charge, destination_payment in ((None, None), ("ch_example", "py_example")):
+            with self.subTest(fee_charge=fee_charge):
+                data = objects()
+                data[3]["charge"] = fee_charge
+                data[4]["destination_payment"] = destination_payment
+                with self.assertRaisesRegex(SpikeError, "Fee/transfer linkage mismatch"):
                     verify_evidence(*data, "acct_example")
 
     def test_inspection_fetches_independent_objects(self):

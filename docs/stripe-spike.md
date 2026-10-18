@@ -94,7 +94,7 @@ On 17 October 2026, the seven standalone unit tests and the offline demo passed
 on Python 3.10.8. Missing credentials fail before network access; the local `.env`
 is ignored by Git. These checks use fixtures and do not prove provider access.
 
-Pending: verify Connect readiness, complete a hosted
+Original gate before the 18 October retry: verify Connect readiness, complete a hosted
 test payment, capture sanitized inspection evidence, and record decline/cancel
 behaviour. Tooling merged in PR #159 at the requester's instruction; keep issue
 #158 In progress and X03 unchecked until provider verification is complete. Access blockers belong
@@ -137,6 +137,10 @@ the platform Charge, while its `charge` identifies the Transfer's
 `destination_payment`. Check both links rather than comparing `fee.charge` to the
 platform Charge. References: [ApplicationFee](https://docs.stripe.com/api/application_fees/object)
 and [Transfer](https://docs.stripe.com/api/transfers/object).
+
+The corrected inspector returned `provider_verified: true` for this Session.
+The earlier unpaid Session was rejected with `Missing or invalid payment_intents ID`.
+Eight local unit tests passed, including rejection of mismatched/missing fee links.
 
 Real declined/cancelled hosted payments have not been exercised. Fixture checks
 reject unpaid/open/cancelled/failed states; these do not establish hosted decline
