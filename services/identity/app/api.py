@@ -11,7 +11,7 @@ from telelink_common.access import has_global_role, has_tenant_role
 from telelink_common.auth import Principal, require_principal
 from telelink_common.errors import DomainError, ErrorEnvelope
 
-from app.auth import require_scheduling_service
+from app.auth import require_access_service
 from app.database import find_subject, get_session
 from app.models import Membership, Subject
 from app.pagination import cursor_key, decode_cursor, encode_cursor
@@ -33,7 +33,7 @@ router = APIRouter(
 )
 DB = Annotated[Session, Depends(get_session)]
 User = Annotated[Principal, Depends(require_principal)]
-Service = Annotated[frozenset[str], Depends(require_scheduling_service)]
+Service = Annotated[frozenset[str], Depends(require_access_service)]
 
 
 def current_subject(session, principal):
@@ -265,9 +265,19 @@ def access_decision(body: AccessRequest, actions: Service, session: DB):
         membership, body.tenant_id, "doctor"
     )
     admin = has_tenant_role(membership, body.tenant_id, "clinic_admin")
-    if own and body.action in {"appointment.read", "appointment.cancel", "clinical.read"}:
+    if own and body.action in {
+        "appointment.read",
+        "appointment.cancel",
+        "clinical.read",
+        "consultation.join",
+    }:
         return AccessDecision(allowed=True, reason="own_appointment")
-    if assigned and body.action in {"appointment.read", "clinical.read", "clinical.write"}:
+    if assigned and body.action in {
+        "appointment.read",
+        "clinical.read",
+        "clinical.write",
+        "consultation.join",
+    }:
         return AccessDecision(allowed=True, reason="assigned_doctor")
     if admin and body.action in {"appointment.read", "appointment.cancel", "medicine.ready"}:
         return AccessDecision(allowed=True, reason="clinic_admin")

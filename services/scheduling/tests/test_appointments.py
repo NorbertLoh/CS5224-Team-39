@@ -108,6 +108,21 @@ def path(appointment, suffix=""):
     return "/appointments/" + str(appointment.appointment_id) + suffix
 
 
+def test_consultation_internal_context_requires_its_service_credential(appointment_api):
+    client = appointment_api[0]
+    appointment = record(appointment_api, status="confirmed")
+    target = "/internal/appointments/" + str(appointment.appointment_id)
+    assert client.get(target).status_code == 401
+    assert client.get(target, headers=service("scheduling-operator")).status_code == 401
+    response = client.get(target, headers=service())
+    assert response.status_code == 200
+    assert response.json()["patient_id"] == str(appointment.patient_id)
+    assert response.json()["payment_id"] == str(appointment.payment_id)
+    assert (
+        client.get("/internal/appointments/" + str(uuid4()), headers=service()).status_code == 404
+    )
+
+
 def test_reads_filtered_for_patient_doctor_admin_platform(appointment_api):
     api = appointment_api
     client, user, tenant, other, ids, *_ = api

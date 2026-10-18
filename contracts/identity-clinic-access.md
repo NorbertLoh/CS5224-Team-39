@@ -122,8 +122,12 @@ service identity with an allowlist for the requested action; network location
 alone is insufficient. Body requires `subject_id`, `tenant_id`, `action` and
 `resource` (`appointment_id`, `patient_id`, `doctor_id`). Supported actions:
 `appointment.read`, `appointment.cancel`, `clinical.read`, `clinical.write`,
-`medicine.ready`. Appointment fields must come from the authenticated scheduling
-service's resource context, not a public browser body. The endpoint is not exposed
+`medicine.ready`, `consultation.join`. Appointment fields must come from the authenticated scheduling
+service's resource context, not a public browser body. V02's consultation caller
+obtains that context through scheduling's authenticated internal appointment read.
+Its separate service credential permits only `consultation.join`: owning patient
+or assigned active doctor, with no clinic/platform admin override. Other actions
+remain governed by the scheduling caller's configured allowlist. The endpoint is not exposed
 through public ingress. It checks current subject roles/memberships and the above
 matrix, returning 200 `{ "allowed": true, "reason": "own_appointment" }` or
 `{ "allowed": false, "reason": "not_authorized" }`. Reasons are safe codes;

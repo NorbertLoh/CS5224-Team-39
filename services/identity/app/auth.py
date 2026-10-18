@@ -5,8 +5,27 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from telelink_common.service_auth import require_service
 
 scheduling_bearer = HTTPBearer(auto_error=False, scheme_name="SchedulingServiceJWT")
+
+
+def require_access_service(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(scheduling_bearer)],
+) -> frozenset[str]:
+    if request.app.state.settings.consultation_secret is not None:
+        try:
+            require_service(
+                "consultation", "telelink-identity-consultation", "consultation_secret"
+            )(request, credentials)
+            return frozenset({"consultation.join"})
+        except HTTPException as error:
+            if error.status_code != 401:
+                raise
+            if request.app.state.settings.scheduling_secret is None:
+                raise
+    return require_scheduling_service(request, credentials)
 
 
 def require_scheduling_service(

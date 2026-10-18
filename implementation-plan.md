@@ -134,8 +134,8 @@ Setup/contracts are complete. Claim a ready task from the audit above; B02 is co
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | V01 | Create consultation service schema and session start/end/join-window rules. Issue #193 is assigned to NorbertLoh and In progress; PR #194 implements service-owned persistence and lifecycle rules. Admission and remote scheduling/payment validation remain V02. | F04, C02 | M |
-| [ ] | V02 | Add admission API validating actual appointment, participants and payment. | V01, A06, S04, X02 | M |
+| [x] | V01 | Create consultation service schema and session start/end/join-window rules. Completed in merged PR #194; issue #193 closed. 52 local PostgreSQL tests and all eight CI checks passed. Setup: `services/consultation/README.md`. Admission and video integration remain V02-V04. | F04, C02 | M |
+| [ ] | V02 | Add admission API validating actual appointment, participants and payment. Issue #195 assigned to NorbertLoh and In progress; PR #196 adds current identity/scheduling/billing validation and durable single-use peer-bound grants. Local four-service HTTP checks passed with synthetic persisted records; PeerServer/browser integration remains V03/V04. | V01, A06, S04, X02 | M |
 | [ ] | V03 | Package PeerServer with admission validation and local HTTPS/WSS routing. | X02, F10 | M |
 | [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. PR #127 supplies role-protected patient/doctor layouts, local media controls and expanded join/leave previews; application remote PeerJS/TURN integration remains unfinished. X01 #56 supplies the verified local spike in merged PR #57; AWS cross-network evidence is RF01 #155. Issue #126 stays In progress. | F07, X01 | L |
 | [ ] | V04 | Connect video room to admission and booked appointment pages. | U11, V02, V03, S07 | M |

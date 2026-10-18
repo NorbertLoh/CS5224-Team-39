@@ -8,7 +8,12 @@ from telelink_common.access import ClinicMembership, ClinicRole, CurrentIdentity
 MembershipRole = ClinicRole
 MembershipStatus = Literal["active", "revoked"]
 Action = Literal[
-    "appointment.read", "appointment.cancel", "clinical.read", "clinical.write", "medicine.ready"
+    "appointment.read",
+    "appointment.cancel",
+    "clinical.read",
+    "clinical.write",
+    "medicine.ready",
+    "consultation.join",
 ]
 
 
