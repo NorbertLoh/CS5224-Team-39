@@ -5,6 +5,7 @@ export type Route =
   | { kind: 'home' }
   | { kind: 'storefront'; slug: string }
   | { kind: 'booking'; role: 'patient'; slug: string }
+  | { kind: 'checkout-preview'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | { kind: 'profile' | 'staff'; role: 'clinic_admin'; tenantId: string }
@@ -65,6 +66,8 @@ export function parseRoute(path: string): Route {
   if (normalized === '/' || normalized === '/auth/callback')
     return { kind: 'home' }
   if (normalized === '/patient') return { kind: 'role', role: 'patient' }
+  if (normalized === '/patient/checkout-preview')
+    return { kind: 'checkout-preview', role: 'patient' }
   if (normalized === '/doctor') return { kind: 'role', role: 'doctor' }
   if (normalized === '/patient/consultation')
     return { kind: 'consultation', role: 'patient' }
