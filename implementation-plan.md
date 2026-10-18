@@ -13,10 +13,10 @@ UI work can start against the agreed API fixtures after its listed contract depe
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
 Completion audit, updated 18 October 2026: reconciled the backlog with open/closed
-GitHub issues, open/merged PRs and the current implementation. **73 tasks are complete,
-F01 is skipped by user decision, and 55 tasks remain unfinished.** The 74 checked
+GitHub issues, open/merged PRs and the current implementation. **74 tasks are complete,
+F01 is skipped by user decision, and 54 tasks remain unfinished.** The 75 checked
 rows include that skipped task. Completed work comprises F02-F16, C01-C05,
-A01-A11, U01-U09, S01-S07, R01-R04, U12-U14, P01-P03, M01-M04, D01, B01-B06 and X01-X05.
+A01-A11, U01-U10, S01-S07, R01-R04, U12-U14, P01-P03, M01-M04, D01, B01-B06 and X01-X05.
 D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
 PR #138 and closed issue #137; P02 after merged PR #144 and closed issue #128;
 P03 after merged PR #148 and closed issue #147; U14 after merged PR #151 and
@@ -38,7 +38,7 @@ Current claims and remaining blockers:
 | Delivery | X05 completed in merged PR #167; issue #166 closed. Actual SG sandbox quotation/order/status and signed order/cancellation callbacks verified; ten local tests and all ten CI checks passed. D02 issue #134 remains assigned to NorbertLoh and In progress, with D01/X05 dependencies now complete; no D02 adapter is claimed complete. D03/D04 have complete listed dependencies. D05-D07 still depend on quote/readiness/payment/delivery work. |
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
-Unclaimed tasks with complete listed dependencies: U10, V01,
+Unclaimed tasks with complete listed dependencies: B07, V01,
 D03, D04, U15, U16, N01 and Q02. These are candidates to claim, not new
 assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
@@ -127,7 +127,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; B02 is co
 | [x] | B05 | Add authorised payment status/list APIs and basic commission totals. Completed in merged PR #179; issue #178 closed. 228 billing tests plus 38 subtests, loopback HTTP authorisation/revocation, Ruff and all eight CI checks passed. Setup: `services/billing/PAYMENT_QUERIES.md`; `SERVICE_CURSOR_SECRET` required for pagination/readiness. Stripe/frontend/refund integration remains unverified. | B03, A06 | M |
 | [x] | B06 | Add medication/delivery checkout with validated order/quote totals. Completed in merged PR #182; issue #181 closed. Trusted reservation totals, commission excluding delivery, durable concurrent retries, expiry handling, signed medication success/outbox and fulfilment-only resolution passed 285 billing tests plus 38 subtests, loopback HTTP and all eight CI checks. Setup: `services/billing/MEDICATION_CHECKOUT.md`; migration `0005`, fulfilment credentials and the user-approved best-effort expiry worker required. Permitted fulfilment/Stripe fixtures do not establish real order/quote integration; I03 remains unfinished. | B04, C04 | M |
 | [x] | U09 | Build checkout return/pending/failure/success screens using fixtures. Completed in merged PR #185; issue #184 closed. Patient-only preview, exact expiry, delayed confirmation and manual refund guidance passed 88 frontend tests, lint, production build and all six CI checks. Setup: `apps/web/src/features/checkout/README.md`; no new configuration. Browser/AWS and live billing integration remain unverified; real handoff stays B07. | F07, F08, C03 | M |
-| [ ] | U10 | Build clinic payments and simple commission summary using fixtures. | F07, F08, C03 | M |
+| [x] | U10 | Build clinic payments and simple commission summary using fixtures. Completed in merged PR #188; issue #187 closed. Clinic-scoped fixture history, filters, details and immutable commission totals passed 94 frontend tests, Prettier, lint, production build and all six CI checks. Setup: `apps/web/src/features/payments/README.md`; no new configuration. Local preview HTTP/CSS checks passed; browser/AWS and real billing integration remain unverified. B07 owns the live handoff. | F07, F08, C03 | M |
 | [ ] | B07 | Connect payment pages and scheduling handoff to real billing APIs. | B02, B05, U09, U10, S07 | M |
 
 ## Week 2-3: consultation, records and files
