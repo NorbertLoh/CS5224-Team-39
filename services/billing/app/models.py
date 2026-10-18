@@ -8,6 +8,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     FetchedValue,
+    ForeignKey,
     Index,
     Integer,
     MetaData,
@@ -16,6 +17,7 @@ from sqlalchemy import (
     func,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 SERVICE_SCHEMA = "billing"
@@ -135,4 +137,28 @@ class Payment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), server_onupdate=FetchedValue()
+    )
+
+
+class CheckoutAttempt(Base):
+    """Durable operation before reservation/provider calls; may precede its payment snapshot."""
+
+    __tablename__ = "checkout_attempts"
+    payment_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    appointment_id: Mapped[UUID] = mapped_column(Uuid, index=True)
+    patient_id: Mapped[UUID] = mapped_column(Uuid)
+    hold_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    provider_fields: Mapped[dict | None] = mapped_column(JSONB)
+    response: Mapped[dict | None] = mapped_column(JSONB)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CheckoutKey(Base):
+    __tablename__ = "checkout_keys"
+    patient_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    key: Mapped[str] = mapped_column(Text, primary_key=True)
+    appointment_id: Mapped[UUID] = mapped_column(Uuid)
+    payment_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("billing.checkout_attempts.payment_id", ondelete="CASCADE")
     )

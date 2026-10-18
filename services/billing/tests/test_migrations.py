@@ -15,10 +15,12 @@ def test_fresh_upgrade_creates_billing_table(database_url):
             assert connection.scalar(text("SELECT current_user")) == "billing"
             assert connection.scalar(text("SHOW timezone")) == "UTC"
             assert (
-                connection.scalar(text("SELECT version_num FROM billing.alembic_version")) == "0001"
+                connection.scalar(text("SELECT version_num FROM billing.alembic_version")) == "0002"
             )
         assert set(inspect(engine).get_table_names(schema="billing")) == {
             "payments",
+            "checkout_attempts",
+            "checkout_keys",
             "alembic_version",
         }
     finally:

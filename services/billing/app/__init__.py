@@ -1,1 +1,1 @@
-"""Billing-owned payment persistence; HTTP/provider flows are separate tasks."""
+"""Billing persistence and consultation checkout; webhook processing follows in B03/B04."""

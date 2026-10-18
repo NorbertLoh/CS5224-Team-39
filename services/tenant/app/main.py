@@ -12,6 +12,7 @@ from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.admin import router as admin_router
 from app.api import router
+from app.billing_profiles import router as billing_profiles_router
 from app.database import create_database_engine
 from app.doctors import router as doctors_router
 from app.document_profiles import router as document_profiles_router
@@ -71,6 +72,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(admin_router)
     app.include_router(logos_router)
     app.include_router(document_profiles_router)
+    app.include_router(billing_profiles_router)
 
     @app.get("/health/live", tags=["health"])
     def live():
