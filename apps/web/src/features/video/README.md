@@ -57,3 +57,5 @@ keyboard navigation and background scrolling. The doctor workspace composes
 These files use Prettier 3.6.2 with `--single-quote --no-semi`. After the component
 split, lint, TypeScript/build, all 65 tests and Prettier checks passed; the patient
 join/leave browser flow and focus restoration were verified again.
+
+U11 continuation: live reusable room transport, tracked under issue #126. V04 retains booked-appointment/admission wiring.
