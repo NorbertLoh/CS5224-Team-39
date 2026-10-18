@@ -1,6 +1,6 @@
 # B07 live billing integration
 
-Issue #190 / PR #191 connects the existing B02/B05 APIs to booking, patient
+Merged PR #191 (closed issue #190) connects the existing B02/B05 APIs to booking, patient
 payment status and clinic payment history. No billing schema or service contract
 changes are required.
 
@@ -28,6 +28,25 @@ Use one browser origin consistently, including the hostname. Set both billing
 The older service defaults `/payments/return` and `/appointments` also resolve to
 the protected live payment page. Return URLs are server configuration; the browser
 sends only appointment ID and Idempotency-Key when creating checkout.
+
+## Local Stripe webhook forwarding
+
+Run the official Stripe CLI as a separate process alongside the billing API and
+workers, authenticated to the configured Stripe test account:
+
+```powershell
+stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed --forward-to http://127.0.0.1:8009/webhooks/stripe
+```
+
+Set billing's `SERVICE_STRIPE_WEBHOOK_SECRET` to this listener's displayed
+`whsec_...` secret and restart the API. Wait for the receiver to be ready before
+paying or resending an event. Keep the listener running for the entire local
+session. A paid checkout otherwise remains pending because the backend has no
+verified receipt; returning to the frontend is not a webhook. To recover a real
+missed test event, use `stripe events resend <event_id>` while the receiver and
+listener are ready. Do not create another payment or manually mark it succeeded.
+The deployed system uses its registered public HTTPS callback instead of this
+local CLI forwarder.
 
 ## Patient flow
 
@@ -80,8 +99,21 @@ confirmation/refund states, redirect host checks, live clinic rendering and load
 An actual loopback Vite HTTP proxy test verifies prefix removal, header/body
 forwarding and internal-route rejection against a synthetic HTTP upstream.
 
-These checks do not establish actual billing-service/Stripe webhook processing,
-real booking confirmation, browser interaction or AWS operation. The full real
-clinic -> booking -> Stripe payment -> confirmed appointment journey remains I01;
-provider and scheduling/refund reconciliation limits from B02/B04 remain applicable.
-Keep B07 In progress until its PR is merged and completion criteria are accepted.
+Additional verification on 18 October 2026: the user opened doctor availability,
+reserved a slot and completed actual hosted Stripe test Checkout for SGD 25.01.
+The initial local startup omitted webhook forwarding, leaving the payment pending.
+After starting the official Stripe CLI and configuring its signing secret, the
+original `checkout.session.completed` event was resent by Stripe and delivered
+with a genuine signature; the receiver returned HTTP 200. Billing stored the
+receipt as processed and the payment as succeeded, published the outbox event
+through the local messaging setup, and scheduling stored confirmed/confirmed.
+The browser displayed Appointment confirmed with the matching SGD 25.01 amount
+and appointment/payment references. No second payment or direct status update was
+used. The local clinic payment page also loaded its real empty history/totals
+before this payment. The API/processor/publisher/scheduling consumer and forwarder
+must remain running for subsequent local tests.
+
+This verifies the local booking/payment handoff. It does not complete the full
+I01 clinic-approval journey, AWS operation or refund scenarios; provider and
+scheduling/refund reconciliation limits from B02/B04 remain applicable. B07 merged
+in PR #191; issue #190 is closed and its backlog task is checked.
