@@ -92,10 +92,10 @@ On 17 October 2026, the seven standalone unit tests and the offline demo passed
 on Python 3.10.8. Missing credentials fail before network access; the local `.env`
 is ignored by Git. These checks use fixtures and do not prove provider access.
 
-Pending: fill both local variables, verify Connect readiness, complete a hosted
+Pending: verify Connect readiness, complete a hosted
 test payment, capture sanitized inspection evidence, and record decline/cancel
-behaviour. Keep issue #158 In progress, PR #159 draft and X03 unchecked until
-provider verification is complete and the PR is merged. Access blockers belong
+behaviour. Tooling merged in PR #159 at the requester's instruction; keep issue
+#158 In progress and X03 unchecked until provider verification is complete. Access blockers belong
 on the issue; do not unblock B02 with offline fixture evidence.
 
 Provider check on 17 October 2026: both local variables are now configured.
