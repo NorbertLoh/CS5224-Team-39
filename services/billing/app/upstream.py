@@ -2,7 +2,7 @@ import httpx
 from telelink_common.errors import DomainError
 from telelink_common.service_auth import service_token
 
-from app.schemas import BillingProfile, Reservation
+from app.schemas import BillingProfile, MedicationReservation, Reservation
 
 
 class CheckoutSources:
@@ -39,6 +39,11 @@ class CheckoutSources:
                 "clinic_not_active",
                 "invalid_appointment_transition",
                 "payment_attempt_pending",
+                "quote_expired",
+                "quote_superseded",
+                "prescription_not_issued",
+                "medication_unavailable",
+                "invalid_order_transition",
             }
             try:
                 code = result.json()["error"]["code"]
@@ -89,3 +94,32 @@ class CheckoutSources:
             return value
         except (ValueError, TypeError):
             raise DomainError(502, "upstream_error", "Invalid clinic response.") from None
+
+    def reserve_medication(self, order_id, quote_id, patient_id, payment_id, request_id):
+        result = self.request(
+            "POST",
+            self.settings.fulfilment_url,
+            self.settings.fulfilment_secret,
+            "telelink-fulfilment-billing",
+            f"/internal/orders/{order_id}/checkout-reservation",
+            request_id,
+            json={
+                "quote_id": str(quote_id),
+                "patient_id": str(patient_id),
+                "payment_id": str(payment_id),
+            },
+        )
+        try:
+            value = MedicationReservation.model_validate(result.json())
+            if (value.order_id, value.quote_id, value.patient_id, value.payment_id) != (
+                order_id,
+                quote_id,
+                patient_id,
+                payment_id,
+            ):
+                raise ValueError("Context mismatch")
+            return value
+        except (ValueError, TypeError):
+            raise DomainError(
+                502, "upstream_error", "Invalid order reservation response."
+            ) from None

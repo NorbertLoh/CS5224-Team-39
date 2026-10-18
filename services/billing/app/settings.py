@@ -13,6 +13,8 @@ class Settings(ServiceSettings):
     scheduling_secret: SecretStr | None = None
     tenant_url: str | None = None
     tenant_secret: SecretStr | None = None
+    fulfilment_url: str | None = None
+    fulfilment_secret: SecretStr | None = None
     stripe_secret_key: SecretStr | None = None
     stripe_webhook_secret: SecretStr | None = None
     stripe_destinations: dict[UUID, str] = {}
@@ -30,6 +32,7 @@ class Settings(ServiceSettings):
         for field in (
             "scheduling_url",
             "tenant_url",
+            "fulfilment_url",
             "checkout_success_url",
             "checkout_cancel_url",
         ):
@@ -61,7 +64,11 @@ class Settings(ServiceSettings):
                 or (url.scheme != "https" and self.environment not in {"local", "test"})
             ):
                 raise ValueError("CORS requires explicit origins, HTTPS outside local/test")
-        secrets = [s.get_secret_value() for s in (self.scheduling_secret, self.tenant_secret) if s]
+        secrets = [
+            s.get_secret_value()
+            for s in (self.scheduling_secret, self.tenant_secret, self.fulfilment_secret)
+            if s
+        ]
         if any(len(s.encode()) < 32 for s in secrets) or len(secrets) != len(set(secrets)):
             raise ValueError("Service secrets must differ and contain at least 32 bytes")
         if self.stripe_secret_key and not re.fullmatch(

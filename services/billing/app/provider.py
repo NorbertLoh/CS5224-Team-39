@@ -39,7 +39,11 @@ class StripeCheckout:
             "client_reference_id": str(payment.payment_id),
             "line_items[0][price_data][currency]": "sgd",
             "line_items[0][price_data][unit_amount]": str(payment.amount_minor),
-            "line_items[0][price_data][product_data][name]": "TeleLink consultation",
+            "line_items[0][price_data][product_data][name]": (
+                "TeleLink medication and delivery"
+                if payment.purpose == "medication_delivery"
+                else "TeleLink consultation"
+            ),
             "line_items[0][quantity]": "1",
             "payment_intent_data[transfer_data][destination]": destination,
             "success_url": self.settings.checkout_success_url,
@@ -53,9 +57,14 @@ class StripeCheckout:
                 payment.commission_amount_minor
             )
         for prefix in ("metadata", "payment_intent_data[metadata]"):
-            for name in ("payment_id", "appointment_id", "tenant_id", "patient_id"):
+            resource_fields = (
+                ("order_id", "quote_id")
+                if payment.purpose == "medication_delivery"
+                else ("appointment_id",)
+            )
+            for name in ("payment_id", "tenant_id", "patient_id", *resource_fields):
                 fields[f"{prefix}[{name}]"] = str(getattr(payment, name))
-            fields[f"{prefix}[purpose]"] = "consultation"
+            fields[f"{prefix}[purpose]"] = payment.purpose
         return fields
 
     def request(self, method, path, *, fields=None, key=None):

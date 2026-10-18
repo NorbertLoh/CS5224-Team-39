@@ -17,9 +17,14 @@ def require(condition, code="provider_context_mismatch"):
 
 
 def metadata_matches(value, payment):
+    resources = (
+        ("order_id", "quote_id")
+        if payment.purpose == "medication_delivery"
+        else ("appointment_id",)
+    )
     expected = {
         name: str(getattr(payment, name))
-        for name in ("payment_id", "appointment_id", "tenant_id", "patient_id", "purpose")
+        for name in ("payment_id", "tenant_id", "patient_id", "purpose", *resources)
     }
     return isinstance(value, dict) and all(value.get(k) == v for k, v in expected.items())
 
@@ -30,13 +35,24 @@ def reconcile(provider, receipt, payment, attempt):
         raise ReceiptDeferred("checkout_linkage_pending")
     require(payment.provider == "stripe" and payment.provider_account_id is None)
     require(receipt.account_id is None, "account_mismatch")
-    require(payment.purpose == "consultation", "unsupported_payment_purpose")
-    require(bool(re.fullmatch(r"cs_test_[A-Za-z0-9]+", payment.provider_checkout_id)))
     require(
-        attempt.appointment_id == payment.appointment_id
-        and attempt.patient_id == payment.patient_id,
-        "checkout_context_mismatch",
+        payment.purpose in {"consultation", "medication_delivery"}, "unsupported_payment_purpose"
     )
+    require(bool(re.fullmatch(r"cs_test_[A-Za-z0-9]+", payment.provider_checkout_id)))
+    if payment.purpose == "medication_delivery":
+        require(
+            attempt.order_id == payment.order_id
+            and attempt.quote_id == payment.quote_id
+            and attempt.patient_id == payment.patient_id
+            and attempt.quote_expires_at is not None,
+            "checkout_context_mismatch",
+        )
+    else:
+        require(
+            attempt.appointment_id == payment.appointment_id
+            and attempt.patient_id == payment.patient_id,
+            "checkout_context_mismatch",
+        )
     obj = receipt.object_data
     checkout_event = receipt.event_type.startswith("checkout.session.")
     require(

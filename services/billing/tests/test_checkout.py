@@ -33,7 +33,10 @@ def api(database, database_url):
     # Worker tests must not sweep operations left by a previous local test run.
     with database.begin() as connection:
         connection.execute(
-            text("TRUNCATE billing.checkout_keys, billing.checkout_attempts, billing.payments")
+            text(
+                "TRUNCATE billing.checkout_keys, billing.checkout_attempts, billing.payments, "
+                "billing.medication_checkout_keys, billing.medication_checkout_attempts"
+            )
         )
     patient, other, tenant, appointment = uuid4(), uuid4(), uuid4(), uuid4()
     expires = datetime.now(timezone.utc) + timedelta(minutes=9)

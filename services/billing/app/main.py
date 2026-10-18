@@ -92,6 +92,8 @@ def create_app(settings: Settings | None = None):
                 config.scheduling_secret,
                 config.tenant_url,
                 config.tenant_secret,
+                config.fulfilment_url,
+                config.fulfilment_secret,
                 config.stripe_secret_key,
                 config.stripe_destinations,
             )
@@ -101,7 +103,7 @@ def create_app(settings: Settings | None = None):
                 with app.state.database_engine.connect() as connection:
                     available = (
                         connection.scalar(text("SELECT version_num FROM billing.alembic_version"))
-                        == "0004"
+                        == "0005"
                     )
             except SQLAlchemyError:
                 available = False
