@@ -97,3 +97,25 @@ consultation-internal access. Results/browser evidence are recorded in PR #202.
 Synthetic persisted paid bookings and signed test identities establish local
 integration, not a new hosted Stripe payment or a complete patient booking flow.
 AWS, independent-network/physical-device observations and RF01 remain separate.
+
+### Observed results, 19 October 2026
+
+- 111 frontend tests, ESLint and production typecheck/build passed.
+- 110 consultation tests passed against disposable PostgreSQL, plus Ruff checks.
+- 12 signalling checks passed, including live scoped discovery and parser privacy.
+- CI passed frontend, consultation, backend lint, signalling and forced-TURN video.
+- Two isolated Chromium contexts loaded the production application through the
+  optional HTTPS proxy, using signed, scoped synthetic identities and actual
+  identity/scheduling/billing/consultation apps with persisted synthetic paid
+  appointments. Both roles navigated from appointment details; an unrelated user
+  was denied. Real admission consumption and live counterpart discovery connected
+  bidirectional audio/video RTP. Leaving stopped tracks/connections; rejoining
+  issued two distinct fresh peer IDs per participant and restored media. Doctor
+  start/completion updated actual scheduling and both rooms cleaned up on completion.
+
+The browser used fake camera/microphone sources, a local certificate exception and
+HTTP/1.1 for the loopback TLS test. Ancillary tenant, clinical-record and document
+services were not started in this run; their panels reported unavailable APIs.
+No clinical save/download, new hosted payment, full booking flow, physical-device
+or AWS result is claimed by this browser check. The isolated app/API processes and
+signalling Compose project were stopped after verification.
