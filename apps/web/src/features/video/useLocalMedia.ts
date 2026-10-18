@@ -44,7 +44,7 @@ export function useLocalMedia() {
       setError(
         'Camera access requires localhost or HTTPS and a supported browser.',
       )
-      return
+      return null
     }
     setPending(true)
     try {
@@ -54,7 +54,7 @@ export function useLocalMedia() {
       })
       if (id !== request.current) {
         next.getTracks().forEach((track) => track.stop())
-        return
+        return null
       }
       current.current = next
       next.getTracks().forEach((track) =>
@@ -73,8 +73,10 @@ export function useLocalMedia() {
       setStream(next)
       setCamera(true)
       setMicrophone(true)
+      return next
     } catch (failure) {
       if (id === request.current) setError(mediaError(failure))
+      return null
     } finally {
       if (id === request.current) setPending(false)
     }
