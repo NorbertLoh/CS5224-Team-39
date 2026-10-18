@@ -38,7 +38,7 @@ Current claims and remaining blockers:
 | Delivery | X05 completed in merged PR #167; issue #166 closed. Actual SG sandbox quotation/order/status and signed order/cancellation callbacks verified; ten local tests and all ten CI checks passed. D02 issue #134 remains assigned to NorbertLoh and In progress, with D01/X05 dependencies now complete; no D02 adapter is claimed complete. D03/D04 have complete listed dependencies. D05-D07 still depend on quote/readiness/payment/delivery work. |
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
-Unclaimed tasks with complete listed dependencies: V01,
+Unclaimed tasks with complete listed dependencies:
 D03, D04, U15, U16, N01 and Q02. These are candidates to claim, not new
 assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
@@ -134,7 +134,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; B02 is co
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | V01 | Create consultation service schema and session start/end/join-window rules. | F04, C02 | M |
+| [ ] | V01 | Create consultation service schema and session start/end/join-window rules. Issue #193 is assigned to NorbertLoh and In progress; PR #194 implements service-owned persistence and lifecycle rules. Admission and remote scheduling/payment validation remain V02. | F04, C02 | M |
 | [ ] | V02 | Add admission API validating actual appointment, participants and payment. | V01, A06, S04, X02 | M |
 | [ ] | V03 | Package PeerServer with admission validation and local HTTPS/WSS routing. | X02, F10 | M |
 | [ ] | U11 | Build video room, camera/mic controls and disconnect/rejoin states. PR #127 supplies role-protected patient/doctor layouts, local media controls and expanded join/leave previews; application remote PeerJS/TURN integration remains unfinished. X01 #56 supplies the verified local spike in merged PR #57; AWS cross-network evidence is RF01 #155. Issue #126 stays In progress. | F07, X01 | L |
