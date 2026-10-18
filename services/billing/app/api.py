@@ -32,7 +32,7 @@ def payment_reader(
     request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
 ):
-    for caller in ("scheduling", "fulfilment"):
+    for caller in ("scheduling", "fulfilment", "consultation"):
         if getattr(request.app.state.settings, caller + "_secret") is None:
             continue
         try:
@@ -89,7 +89,7 @@ def internal_payment(
     payment_id: UUID, caller: PaymentReader, session: Annotated[Session, Depends(get_session)]
 ):
     payment = session.get(Payment, payment_id)
-    purpose = "consultation" if caller == "scheduling" else "medication_delivery"
+    purpose = "consultation" if caller in {"scheduling", "consultation"} else "medication_delivery"
     if payment is None or payment.purpose != purpose:
         raise DomainError(404, "not_found", "Resource not found.")
     return payment_public(payment)

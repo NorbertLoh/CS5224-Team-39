@@ -15,6 +15,7 @@ class Settings(ServiceSettings):
     tenant_secret: SecretStr | None = None
     fulfilment_url: str | None = None
     fulfilment_secret: SecretStr | None = None
+    consultation_secret: SecretStr | None = None
     stripe_secret_key: SecretStr | None = None
     stripe_webhook_secret: SecretStr | None = None
     stripe_destinations: dict[UUID, str] = {}
@@ -66,7 +67,12 @@ class Settings(ServiceSettings):
                 raise ValueError("CORS requires explicit origins, HTTPS outside local/test")
         secrets = [
             s.get_secret_value()
-            for s in (self.scheduling_secret, self.tenant_secret, self.fulfilment_secret)
+            for s in (
+                self.scheduling_secret,
+                self.tenant_secret,
+                self.fulfilment_secret,
+                self.consultation_secret,
+            )
             if s
         ]
         if any(len(s.encode()) < 32 for s in secrets) or len(secrets) != len(set(secrets)):

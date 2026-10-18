@@ -389,6 +389,46 @@ def test_internal_payment_read_requires_scoped_service_token(api):
     assert client.get(path, headers={"Authorization": "Bearer " + token}).status_code == 200
 
 
+def test_consultation_payment_reader_has_separate_read_only_credentials(api):
+    from pydantic import SecretStr
+
+    from tests.helpers import insert, payment_values
+
+    client = api[0]
+    payment_id = checkout(api).json()["payment"]["payment_id"]
+    secret = SecretStr("v02-billing-consultation-at-least-32-bytes")
+    client.app.state.settings.consultation_secret = secret
+    client.app.state.settings.fulfilment_secret = SecretStr(
+        "v02-fulfilment-secret-at-least-32-bytes"
+    )
+    token = service_token(secret, "consultation", "telelink-billing-consultation")
+    headers = {"Authorization": "Bearer " + token}
+    path = "/internal/payments/" + payment_id
+    assert client.get(path, headers=headers).status_code == 200
+    assert (
+        client.post(
+            path + "/resolution",
+            headers=headers,
+            json={
+                "resolution": "refund_required",
+                "resource_id": str(uuid4()),
+                "reason": "quote_expired",
+            },
+        ).status_code
+        == 401
+    )
+    order, quote = uuid4(), uuid4()
+    other = insert(
+        api[-1],
+        payment_values(
+            purpose="medication_delivery", appointment_id=None, order_id=order, quote_id=quote
+        ),
+    )
+    assert client.get("/internal/payments/" + str(other), headers=headers).status_code == 404
+    wrong = service_token(secret, "consultation", "telelink-billing-scheduling")
+    assert client.get(path, headers={"Authorization": "Bearer " + wrong}).status_code == 401
+
+
 def test_readiness_requires_checkout_configuration():
     with TestClient(create_app(Settings(_env_file=None))) as client:
         assert client.get("/health/live").status_code == 200

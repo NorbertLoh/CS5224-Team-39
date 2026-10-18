@@ -533,6 +533,46 @@ def test_access_decisions_reject_untrusted_and_stale_context(api):
 
 
 @pytest.mark.parametrize(
+    "name,allowed",
+    [
+        ("patient", True),
+        ("doctor", True),
+        ("other_patient", False),
+        ("former", False),
+        ("admin_a", False),
+        ("platform", False),
+    ],
+)
+def test_consultation_service_only_gets_participant_join_decisions(api, name, allowed):
+    from telelink_common.service_auth import service_token
+
+    secret = SecretStr("v02-consultation-identity-at-least-32-bytes")
+    api.app.state.settings.consultation_secret = secret
+    headers = {
+        "Authorization": "Bearer "
+        + service_token(secret, "consultation", "telelink-identity-consultation")
+    }
+    body = decision_body(api, name, "consultation.join")
+    response = api.client.post("/access-decisions", json=body, headers=headers)
+    assert response.status_code == 200
+    assert response.json()["allowed"] is allowed
+    assert (
+        api.client.post(
+            "/access-decisions", json=body | {"action": "clinical.read"}, headers=headers
+        ).status_code
+        == 403
+    )
+    if name == "doctor":
+        with Session(api.engine) as db, db.begin():
+            membership = db.scalar(select(Membership).where(Membership.subject_id == api.ids[name]))
+            membership.status = "revoked"
+        assert (
+            api.client.post("/access-decisions", json=body, headers=headers).json()["allowed"]
+            is False
+        )
+
+
+@pytest.mark.parametrize(
     "changes",
     [
         {"sub": "tenant"},

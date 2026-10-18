@@ -1,10 +1,12 @@
-# Consultation sessions (V01)
+# Consultation sessions and admission (V01/V02)
 
 Consultation owns PostgreSQL schema `consultation`, its own Alembic version table,
 and one session per appointment. UUID links to scheduling and identity are opaque;
 there are no cross-service foreign keys or reads. The schema stores tenant,
 appointment, patient, doctor, scheduled UTC interval, state and lifecycle times.
-It contains no clinical notes, credentials, media or recordings.
+It contains no clinical notes, raw credentials, media or recordings. V02 adds
+hashed, single-use admission leases; see [ADMISSION.md](ADMISSION.md) for API,
+service authentication, setup and observed verification.
 
 ## Lifecycle rules
 
@@ -12,7 +14,7 @@ It contains no clinical notes, credentials, media or recordings.
 creation is idempotent by appointment ID; different tenant, participant or schedule
 snapshots for the same appointment fail with `session_context_conflict` (409).
 The snapshot is immutable. Scheduling retains cancellation/no-show ownership;
-V02 must reject those actual appointment states before using a session.
+V02 rejects those actual appointment states before using a session.
 
 | Operation | Rule |
 | --- | --- |
@@ -40,18 +42,19 @@ Use the service role, not a database superuser. No row-level security is claimed
 
 ## Integration boundary
 
-These are internal Python domain functions, with no HTTP endpoints or application
-authentication bypass. The tenant/doctor parameters must come from validated
+The lifecycle functions are internal Python operations. V02 exposes admission
+HTTP endpoints, described separately in ADMISSION.md. The tenant/doctor parameters must come from validated
 server context. `can_join` evaluates time/state only; it is **not authorization**.
 `now` is a trusted clock injection for tests, never a client-supplied timestamp;
 omitting it uses server UTC after acquiring the lifecycle row lock.
 
-V02 must authenticate callers, resolve current membership and actual appointment
-participants/payment/state, build the trusted snapshot and issue short-lived
-admission. It must coordinate scheduling's authenticated start/complete operations
-with durable retry/reconciliation rather than claiming a cross-service atomic
-transaction. No scheduling transition is made by V01. V03/V04 own signalling and
-browser integration. No real admission, payment or video integration is claimed.
+V02 authenticates callers, resolves current membership and actual appointment
+participants/payment/state, builds the trusted snapshot and issues short-lived
+admission. Admission never starts or completes an appointment. The later video
+lifecycle integration must coordinate scheduling start/complete with durable
+retry/reconciliation; no cross-service atomic transaction is claimed. V03/V04
+retain PeerServer wiring and browser integration. No video/provider/AWS integration
+is completed by these local service checks.
 
 ## Local setup
 

@@ -173,6 +173,19 @@ def internal_action(appointment_id, action, session):
     return appointment_public(appointment)
 
 
+@router.get(
+    "/internal/appointments/{appointment_id}",
+    response_model=AppointmentPublic,
+    dependencies=[Depends(require_consultation)],
+    tags=["internal"],
+)
+def consultation_context(appointment_id: UUID, session: DB):
+    appointment = session.get(Appointment, appointment_id)
+    if appointment is None:
+        raise DomainError(404, "not_found", "Resource not found.")
+    return appointment_public(appointment)
+
+
 @router.post(
     "/internal/appointments/{appointment_id}/start",
     response_model=AppointmentPublic,
