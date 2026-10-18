@@ -8,7 +8,11 @@ export type Route =
   | { kind: 'checkout-preview'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
-  | { kind: 'profile' | 'staff' | 'payments'; role: 'clinic_admin'; tenantId: string }
+  | {
+      kind: 'profile' | 'staff' | 'payments'
+      role: 'clinic_admin'
+      tenantId: string
+    }
   | { kind: 'platform'; role: 'platform_admin'; tenantId?: string }
   | { kind: 'missing' }
 
@@ -91,9 +95,10 @@ export function parseRoute(path: string): Route {
       role: 'platform_admin',
       tenantId: platform[1].toLowerCase(),
     }
-  const clinic = /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments)$/.exec(
-    normalized,
-  )
+  const clinic =
+    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments)$/.exec(
+      normalized,
+    )
   if (clinic && uuid.test(clinic[1]))
     return {
       kind: clinic[2] as 'profile' | 'staff' | 'payments',

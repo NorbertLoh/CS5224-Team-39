@@ -12,8 +12,8 @@ const refundExamples: Payment[] = [
   ...original,
   payment_id: `00000000-0000-4000-8000-0000000002${index}0`,
   appointment_id: `00000000-0000-4000-8000-0000000002${index}1`,
-    order_id: null,
-    quote_id: null,
+  order_id: null,
+  quote_id: null,
   status,
   resolution: status === 'refunded' ? 'none' : 'refund_required',
 }))

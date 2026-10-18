@@ -12,7 +12,6 @@ export const statusLabels: Record<string, string> = {
   refund_failed: 'Refund failed',
   refunded: 'Refunded',
 }
-export const paymentStatuses = Object.keys(statusLabels)
 
 export function clinicPayments(
   payments: Payment[],
