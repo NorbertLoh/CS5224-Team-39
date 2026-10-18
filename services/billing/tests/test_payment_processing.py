@@ -33,7 +33,8 @@ def flow(database):
         connection.execute(
             text(
                 "TRUNCATE billing.event_outbox, billing.stripe_webhook_events, "
-                "billing.checkout_keys, billing.checkout_attempts, billing.payments"
+                "billing.checkout_keys, billing.checkout_attempts, billing.payments, "
+                "billing.medication_checkout_keys, billing.medication_checkout_attempts"
             )
         )
     values = payment_values(provider_checkout_id="cs_test_" + uuid4().hex)

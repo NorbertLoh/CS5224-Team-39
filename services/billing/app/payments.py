@@ -10,7 +10,13 @@ from telelink_common.events import new_event
 from telelink_common.outbox import add_event
 from telelink_common.outbox.publisher import retry_delay
 
-from app.models import CheckoutAttempt, Payment, StripeWebhookEvent, event_outbox
+from app.models import (
+    CheckoutAttempt,
+    MedicationCheckoutAttempt,
+    Payment,
+    StripeWebhookEvent,
+    event_outbox,
+)
 from app.provider import ProviderRejected, ProviderUncertain
 from app.reconciliation import ReceiptDeferred, ReceiptRejected, reconcile
 
@@ -50,7 +56,7 @@ def apply_receipt(session, receipt, provider, now):
     # racing a lost create response or deadlocking while a checkout is in flight.
     acquired = session.scalar(
         text("SELECT pg_try_advisory_xact_lock(hashtextextended(:name, 0))"),
-        {"name": "billing-checkout:" + str(payment.appointment_id)},
+        {"name": "billing-checkout:" + str(payment.order_id or payment.appointment_id)},
     )
     if not acquired:
         raise ReceiptDeferred("checkout_busy")
@@ -60,7 +66,10 @@ def apply_receipt(session, receipt, provider, now):
         .with_for_update()
         .execution_options(populate_existing=True)
     )
-    attempt = session.get(CheckoutAttempt, payment.payment_id)
+    medication = payment.purpose == "medication_delivery"
+    attempt = session.get(
+        MedicationCheckoutAttempt if medication else CheckoutAttempt, payment.payment_id
+    )
     if attempt is None:
         raise ReceiptDeferred("checkout_context_missing")
     outcome, intent_id = reconcile(provider, receipt, payment, attempt)
@@ -71,11 +80,19 @@ def apply_receipt(session, receipt, provider, now):
         # Expiry does not erase a paid fact. Scheduling owns late-payment recovery
         # and duplicate-charge/refund decisions after consuming this success.
         attempt.closed_at = attempt.closed_at or now
+        if medication and now >= attempt.quote_expires_at:
+            # Conservative: delayed processing also requires review. Never hide a
+            # verified charge or imply that an expired delivery fee remains valid.
+            payment.resolution = "refund_required"
+            attempt.resolution_reason = "quote_expired"
+            attempt.resolution_requested_at = now
         add_event(
             session,
             event_outbox,
             new_event(
-                "consultation_payment_succeeded.v1",
+                "medication_payment_succeeded.v1"
+                if medication
+                else "consultation_payment_succeeded.v1",
                 tenant_id=payment.tenant_id,
                 correlation_id=payment.payment_id,
                 occurred_at=now,
@@ -84,7 +101,9 @@ def apply_receipt(session, receipt, provider, now):
                 ),
                 data={
                     "payment_id": payment.payment_id,
-                    "appointment_id": payment.appointment_id,
+                    ("order_id" if medication else "appointment_id"): (
+                        payment.order_id if medication else payment.appointment_id
+                    ),
                     "amount": {"amount_minor": payment.amount_minor, "currency": payment.currency},
                 },
             ),

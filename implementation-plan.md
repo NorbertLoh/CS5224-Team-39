@@ -38,7 +38,7 @@ Current claims and remaining blockers:
 | Delivery | X05 completed in merged PR #167; issue #166 closed. Actual SG sandbox quotation/order/status and signed order/cancellation callbacks verified; ten local tests and all ten CI checks passed. D02 issue #134 remains assigned to NorbertLoh and In progress, with D01/X05 dependencies now complete; no D02 adapter is claimed complete. D03/D04 have complete listed dependencies. D05-D07 still depend on quote/readiness/payment/delivery work. |
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
-Unclaimed tasks with complete listed dependencies: B06, U09, U10, V01,
+Unclaimed tasks with complete listed dependencies: U09, U10, V01,
 D03, D04, U15, U16, N01 and Q02. These are candidates to claim, not new
 assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
@@ -125,7 +125,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; B02 is co
 | [x] | B03 | Add raw-body webhook signature verification and event-ID deduplication. Completed in merged PR #173; issue #172 closed. 167 billing tests plus 38 subtests, actual loopback HTTP signature/replay checks, migration round-trips, Ruff and all eight CI checks passed. Setup and B04 handoff: `services/billing/WEBHOOKS.md`; real Stripe delivery remains unverified. | B02, X04 | M |
 | [x] | B04 | Save payment changes and outbox event in one transaction; publish success. Completed in merged PR #176; issue #175 closed. 201 billing tests plus 38 subtests, atomic rollback/concurrency checks, actual loopback HTTP-to-Floci EventBridge/SQS delivery, migration checks, Ruff and all eight CI checks passed. Stripe reads were simulated; real payment/refund integration remains unverified. Setup: `services/billing/PAYMENT_PROCESSING.md`. | B03, M02, C05 | M |
 | [x] | B05 | Add authorised payment status/list APIs and basic commission totals. Completed in merged PR #179; issue #178 closed. 228 billing tests plus 38 subtests, loopback HTTP authorisation/revocation, Ruff and all eight CI checks passed. Setup: `services/billing/PAYMENT_QUERIES.md`; `SERVICE_CURSOR_SECRET` required for pagination/readiness. Stripe/frontend/refund integration remains unverified. | B03, A06 | M |
-| [ ] | B06 | Add medication/delivery checkout with validated order/quote totals. | B04, C04 | M |
+| [ ] | B06 | Add medication/delivery checkout with validated order/quote totals. Assignee: NorbertLoh; status: in progress, issue #181, PR #182. Billing boundary uses permitted fulfilment fixtures; real order/quote integration remains I03. | B04, C04 | M |
 | [ ] | U09 | Build checkout return/pending/failure/success screens using fixtures. | F07, F08, C03 | M |
 | [ ] | U10 | Build clinic payments and simple commission summary using fixtures. | F07, F08, C03 | M |
 | [ ] | B07 | Connect payment pages and scheduling handoff to real billing APIs. | B02, B05, U09, U10, S07 | M |

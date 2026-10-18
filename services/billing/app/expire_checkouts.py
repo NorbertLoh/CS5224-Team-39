@@ -8,23 +8,39 @@ from sqlalchemy.orm import Session
 
 from app.checkout import checkout_lock, expire_attempt, now
 from app.database import create_database_engine
-from app.models import CheckoutAttempt, Payment
+from app.models import CheckoutAttempt, MedicationCheckoutAttempt, Payment
 from app.provider import ProviderRejected, ProviderUncertain, StripeCheckout
 from app.settings import Settings
 
 
 def expire_due(engine, provider):
+    outcomes = {"closed": 0, "pending": 0}
+    for model, resource, deadline in (
+        (CheckoutAttempt, CheckoutAttempt.appointment_id, CheckoutAttempt.hold_expires_at),
+        (
+            MedicationCheckoutAttempt,
+            MedicationCheckoutAttempt.order_id,
+            MedicationCheckoutAttempt.quote_expires_at,
+        ),
+    ):
+        result = expire_model(engine, provider, model, resource, deadline)
+        for key in outcomes:
+            outcomes[key] += result[key]
+    return outcomes
+
+
+def expire_model(engine, provider, model, resource, deadline):
     with Session(engine) as session:
         rows = session.execute(
-            select(CheckoutAttempt.payment_id, CheckoutAttempt.appointment_id)
-            .where(CheckoutAttempt.closed_at.is_(None), CheckoutAttempt.hold_expires_at <= now())
-            .order_by(CheckoutAttempt.hold_expires_at)
+            select(model.payment_id, resource)
+            .where(model.closed_at.is_(None), deadline <= now())
+            .order_by(deadline)
             .limit(100)
         ).all()
     outcomes = {"closed": 0, "pending": 0}
     for payment_id, appointment_id in rows:
         with checkout_lock(engine, appointment_id) as session:
-            attempt = session.get(CheckoutAttempt, payment_id)
+            attempt = session.get(model, payment_id)
             payment = session.get(Payment, payment_id)
             if attempt.closed_at is not None or payment is None:
                 continue

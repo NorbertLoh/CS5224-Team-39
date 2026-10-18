@@ -168,6 +168,41 @@ class CheckoutKey(Base):
     )
 
 
+class MedicationCheckoutAttempt(Base):
+    __tablename__ = "medication_checkout_attempts"
+    __table_args__ = (
+        Index(
+            "uq_medication_checkout_open_order",
+            "order_id",
+            unique=True,
+            postgresql_where=text("closed_at IS NULL"),
+        ),
+    )
+    payment_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    order_id: Mapped[UUID] = mapped_column(Uuid)
+    quote_id: Mapped[UUID] = mapped_column(Uuid)
+    patient_id: Mapped[UUID] = mapped_column(Uuid)
+    quote_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reservation: Mapped[dict | None] = mapped_column(JSONB)
+    provider_fields: Mapped[dict | None] = mapped_column(JSONB)
+    response: Mapped[dict | None] = mapped_column(JSONB)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolution_reason: Mapped[str | None] = mapped_column(Text)
+    resolution_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class MedicationCheckoutKey(Base):
+    __tablename__ = "medication_checkout_keys"
+    patient_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    key: Mapped[str] = mapped_column(Text, primary_key=True)
+    order_id: Mapped[UUID] = mapped_column(Uuid)
+    quote_id: Mapped[UUID] = mapped_column(Uuid)
+    payment_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("billing.medication_checkout_attempts.payment_id", ondelete="CASCADE")
+    )
+
+
 class StripeWebhookEvent(Base):
     """Durable verified receipt; B04 processes pending rows independently of delivery."""
 
