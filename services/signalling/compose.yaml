@@ -5,7 +5,7 @@ services:
     environment:
       SIGNALLING_ENVIRONMENT: local
       SIGNALLING_HOST: 0.0.0.0
-      SIGNALLING_ORIGINS: https://localhost:8443
+      SIGNALLING_ORIGINS: ${SIGNALLING_ORIGINS:-https://localhost:8443}
       CONSULTATION_URL: ${CONSULTATION_URL:-http://host.docker.internal:8004}
       SIGNALLING_SECRET: ${SIGNALLING_SECRET:?Set the matching consultation signalling key}
     extra_hosts:
