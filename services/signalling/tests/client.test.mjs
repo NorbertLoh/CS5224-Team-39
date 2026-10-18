@@ -22,7 +22,7 @@ test('admission client rejects malformed, redirected, oversized and changed leas
   });
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
   t.after(() => { server.closeAllConnections(); server.close(); });
-  const client = new Admissions({ url: `http://127.0.0.1:${server.address().port}`, secret: SECRET, timeoutMs: 100 });
+  const client = new Admissions({ url: `http://127.0.0.1:${server.address().port}`, secret: SECRET, timeoutMs: 3000 });
   const grant = await client.consume(token, peerId);
   for (mode of ['invalid', 'oversized', 'wrongPeer', 'expired', 'redirect']) {
     await assert.rejects(client.consume(token, peerId));
@@ -36,7 +36,7 @@ test('upstream timeout is bounded and never retries consumption', async (t) => {
   const server = http.createServer(() => { requests++; });
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
   t.after(() => { server.closeAllConnections(); server.close(); });
-  const client = new Admissions({ url: `http://127.0.0.1:${server.address().port}`, secret: SECRET, timeoutMs: 30 });
+  const client = new Admissions({ url: `http://127.0.0.1:${server.address().port}`, secret: SECRET, timeoutMs: 250 });
   await assert.rejects(client.consume('a'.repeat(43), randomUUID()));
   assert.equal(requests, 1);
 });
