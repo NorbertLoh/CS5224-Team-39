@@ -13,10 +13,10 @@ UI work can start against the agreed API fixtures after its listed contract depe
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
 Completion audit, updated 18 October 2026: reconciled the backlog with open/closed
-GitHub issues, open/merged PRs and the current implementation. **67 tasks are complete,
-F01 is skipped by user decision, and 61 tasks remain unfinished.** The 68 checked
+GitHub issues, open/merged PRs and the current implementation. **68 tasks are complete,
+F01 is skipped by user decision, and 60 tasks remain unfinished.** The 69 checked
 rows include that skipped task. Completed work comprises F02-F16, C01-C05,
-A01-A11, U01-U08, S01-S07, R01-R04, U12-U14, P01-P03, M01-M04, D01, B01 and X01-X05.
+A01-A11, U01-U08, S01-S07, R01-R04, U12-U14, P01-P03, M01-M04, D01, B01-B02 and X01-X05.
 D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
 PR #138 and closed issue #137; P02 after merged PR #144 and closed issue #128;
 P03 after merged PR #148 and closed issue #147; U14 after merged PR #151 and
@@ -32,13 +32,13 @@ Current claims and remaining blockers:
 | Work | Current status and remaining work |
 | --- | --- |
 | X01 / U11 / consultation | X01 completed in merged PR #57; issue #56 closed. It meets the user-accepted local scope: two-browser media, controls/rejoin and actual local forced TURN over UDP/TCP verified. AWS cross-network evidence is deferred to refinement RF01 / issue #155. U11's preview merged in PR #127, but issue #126 stays open until application remote calling works. X02 is complete in merged PR #157; issue #156 closed; V02-V04 still depend on unfinished admission/video work; V01's listed dependencies are complete. |
-| Billing | B01 completed in merged PR #138; issue #137 closed. Its 89 PostgreSQL tests and CI passed. X03 completed in merged PRs #159/#164; issue #158 closed. On 18 October the enabled test account completed a real Stripe test payment with SGD 50 paid, SGD 5 application fee and linked destination transfer verified; eight local unit tests and all eight fix PR CI checks passed. X04 completed its agreed independent sample raw-body signature scope in merged PR #162; issue #161 closed. Its 28 local checks and all ten CI checks passed; real Stripe delivery remains unverified. B02-B07 and the real billing handoff are unfinished; S05/S06 fixtures do not establish billing integration. |
+| Billing | B01 completed in merged PR #138; issue #137 closed. Its 89 PostgreSQL tests and CI passed. B02 completed in merged PR #170; issue #169 closed. Trusted consultation checkout, persistent idempotency and the approved best-effort expiry worker passed actual four-service HTTP Stripe test creation/replay/unpaid expiry checks. All twelve CI checks passed: billing 132 tests plus 38 subtests, scheduling with Redis 226 passed/two skipped, and tenant 116 passed; local Redis verification matched CI. X03 completed in merged PRs #159/#164; issue #158 closed. On 18 October the enabled test account completed a real Stripe test payment with SGD 50 paid, SGD 5 application fee and linked destination transfer verified; eight local unit tests and all eight fix PR CI checks passed. X04 completed its agreed independent sample raw-body signature scope in merged PR #162; issue #161 closed. Its 28 local checks and all ten CI checks passed; real Stripe delivery remains unverified. B03-B07 and the real billing handoff are unfinished; S05/S06 fixtures do not establish billing integration. |
 | Documents | P02 completed in merged PR #144; issue #128 closed. The authenticated/audited records projection, trusted current-name lookups and stored-PDF worker passed local transport/replay/recovery checks and CI. P03 completed in merged PR #148; issue #147 closed. Authorised/audited lists and signed downloads passed 89 document tests, local HTTP verification and CI. U14 completed in merged PR #151; issue #150 closed. Patient/doctor lists and downloads passed 82 frontend tests, live adapter/Vite checks, Prettier and CI. Address/registration fields remain optional prototype omissions. Browser interaction and AWS privacy/download verification remain unfinished. |
 | Records / fulfilment | D01 merged with an explicitly permitted dispensing fixture, not real order integration. C04's authenticated dispensing projection and its HTTP adapter remain missing. R04 completed in merged PR #142; issue #141 closed. Real frontend records saves, issuance and catalogue integration passed local HTTP verification. Browser/AWS and actual consultation/payment journeys remain unverified. |
 | Delivery | X05 completed in merged PR #167; issue #166 closed. Actual SG sandbox quotation/order/status and signed order/cancellation callbacks verified; ten local tests and all ten CI checks passed. D02 issue #134 remains assigned to NorbertLoh and In progress, with D01/X05 dependencies now complete; no D02 adapter is claimed complete. D03/D04 have complete listed dependencies. D05-D07 still depend on quote/readiness/payment/delivery work. |
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
-Unclaimed tasks with complete listed dependencies: B02, U09, U10, V01,
+Unclaimed tasks with complete listed dependencies: B03, U09, U10, V01,
 D03, D04, U15, U16, N01 and Q02. These are candidates to claim, not new
 assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
@@ -78,7 +78,7 @@ prerequisites; an unchecked task is not necessarily blocked by external access.
 
 C02-C05 each need a quick review by someone building a consuming feature. They do not need a meeting with all five people. Use temporary fixtures for feasibility spikes and keep credentials out of Git. If sandbox access is blocked, record it immediately and implement an explicitly labelled adapter for demo continuity.
 
-Setup/contracts are complete. Claim a ready task from the audit above; X03 is complete and B02's listed dependencies are now complete. X05 is complete and D02's listed dependencies are now complete; its existing claim remains with NorbertLoh. X01 is complete; X02 is complete in merged PR #157; issue #156 closed.
+Setup/contracts are complete. Claim a ready task from the audit above; B02 is complete in merged PR #170 and B03's listed dependencies are now complete. X05 is complete and D02's listed dependencies are now complete; its existing claim remains with NorbertLoh. X01 is complete; X02 is complete in merged PR #157; issue #156 closed.
 
 ## Week 1-2: authentication and clinics
 
@@ -121,7 +121,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; X03 is co
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [x] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. Completed in merged PR #138; 89 PostgreSQL tests, migration isolation/round-trips, SQL/ORM snapshot protection, lint/format and CI passed. Issue #137 closed. | F04, C03, C04 | M |
-| [ ] | B02 | Add consultation checkout API with trusted price and appointment linkage. | B01, X03, A06 | M |
+| [x] | B02 | Add consultation checkout API with trusted price and appointment linkage. Completed in merged PR #170; issue #169 closed. Authenticated reservation/commission APIs, immutable snapshots, concurrent request/provider idempotency and the user-approved best-effort Stripe expiry worker verified. Actual four-service HTTP Stripe test creation/replay/unpaid expiry passed; all twelve CI checks passed (132 billing tests plus 38 subtests; scheduling with Redis 226 passed/two skipped; tenant 116 passed). Local Redis verification matched CI. Setup/expiry limitations: `services/billing/CHECKOUT.md`; webhook/payment-success/frontend integration remains B03-B07. | B01, X03, A06 | M |
 | [ ] | B03 | Add raw-body webhook signature verification and event-ID deduplication. | B02, X04 | M |
 | [ ] | B04 | Save payment changes and outbox event in one transaction; publish success. | B03, M02, C05 | M |
 | [ ] | B05 | Add authorised payment status/list APIs and basic commission totals. | B03, A06 | M |

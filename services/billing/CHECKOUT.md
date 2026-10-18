@@ -147,8 +147,9 @@ linkage and the original deadline were verified. At that deadline the real
 worker expired the unpaid Stripe session; an independent Stripe GET confirmed
 `expired`/`unpaid`, and billing stored `failed`. No card payment was taken.
 
-Local Python 3.10 checks passed the full B01/B02 billing persistence suite and
-the new reservation/profile checks, plus all 116 tenant checks, migration parity,
-Ruff and `pip check`. A local full scheduling run without Redis produced
-192 passes, 34 skips and one existing cache-dependent recovery-test failure;
-its CI job supplies Redis. Exact final CI counts are recorded in the PR.
+Merged PR #170 passed all twelve CI checks on PostgreSQL 17/Python 3.10:
+billing 132 tests plus 38 subtests, scheduling with Redis 226 passed/two skipped,
+and tenant 116 passed. Local checks also passed migration parity, Ruff and
+`pip check`. After Docker became available, the full local scheduling suite with
+isolated Redis 7.4 passed 226 tests with two skipped, matching CI and resolving
+the earlier Redis-unavailable local test limitation. Issue #169 is closed.
