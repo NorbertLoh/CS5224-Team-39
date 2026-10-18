@@ -1,5 +1,9 @@
 # Fulfilment (D01)
 
+X05's isolated Lalamove sandbox CLI and callback verifier are documented in
+[`docs/lalamove-spike.md`](../../docs/lalamove-spike.md). They do not update
+application orders or implement D02/D05/D06.
+
 Owns the `fulfilment` PostgreSQL schema, clinic medication catalogue, prescription-linked
 orders, item snapshots and persistent order-request keys. Uses C01/C04 and the shared
 access-token verifier/current identity lookup. No other service's tables are accessed.

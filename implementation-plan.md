@@ -38,7 +38,7 @@ Current claims and remaining blockers:
 | Delivery | D02 issue #134 is assigned to NorbertLoh and blocked by unchecked X05 Lalamove sandbox verification. D01 is complete; D03/D04 have complete listed dependencies. D05-D07 still depend on quote/readiness/payment/delivery work. |
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
-Unclaimed tasks with complete listed dependencies: X05, B02, U09, U10, V01,
+Unclaimed tasks with complete listed dependencies: B02, U09, U10, V01,
 D03, D04, U15, U16, N01 and Q02. These are candidates to claim, not new
 assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
@@ -74,7 +74,7 @@ prerequisites; an unchecked task is not necessarily blocked by external access.
 | [x] | X02 | Spike appointment-bound signalling admission; reject unrelated users. Completed in merged PR #157; issue #156 closed. Local fixture spike implemented with single-use expiring participant/appointment/peer-bound admission, pre-registration checks and same-appointment frame filtering. 11 Node checks and 3 browser checks passed (1 existing TURN-dependent check skipped). All eight CI checks passed; real service integration remains V02/V03. Setup/evidence: `services/signalling/spike/ADMISSION.md`. | X01 | M |
 | [x] | X03 | Verify Stripe test checkout, Connect access and commission capability. Completed in merged PRs #159/#164; issue #158 closed. Real hosted test payment and fee/transfer verified on 18 October 2026: SGD 50 paid, SGD 5 gross commission and SGD 45 clinic gross after the fee. Eight local unit tests and all eight fix PR CI checks passed; real hosted decline/cancel behaviour remains unexercised. Setup/evidence: `docs/stripe-spike.md`. | none | M |
 | [x] | X04 | Verify Stripe webhook signatures against a sample raw-body callback. Completed in merged PR #162; issue #161 closed. Requested independent sample scope despite X03 onboarding blocker; 28 local checks including actual loopback HTTP and all ten CI checks passed. Setup/evidence: `docs/stripe-webhook-spike.md`. No real Stripe delivery or payment processing claimed. | X03 | S |
-| [ ] | X05 | Verify Lalamove sandbox quote/order/status and callback verification. | none | M |
+| [ ] | X05 | Verify Lalamove sandbox quote/order/status and callback verification. Assignee: NorbertLoh; status: in progress, issue #166 / PR #167. Actual SG sandbox quotation/order/status and signed callback checks passed on 18 October 2026; pending final checks and merge. Setup/evidence: `docs/lalamove-spike.md`. | none | M |
 
 C02-C05 each need a quick review by someone building a consuming feature. They do not need a meeting with all five people. Use temporary fixtures for feasibility spikes and keep credentials out of Git. If sandbox access is blocked, record it immediately and implement an explicitly labelled adapter for demo continuity.
 
