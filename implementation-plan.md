@@ -38,7 +38,7 @@ Current claims and remaining blockers:
 | Delivery | X05 completed in merged PR #167; issue #166 closed. Actual SG sandbox quotation/order/status and signed order/cancellation callbacks verified; ten local tests and all ten CI checks passed. D02 issue #134 remains assigned to NorbertLoh and In progress, with D01/X05 dependencies now complete; no D02 adapter is claimed complete. D03/D04 have complete listed dependencies. D05-D07 still depend on quote/readiness/payment/delivery work. |
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
-Unclaimed tasks with complete listed dependencies: B04, B05, U09, U10, V01,
+Unclaimed tasks with complete listed dependencies: B05, U09, U10, V01,
 D03, D04, U15, U16, N01 and Q02. These are candidates to claim, not new
 assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
@@ -123,7 +123,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; B02 is co
 | [x] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. Completed in merged PR #138; 89 PostgreSQL tests, migration isolation/round-trips, SQL/ORM snapshot protection, lint/format and CI passed. Issue #137 closed. | F04, C03, C04 | M |
 | [x] | B02 | Add consultation checkout API with trusted price and appointment linkage. Completed in merged PR #170; issue #169 closed. Authenticated reservation/commission APIs, immutable snapshots, concurrent request/provider idempotency and the user-approved best-effort Stripe expiry worker verified. Actual four-service HTTP Stripe test creation/replay/unpaid expiry passed; all twelve CI checks passed (132 billing tests plus 38 subtests; scheduling with Redis 226 passed/two skipped; tenant 116 passed). Local Redis verification matched CI. Setup/expiry limitations: `services/billing/CHECKOUT.md`; webhook/payment-success/frontend integration remains B03-B07. | B01, X03, A06 | M |
 | [x] | B03 | Add raw-body webhook signature verification and event-ID deduplication. Completed in merged PR #173; issue #172 closed. 167 billing tests plus 38 subtests, actual loopback HTTP signature/replay checks, migration round-trips, Ruff and all eight CI checks passed. Setup and B04 handoff: `services/billing/WEBHOOKS.md`; real Stripe delivery remains unverified. | B02, X04 | M |
-| [ ] | B04 | Save payment changes and outbox event in one transaction; publish success. | B03, M02, C05 | M |
+| [ ] | B04 | Save payment changes and outbox event in one transaction; publish success. Assignee: NorbertLoh; status: in progress; issue #175, PR #176. | B03, M02, C05 | M |
 | [ ] | B05 | Add authorised payment status/list APIs and basic commission totals. | B03, A06 | M |
 | [ ] | B06 | Add medication/delivery checkout with validated order/quote totals. | B04, C04 | M |
 | [ ] | U09 | Build checkout return/pending/failure/success screens using fixtures. | F07, F08, C03 | M |

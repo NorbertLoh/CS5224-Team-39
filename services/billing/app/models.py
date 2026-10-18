@@ -19,12 +19,16 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from telelink_common.outbox import outbox_table
 
 SERVICE_SCHEMA = "billing"
 
 
 class Base(DeclarativeBase):
     metadata = MetaData(schema=SERVICE_SCHEMA)
+
+
+event_outbox = outbox_table(Base.metadata)
 
 
 class Payment(Base):
@@ -169,8 +173,10 @@ class StripeWebhookEvent(Base):
 
     __tablename__ = "stripe_webhook_events"
     __table_args__ = (
-        CheckConstraint("status IN ('pending', 'ignored', 'processed')", name="ck_webhook_status"),
-        Index("ix_stripe_webhook_pending", "status", "received_at"),
+        CheckConstraint(
+            "status IN ('pending', 'ignored', 'processed', 'rejected')", name="ck_webhook_status"
+        ),
+        Index("ix_stripe_webhook_pending", "status", "next_attempt_at", "received_at"),
     )
     event_id: Mapped[str] = mapped_column(Text, primary_key=True)
     event_type: Mapped[str] = mapped_column(Text)
@@ -179,6 +185,12 @@ class StripeWebhookEvent(Base):
     provider_created_at: Mapped[int] = mapped_column(BigInteger)
     object_data: Mapped[dict] = mapped_column(JSONB)
     status: Mapped[str] = mapped_column(Text)
+    attempts: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    last_error: Mapped[str | None] = mapped_column(Text)
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     received_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
