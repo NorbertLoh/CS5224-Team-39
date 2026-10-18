@@ -15,6 +15,7 @@ from app.database import create_database_engine
 from app.provider import StripeCheckout
 from app.settings import Settings
 from app.upstream import CheckoutSources
+from app.webhooks import router as webhook_router
 
 
 def create_app(settings: Settings | None = None):
@@ -71,6 +72,7 @@ def create_app(settings: Settings | None = None):
 
     install_error_handlers(app)
     app.include_router(router)
+    app.include_router(webhook_router)
 
     @app.get("/health/live")
     def live():
@@ -96,7 +98,7 @@ def create_app(settings: Settings | None = None):
                 with app.state.database_engine.connect() as connection:
                     available = (
                         connection.scalar(text("SELECT version_num FROM billing.alembic_version"))
-                        == "0002"
+                        == "0003"
                     )
             except SQLAlchemyError:
                 available = False

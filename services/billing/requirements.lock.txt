@@ -3,6 +3,7 @@ annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
 certifi==2026.7.22
+charset-normalizer==3.5.2
 cffi==2.1.1
 colorama==0.4.6
 click==8.5.0
@@ -30,13 +31,16 @@ Pygments==2.21.0
 PyJWT==2.15.1
 pytest==9.1.1
 python-dotenv==1.2.4
+requests==2.34.2
 ruff==0.17.0
 setuptools==84.0.0
 SQLAlchemy==2.0.54
 starlette==1.7.0
+stripe==16.0.0
 tomli==2.5.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 tzdata==2026.5
+urllib3==2.8.0
 uvicorn==0.54.0
 wheel==0.48.0
