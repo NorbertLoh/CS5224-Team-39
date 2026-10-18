@@ -1,0 +1,35 @@
+name: telelink-signalling
+services:
+  signalling:
+    build: .
+    environment:
+      SIGNALLING_ENVIRONMENT: local
+      SIGNALLING_HOST: 0.0.0.0
+      SIGNALLING_ORIGINS: https://localhost:8443
+      CONSULTATION_URL: ${CONSULTATION_URL:-http://host.docker.internal:8004}
+      SIGNALLING_SECRET: ${SIGNALLING_SECRET:?Set the matching consultation signalling key}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    stop_grace_period: 5s
+  tls:
+    image: caddy:2@sha256:685ae3d7c34d9b5f8caeddc5d14051db7bbd88ff1f5a2fa0c16bd8ca328fb7af
+    ports:
+      - 127.0.0.1:8443:8443
+    environment:
+      CONSULTATION_UPSTREAM: ${CONSULTATION_UPSTREAM:-host.docker.internal:8004}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./local/Caddyfile:/etc/caddy/Caddyfile:ro
+      - tls_data:/data
+      - tls_config:/config
+    depends_on:
+      signalling:
+        condition: service_healthy
+volumes:
+  tls_data:
+  tls_config:

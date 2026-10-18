@@ -1,0 +1,34 @@
+{
+    auto_https disable_redirects
+    # Runtime proxy errors can include the WebSocket query credential.
+    # Keep access logging disabled and suppress runtime request dumps locally.
+    log {
+        output discard
+    }
+}
+
+https://localhost:8443 {
+    tls internal
+    header Cache-Control "no-store"
+    header Referrer-Policy "no-referrer"
+    header X-Content-Type-Options "nosniff"
+
+    handle /peerjs/* {
+        reverse_proxy signalling:9000
+    }
+    @admission {
+        path /api/v1/consultation/admissions
+        method POST
+    }
+    handle @admission {
+        rewrite * /admissions
+        reverse_proxy {$CONSULTATION_UPSTREAM:host.docker.internal:8004}
+    }
+    handle /healthz {
+        reverse_proxy signalling:9000
+    }
+    # Explicit allowlist above excludes internal consultation APIs and fixtures.
+    handle {
+        respond 404
+    }
+}

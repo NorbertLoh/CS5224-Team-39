@@ -1,0 +1,34 @@
+name: Admitted signalling
+on:
+  push:
+    paths: ['services/signalling/**', '.github/workflows/signalling-checks.yml']
+  pull_request:
+    paths: ['services/signalling/**', '.github/workflows/signalling-checks.yml']
+permissions:
+  contents: read
+jobs:
+  signalling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: services/signalling
+    env:
+      SIGNALLING_SECRET: v03-test-only-signalling-secret-at-least-32-bytes
+      CONSULTATION_URL: http://host.docker.internal:9050
+      CONSULTATION_UPSTREAM: host.docker.internal:9050
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: services/signalling/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: docker compose config --quiet
+      - run: docker compose up --build --wait --wait-timeout 90
+      - run: npm run test:browser
+      - if: always()
+        run: docker compose down
