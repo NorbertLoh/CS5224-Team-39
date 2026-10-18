@@ -2,11 +2,11 @@
 
 Tracking: [issue #158](https://github.com/NorbertLoh/CS5224-Team-39/issues/158).
 
-Status: in progress. Real Stripe test Checkout, Connect access and commission
-verification require a platform test key and an onboarded connected test account.
-The hosted test payment and commission/transfer objects were verified on
-18 October 2026. X03 remains In progress pending merge of the inspection fix and
-recorded evidence below.
+Status: complete in merged PRs #159/#164; issue #158 closed. The hosted test
+payment and commission/transfer objects were verified on 18 October 2026.
+Eight local unit tests and all eight inspection-fix push/PR CI checks passed.
+Reproducing provider verification requires a platform test key and an onboarded
+connected test account. Evidence and remaining integration limits are below.
 
 Scope is an isolated feasibility tool and reproducible evidence for B02/X04.
 Application checkout APIs and webhook verification belong to those later tasks.
