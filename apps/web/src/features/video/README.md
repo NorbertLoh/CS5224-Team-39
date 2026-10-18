@@ -1,59 +1,95 @@
-# Video room (U11)
+﻿# Video room (U11)
 
-Patient: `/patient/consultation`. Doctor: `/doctor/consultation`.
-The video area is a role-protected preview. The patient sees a video room; the
-doctor also sees the real R04 appointment records workspace. Select an actual
-appointment before viewing/saving records; the video preview does not admit or
-start that appointment. See [records setup](../../../../../docs/records-frontend.md).
+`VideoRoom` supplies patient call-only and doctor call-plus-records layouts. It
+supports real PeerJS 1.5.5 audio/video when given a `RoomConnection` adapter. The
+existing role-protected `/patient/consultation` and `/doctor/consultation` routes
+remain camera checks until V04 supplies booked-appointment admission/discovery.
+No manual peer-ID/token fields or fixture authentication are added to production.
 
-X01 (#56 / PR #57) is incomplete. Remote media, PeerJS/TURN connectivity,
-appointment admission and booked-appointment integration are not implemented.
-This UI work does not complete those dependencies or U11's remote-call verification.
-V02/V03/V04 remain responsible for admission and appointment integration.
+## V04 integration boundary
 
-Local camera/microphone access requires localhost or HTTPS and browser permission.
-No media is recorded or sent to another participant by this preview. Doctor form
-saves and issuance now use the real records API and survive reload. Unsaved edits
-are discarded when switching appointments, navigating away or reloading.
+Pass a stable `connection` prop, and key the room by appointment and user so
+switching context unmounts the previous call. Its contract is in `connection.ts`:
 
-## Run and review
+- `signalling`: trusted WSS host/port/path/key, with `secure: true`.
+- `acquire(signal)`: authenticated fresh admission for the selected appointment;
+  returns server-issued `peerId`, opaque `token`, absolute `expiresAt`, current
+  `iceServers` and optional `relayOnly`. Fetch fresh TURN credentials here; never
+  persist credentials or put them into URLs other than PeerJS's required token.
+- `counterpart(admission, signal)`: authorized discovery of the other participant's
+  currently registered peer, or null while waiting. It must never return an
+  unrelated, offline or stale peer. Respect cancellation and bound HTTP timeouts.
 
-Use the existing local frontend configuration in `apps/web/.env` (see its
-`.env.example`), with Floci on 4566 and identity on 8001. From `apps/web`, run
-`npm ci` and `npm run dev`. Sign in as `patient@example.test` or
-`doctor@example.test`, password `LocalDemo123!`, and open the matching route
-above. Both dashboards also link to the consultation preview. At desktop width,
-the doctor form sits beside the video; narrow screens stack the form below it.
+V02/V03 provide admission enforcement and signalling. V04 still owns the real
+adapter, secure peer discovery, booked-appointment navigation and coordination of
+consultation/scheduling lifecycle actions. Neither a URL role nor an incoming
+call's metadata establishes identity. Admission fixtures in the browser tests do
+not complete V04 or a real patient booking/payment journey.
 
-Join preview expands the room to fill the browser area. Leave, Escape and the
-explicit disconnect test return it to its original position and stop local
-tracks. Rejoin expands it again; enable devices separately to request browser
-permission. Mute/camera controls change local track availability. The doctor
-form remains mounted across these transitions so notes and prescription entries
-are retained. Desktop doctors retain the form beside the video, with independent
-form scrolling; narrow screens stack the two areas. Keyboard focus stays within
-the expanded room and returns to the join/rejoin button after leaving.
-Route navigation/reload reloads saved records; only unsaved edits are discarded.
+## Room behavior
 
-Historical U11 preview verification: frontend lint, TypeScript/production build and all 65 tests passed.
-Browser checks passed for real local patient/doctor login, role denial in both
-directions, patient form exclusion, doctor note save and retention on simulated
-disconnect, desktop side-by-side layout and 390px mobile layout without horizontal
-overflow. Physical camera/mic permissions, hardware toggles, device-loss cleanup
-and rejoin with devices were not exercised in the browser. Remote calling and
-cross-network/TURN verification remain blocked by X01, not counted as complete.
+Join requests devices through a user gesture, then fresh admission. The patient
+initiates media after discovery; the doctor answers only the resolved counterpart.
+Media uses max-bundle ICE, configured TURN and an optional relay-only policy that
+fails if no TURN server exists. There is no public STUN/TURN credential default.
+Remote video includes audio, a local muted preview and a playback button if browser
+autoplay is blocked. Camera and microphone controls enable/disable outgoing tracks.
 
-Expanded-room browser checks: patient join/rejoin fills the browser area; Leave
-and Escape restore the embedded layout and focus; Tab wraps inside the room.
+Leave, Escape, route unmount, device loss, connection failure, signalling loss and
+lease expiry close the PeerJS/media connections and stop local/remote tracks.
+There is no automatic reconnect with consumed credentials. Rejoin acquires a new
+stream, peer ID, admission and TURN configuration. Cancellation prevents late
+permission/admission/library responses from reopening a departed call. Admission
+and peer startup, plus media negotiation, each have bounded 15-second waits.
 
-## Code structure
+The expanded room traps keyboard focus, restores focus on leave/disconnect, and
+keeps the doctor workspace mounted so unsaved notes survive call transitions.
+Desktop uses side-by-side panels; mobile stacks them without horizontal overflow.
+Records retain their own real authorization and appointment selection; joining
+video never independently grants clinical write access. Saved records survive
+reload; unsaved edits are discarded by navigation or changing records context.
+Media is not recorded. PeerJS debugging is disabled; errors shown to users never
+include raw provider errors, credentials, SDP or ICE addresses.
 
-`VideoRoom` coordinates the role layout and call state. `CallStage` displays
-participant placeholders and the local video; `CallControls` handles media and
-leave buttons. `useLocalMedia` owns devices, while `useExpandedRoom` owns focus,
-keyboard navigation and background scrolling. The doctor workspace composes
-`ConsultationNoteForm`, `PrescriptionEditor` and `PrescriptionItemFields`.
+## Verification
 
-These files use Prettier 3.6.2 with `--single-quote --no-semi`. After the component
-split, lint, TypeScript/build, all 65 tests and Prettier checks passed; the patient
-join/leave browser flow and focus restoration were verified again.
+From `apps/web`:
+
+```powershell
+npm ci
+npm test
+npm run lint
+npm run build
+# Explicit isolated browser adapters; not application authentication:
+$env:SIGNALLING_SECRET='v03-test-only-signalling-secret-at-least-32-bytes'
+$env:CONSULTATION_URL='http://host.docker.internal:9050'
+$env:CONSULTATION_UPSTREAM='host.docker.internal:9050'
+docker compose -f ../../services/signalling/compose.yaml -f tests/browser/compose.yaml up --build --wait --wait-timeout 90
+npx playwright install chromium
+npx playwright test --config playwright.video.config.mjs
+node tests/browser/turn.mjs
+docker compose -f ../../services/signalling/compose.yaml -f tests/browser/compose.yaml down
+```
+
+The test-only HTML entry is outside the production build. Playwright starts Vite
+on 5174 and explicit fixture APIs on 9050/9051 for Docker access. A test-only Caddy
+configuration serves that harness through localhost HTTPS/WSS; ordinary production
+signalling routing remains unchanged. Fixtures and synthetic record caches verify
+room behavior, not backend integration. Do not use the test Compose override for
+normal development/deployment.
+
+The TURN helper creates a fresh temporary HMAC key and 15-minute credentials,
+starts coturn bound strictly to loopback with host networking and no published
+ports, and removes its container/config afterward. Docker Desktop needs host
+networking support; Linux CI uses native host networking. It tests forced UDP and
+TCP relay with selected-candidate and bidirectional audio/video RTP assertions.
+No host certificate trust is changed by these tests.
+
+Local checks: 107 frontend tests, lint and production build passed. Three direct
+Chromium scenarios passed: actual two-way audio/video RTP/playback; controls,
+leave/rejoin and doctor note retention; revocation and expiry cleanup; permission
+denial, device loss, mobile layout and navigation. Separate lifecycle regression
+checks cover cancellation races, late PeerJS creation, verified incoming-call
+answer order and forced-relay validation. TURN/CI results are recorded in PR #199.
+Independent-network, physical-device and AWS observations remain RF01; application
+admission/booking/clinical lifecycle integration remains V04.

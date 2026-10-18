@@ -1,15 +1,18 @@
 import type { Ref } from 'react'
 import { Camera, CameraOff, Mic, MicOff, PhoneOff } from 'lucide-react'
 import type { LocalMedia } from './useLocalMedia'
+import type { CallState } from './connection'
 
 const control =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-slate-600 px-4 py-3 text-sm font-medium transition hover:bg-slate-700 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-300'
 
 type CallControlsProps = {
-  state: 'waiting' | 'disconnected' | 'left'
+  state: CallState
   media: LocalMedia
   leaveButton: Ref<HTMLButtonElement>
-  leave: (next: 'left' | 'disconnected') => void
+  leave: () => void
+  live: boolean
+  error: string
 }
 
 export function CallControls({
@@ -17,19 +20,21 @@ export function CallControls({
   media,
   leaveButton,
   leave,
+  live,
+  error,
 }: CallControlsProps) {
   const waiting = state === 'waiting'
   return (
     <div className="space-y-4 border-t border-slate-800 p-5">
-      {media.error && (
+      {(media.error || error) && (
         <p
           role="alert"
           className="rounded-lg bg-amber-100 p-3 text-sm text-amber-950"
         >
-          {media.error}
+          {media.error || error}
         </p>
       )}
-      {waiting && !media.stream && (
+      {!live && waiting && !media.stream && (
         <div className="text-center">
           <button
             type="button"
@@ -75,26 +80,17 @@ export function CallControls({
           type="button"
           className={`${control} border-red-600 bg-red-600 hover:bg-red-700`}
           disabled={state === 'left'}
-          onClick={() => leave('left')}
+          onClick={leave}
         >
           <PhoneOff size={18} />
-          Leave preview
+          {live ? 'Leave call' : 'Close camera check'}
         </button>
       </div>
-      {waiting && (
-        <div className="text-center">
-          <button
-            type="button"
-            className="text-xs text-slate-400 underline underline-offset-4"
-            onClick={() => leave('disconnected')}
-          >
-            Test disconnected preview
-          </button>
-        </div>
-      )}
       <p className="text-center text-xs text-slate-400">
         {media.stream
-          ? 'Local devices enabled. No media is being transmitted.'
+          ? live && state === 'connected'
+            ? 'Your live audio and video are connected.'
+            : 'Your camera and microphone are ready.'
           : 'Your camera and microphone are off.'}
       </p>
     </div>

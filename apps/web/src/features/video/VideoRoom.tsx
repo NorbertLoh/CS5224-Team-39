@@ -1,32 +1,44 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CallStage } from './CallStage'
 import { CallControls } from './CallControls'
 import { useExpandedRoom } from './useExpandedRoom'
 import { DoctorRecordForm } from '../records/DoctorRecordForm'
 import { useLocalMedia } from './useLocalMedia'
+import { useRemoteCall } from './useRemoteCall'
+import type { CallState, RoomConnection } from './connection'
 
-export function VideoRoom({ role }: { role: 'patient' | 'doctor' }) {
+export function VideoRoom({
+  role,
+  connection,
+}: {
+  role: 'patient' | 'doctor'
+  connection?: RoomConnection
+}) {
   const media = useLocalMedia()
+  const call = useRemoteCall(connection, role, media)
   const [expanded, setExpanded] = useState(false)
-  const [state, setState] = useState<'waiting' | 'disconnected' | 'left'>(
-    'waiting',
-  )
+  const [previewState, setPreviewState] = useState<CallState>('waiting')
   const doctor = role === 'doctor'
   const peer = doctor ? 'patient' : 'doctor'
-  const waiting = state === 'waiting'
-  const leave = (next: 'left' | 'disconnected') => {
-    media.stop()
-    setState(next)
+  const state = connection ? call.state : previewState
+  const leave = () => {
+    call.leave()
+    setPreviewState('left')
     setExpanded(false)
   }
   const join = () => {
-    setState('waiting')
+    setPreviewState('waiting')
     setExpanded(true)
+    if (connection) void call.join()
   }
+
+  useEffect(() => {
+    if (call.state === 'disconnected') setExpanded(false)
+  }, [call.state])
 
   const { room, joinButton, leaveButton, handleKeyDown } = useExpandedRoom(
     expanded,
-    () => leave('left'),
+    leave,
   )
 
   return (
@@ -63,19 +75,19 @@ export function VideoRoom({ role }: { role: 'patient' | 'doctor' }) {
             </h1>
           </div>
           <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-            Video preview
+            {connection ? 'Video consultation' : 'Camera check'}
           </span>
         </div>
         <p className="mt-4 max-w-4xl text-sm leading-6 text-slate-600">
-          Check your camera and microphone here. The other participant is a
-          placeholder; no remote call is connected and your media stays in this
-          browser.
+          {connection
+            ? 'Join when you are ready to speak with the other participant.'
+            : 'Check your camera and microphone here. Choose a booked appointment to start your consultation.'}
           {doctor &&
             ' The records workspace saves real records for the appointment you select.'}
         </p>
       </div>
       <div
-        className={`grid gap-6 ${expanded ? 'min-h-full lg:h-full lg:min-h-0' : 'mt-6 items-start'} ${doctor ? 'lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)]' : expanded ? 'h-full' : ''}`}
+        className={`grid grid-cols-1 gap-6 ${expanded ? 'min-h-full lg:h-full lg:min-h-0' : 'mt-6 items-start'} ${doctor ? 'lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)]' : expanded ? 'h-full' : ''}`}
       >
         <section
           aria-label="Video call"
@@ -83,14 +95,18 @@ export function VideoRoom({ role }: { role: 'patient' | 'doctor' }) {
         >
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
             <span className="text-sm font-medium">
-              Consultation preview · {doctor ? 'Doctor' : 'Patient'} view
+              Consultation · {doctor ? 'Doctor' : 'Patient'} view
             </span>
             <span role="status" className="text-sm text-slate-300">
-              {waiting
-                ? 'Waiting room'
-                : state === 'left'
-                  ? 'You left the preview'
-                  : 'Disconnected preview'}
+              {state === 'connected'
+                ? 'Connected'
+                : state === 'joining' || state === 'connecting'
+                  ? 'Connecting'
+                  : state === 'waiting'
+                    ? 'Waiting room'
+                    : state === 'left'
+                      ? 'You left the room'
+                      : 'Disconnected'}
             </span>
           </div>
           <CallStage
@@ -100,18 +116,22 @@ export function VideoRoom({ role }: { role: 'patient' | 'doctor' }) {
             media={media}
             joinButton={joinButton}
             join={join}
+            remote={call.remote}
+            live={Boolean(connection)}
           />
           <CallControls
             state={state}
             media={media}
             leaveButton={leaveButton}
             leave={leave}
+            live={Boolean(connection)}
+            error={call.error}
           />
         </section>
         {doctor && (
           <aside
             aria-label="Doctor workspace"
-            className={expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}
+            className={`min-w-0 [&_select]:w-full [&_select]:min-w-0 ${expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}`}
           >
             <DoctorRecordForm />
           </aside>

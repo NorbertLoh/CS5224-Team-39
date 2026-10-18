@@ -1,0 +1,6 @@
+# TEST ONLY; adds the Vite harness and explicit fixtures to the local TLS edge.
+# Paths are resolved from services/signalling/compose.yaml (the first -f file).
+services:
+  tls:
+    volumes:
+      - ../../apps/web/tests/browser/Caddyfile:/etc/caddy/Caddyfile:ro
