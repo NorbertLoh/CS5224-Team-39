@@ -1,5 +1,5 @@
 // Test-only entry: Vite's production build still includes only index.html.
-import { StrictMode } from 'react'
+import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { VideoRoom } from '../../src/features/video/VideoRoom'
@@ -85,10 +85,21 @@ client.setQueryData(
   ['records', 'workspace', 'u11-test-only', 'u11-appointment'],
   { note: null, prescription: null },
 )
+function FixtureRoom() {
+  const [mounted, setMounted] = useState(true)
+  return (
+    <>
+      <button id="test-unmount" onClick={() => setMounted(false)}>
+        Unmount room fixture
+      </button>
+      {mounted && <VideoRoom role={role} connection={connection} />}
+    </>
+  )
+}
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={client}>
-      <VideoRoom role={role} connection={connection} />
+      <FixtureRoom />
     </QueryClientProvider>
   </StrictMode>,
 )

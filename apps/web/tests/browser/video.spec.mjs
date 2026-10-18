@@ -141,8 +141,8 @@ test('permission denial, device loss, mobile layout and navigation clean up', as
     await doctor.setViewportSize({ width: 390, height: 844 });
     expect(await doctor.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await patient.getByRole('button', { name: 'Rejoin consultation' }).click();
-    await patient.goto(`${base}/tests/browser/room.html?role=patient`);
-    await expect(patient.getByRole('button', { name: 'Join consultation', exact: true })).toBeVisible();
-    expect(await patient.evaluate(() => window.__streams.length)).toBe(0);
+    await expect.poll(() => patient.evaluate(() => window.__streams.at(-1).getTracks().some((track) => track.readyState === 'live'))).toBe(true);
+    await patient.evaluate(() => document.getElementById('test-unmount').click());
+    await stopped(patient);
   } finally { await context.close(); }
 });
