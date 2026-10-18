@@ -98,7 +98,7 @@ def create_app(settings: Settings | None = None):
                 with app.state.database_engine.connect() as connection:
                     available = (
                         connection.scalar(text("SELECT version_num FROM billing.alembic_version"))
-                        == "0003"
+                        == "0004"
                     )
             except SQLAlchemyError:
                 available = False

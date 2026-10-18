@@ -54,6 +54,10 @@ choices follow [Stripe's webhook documentation](https://docs.stripe.com/webhooks
 
 ## B04 handoff and limits
 
+The B04 processor/publisher is now implemented; current commands and processing
+semantics are in [PAYMENT_PROCESSING.md](PAYMENT_PROCESSING.md). The following
+describes the responsibility split introduced by B03.
+
 No consumer runs in B03. Pending receipts must be drained independently of HTTP
 delivery in B04; they are not marked processed on receipt. B04 must lock a receipt,
 validate account, event/object type, trusted payment/session/intent linkage,
