@@ -12,6 +12,7 @@ import { ErrorState } from '../components/ErrorState'
 import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
 import { DocumentList } from '../features/documents/DocumentList'
 import { VideoRoom } from '../features/video/VideoRoom'
+import { CheckoutPreview } from '../features/checkout/CheckoutPreview'
 import { roleLabels } from './access'
 import type { Route } from './access'
 import type { Session } from '../auth/session'
@@ -30,6 +31,8 @@ export function AppRoutes({
       return <ClinicStorefront slug={route.slug} />
     case 'booking':
       return <ClinicBooking slug={route.slug} />
+    case 'checkout-preview':
+      return <CheckoutPreview />
     case 'consultation':
       return <VideoRoom role={route.role} />
     case 'profile':
@@ -57,6 +60,13 @@ export function AppRoutes({
           )}
           {route.role === 'patient' && <PatientPrescriptions />}
           {route.role === 'patient' && <DocumentList role="patient" />}
+          {route.role === 'patient' && (
+            <p className="mt-6 text-sm">
+              <a className="underline" href="/patient/checkout-preview">
+                Preview checkout outcomes (synthetic data)
+              </a>
+            </p>
+          )}
           {route.role === 'clinic_admin' && session && (
             <ManagedClinics session={session} />
           )}

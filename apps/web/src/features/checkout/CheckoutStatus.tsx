@@ -1,0 +1,148 @@
+import { consultationPrice } from '../../lib/money'
+import { checkoutSummary } from './fixtures'
+import type { CheckoutState } from './status'
+
+const messages: Record<
+  CheckoutState | 'return' | 'error' | 'missing',
+  [string, string]
+> = {
+  return: [
+    'Welcome back from checkout',
+    'Your return does not confirm payment. Check the payment and booking status before trying again.',
+  ],
+  pending: [
+    'Payment pending',
+    'Payment has not been confirmed. Check again shortly. Do not start another payment while the outcome is uncertain.',
+  ],
+  failed: [
+    'Payment unsuccessful',
+    'This payment attempt failed. You can retry while the original booking hold is valid.',
+  ],
+  success: [
+    'Appointment confirmed',
+    'Payment received and your consultation is confirmed. You can find the booking in Appointments.',
+  ],
+  confirming: [
+    'Payment received, confirming appointment',
+    'Your payment succeeded. We are waiting for the booking confirmation. Do not pay again.',
+  ],
+  expired: [
+    'Booking hold expired',
+    'This time is no longer reserved. Check the latest payment status before choosing another time.',
+  ],
+  cancelled: [
+    'Booking cancelled',
+    'This appointment is cancelled. Check payment status before making another booking.',
+  ],
+  refund_required: [
+    'Payment received, booking not confirmed',
+    'Your booking could not be confirmed. Contact the clinic with the references below so support can arrange a manual refund. No automatic refund is promised. Do not pay again for this booking.',
+  ],
+  refund_pending: [
+    'Refund processing',
+    'The booking is not confirmed. A refund has been requested; check again for completion.',
+  ],
+  refunded: [
+    'Payment refunded',
+    'The payment has been refunded. This booking is not confirmed.',
+  ],
+  error: [
+    'Unable to check payment status',
+    'The payment outcome is unknown. Try checking again; do not make another payment.',
+  ],
+  missing: [
+    'Payment reference unavailable',
+    'We cannot identify this checkout. Open Appointments or contact the clinic before trying another payment.',
+  ],
+}
+
+export function CheckoutStatus({
+  state,
+  cancelledReturn = false,
+  onCheck,
+  onRetry,
+}: {
+  state: keyof typeof messages
+  cancelledReturn?: boolean
+  onCheck: () => void
+  onRetry: () => void
+}) {
+  const [title, description] = messages[state]
+  return (
+    <section
+      className="rounded-2xl border bg-white p-6 sm:p-8"
+      aria-labelledby="checkout-title"
+    >
+      <div role="status" aria-live="polite">
+        <h1 id="checkout-title" className="text-2xl font-semibold">
+          {title}
+        </h1>
+        <p className="mt-3 leading-relaxed text-slate-600">{description}</p>
+        {cancelledReturn && (
+          <p className="mt-3 text-sm">
+            You left checkout. This alone does not mean the payment failed or
+            the booking was cancelled.
+          </p>
+        )}
+      </div>
+      {state !== 'missing' && (
+        <dl className="my-6 space-y-3 rounded-xl bg-slate-50 p-4 text-sm">
+          <div>
+            <dt className="text-slate-500">Consultation</dt>
+            <dd>
+              {new Date(checkoutSummary.startsAt).toLocaleString('en-SG', {
+                timeZone: 'Asia/Singapore',
+              })}{' '}
+              SGT
+            </dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Total</dt>
+            <dd>
+              {consultationPrice(
+                checkoutSummary.amount.amount_minor,
+                checkoutSummary.amount.currency,
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Appointment reference</dt>
+            <dd className="break-all">{checkoutSummary.appointmentId}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Payment reference</dt>
+            <dd className="break-all">{checkoutSummary.paymentId}</dd>
+          </div>
+        </dl>
+      )}
+      <div className="mt-6 flex flex-wrap gap-3">
+        {state !== 'missing' && (
+          <button
+            type="button"
+            className="rounded-lg bg-slate-900 px-4 py-3 text-white"
+            onClick={onCheck}
+          >
+            Check fixture status
+          </button>
+        )}
+        {state === 'failed' && (
+          <button
+            type="button"
+            className="rounded-lg border px-4 py-3"
+            onClick={onRetry}
+          >
+            Preview payment retry
+          </button>
+        )}
+        <a className="rounded-lg border px-4 py-3" href="/patient">
+          Appointments
+        </a>
+        {(state === 'expired' || state === 'refunded') && (
+          <a className="rounded-lg border px-4 py-3" href="/">
+            Browse clinics
+          </a>
+        )}
+      </div>
+    </section>
+  )
+}
