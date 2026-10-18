@@ -122,7 +122,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; B02 is co
 | --- | --- | --- | --- | --- |
 | [x] | B01 | Create billing schema/migrations for charges, provider IDs and commission snapshots. Completed in merged PR #138; 89 PostgreSQL tests, migration isolation/round-trips, SQL/ORM snapshot protection, lint/format and CI passed. Issue #137 closed. | F04, C03, C04 | M |
 | [x] | B02 | Add consultation checkout API with trusted price and appointment linkage. Completed in merged PR #170; issue #169 closed. Authenticated reservation/commission APIs, immutable snapshots, concurrent request/provider idempotency and the user-approved best-effort Stripe expiry worker verified. Actual four-service HTTP Stripe test creation/replay/unpaid expiry passed; all twelve CI checks passed (132 billing tests plus 38 subtests; scheduling with Redis 226 passed/two skipped; tenant 116 passed). Local Redis verification matched CI. Setup/expiry limitations: `services/billing/CHECKOUT.md`; webhook/payment-success/frontend integration remains B03-B07. | B01, X03, A06 | M |
-| [ ] | B03 | Add raw-body webhook signature verification and event-ID deduplication. Assignee: NorbertLoh; status: in progress; issue #172, draft PR #173. | B02, X04 | M |
+| [ ] | B03 | Add raw-body webhook signature verification and event-ID deduplication. Assignee: NorbertLoh; status: in progress; issue #172, PR #173. | B02, X04 | M |
 | [ ] | B04 | Save payment changes and outbox event in one transaction; publish success. | B03, M02, C05 | M |
 | [ ] | B05 | Add authorised payment status/list APIs and basic commission totals. | B03, A06 | M |
 | [ ] | B06 | Add medication/delivery checkout with validated order/quote totals. | B04, C04 | M |

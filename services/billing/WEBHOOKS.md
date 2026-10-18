@@ -84,5 +84,6 @@ not established by these checks.
 
 Observed on 18 October 2026: 167 billing tests plus 38 subtests passed locally
 with PostgreSQL, along with Ruff lint/format and `pip check`. Migration round-trips
-and Alembic schema parity passed. The existing Starlette TestClient deprecation
-warning remains.
+and Alembic schema parity passed. Actual loopback HTTP returned 200 for a signed
+receipt and replay, 400 for body tampering, and left exactly one PostgreSQL
+receipt. The existing Starlette TestClient deprecation warning remains.
