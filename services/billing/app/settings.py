@@ -8,6 +8,7 @@ from telelink_common.settings import ServiceName, ServicePort, ServiceSettings
 class Settings(ServiceSettings):
     name: ServiceName = "billing"
     port: ServicePort = 8009
+    cursor_secret: SecretStr | None = None
     scheduling_url: str | None = None
     scheduling_secret: SecretStr | None = None
     tenant_url: str | None = None
@@ -22,6 +23,9 @@ class Settings(ServiceSettings):
     @model_validator(mode="after")
     def validate_checkout(self):
         import re
+
+        if self.cursor_secret and len(self.cursor_secret.get_secret_value().encode()) < 32:
+            raise ValueError("cursor_secret requires at least 32 bytes")
 
         for field in (
             "scheduling_url",
