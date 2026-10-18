@@ -4,7 +4,9 @@ Tracking: [issue #158](https://github.com/NorbertLoh/CS5224-Team-39/issues/158).
 
 Status: in progress. Real Stripe test Checkout, Connect access and commission
 verification require a platform test key and an onboarded connected test account.
-No provider verification has been completed yet; X03 remains unchecked.
+The hosted test payment and commission/transfer objects were verified on
+18 October 2026. X03 remains In progress pending merge of the inspection fix and
+recorded evidence below.
 
 Scope is an isolated feasibility tool and reproducible evidence for B02/X04.
 Application checkout APIs and webhook verification belong to those later tasks.
@@ -107,3 +109,37 @@ external account and terms acceptance. A real test Checkout creation attempt was
 rejected with HTTP 400 / `insufficient_capabilities_for_transfer`; no Checkout URL
 or completed payment was produced. Finish the clinic's sandbox onboarding before
 retrying. All PR checks passed, including billing PostgreSQL tests and Ruff.
+
+### Provider retry, 18 October 2026
+
+The same connected SG account now reports `transfers: active` and
+`charges_enabled: true`. The requester completed hosted Checkout in test mode.
+Independent retrieval confirmed a completed/paid Session, succeeded PaymentIntent,
+captured and unrefunded Charge, SGD 5 unrefunded application fee, and SGD 50
+unreversed destination transfer. Clinic gross after the application fee is SGD 45;
+Stripe processing fees reduce the platform's SGD 5 gross commission.
+
+Sanitized provider identifiers (no customer/card data or Checkout URLs):
+
+| Object | ID |
+| --- | --- |
+| Checkout Session | `cs_test_a10a9BuXFfe3pSXRg0AzJZfSCCbkkhN8HOZN2AMxjkaZ6pzMhCrTCsZeND` |
+| PaymentIntent | `pi_3URoPDBTxJJFyMeS1S2aynCk` |
+| Platform Charge | `ch_3URoPDBTxJJFyMeS1IZndt9n` |
+| ApplicationFee | `fee_1URoPHBTxJcCTCXnvF73NVqT` |
+| Transfer | `tr_3URoPDBTxJJFyMeS1cSRPGO7` |
+| Destination payment | `py_1URoPGBTxJcCTCXnpmVlwPvy` |
+| Connected account | `acct_1URoDIBTxJcCTCXn` |
+
+The real response exposed an incorrect fixture assumption in the inspector:
+for destination charges, the ApplicationFee's `originating_transaction` identifies
+the platform Charge, while its `charge` identifies the Transfer's
+`destination_payment`. Check both links rather than comparing `fee.charge` to the
+platform Charge. References: [ApplicationFee](https://docs.stripe.com/api/application_fees/object)
+and [Transfer](https://docs.stripe.com/api/transfers/object).
+
+Real declined/cancelled hosted payments have not been exercised. Fixture checks
+reject unpaid/open/cancelled/failed states; these do not establish hosted decline
+or cancellation behaviour. Application checkout/webhook integration remains
+B02-B04, and X04's completed sample signature scope is documented separately in
+`docs/stripe-webhook-spike.md`.
