@@ -13,6 +13,7 @@ import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
 import { DocumentList } from '../features/documents/DocumentList'
 import { VideoRoom } from '../features/video/VideoRoom'
 import { CheckoutPreview } from '../features/checkout/CheckoutPreview'
+import { ClinicPayments } from '../features/payments/ClinicPayments'
 import { roleLabels } from './access'
 import type { Route } from './access'
 import type { Session } from '../auth/session'
@@ -39,6 +40,8 @@ export function AppRoutes({
       return <ClinicProfileEditor tenantId={route.tenantId} />
     case 'staff':
       return <StaffManagement tenantId={route.tenantId} />
+    case 'payments':
+      return <ClinicPayments key={route.tenantId} tenantId={route.tenantId} />
     case 'platform':
       return (
         session && (

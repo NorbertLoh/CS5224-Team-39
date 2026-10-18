@@ -11,9 +11,10 @@ export function ClinicLinks({ clinics, edit = false }: { clinics: Clinic[]; edit
     <article key={clinic.tenant_id} className="rounded-xl border border-t-4 p-6" style={{ borderTopColor: clinic.branding.primary_color }}>
       <h3 className="text-lg font-semibold">{clinic.name}</h3>
       <p className="mt-2 text-sm text-muted-foreground">Consultation - {consultationPrice(clinic.consultation_price.amount_minor, clinic.consultation_price.currency)} SGD</p>
-      <div className="mt-5 flex gap-5 text-sm font-medium underline underline-offset-4">
+      <div className="mt-5 flex flex-wrap gap-5 text-sm font-medium underline underline-offset-4">
         <a href={edit ? `/clinic-admin/clinics/${clinic.tenant_id}/profile` : `/clinics/${clinic.slug}`}>{edit ? 'Edit profile' : 'View clinic'}</a>
         {edit && <a href={`/clinic-admin/clinics/${clinic.tenant_id}/staff`}>Manage staff</a>}
+        {edit && <a href={`/clinic-admin/clinics/${clinic.tenant_id}/payments`}>Payments preview</a>}
       </div>
     </article>
   ))}</div>
