@@ -13,6 +13,7 @@ class Settings(ServiceSettings):
     lalamove_api_key: SecretStr | None = None
     lalamove_api_secret: SecretStr | None = None
     delivery_locations_path: Path | None = None
+    delivery_contacts_path: Path | None = None
     billing_url: str | None = None
     billing_secret: SecretStr | None = None
     payment_queue_name: str = Field(default="telelink-local-fulfilment", pattern=r"^[\w-]{1,80}$")

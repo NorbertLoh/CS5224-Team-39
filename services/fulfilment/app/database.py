@@ -8,7 +8,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from telelink_common.database import create_postgres_engine
 
-from app.models import Order, Quote, event_inbox
+from app.models import Delivery, Order, Quote, event_inbox, event_outbox
 from app.settings import Settings
 
 
@@ -31,6 +31,8 @@ class Database:
             connection.execute(select(Order.order_id).limit(1))
             connection.execute(select(Quote.quote_id).limit(1))
             connection.execute(select(event_inbox.c.event_id).limit(1))
+            connection.execute(select(Delivery.delivery_id).limit(1))
+            connection.execute(select(event_outbox.c.event_id).limit(1))
 
     def close(self) -> None:
         self.engine.dispose()

@@ -6,6 +6,10 @@ documented in [`READINESS.md`](READINESS.md). No additional migration or setting
 D04 consumes medication-payment events in a separate process. Run migration `0003`
 and configure the billing service credential and queue described in [`PAYMENTS.md`](PAYMENTS.md).
 
+D05 adds guarded delivery submission and verified uncertain-outcome reconciliation.
+Run migration `0004`; worker, private contacts and recovery setup are documented in
+[`DELIVERIES.md`](DELIVERIES.md). Callbacks and ongoing tracking remain D06.
+
 D02 quotation APIs, sandbox setup and verification are documented in
 [`QUOTES.md`](QUOTES.md). Run migration `0002` before starting the updated service.
 
@@ -114,7 +118,8 @@ enforce prescription/patient identity and fail closed for upstream errors. Never
 a browser token as a service credential or read clinical-record tables directly.
 Real medication pricing/payment integration remains I03. Quotes are implemented in
 D02; D03 implements readiness and D04 consumes verified medication-payment events.
-Checkout reservation and delivery/cancellation remain separate integration work.
+Checkout reservation and application cancellation remain separate integration work.
+D05 submits sandbox deliveries from paid/ready orders; D06 adds ongoing tracking.
 
 ## Verification
 

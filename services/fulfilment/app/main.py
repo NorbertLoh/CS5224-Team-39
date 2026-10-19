@@ -8,6 +8,7 @@ from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.catalogue import router as catalogue_router
 from app.database import Database
+from app.deliveries import router as deliveries_router
 from app.delivery_provider import SandboxQuotes
 from app.dispensing import FixtureDispensing, UnavailableDispensing
 from app.health import router as health_router
@@ -57,5 +58,6 @@ def create_app(settings: Settings | None = None):
     app.include_router(catalogue_router)
     app.include_router(orders_router)
     app.include_router(quotes_router)
+    app.include_router(deliveries_router)
     install_error_handlers(app)
     return app
