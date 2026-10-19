@@ -129,5 +129,5 @@ fulfilment was absent, so prescription catalogue/save operations were not exerci
 in the browser run. Existing prescription regression tests passed. Emulator results
 do not establish real AWS IAM, private-bucket or URL expiry enforcement. Deployment,
 cross-network/physical-device video and full prescription journeys remain in their
-existing tasks. Issue #152 stays In progress and the backlog stays unchecked until
-the U17 PR is merged and its criteria are met.
+existing tasks. U17 completed in merged PR #204; issue #152 is closed and the
+matching backlog task is checked off.
