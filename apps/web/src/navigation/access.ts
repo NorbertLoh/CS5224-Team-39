@@ -121,7 +121,11 @@ export function parseRoute(path: string): Route {
   if (clinic && uuid.test(clinic[1]))
     return {
       kind: clinic[2] as
-        'profile' | 'staff' | 'payments' | 'fulfilment-preview' | 'orders',
+        | 'profile'
+        | 'staff'
+        | 'payments'
+        | 'fulfilment-preview'
+        | 'orders',
       role: 'clinic_admin',
       tenantId: clinic[1].toLowerCase(),
     }
