@@ -57,6 +57,18 @@ class MedicineReady(StrictModel):
     """The action accepts no client-controlled state or resource links."""
 
 
+class DeliveryPublic(Resource):
+    model_config = ConfigDict(from_attributes=True)
+    delivery_id: UUID
+    order_id: UUID
+    tenant_id: UUID
+    status: Literal[
+        "pending", "submitted", "picked_up", "delivered", "cancelled", "failed", "unknown"
+    ]
+    created_at: datetime
+    updated_at: datetime
+
+
 class OrderItemPublic(StrictModel):
     prescription_item_id: UUID
     medication_id: UUID

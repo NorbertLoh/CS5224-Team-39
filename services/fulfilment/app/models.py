@@ -19,6 +19,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from telelink_common.inbox import inbox_table
+from telelink_common.outbox import outbox_table
 
 SERVICE_SCHEMA = "fulfilment"
 MAX_MONEY = 9007199254740991
@@ -29,6 +30,7 @@ class Base(DeclarativeBase):
 
 
 event_inbox = inbox_table(Base.metadata)
+event_outbox = outbox_table(Base.metadata)
 
 
 class CatalogueItem(Base):
@@ -181,3 +183,39 @@ class QuoteRequest(Base):
     quote_id: Mapped[UUID] = mapped_column(ForeignKey("fulfilment.quotes.quote_id"))
     response_payload: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Delivery(Base):
+    __tablename__ = "deliveries"
+    __table_args__ = (
+        UniqueConstraint("order_id", name="uq_delivery_order"),
+        UniqueConstraint("operation_id", name="uq_delivery_operation"),
+        UniqueConstraint("provider_order_id", name="uq_delivery_provider_order"),
+        CheckConstraint(
+            "status IN ('pending','submitted','picked_up','delivered',"
+            "'cancelled','failed','unknown')",
+            name="ck_delivery_status",
+        ),
+        Index("ix_delivery_pending", "status", "created_at"),
+    )
+    delivery_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    order_id: Mapped[UUID] = mapped_column(ForeignKey("fulfilment.orders.order_id"))
+    tenant_id: Mapped[UUID] = mapped_column(Uuid)
+    operation_id: Mapped[UUID] = mapped_column(Uuid, default=uuid4)
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    provider_order_id: Mapped[str | None] = mapped_column(String(30))
+    # Private immutable submission request, including provider quote and minimal contacts.
+    request_payload: Mapped[dict | None] = mapped_column(JSON)
+    provider_quote_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    attempts: Mapped[int] = mapped_column(default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    send_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    failure_code: Mapped[str | None] = mapped_column(String(40))
+    resolution_reason: Mapped[str | None] = mapped_column(String(40))
+    resolution_delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reconciled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reconciled_by: Mapped[str | None] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

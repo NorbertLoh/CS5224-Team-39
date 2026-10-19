@@ -29,7 +29,9 @@ def test_migration_roundtrip_and_schema_isolation(sessions, database):
     assert sorted(inspect(database).get_table_names(schema="fulfilment")) == [
         "alembic_version",
         "catalogue_items",
+        "deliveries",
         "event_inbox",
+        "event_outbox",
         "order_items",
         "order_requests",
         "orders",

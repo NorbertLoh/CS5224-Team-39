@@ -1,4 +1,4 @@
-"""SG sandbox quotations. No order submission or production endpoint exists here."""
+"""SG sandbox quotations; all requests use the fixed sandbox endpoint."""
 
 import hashlib
 import hmac
@@ -93,6 +93,14 @@ class SandboxQuotes:
                 address=f"{destination.address_line}, Singapore {destination.postal_code}",
             ),
         ]
+        return self.quote_route(stops)
+
+    def quote_route(self, stops):
+        if self.key is None or self.secret is None:
+            raise unavailable()
+        stops = [Stop.model_validate(stop).model_dump() for stop in stops]
+        if len(stops) != 2:
+            raise unavailable()
         body = json.dumps(
             {"data": {"serviceType": "MOTORCYCLE", "language": "en_SG", "stops": stops}},
             separators=(",", ":"),
