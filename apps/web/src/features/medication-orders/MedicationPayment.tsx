@@ -2,15 +2,6 @@ import contract from '../../../../../contracts/examples/prescription-order-quote
 import type { Dispatch } from 'react'
 import type { Action, OrderState, Outcome, PaymentState } from './model'
 
-export const paymentOutcomes: Record<Outcome, string> = {
-  pending: 'Payment still pending',
-  cancelled: 'Checkout cancelled, status still pending',
-  unknown: 'Status unavailable',
-  failed: 'Payment failure verified',
-  confirming: 'Payment succeeded, order update pending',
-  paid: 'Payment and order confirmed',
-  refund_required: 'Late payment requires manual refund review',
-}
 const messages: Record<
   Exclude<PaymentState, 'none'>,
   { title: string; text: string }

@@ -1,9 +1,5 @@
-import { useEffect, useReducer, useState } from 'react'
-import { DeliveryQuote } from './DeliveryQuote'
-import { MedicationPayment, paymentOutcomes } from './MedicationPayment'
-import { OrderSummary } from './OrderSummary'
-import { initialState, orderReducer, singaporeTime } from './model'
-import type { Outcome } from './model'
+import { useState } from 'react'
+import { OrderFlow } from './OrderFlow'
 
 const scenarios = {
   issued: 'Issued prescription',
@@ -87,92 +83,5 @@ export function MedicationOrderPreview() {
         </section>
       )}
     </main>
-  )
-}
-
-function OrderFlow() {
-  const [state, dispatch] = useReducer(orderReducer, undefined, initialState)
-  const [outcome, setOutcome] = useState<Outcome>('pending')
-  const [unavailable, setUnavailable] = useState(false)
-  useEffect(() => {
-    let previous = Date.now()
-    const timer = window.setInterval(() => {
-      const current = Date.now()
-      dispatch({ type: 'tick', elapsed: current - previous })
-      previous = current
-    }, 1000)
-    return () => window.clearInterval(timer)
-  }, [])
-  return (
-    <>
-      <OrderSummary state={state} />
-      {!state.created ? (
-        <button
-          className="rounded-lg bg-slate-900 px-4 py-2 text-white"
-          onClick={() => dispatch({ type: 'create' })}
-        >
-          Create demo medication order
-        </button>
-      ) : (
-        <>
-          <details className="rounded-xl border p-4 text-sm">
-            <summary className="cursor-pointer font-medium">
-              Preview controls
-            </summary>
-            <div className="mt-3 space-y-3">
-              <p>
-                Demo clock: {singaporeTime(state.now)}. It advances while this
-                page is open.
-              </p>
-              <label className="block">
-                <input
-                  type="checkbox"
-                  checked={unavailable}
-                  onChange={(event) => setUnavailable(event.target.checked)}
-                />{' '}
-                Simulate unavailable delivery quote
-              </label>
-              <label className="block">
-                Next payment status check
-                <select
-                  className="mt-1 block w-full rounded border bg-white p-2"
-                  value={outcome}
-                  onChange={(event) =>
-                    setOutcome(event.target.value as Outcome)
-                  }
-                >
-                  {Object.entries(paymentOutcomes).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                className="rounded border px-4 py-2"
-                disabled={!state.quote}
-                onClick={() => dispatch({ type: 'expire' })}
-              >
-                Advance to quote deadline
-              </button>
-              <p>
-                Changing a preview control applies only when you request a quote
-                or check payment status.
-              </p>
-            </div>
-          </details>
-          <DeliveryQuote
-            state={state}
-            dispatch={dispatch}
-            unavailable={unavailable}
-          />
-          <MedicationPayment
-            state={state}
-            outcome={outcome}
-            dispatch={dispatch}
-          />
-        </>
-      )}
-    </>
   )
 }
