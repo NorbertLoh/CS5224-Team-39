@@ -21,6 +21,7 @@ from app.intake import QueueNotification
 from app.models import NotificationJob, event_inbox
 from app.recipients import RecipientDirectory
 from app.settings import Settings
+from app.templates import render_email
 
 
 def main():
@@ -187,6 +188,15 @@ def main():
                 row.status == "sent" and row.attempts == 1 for row in jobs
             )
             assert sum(message["Id"] in accepted for message in captured) == 4
+            for row in jobs:
+                item = next(
+                    message for message in captured if message["Id"] == row.provider_message_id
+                )
+                expected = render_email(row.template, settings.app_url)
+                assert item["Destination"]["ToAddresses"] == [row.recipient_email]
+                assert item["Subject"] == expected.subject
+                assert item["Body"]["text_part"] == expected.text
+                assert item["Body"]["html_part"] == expected.html
         print(
             "N02 pipeline passed: four events, four duplicates, four captured emails; "
             "restart did not resend."

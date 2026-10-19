@@ -66,4 +66,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        configure_logging("ERROR")
+        logging.getLogger(__name__).exception("notification_worker_failed")
+        raise SystemExit(1) from None

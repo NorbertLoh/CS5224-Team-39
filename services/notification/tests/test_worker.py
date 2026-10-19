@@ -267,3 +267,44 @@ def test_sqs_delete_failure_replay_after_commit(work):
         wait_seconds=0,
     )
     assert result.duplicates == 1 and directory.calls == 1 and len(rows(work)) == 1
+
+
+def test_migration_never_retries_legacy_failed_jobs(work):
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import text
+
+    config_path = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    command.downgrade(config_path, "0001_notification_jobs")
+    with work.begin() as session:
+        session.execute(
+            text(
+                "INSERT INTO notification.jobs "
+                "(job_id, tenant_id, event_id, recipient_id, recipient_email, "
+                "template, status, attempts, error_code) "
+                "VALUES (:job, :tenant, :event, :patient, 'patient@example.test', "
+                "'booking_confirmed', 'failed', 1, 'ses_unconfirmed')"
+            ),
+            dict(job=uuid4(), tenant=uuid4(), event=uuid4(), patient=uuid4()),
+        )
+    command.upgrade(config_path, "head")
+    assert rows(work)[0].ready_at is None
+    assert not dispatch_one(work, Sender(), config())
+
+
+def test_downgrade_refuses_ambiguous_jobs(work):
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+
+    queue(work)
+    dispatch_one(work, Sender(EmailSendError()), config())
+    with pytest.raises(RuntimeError, match="Resolve sending/uncertain"):
+        command.downgrade(
+            Config(str(Path(__file__).resolve().parents[1] / "alembic.ini")),
+            "0001_notification_jobs",
+        )
+    assert rows(work)[0].status == "uncertain"

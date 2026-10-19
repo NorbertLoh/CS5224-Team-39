@@ -96,3 +96,58 @@ def test_owner_context_and_current_mailbox(kind, mutation):
             assert "private" not in str(error.value)
     finally:
         directory.close()
+
+
+@pytest.mark.parametrize(
+    "kind,field",
+    [
+        ("document_ready.v1", "prescription_id"),
+        ("document_ready.v1", "appointment_id"),
+        ("delivery_status_changed.v1", "order_id"),
+    ],
+)
+def test_mismatched_source_links_are_rejected(kind, field):
+    value = workflow(kind)
+
+    def respond(request):
+        key = "document_id" if kind == "document_ready.v1" else "delivery_id"
+        data = value.data.model_dump(mode="json")
+        data.update(
+            resource_id=str(getattr(value.data, key)),
+            tenant_id=str(value.tenant_id),
+            patient_id=str(uuid4()),
+            eligible=True,
+        )
+        data[field] = str(uuid4())
+        return httpx.Response(200, json=data)
+
+    directory = RecipientDirectory(settings(), transport=httpx.MockTransport(respond))
+    try:
+        with pytest.raises(RecipientLookupError):
+            directory.resolve(value)
+    finally:
+        directory.close()
+
+
+def test_stale_delivery_status_skips_mailbox_lookup():
+    value = workflow("delivery_status_changed.v1")
+
+    def respond(request):
+        assert request.url.host == "fulfilment.test"
+        return httpx.Response(
+            200,
+            json=dict(
+                resource_id=str(value.data.delivery_id),
+                tenant_id=str(value.tenant_id),
+                patient_id=str(uuid4()),
+                order_id=str(value.data.order_id),
+                status="delivered",
+                eligible=True,
+            ),
+        )
+
+    directory = RecipientDirectory(settings(), transport=httpx.MockTransport(respond))
+    try:
+        assert directory.resolve(value) is None
+    finally:
+        directory.close()

@@ -66,13 +66,13 @@ No real recipient or deployed AWS email is used by this check.
 ## Persistence and delivery semantics
 
 `notification.jobs` stores tenant/event/recipient IDs, recipient email, template
-name, pending/sent/failed status, attempt count, SES message ID, safe error code
-and creation/acceptance timestamps. It does not store clinical details or rendered
+name, send status, attempt count, SES message ID, safe error code and timestamps.
+N02 adds sending/uncertain states, a persisted claim and retry scheduling. It does not store clinical details or rendered
 bodies. Treat recipient emails as private data; keep them out of logs and limit
 DB access. Retention policy and recipient lookup are not implemented in N01.
 
-The unique event/recipient/template key is schema groundwork for N02, not proof of
-an idempotent sender. The three templates map to `appointment_confirmed.v1`,
+The worker commits its inbox row and job together, then claims the job before
+sending. Event duplicates and concurrent dispatchers share that durable state. The three templates map to `appointment_confirmed.v1`,
 `document_ready.v1` and `delivery_status_changed.v1`. Emails contain generic copy
 and a sign-in link, without diagnosis, medication, signed downloads or tokens.
 They do not grant access; the application still enforces its own authorisation.
@@ -101,5 +101,5 @@ cover migration upgrade/repeated upgrade/schema drift/rollback/re-upgrade, defau
 values, duplicate keys, invalid states, acceptance metadata, templates, URL/header
 validation, actual SDK request shapes and sanitized provider/connection failures.
 Ruff passed. The actual local SES check verified one captured message's recipient,
-subject and both bodies through Floci. Event integration, real AWS email delivery,
-automated retries and bounce handling are not claimed.
+subject and both bodies through Floci. N02 worker verification is recorded in
+[WORKER.md](WORKER.md); deployed AWS delivery and bounce handling remain open.

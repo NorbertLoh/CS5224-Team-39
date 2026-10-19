@@ -153,3 +153,32 @@ def test_connection_failure_is_sanitized():
             "patient@example.test", render_email("booking_confirmed", "http://localhost:5173")
         )
     assert "private" not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    "code,definitive,retryable",
+    [
+        ("Throttling", True, True),
+        ("MessageRejected", True, False),
+        ("ServiceUnavailable", False, False),
+    ],
+)
+def test_acceptance_certainty(code, definitive, retryable):
+    ses = client()
+    with Stubber(ses) as stub:
+        stub.add_client_error("send_email", service_error_code=code)
+        with pytest.raises(EmailSendError) as error:
+            SESEmailSender(settings(), client=ses).send(
+                "patient@example.test", render_email("document_ready", "http://localhost:5173")
+            )
+        assert error.value.definitive == definitive and error.value.retryable == retryable
+
+
+def test_ses_has_no_hidden_retries(monkeypatch):
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "local")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "local")
+    sender = SESEmailSender(settings())
+    try:
+        assert sender.client.meta.config.retries["total_max_attempts"] == 1
+    finally:
+        sender.client.close()
