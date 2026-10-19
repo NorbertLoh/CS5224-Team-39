@@ -38,7 +38,7 @@ def sessions(database):
     with database.begin() as connection:
         connection.execute(
             text(
-                "TRUNCATE fulfilment.quote_requests, fulfilment.quotes, "
+                "TRUNCATE fulfilment.event_inbox, fulfilment.quote_requests, fulfilment.quotes, "
                 "fulfilment.order_requests, fulfilment.order_items, "
                 "fulfilment.orders, fulfilment.catalogue_items"
             )
