@@ -11,14 +11,14 @@ Publish to the configured EventBridge bus (`telelink-local` in Floci). Each
 PutEvents entry has `Source` from the table below, `DetailType` ending in `.v1`,
 `Time` equal to `occurred_at`, and `Detail` containing this JSON object:
 
-| Field | Required value |
-| --- | --- |
-| `event_id` | Server-generated UUID; stable across publication retries/replay |
-| `schema_version` | Integer `1` |
-| `occurred_at` | Committed fact's UTC timestamp, RFC 3339 milliseconds with `Z` |
-| `tenant_id` | Owning clinic's UUID |
+| Field            | Required value                                                  |
+| ---------------- | --------------------------------------------------------------- |
+| `event_id`       | Server-generated UUID; stable across publication retries/replay |
+| `schema_version` | Integer `1`                                                     |
+| `occurred_at`    | Committed fact's UTC timestamp, RFC 3339 milliseconds with `Z`  |
+| `tenant_id`      | Owning clinic's UUID                                            |
 | `correlation_id` | UUID identifying the initiating workflow; propagated downstream |
-| `data` | Event-specific object from the table below |
+| `data`           | Event-specific object from the table below                      |
 
 SQS receives the full EventBridge JSON wrapper without an input transformer.
 Consumers inspect `source`, `detail-type` and `detail`. EventBridge's outer `id`
@@ -31,15 +31,15 @@ and read its `detail` object. See [AWS event structure](https://docs.aws.amazon.
 All IDs below are UUID strings. Payment `amount` uses C01 Money and is the
 trusted committed charge snapshot. Payment purposes have separate event types.
 
-| DetailType | Source | Required `data` fields | Consumers |
-| --- | --- | --- | --- |
-| `consultation_payment_succeeded.v1` | `telelink.billing` | `payment_id`, `appointment_id`, `amount` | scheduling |
-| `medication_payment_succeeded.v1` | `telelink.billing` | `payment_id`, `order_id`, `amount` | fulfilment |
-| `appointment_confirmed.v1` | `telelink.scheduling` | `appointment_id` | notification |
-| `prescription_issued.v1` | `telelink.clinical-records` | `prescription_id`, `appointment_id` | document |
-| `medical_certificate_issued.v1` | `telelink.clinical-records` | `medical_certificate_id`, `appointment_id`, `patient_id`, `doctor_id` | document |
-| `document_ready.v1` | `telelink.document` | `document_id`, `appointment_id`, exactly one of `prescription_id` / `medical_certificate_id` | notification |
-| `delivery_status_changed.v1` | `telelink.fulfilment` | `delivery_id`, `order_id`, `status` | notification |
+| DetailType                          | Source                      | Required `data` fields                                                                       | Consumers    |
+| ----------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------- | ------------ |
+| `consultation_payment_succeeded.v1` | `telelink.billing`          | `payment_id`, `appointment_id`, `amount`                                                     | scheduling   |
+| `medication_payment_succeeded.v1`   | `telelink.billing`          | `payment_id`, `order_id`, `amount`                                                           | fulfilment   |
+| `appointment_confirmed.v1`          | `telelink.scheduling`       | `appointment_id`                                                                             | notification |
+| `prescription_issued.v1`            | `telelink.clinical-records` | `prescription_id`, `appointment_id`                                                          | document     |
+| `medical_certificate_issued.v1`     | `telelink.clinical-records` | `medical_certificate_id`, `appointment_id`, `patient_id`, `doctor_id`                        | document     |
+| `document_ready.v1`                 | `telelink.document`         | `document_id`, `appointment_id`, exactly one of `prescription_id` / `medical_certificate_id` | notification |
+| `delivery_status_changed.v1`        | `telelink.fulfilment`       | `delivery_id`, `order_id`, `status`                                                          | notification |
 
 Delivery `status` is the fulfilment service's normalized, nonempty status string;
 C04/D06 define legal values and transitions. C03/C04 own payment and booking

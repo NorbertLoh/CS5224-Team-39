@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createElement } from 'react'
-import { MCFields } from '../src/features/records/MedicalCertificateForm'
+import { MedicalCertificateEditor } from '../src/features/records/MedicalCertificateEditor'
 import { mcEndDate } from '../src/features/records/medicalCertificate'
 import {
   readMedicalCertificate,
@@ -32,7 +32,7 @@ test('MC is opt-in and completion seals its form', () => {
   try {
     const initial = renderScheduling(
       client,
-      createElement(MCFields, {
+      createElement(MedicalCertificateEditor, {
         appointmentId: 'appointment',
         draft: null,
         editable: true,
@@ -43,7 +43,7 @@ test('MC is opt-in and completion seals its form', () => {
     assert.doesNotMatch(initial, /MC start date/)
     const finalized = renderScheduling(
       client,
-      createElement(MCFields, {
+      createElement(MedicalCertificateEditor, {
         appointmentId: 'appointment',
         editable: false,
         draft: {
