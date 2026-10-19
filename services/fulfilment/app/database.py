@@ -31,7 +31,7 @@ class Database:
             connection.execute(select(Order.order_id).limit(1))
             connection.execute(select(Quote.quote_id).limit(1))
             connection.execute(select(event_inbox.c.event_id).limit(1))
-            connection.execute(select(Delivery.delivery_id).limit(1))
+            connection.execute(select(Delivery.next_poll_at).limit(1))
             connection.execute(select(event_outbox.c.event_id).limit(1))
 
     def close(self) -> None:

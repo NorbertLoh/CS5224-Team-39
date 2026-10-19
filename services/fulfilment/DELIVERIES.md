@@ -122,7 +122,7 @@ It cannot accept an operator assertion alone or replace a conflicting stored
 reference. Successful reconciliation records the operator and timestamp. Repeating
 it is safe. A verified cancelled/rejected/expired provider order becomes a failed
 delivery and an exception order. Accepted orders become submitted; tracking their
-later progress remains D06.
+later progress is handled by the [D06 poller](TRACKING.md).
 
 If no provider reference can be established, leave the attempt unknown and resolve
 it with the provider. There is no force-resend or retry-failed command in D05.
@@ -159,6 +159,6 @@ confirmed `CANCELED`; this cleanup is not evidence of D06 application tracking.
 Clinical dispensing and the fulfilment checkout-reservation endpoint remain
 unfinished, so these checks use explicit synthetic accepted reservations and
 billing payment rows. No Stripe charge, real patient delivery, AWS deployment,
-driver pickup/completion, callbacks or full I03 journey is claimed. D06 owns ongoing
-verified callback/polling updates; application cancellation and automatic refunds
+driver pickup/completion, callbacks or full I03 journey is claimed. D06 implements
+ongoing [verified polling](TRACKING.md); application cancellation and automatic refunds
 remain separate work. Run the full suite using the disposable setup in [README.md](README.md).
