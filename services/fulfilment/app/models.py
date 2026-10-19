@@ -18,6 +18,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from telelink_common.inbox import inbox_table
 
 SERVICE_SCHEMA = "fulfilment"
 MAX_MONEY = 9007199254740991
@@ -25,6 +26,9 @@ MAX_MONEY = 9007199254740991
 
 class Base(DeclarativeBase):
     metadata = MetaData(schema=SERVICE_SCHEMA)
+
+
+event_inbox = inbox_table(Base.metadata)
 
 
 class CatalogueItem(Base):

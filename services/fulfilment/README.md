@@ -3,6 +3,9 @@
 D03 adds `POST /orders/{order_id}/ready`; policy, retries and verification are
 documented in [`READINESS.md`](READINESS.md). No additional migration or setting is needed.
 
+D04 consumes medication-payment events in a separate process. Run migration `0003`
+and configure the billing service credential and queue described in [`PAYMENTS.md`](PAYMENTS.md).
+
 D02 quotation APIs, sandbox setup and verification are documented in
 [`QUOTES.md`](QUOTES.md). Run migration `0002` before starting the updated service.
 
@@ -110,7 +113,8 @@ authentication and patient-purpose checks. Return the validated minimum projecti
 enforce prescription/patient identity and fail closed for upstream errors. Never forward
 a browser token as a service credential or read clinical-record tables directly.
 Real medication pricing/payment integration remains I03. Quotes are implemented in
-D02; D03 implements readiness. Payment events and delivery/cancellation remain separate work.
+D02; D03 implements readiness and D04 consumes verified medication-payment events.
+Checkout reservation and delivery/cancellation remain separate integration work.
 
 ## Verification
 

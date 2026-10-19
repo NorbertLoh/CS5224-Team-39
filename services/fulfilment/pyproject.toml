@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Fulfilment catalogue and prescription-linked orders"
 requires-python = ">=3.10"
 dependencies = [
-    "telelink-python-common==0.1.0",
+    "telelink-python-common[aws]==0.1.0",
     "fastapi>=0.115,<1",
     "pydantic-settings>=2.6,<3",
     "uvicorn>=0.30,<1",
