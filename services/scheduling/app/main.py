@@ -17,6 +17,7 @@ from app.checkout import router as checkout_router
 from app.database import create_database_engine
 from app.holds import HoldCache
 from app.models import Appointment, AvailabilitySlot
+from app.notification_context import router as notification_router
 from app.settings import Settings
 from app.tenant import TenantClient
 
@@ -66,6 +67,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         expose_headers=["X-Request-ID", "Retry-After"],
     )
     app.add_middleware(RequestLoggingMiddleware, service="scheduling")
+    app.include_router(notification_router)
     install_error_handlers(app)
     app.include_router(router)
     app.include_router(booking_router)

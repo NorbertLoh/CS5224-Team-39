@@ -1,9 +1,10 @@
 # Notification foundation (N01)
 
 This service owns notification jobs, three version-one email templates and the
-`EmailSender` interface / SES implementation. N02 owns event consumption,
-authoritative recipient resolution, send deduplication and automated status
-transitions. There is no public send endpoint or running event consumer here.
+`EmailSender` interface / SES implementation. N02 adds the separately run event
+worker, authoritative recipient resolution and durable send states; see
+[WORKER.md](WORKER.md) for setup, operations and verification. There is no public
+send endpoint.
 
 ## Setup
 
@@ -65,13 +66,13 @@ No real recipient or deployed AWS email is used by this check.
 ## Persistence and delivery semantics
 
 `notification.jobs` stores tenant/event/recipient IDs, recipient email, template
-name, pending/sent/failed status, attempt count, SES message ID, safe error code
-and creation/acceptance timestamps. It does not store clinical details or rendered
+name, send status, attempt count, SES message ID, safe error code and timestamps.
+N02 adds sending/uncertain states, a persisted claim and retry scheduling. It does not store clinical details or rendered
 bodies. Treat recipient emails as private data; keep them out of logs and limit
 DB access. Retention policy and recipient lookup are not implemented in N01.
 
-The unique event/recipient/template key is schema groundwork for N02, not proof of
-an idempotent sender. The three templates map to `appointment_confirmed.v1`,
+The worker commits its inbox row and job together, then claims the job before
+sending. Event duplicates and concurrent dispatchers share that durable state. The three templates map to `appointment_confirmed.v1`,
 `document_ready.v1` and `delivery_status_changed.v1`. Emails contain generic copy
 and a sign-in link, without diagnosis, medication, signed downloads or tokens.
 They do not grant access; the application still enforces its own authorisation.
@@ -79,9 +80,9 @@ They do not grant access; the application still enforces its own authorisation.
 `SESEmailSender.send()` returns the SES acceptance ID. `sent` means provider
 acceptance, not delivery to an inbox. SES/network failures raise a sanitized
 `EmailSendError`; persist only `ses_unconfirmed`, never raw provider messages.
-There is no application retry loop here. SDK transport retries and ambiguous
-network/crash outcomes can result in duplicate email; N02 must explicitly handle
-these limits rather than claiming exactly-once delivery.
+The adapter disables SDK retries because SES has no send idempotency token.
+N02 retries only definitive throttle rejections and holds ambiguous outcomes for
+review. See the worker guide for its delivery limits.
 
 ## Verification
 
@@ -100,5 +101,5 @@ cover migration upgrade/repeated upgrade/schema drift/rollback/re-upgrade, defau
 values, duplicate keys, invalid states, acceptance metadata, templates, URL/header
 validation, actual SDK request shapes and sanitized provider/connection failures.
 Ruff passed. The actual local SES check verified one captured message's recipient,
-subject and both bodies through Floci. Event integration, real AWS email delivery,
-automated retries and bounce handling are not claimed.
+subject and both bodies through Floci. N02 worker verification is recorded in
+[WORKER.md](WORKER.md); deployed AWS delivery and bounce handling remain open.

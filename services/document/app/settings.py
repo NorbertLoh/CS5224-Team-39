@@ -5,6 +5,7 @@ from telelink_common.settings import ServiceName, ServiceSettings
 
 
 class Settings(ServiceSettings):
+    notification_secret: SecretStr | None = None
     name: ServiceName = "document"
     port: int = Field(default=8007, ge=1, le=65535)
     scheduling_url: str | None = None
@@ -19,6 +20,13 @@ class Settings(ServiceSettings):
 
     @model_validator(mode="after")
     def validate_worker_configuration(self):
+        if self.notification_secret:
+            value = self.notification_secret.get_secret_value()
+            if len(value.encode()) < 32 or any(
+                key and key.get_secret_value() == value
+                for key in (self.records_secret, self.cursor_secret)
+            ):
+                raise ValueError("Notification secret needs distinct 32+ bytes")
         if self.cursor_secret:
             value = self.cursor_secret.get_secret_value()
             if len(value.encode()) < 32:

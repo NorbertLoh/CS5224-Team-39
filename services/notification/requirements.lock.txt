@@ -44,3 +44,5 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 tzdata==2026.5
 urllib3==2.8.0
+setuptools==84.0.0
+wheel==0.48.0

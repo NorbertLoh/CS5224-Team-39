@@ -15,6 +15,7 @@ from app.database import create_database_engine
 from app.doctors import router as doctors_router
 from app.document_profiles import router as document_profiles_router
 from app.models import Membership, Subject
+from app.notification_context import router as notification_router
 from app.provisioning import router as provisioning_router
 from app.settings import Settings
 
@@ -61,6 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         expose_headers=["X-Request-ID", "Retry-After"],
     )
     app.add_middleware(RequestLoggingMiddleware, service="identity")
+    app.include_router(notification_router)
     install_error_handlers(app)
     app.include_router(router)
     app.include_router(provisioning_router)

@@ -39,8 +39,8 @@ Current claims and remaining blockers:
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
 Unclaimed tasks with complete listed dependencies:
-Q02. N02 dependencies are complete and it is claimed by NorbertLoh in issue #228. These are candidates to claim, not new
-assignments. W01 additionally needs the AWS decisions above. P02/P03 are complete;
+Q02. This is a candidate to claim, not a new assignment.
+N02 is claimed by NorbertLoh in issue #228; implementation is in PR #230. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
 For every other unchecked task, the Depends on column identifies unfinished
 prerequisites; an unchecked task is not necessarily blocked by external access.

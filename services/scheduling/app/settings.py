@@ -5,6 +5,7 @@ from telelink_common.settings import ServiceName, ServicePort, ServiceSettings
 
 
 class Settings(ServiceSettings):
+    notification_secret: SecretStr | None = None
     name: ServiceName = "scheduling"
     port: ServicePort = 8003
     tenant_url: str | None = None
@@ -68,6 +69,7 @@ class Settings(ServiceSettings):
                 self.consultation_secret,
                 self.operator_secret,
                 self.billing_secret,
+                self.notification_secret,
             )
             if secret is not None
         ]

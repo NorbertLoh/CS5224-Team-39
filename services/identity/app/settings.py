@@ -8,6 +8,7 @@ from telelink_common.settings import ServiceName, ServicePort, ServiceSettings
 
 
 class Settings(ServiceSettings):
+    notification_secret: SecretStr | None = None
     name: ServiceName = "identity"
     port: ServicePort = 8001
     cursor_secret: SecretStr | None = None
@@ -50,6 +51,7 @@ class Settings(ServiceSettings):
             self.tenant_secret,
             self.identity_secret,
             self.records_secret,
+            self.notification_secret,
             self.consultation_secret,
         )
         for secret in secrets:
