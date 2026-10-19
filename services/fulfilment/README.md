@@ -1,4 +1,7 @@
-# Fulfilment (D01)
+# Fulfilment
+
+D02 quotation APIs, sandbox setup and verification are documented in
+[`QUOTES.md`](QUOTES.md). Run migration `0002` before starting the updated service.
 
 X05's isolated Lalamove sandbox CLI and callback verifier are documented in
 [`docs/lalamove-spike.md`](../../docs/lalamove-spike.md). They do not update
@@ -103,8 +106,8 @@ service-only `/internal/prescriptions/{id}/dispensing` once R02 supplies agreed 
 authentication and patient-purpose checks. Return the validated minimum projection,
 enforce prescription/patient identity and fail closed for upstream errors. Never forward
 a browser token as a service credential or read clinical-record tables directly.
-Real medication pricing/payment integration remains I03. Quotes, readiness, payment
-events and delivery/cancellation actions are D02–D06 and are not exposed here.
+Real medication pricing/payment integration remains I03. Quotes are implemented in
+D02; readiness, payment events and delivery/cancellation remain separate work.
 
 ## Verification
 

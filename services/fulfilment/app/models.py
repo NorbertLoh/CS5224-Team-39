@@ -15,6 +15,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Uuid,
     func,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -127,5 +128,52 @@ class OrderRequest(Base):
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     prescription_id: Mapped[UUID] = mapped_column(Uuid)
     order_id: Mapped[UUID] = mapped_column(ForeignKey("fulfilment.orders.order_id"))
+    response_payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Quote(Base):
+    __tablename__ = "quotes"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('active','accepted','expired','superseded')", name="ck_quote_status"
+        ),
+        CheckConstraint(
+            f"medication_subtotal_minor BETWEEN 0 AND {MAX_MONEY} AND "
+            f"delivery_fee_minor BETWEEN 0 AND {MAX_MONEY} AND "
+            f"total_minor BETWEEN 0 AND {MAX_MONEY} "
+            "AND total_minor = medication_subtotal_minor + delivery_fee_minor",
+            name="ck_quote_total",
+        ),
+        CheckConstraint("expires_at > created_at", name="ck_quote_expiry"),
+        Index("ix_quotes_order", "order_id"),
+        Index(
+            "uq_quotes_active_order",
+            "order_id",
+            unique=True,
+            postgresql_where=text("status = 'active'"),
+        ),
+    )
+    quote_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    order_id: Mapped[UUID] = mapped_column(ForeignKey("fulfilment.orders.order_id"))
+    tenant_id: Mapped[UUID] = mapped_column(Uuid)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    medication_subtotal_minor: Mapped[int] = mapped_column(BigInteger)
+    delivery_fee_minor: Mapped[int] = mapped_column(BigInteger)
+    total_minor: Mapped[int] = mapped_column(BigInteger)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Private snapshots for checkout/delivery consumers; never public or logged.
+    items: Mapped[list] = mapped_column(JSON)
+    destination: Mapped[dict] = mapped_column(JSON)
+    provider_context: Mapped[dict] = mapped_column(JSON)
+
+
+class QuoteRequest(Base):
+    __tablename__ = "quote_requests"
+    subject_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    quote_id: Mapped[UUID] = mapped_column(ForeignKey("fulfilment.quotes.quote_id"))
     response_payload: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

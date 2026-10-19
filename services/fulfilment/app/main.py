@@ -8,9 +8,11 @@ from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.catalogue import router as catalogue_router
 from app.database import Database
+from app.delivery_provider import SandboxQuotes
 from app.dispensing import FixtureDispensing, UnavailableDispensing
 from app.health import router as health_router
 from app.orders import router as orders_router
+from app.quotes import router as quotes_router
 from app.settings import Settings
 
 
@@ -26,6 +28,7 @@ def create_app(settings: Settings | None = None):
         finally:
             app.state.ready = False
             app.state.identity_client.close()
+            app.state.delivery_quotes.close()
             if app.state.database is not None:
                 app.state.database.close()
 
@@ -43,6 +46,7 @@ def create_app(settings: Settings | None = None):
     app.state.database = None
     app.state.identity_client = IdentityClient(config)
     app.state.token_verifier = TokenVerifier(config)
+    app.state.delivery_quotes = SandboxQuotes(config)
     app.state.dispensing = (
         FixtureDispensing(config.dispensing_fixture_path)
         if config.dispensing_fixture_path
@@ -52,5 +56,6 @@ def create_app(settings: Settings | None = None):
     app.include_router(health_router)
     app.include_router(catalogue_router)
     app.include_router(orders_router)
+    app.include_router(quotes_router)
     install_error_handlers(app)
     return app

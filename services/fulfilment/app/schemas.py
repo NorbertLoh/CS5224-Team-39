@@ -88,3 +88,25 @@ class OrderPublic(OrderOperational):
 class OrderPage(BaseModel):
     items: list[OrderPublic | OrderOperational]
     next_cursor: str | None
+
+
+class Destination(StrictModel):
+    address_line: str = Field(min_length=1, max_length=300, pattern=r"^[^\x00-\x1f\x7f]+$")
+    postal_code: str = Field(pattern=r"^[0-9]{6}$")
+    country_code: Literal["SG"]
+
+
+class QuoteCreate(StrictModel):
+    destination: Destination
+
+
+class QuotePublic(Resource):
+    quote_id: UUID
+    order_id: UUID
+    tenant_id: UUID
+    status: Literal["active", "accepted", "expired", "superseded"]
+    medication_subtotal: Money
+    delivery_fee: Money
+    total: Money
+    expires_at: datetime
+    created_at: datetime
