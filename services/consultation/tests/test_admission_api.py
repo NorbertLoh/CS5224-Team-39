@@ -162,6 +162,12 @@ def api(database, monkeypatch):
         if state["sources_status"] != 200:
             return httpx.Response(state["sources_status"], json={"private": "do not reflect"})
         if service == "scheduling":
+            if request.method == "POST":
+                action = request.url.path.rsplit("/", 1)[-1]
+                assert action in {"start", "complete"}
+                state["appointment"]["status"] = "in_progress" if action == "start" else "completed"
+                if state.pop("lost_scheduling_response", False):
+                    return httpx.Response(503)
             return httpx.Response(200, json=state["appointment"])
         if service == "billing":
             return httpx.Response(200, json=state["payment"])
@@ -463,3 +469,48 @@ def test_no_raw_grant_in_request_logs(api, caplog):
     grant = issue(api).json()
     internal(api, "consume", grant)
     assert grant["token"] not in caplog.text
+
+
+def test_doctor_lifecycle_syncs_scheduling_and_closes_admission(api):
+    path = f"/appointments/{api.appointment_id}"
+    assert api.client.post(path + "/start", headers=api.headers()).status_code == 404
+    grant = issue(api).json()
+    for _ in range(2):
+        result = api.client.post(path + "/start", headers=api.headers(api.doctor))
+        assert result.status_code == 200
+        assert result.json()["status"] == "in_progress"
+    assert api.state["appointment"]["status"] == "in_progress"
+    for _ in range(2):
+        result = api.client.post(path + "/complete", headers=api.headers(api.doctor))
+        assert result.status_code == 200
+    assert api.state["appointment"]["status"] == "completed"
+    assert internal(api, "consume", grant).status_code in {403, 409}
+    assert issue(api).status_code == 409
+
+
+@pytest.mark.parametrize("target", ["doctor_active", "payment", "sources_status"])
+def test_lifecycle_denies_revocation_refund_and_upstream_outage(api, target):
+    if target == "payment":
+        api.state["payment"]["status"] = "refunded"
+    elif target == "sources_status":
+        api.state[target] = 503
+    else:
+        api.state[target] = False
+    response = api.client.post(
+        f"/appointments/{api.appointment_id}/start", headers=api.headers(api.doctor)
+    )
+    assert response.status_code in {404, 409, 503}
+    assert api.state["appointment"]["status"] == "confirmed"
+
+
+def test_lifecycle_recovers_lost_scheduling_response_without_repeating_transition(api):
+    path = f"/appointments/{api.appointment_id}"
+    for action, target in [("start", "in_progress"), ("complete", "completed")]:
+        api.state["lost_scheduling_response"] = True
+        assert (
+            api.client.post(path + "/" + action, headers=api.headers(api.doctor)).status_code == 503
+        )
+        assert api.state["appointment"]["status"] == target
+        assert (
+            api.client.post(path + "/" + action, headers=api.headers(api.doctor)).status_code == 200
+        )

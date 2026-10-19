@@ -48,6 +48,11 @@ issuer upstream. Docker Desktop uses `host.docker.internal`; Linux Compose adds
 the host-gateway mapping. Protect backend host ports and use appropriate bind
 addresses so Docker can reach them. This is a service-local development profile.
 
+V04 adds an optional full-application HTTPS entry point using `compose.app.yaml`
+and online discovery at POST `/peerjs/counterpart`. See
+`../../docs/V04-booked-video.md` for the command, scoped capability contract and
+browser verification. The original signalling-only profile retains its allowlist.
+
 ## Admission and transport behavior
 
 Request a V02 admission with the user's verified access token:

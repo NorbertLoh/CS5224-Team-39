@@ -99,6 +99,8 @@ class AdmissionSources:
             raise DomainError(503, "unavailable", "Required service is unavailable.") from None
         if response.status_code in {403, 404}:
             raise DomainError(404, "not_found", "Resource not found.")
+        if response.status_code == 409:
+            raise DomainError(409, "appointment_changed", "Appointment changed; refresh and retry.")
         if response.status_code == 401 or response.status_code >= 500:
             raise DomainError(503, "unavailable", "Required service is unavailable.")
         try:
@@ -116,7 +118,7 @@ class AdmissionSources:
             raise DomainError(502, "upstream_error", "Invalid upstream appointment.")
         return row
 
-    def validate(self, appointment, subject_id, request_id):
+    def validate(self, appointment, subject_id, request_id, *, statuses=None):
         if subject_id not in {appointment.patient_id, appointment.doctor_id}:
             raise DomainError(404, "not_found", "Resource not found.")
         decision = self.call(
@@ -140,7 +142,7 @@ class AdmissionSources:
         if not decision.allowed or decision.reason != expected_reason:
             raise DomainError(404, "not_found", "Resource not found.")
         if (
-            appointment.status not in {"confirmed", "in_progress"}
+            appointment.status not in (statuses or {"confirmed", "in_progress"})
             or appointment.payment_resolution != "confirmed"
             or appointment.payment_id is None
         ):

@@ -4,6 +4,11 @@ Tracks issue #195 / PR #196. Service-local routes below omit the public
 `/api/v1/consultation` prefix; ingress must strip it. No shared Compose/proxy or
 signalling configuration is changed by this task.
 
+V04 extends the grant with fresh `ice_servers` / `relay_only` and adds authenticated
+doctor start/complete actions. See `../../docs/V04-booked-video.md` for retry
+semantics, configuration and application HTTPS setup. Discovery uses signalling's
+online map; public clients never call internal lease APIs.
+
 ## API
 
 | Route | Authentication | Body/result |

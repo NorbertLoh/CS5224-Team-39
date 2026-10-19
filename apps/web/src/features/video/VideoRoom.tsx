@@ -3,6 +3,7 @@ import { CallStage } from './CallStage'
 import { CallControls } from './CallControls'
 import { useExpandedRoom } from './useExpandedRoom'
 import { DoctorRecordForm } from '../records/DoctorRecordForm'
+import { RecordWorkspace } from '../records/RecordWorkspace'
 import { useLocalMedia } from './useLocalMedia'
 import { useRemoteCall } from './useRemoteCall'
 import type { CallState, RoomConnection } from './connection'
@@ -10,9 +11,15 @@ import type { CallState, RoomConnection } from './connection'
 export function VideoRoom({
   role,
   connection,
+  appointmentId,
+  token,
+  subjectId,
 }: {
   role: 'patient' | 'doctor'
   connection?: RoomConnection
+  appointmentId?: string
+  token?: string
+  subjectId?: string
 }) {
   const media = useLocalMedia()
   const call = useRemoteCall(connection, role, media)
@@ -133,7 +140,15 @@ export function VideoRoom({
             aria-label="Doctor workspace"
             className={`min-w-0 [&_select]:w-full [&_select]:min-w-0 ${expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}`}
           >
-            <DoctorRecordForm />
+            {appointmentId && token && subjectId ? (
+              <RecordWorkspace
+                appointmentId={appointmentId}
+                token={token}
+                subjectId={subjectId}
+              />
+            ) : (
+              <DoctorRecordForm />
+            )}
           </aside>
         )}
       </div>

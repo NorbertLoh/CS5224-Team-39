@@ -32,3 +32,5 @@ class LeasePublic(BaseModel):
 
 class AdmissionPublic(LeasePublic):
     token: str = Field(repr=False)
+    ice_servers: list[dict] = Field(default_factory=list)
+    relay_only: bool = False
