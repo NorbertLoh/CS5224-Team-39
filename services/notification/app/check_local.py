@@ -36,9 +36,7 @@ def main():
         or captured.get("Body", {}).get("html_part") != message.html
     ):
         raise RuntimeError("Expected SES message was not captured")
-    print(
-        "N01: SES acceptance, recipient and both bodies verified in Floci capture."
-    )
+    print("N01: SES acceptance, recipient and both bodies verified in Floci capture.")
 
 
 if __name__ == "__main__":
