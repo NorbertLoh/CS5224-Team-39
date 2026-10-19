@@ -32,6 +32,8 @@ def test_migration_roundtrip_and_schema_isolation(sessions, database):
         "order_items",
         "order_requests",
         "orders",
+        "quote_requests",
+        "quotes",
     ]
     with sessions() as db:
         with pytest.raises(DBAPIError):

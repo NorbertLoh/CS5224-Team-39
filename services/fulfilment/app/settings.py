@@ -9,9 +9,20 @@ class Settings(ServiceSettings):
     port: ServicePort = 8006
     cursor_secret: SecretStr | None = None
     dispensing_fixture_path: Path | None = None
+    lalamove_api_key: SecretStr | None = None
+    lalamove_api_secret: SecretStr | None = None
+    delivery_locations_path: Path | None = None
 
     @model_validator(mode="after")
     def validate_configuration(self):
+        for value, prefix in (
+            (self.lalamove_api_key, "pk_test"),
+            (self.lalamove_api_secret, "sk_test"),
+        ):
+            if value is not None and not value.get_secret_value().startswith(prefix):
+                raise ValueError("Only Lalamove sandbox credentials are supported")
+        if (self.lalamove_api_key is None) != (self.lalamove_api_secret is None):
+            raise ValueError("Both Lalamove sandbox credentials are required")
         if self.dispensing_fixture_path is not None and self.environment not in {"local", "test"}:
             raise ValueError("Dispensing fixtures are restricted to local/test")
         if (
