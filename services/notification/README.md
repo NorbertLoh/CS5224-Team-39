@@ -45,9 +45,12 @@ are required by this foundation.
 ## Local SES inspection
 
 Start the existing pinned Floci 2.2.0 service with its default store-only SES
-configuration. With the example environment loaded:
+configuration. Settings read the copied `.env`; boto3 needs dummy credentials
+exported in the process environment:
 
 ```powershell
+$env:AWS_ACCESS_KEY_ID='local'
+$env:AWS_SECRET_ACCESS_KEY='local'
 .venv/Scripts/python -m app.check_local
 ```
 
