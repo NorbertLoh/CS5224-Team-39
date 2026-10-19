@@ -1,4 +1,5 @@
 import hashlib
+from datetime import datetime, timezone
 from typing import Annotated
 from uuid import UUID
 
@@ -7,12 +8,13 @@ from sqlalchemy import select, text, tuple_
 from telelink_common.access import CurrentIdentity, require_global_role
 from telelink_common.errors import DomainError, ErrorEnvelope
 
-from app.access import can_read_items, order_scope, permission_fingerprint
+from app.access import can_read_items, order_scope, permission_fingerprint, require_clinic
 from app.catalogue import DB, Identity
 from app.models import CatalogueItem, Order, OrderItem, OrderRequest
 from app.pagination import decode, encode
 from app.schemas import (
     MAX_MONEY,
+    MedicineReady,
     Money,
     OrderCreate,
     OrderOperational,
@@ -186,6 +188,42 @@ def get_order(order_id: UUID, identity: Identity, session: DB):
     if order is None:
         raise DomainError(404, "not_found", "Resource not found.")
     return public_order(order, identity)
+
+
+@router.post("/orders/{order_id}/ready", response_model=OrderPublic)
+def mark_medicine_ready(
+    order_id: UUID,
+    request: Request,
+    identity: Identity,
+    session: DB,
+    body: MedicineReady | None = None,
+):
+    # Share the order row lock with quotes and future payment/delivery writers.
+    order = session.scalar(select(Order).where(Order.order_id == order_id).with_for_update())
+    if order is None:
+        raise DomainError(404, "not_found", "Resource not found.")
+    require_clinic(identity, order.tenant_id, {"clinic_admin"})
+    if order.status not in {"awaiting_payment", "paid"} or order.payment_status in {
+        "refund_required",
+        "refunded",
+    }:
+        raise DomainError(409, "order_not_active", "Order cannot be marked medicine-ready.")
+    context = request.app.state.dispensing.get(
+        order.prescription_id, order.patient_id, request.state.request_id
+    )
+    if any(
+        getattr(context, field) != getattr(order, field)
+        for field in ("prescription_id", "tenant_id", "patient_id", "appointment_id")
+    ):
+        raise DomainError(404, "not_found", "Resource not found.")
+    if context.status != "issued":
+        raise DomainError(409, "prescription_not_issued", "Prescription must be issued.")
+    if order.medicine_status != "ready":
+        order.medicine_status = "ready"
+        order.updated_at = datetime.now(timezone.utc)
+    result = public_order(order)
+    session.commit()
+    return result
 
 
 @router.get("/orders", response_model=OrderPage)

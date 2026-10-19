@@ -15,9 +15,10 @@ from telelink_common.errors import DomainError
 from app.database import get_session
 from app.dispensing import DispensingContext, FixtureDispensing, UnavailableDispensing
 from app.main import create_app
+from app.models import Order
 from app.schemas import Money
 from app.settings import Settings
-from tests.test_api import TENANT, identity
+from tests.test_api import TENANT, Source, context, identity
 
 
 def test_fixture_projects_only_minimum_context():
@@ -80,6 +81,20 @@ def test_real_jwt_and_identity_revocation_path(sessions):
             yield db
 
     app.dependency_overrides[get_session] = session
+    order_id = uuid4()
+    app.state.dispensing = Source()
+    prescription = context()
+    with sessions.begin() as db:
+        db.add(
+            Order(
+                order_id=order_id,
+                tenant_id=prescription.tenant_id,
+                prescription_id=prescription.prescription_id,
+                patient_id=prescription.patient_id,
+                appointment_id=prescription.appointment_id,
+                medication_subtotal_minor=0,
+            )
+        )
 
     def headers(**changes):
         token = jwt.encode(
@@ -99,13 +114,19 @@ def test_real_jwt_and_identity_revocation_path(sessions):
         return {"Authorization": "Bearer " + token}
 
     path = f"/clinics/{TENANT}/catalogue"
+    ready_path = f"/orders/{order_id}/ready"
     with TestClient(app) as client:
         assert client.get(path, headers=headers()).status_code == 200
+        assert client.post(ready_path, headers=headers()).status_code == 200
         assert forwarded
         assert client.get(path, headers=headers(exp=1)).status_code == 401
         assert client.get(path, headers=headers(token_use="id")).status_code == 401
         assert client.get(path, headers={"X-Role": "clinic_admin"}).status_code == 401
+        assert client.post(ready_path, headers=headers(exp=1)).status_code == 401
+        assert client.post(ready_path, headers=headers(token_use="id")).status_code == 401
+        assert client.post(ready_path, headers={"X-Role": "clinic_admin"}).status_code == 401
         payload["memberships"][0]["status"] = "revoked"
+        assert client.post(ready_path, headers=headers()).status_code == 404
         response = client.get(path, headers=headers(**{"cognito:groups": ["clinic_admin"]}))
         assert response.status_code == 404
         assert response.json()["error"]["request_id"] == response.headers["X-Request-ID"]

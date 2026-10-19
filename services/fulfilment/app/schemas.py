@@ -53,6 +53,10 @@ class OrderCreate(StrictModel):
     prescription_id: UUID
 
 
+class MedicineReady(StrictModel):
+    """The action accepts no client-controlled state or resource links."""
+
+
 class OrderItemPublic(StrictModel):
     prescription_item_id: UUID
     medication_id: UUID
