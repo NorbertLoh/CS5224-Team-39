@@ -16,12 +16,16 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from telelink_common.inbox import inbox_table
 
 SERVICE_SCHEMA = "notification"
 
 
 class Base(DeclarativeBase):
     metadata = MetaData(schema=SERVICE_SCHEMA)
+
+
+event_inbox = inbox_table(Base.metadata)
 
 
 class NotificationJob(Base):
@@ -34,10 +38,13 @@ class NotificationJob(Base):
             "template IN ('booking_confirmed', 'document_ready', 'delivery_updated')",
             name="ck_jobs_template",
         ),
-        CheckConstraint("status IN ('pending', 'sent', 'failed')", name="ck_jobs_status"),
+        CheckConstraint(
+            "status IN ('pending', 'sending', 'sent', 'failed', 'uncertain')", name="ck_jobs_status"
+        ),
         CheckConstraint("attempts >= 0", name="ck_jobs_attempts"),
         CheckConstraint(
-            "error_code IS NULL OR error_code = 'ses_unconfirmed'", name="ck_jobs_error_code"
+            "error_code IS NULL OR error_code IN ('ses_unconfirmed', 'ses_rejected')",
+            name="ck_jobs_error_code",
         ),
         CheckConstraint(
             "length(btrim(recipient_email)) BETWEEN 3 AND 254 "
@@ -49,9 +56,15 @@ class NotificationJob(Base):
             "(status = 'sent' AND provider_message_id IS NOT NULL "
             "AND btrim(provider_message_id) <> '' AND sent_at IS NOT NULL "
             "AND attempts > 0 AND error_code IS NULL) "
-            "OR (status IN ('pending', 'failed') AND provider_message_id IS NULL "
+            "OR (status IN ('pending', 'sending', 'failed', 'uncertain') "
+            "AND provider_message_id IS NULL "
             "AND sent_at IS NULL)",
             name="ck_jobs_sent",
+        ),
+        CheckConstraint(
+            "status NOT IN ('sending', 'uncertain') "
+            "OR (send_started_at IS NOT NULL AND attempts > 0)",
+            name="ck_jobs_claim",
         ),
         Index("ix_jobs_status_created", "status", "created_at"),
     )
@@ -67,3 +80,8 @@ class NotificationJob(Base):
     error_code: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    ready_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    send_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -2,15 +2,22 @@
 
 from typing import Protocol
 
+import boto3
+from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
-from telelink_common.aws import create_client
+from telelink_common.aws import client_options
 
 from app.settings import Settings, validate_email
 from app.templates import EmailMessage
 
 
 class EmailSendError(RuntimeError):
-    pass
+    def __init__(
+        self, message="SES did not confirm message acceptance", *, definitive=False, retryable=False
+    ):
+        super().__init__(message)
+        self.definitive = definitive
+        self.retryable = retryable
 
 
 class EmailSender(Protocol):
@@ -20,7 +27,18 @@ class EmailSender(Protocol):
 class SESEmailSender:
     def __init__(self, settings: Settings, *, client=None):
         self.source = settings.email_sender
-        self.client = client if client is not None else create_client("ses", settings)
+        # SES SendEmail has no idempotency token: disable hidden SDK retries.
+        self.client = (
+            client
+            if client is not None
+            else boto3.client(
+                "ses",
+                **client_options(settings),
+                config=Config(
+                    connect_timeout=3, read_timeout=10, retries={"total_max_attempts": 1}
+                ),
+            )
+        )
 
     def send(self, recipient: str, message: EmailMessage) -> str:
         validate_email(recipient)
@@ -38,8 +56,20 @@ class SESEmailSender:
                     },
                 },
             )
-        except (BotoCoreError, ClientError):
-            raise EmailSendError("SES did not confirm message acceptance") from None
+        except ClientError as error:
+            code = error.response.get("Error", {}).get("Code")
+            retryable = code in {"Throttling", "ThrottlingException", "TooManyRequestsException"}
+            definitive = retryable or code in {
+                "MessageRejected",
+                "AccessDenied",
+                "AccessDeniedException",
+                "MailFromDomainNotVerifiedException",
+                "AccountSendingPausedException",
+                "ConfigurationSetDoesNotExistException",
+            }
+            raise EmailSendError(definitive=definitive, retryable=retryable) from None
+        except BotoCoreError:
+            raise EmailSendError() from None
         message_id = result.get("MessageId")
         if not isinstance(message_id, str) or not message_id.strip():
             raise EmailSendError("SES did not confirm message acceptance")

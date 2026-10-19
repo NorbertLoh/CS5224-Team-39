@@ -14,6 +14,7 @@ from app.access import AppointmentClient
 from app.api import router
 from app.database import create_database_engine
 from app.downloads import Downloads, create_signer
+from app.notification_context import router as notification_router
 from app.settings import Settings
 
 
@@ -68,6 +69,7 @@ def create_app(settings: Settings | None = None):
         response.headers["Cache-Control"] = "no-store"
         return response
 
+    app.include_router(notification_router)
     install_error_handlers(app)
     app.include_router(router)
 

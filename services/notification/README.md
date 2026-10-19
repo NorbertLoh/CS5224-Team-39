@@ -1,9 +1,10 @@
 # Notification foundation (N01)
 
 This service owns notification jobs, three version-one email templates and the
-`EmailSender` interface / SES implementation. N02 owns event consumption,
-authoritative recipient resolution, send deduplication and automated status
-transitions. There is no public send endpoint or running event consumer here.
+`EmailSender` interface / SES implementation. N02 adds the separately run event
+worker, authoritative recipient resolution and durable send states; see
+[WORKER.md](WORKER.md) for setup, operations and verification. There is no public
+send endpoint.
 
 ## Setup
 
@@ -79,9 +80,9 @@ They do not grant access; the application still enforces its own authorisation.
 `SESEmailSender.send()` returns the SES acceptance ID. `sent` means provider
 acceptance, not delivery to an inbox. SES/network failures raise a sanitized
 `EmailSendError`; persist only `ses_unconfirmed`, never raw provider messages.
-There is no application retry loop here. SDK transport retries and ambiguous
-network/crash outcomes can result in duplicate email; N02 must explicitly handle
-these limits rather than claiming exactly-once delivery.
+The adapter disables SDK retries because SES has no send idempotency token.
+N02 retries only definitive throttle rejections and holds ambiguous outcomes for
+review. See the worker guide for its delivery limits.
 
 ## Verification
 

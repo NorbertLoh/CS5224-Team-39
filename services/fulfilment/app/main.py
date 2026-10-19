@@ -13,6 +13,7 @@ from app.deliveries import router as deliveries_router
 from app.delivery_provider import SandboxQuotes
 from app.dispensing import FixtureDispensing, HttpDispensing, UnavailableDispensing
 from app.health import router as health_router
+from app.notification_context import router as notification_router
 from app.orders import router as orders_router
 from app.quotes import router as quotes_router
 from app.settings import Settings
@@ -65,5 +66,6 @@ def create_app(settings: Settings | None = None):
     app.include_router(quotes_router)
     app.include_router(checkout_router)
     app.include_router(deliveries_router)
+    app.include_router(notification_router)
     install_error_handlers(app)
     return app

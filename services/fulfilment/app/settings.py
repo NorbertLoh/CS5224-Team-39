@@ -6,6 +6,7 @@ from telelink_common.settings import ServiceName, ServicePort, ServiceSettings
 
 
 class Settings(ServiceSettings):
+    notification_secret: SecretStr | None = None
     name: ServiceName = "fulfilment"
     port: ServicePort = 8006
     cursor_secret: SecretStr | None = None
@@ -40,7 +41,12 @@ class Settings(ServiceSettings):
                 setattr(self, field, value.rstrip("/"))
         secrets = [
             value.get_secret_value()
-            for value in (self.cursor_secret, self.billing_secret, self.records_secret)
+            for value in (
+                self.cursor_secret,
+                self.billing_secret,
+                self.records_secret,
+                self.notification_secret,
+            )
             if value is not None
         ]
         if any(len(value.encode()) < 32 for value in secrets) or len(secrets) != len(set(secrets)):
