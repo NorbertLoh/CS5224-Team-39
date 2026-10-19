@@ -13,7 +13,7 @@ export function ConsultationActions({
     mutationFn: () => consultationAction(appointment.appointment_id, action),
     onSettled: async () => {
       await Promise.all(
-        ['consultation', 'records', 'scheduling'].map((key) =>
+        ['consultation', 'records', 'scheduling', 'documents'].map((key) =>
           cache.invalidateQueries({ queryKey: [key] }),
         ),
       )
@@ -28,7 +28,9 @@ export function ConsultationActions({
       <p>
         Start the consultation to enable clinical writing. Completing it ends
         room access for both participants. Leaving video alone does not complete
-        the appointment.
+        the appointment. Save any MC draft first. If completion reports an error
+        after the appointment ends, retry the completion handoff below to
+        finalize the saved MC decision.
       </p>
       <button
         className="rounded border px-4 py-2"
@@ -42,12 +44,21 @@ export function ConsultationActions({
           ? 'Updating consultation...'
           : action === 'start'
             ? 'Start clinical consultation'
-            : 'Complete consultation'}
+            : appointment.status === 'completed'
+              ? 'Retry completion handoff'
+              : 'Complete consultation'}
       </button>
       {mutation.isError && (
         <p role="alert">
           {consultationError(mutation.error)} Refresh to check the appointment
           before retrying.
+        </p>
+      )}
+      {mutation.isSuccess && (
+        <p role="status">
+          {action === 'complete'
+            ? 'Consultation completion and MC decision confirmed. Refresh Documents for PDF status.'
+            : 'Consultation started.'}
         </p>
       )}
     </section>

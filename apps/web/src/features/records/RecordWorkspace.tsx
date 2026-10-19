@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { appointmentDetail } from '../scheduling/api'
 import { readNote, appointmentPrescriptions, recordsError } from './api'
 import { ConsultationNoteForm } from './ConsultationNoteForm'
+import { MedicalCertificateForm } from './MedicalCertificateForm'
 import { PrescriptionEditor } from './PrescriptionEditor'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
@@ -142,6 +143,11 @@ function Records({
         note={records.data.note}
         editable={editable && !uncertain}
         onFailure={() => setUncertain(true)}
+      />
+      <MedicalCertificateForm
+        appointmentId={appointmentId}
+        token={token}
+        editable={editable && !uncertain}
       />
       <PrescriptionEditor
         appointmentId={appointmentId}

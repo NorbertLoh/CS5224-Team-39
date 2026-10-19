@@ -60,8 +60,10 @@ class Receipt(Header):
 
 
 class MedicalCertificate(Header):
+    clinic_address: str | None = Field(default=None, min_length=1, max_length=500)
     doctor_name: str = Field(min_length=1, max_length=200)
-    doctor_registration: str = Field(min_length=1, max_length=100)
+    doctor_registration: str | None = Field(default=None, min_length=1, max_length=100)
+    additional_notes: str = Field(default="", max_length=20000)
     consultation_date: date
     unfit_from: date
     unfit_through: date

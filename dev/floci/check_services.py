@@ -163,7 +163,7 @@ def check_messages():
     routes = {
         "scheduling": {"consultation_payment_succeeded.v1"},
         "fulfilment": {"medication_payment_succeeded.v1"},
-        "document": {"prescription_issued.v1"},
+        "document": {"prescription_issued.v1", "medical_certificate_issued.v1"},
         "notification": {
             "appointment_confirmed.v1", "document_ready.v1", "delivery_status_changed.v1"
         },
@@ -186,7 +186,7 @@ def check():
         assert values == expected[service], f"{service} state changed after restart"
         print(f"{service}: persisted state matches")
     check_messages()
-    print("Pending SQS/DLQ messages and all six routed events survived.")
+    print("Pending SQS/DLQ messages and all routed events survived.")
 
 
 def exercise():
@@ -225,8 +225,8 @@ def exercise():
             body = json.loads(message["Body"])
             if body["detail"]["correlation_id"] == run_id:
                 received[body["detail-type"]] = body["detail"]
-    assert received == expected, "Restored rules did not deliver all six new event payloads"
-    print("Post-recreation writes, secret versions, SES capture and six fresh event routes passed.")
+    assert received == expected, "Restored rules did not deliver all new event payloads"
+    print("Post-recreation writes, secret versions, SES capture and fresh event routes passed.")
 
 
 if __name__ == "__main__":

@@ -3,7 +3,15 @@
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StringConstraints
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictInt,
+    StringConstraints,
+    model_serializer,
+    model_validator,
+)
 
 
 class Money(BaseModel):
@@ -39,10 +47,29 @@ class PrescriptionIssued(EventData):
     appointment_id: UUID
 
 
+class MedicalCertificateIssued(EventData):
+    medical_certificate_id: UUID
+    appointment_id: UUID
+    patient_id: UUID
+    doctor_id: UUID
+
+
 class DocumentReady(EventData):
     document_id: UUID
-    prescription_id: UUID
+    prescription_id: UUID | None = None
+    medical_certificate_id: UUID | None = None
     appointment_id: UUID
+
+    @model_serializer(mode="wrap")
+    def source_fields(self, handler):
+        # Preserve the existing prescription event shape (no new null fields).
+        return {key: value for key, value in handler(self).items() if value is not None}
+
+    @model_validator(mode="after")
+    def one_source(self):
+        if (self.prescription_id is None) == (self.medical_certificate_id is None):
+            raise ValueError("Document-ready requires exactly one source")
+        return self
 
 
 class DeliveryStatusChanged(EventData):

@@ -75,10 +75,11 @@ and support a limited character repertoire. Unsupported characters (including
 CJK) raise `ValueError`; add a properly licensed font with glyph coverage before
 supporting those names. These are prototype templates, not signed documents.
 
-C04/C05 currently define prescription integration only. Receipt and MC source
-snapshots are local P01 template inputs; billing/records endpoints, issuance
-policies and event contracts for them require follow-up agreement before live
-integration. P01 does not change shared contracts or fixtures.
+U17 connects MC source persistence, authoritative consultation completion and
+the document worker/download path. MC additional notes are supported; unavailable
+clinic address/doctor registration fields are omitted. See
+[MC setup, contracts and verification](../../docs/medical-certificates.md).
+Receipt issuance and live source integration remain separate work.
 
 ## Verification
 

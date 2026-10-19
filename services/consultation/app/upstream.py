@@ -66,6 +66,14 @@ class Decision(BaseModel):
     reason: str
 
 
+class MCCompletion(BaseModel):
+    appointment_id: UUID
+    tenant_id: UUID
+    patient_id: UUID
+    doctor_id: UUID
+    finalized_at: datetime
+
+
 class AdmissionSources:
     def __init__(self, settings, *, transport=None):
         self.settings = settings

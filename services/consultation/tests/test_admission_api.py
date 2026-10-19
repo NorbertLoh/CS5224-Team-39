@@ -70,6 +70,8 @@ def api(database, monkeypatch):
         scheduling_secret="v02-scheduling-secret-at-least-32-bytes",
         billing_secret="v02-billing-secret-at-least-32-bytes",
         signalling_secret="v02-signalling-secret-at-least-32-bytes",
+        records_url="http://records.test/api/v1/clinical-records",
+        records_secret="u17-records-secret-at-least-32-bytes",
     )
     appointment = dict(
         appointment_id=str(appointment_id),
@@ -171,6 +173,13 @@ def api(database, monkeypatch):
             return httpx.Response(200, json=state["appointment"])
         if service == "billing":
             return httpx.Response(200, json=state["payment"])
+        if service == "records":
+            body = json.loads(request.content)
+            assert state["appointment"]["status"] == "completed"
+            state["mc_calls"] = state.get("mc_calls", 0) + 1
+            if state.pop("lost_mc_response", False):
+                return httpx.Response(503)
+            return httpx.Response(200, json={**body, "finalized_at": body["completed_at"]})
         body = json.loads(request.content)
         assert body["action"] == "consultation.join"
         subject = body["subject_id"]
@@ -514,3 +523,13 @@ def test_lifecycle_recovers_lost_scheduling_response_without_repeating_transitio
         assert (
             api.client.post(path + "/" + action, headers=api.headers(api.doctor)).status_code == 200
         )
+
+
+def test_completion_handoff_can_retry_after_scheduling_finished(api):
+    path = f"/appointments/{api.appointment_id}"
+    assert api.client.post(path + "/start", headers=api.headers(api.doctor)).status_code == 200
+    api.state["lost_mc_response"] = True
+    assert api.client.post(path + "/complete", headers=api.headers(api.doctor)).status_code == 503
+    assert api.state["appointment"]["status"] == "completed"
+    assert api.client.post(path + "/complete", headers=api.headers(api.doctor)).status_code == 200
+    assert api.state["mc_calls"] == 2

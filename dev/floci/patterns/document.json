@@ -1,4 +1,4 @@
 {
   "source": ["telelink.clinical-records"],
-  "detail-type": ["prescription_issued.v1"]
+  "detail-type": ["prescription_issued.v1", "medical_certificate_issued.v1"]
 }

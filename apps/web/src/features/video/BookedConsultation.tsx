@@ -6,6 +6,9 @@ import { LoadingState } from '../../components/LoadingState'
 import { ErrorState } from '../../components/ErrorState'
 import { VideoRoom } from './VideoRoom'
 import { ConsultationActions } from './ConsultationActions'
+import { CompletionHandoff } from './CompletionHandoff'
+import { DocumentList } from '../documents/DocumentList'
+import { MedicalCertificateForm } from '../records/MedicalCertificateForm'
 import {
   bookedRoomConnection,
   consultationError,
@@ -66,6 +69,24 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
       <main className="mx-auto max-w-3xl space-y-4 px-6 py-10">
         <h1 className="text-2xl font-semibold">Consultation completed</h1>
         <p>This appointment has ended.</p>
+        {role === 'doctor' && (
+          <>
+            <CompletionHandoff
+              appointment={appointment.data}
+              token={identity.token}
+            />
+            <MedicalCertificateForm
+              appointmentId={id}
+              token={identity.token}
+              editable={false}
+            />
+          </>
+        )}
+        <DocumentList
+          role={role}
+          appointmentId={id}
+          tenantId={appointment.data.tenant_id}
+        />
         <a className="underline" href={`/${role}`}>
           Back to appointments
         </a>
