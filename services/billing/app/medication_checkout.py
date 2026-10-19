@@ -96,6 +96,12 @@ def create_medication_checkout(
                 session.commit()
             raise DomainError(409, "quote_expired", "The delivery quote has expired.")
         snapshot = reservation.model_dump(mode="json")
+        if attempt.reservation is not None and attempt.reservation != snapshot:
+            pending(attempt.payment_id)
+        if attempt.reservation is None:
+            attempt.reservation = snapshot
+            attempt.quote_expires_at = reservation.expires_at
+            session.commit()  # Expiry can release an operation that never reached Stripe.
         if payment is None:
             profile = sources.profile(reservation.tenant_id, request_id)
             destination = settings.stripe_destinations.get(reservation.tenant_id)

@@ -98,6 +98,10 @@ def create_quote(
     if order is None:
         raise DomainError(404, "not_found", "Resource not found.")
     own_order(order, identity)
+    if order.payment_status == "pending":
+        from app.checkout import release_failed
+
+        release_failed(session, order, request.app.state.settings)
     if (
         order.payment_status in {"succeeded", "refund_required", "refunded"}
         or order.status == "paid"

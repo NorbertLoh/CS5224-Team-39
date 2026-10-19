@@ -53,6 +53,11 @@ export function ClinicLinks({
               </a>
             )}
             {edit && readinessPreview && (
+              <a href={`/clinic-admin/clinics/${clinic.tenant_id}/orders`}>
+                Medicine readiness and delivery
+              </a>
+            )}
+            {edit && readinessPreview && (
               <a
                 href={`/clinic-admin/clinics/${clinic.tenant_id}/fulfilment-preview`}
               >

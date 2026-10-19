@@ -39,7 +39,8 @@ export function orderAppearance(order: TrackingOrder) {
       ['unknown', 'failed', 'cancelled'].includes(order.delivery.status))
   )
     return appearances.attention
-  if (order.delivery?.status === 'delivered') return appearances.delivered
+  if (order.status === 'delivered' || order.delivery?.status === 'delivered')
+    return appearances.delivered
   if (order.payment_status !== 'succeeded' || order.medicine_status !== 'ready')
     return appearances.waiting
   return appearances.progress

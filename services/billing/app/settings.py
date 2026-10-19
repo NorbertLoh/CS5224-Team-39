@@ -21,6 +21,8 @@ class Settings(ServiceSettings):
     stripe_destinations: dict[UUID, str] = {}
     checkout_success_url: str = "http://localhost:5173/payments/return"
     checkout_cancel_url: str = "http://localhost:5173/appointments"
+    medication_checkout_success_url: str | None = None
+    medication_checkout_cancel_url: str | None = None
     cors_origins: list[str] = []
 
     @model_validator(mode="after")
@@ -36,6 +38,8 @@ class Settings(ServiceSettings):
             "fulfilment_url",
             "checkout_success_url",
             "checkout_cancel_url",
+            "medication_checkout_success_url",
+            "medication_checkout_cancel_url",
         ):
             value = getattr(self, field)
             if value is None:

@@ -1,4 +1,10 @@
-# U16 readiness and tracking previews
+# Live fulfilment and U16 previews
+
+D07 adds real patient orders at `/patient/medication-orders` and owning-clinic
+orders at `/clinic-admin/clinics/<tenant UUID>/orders`. Setup, service credentials,
+worker commands, recovery and sandbox evidence are in
+[`docs/D07-live-fulfilment.md`](../../../../../docs/D07-live-fulfilment.md).
+The preview instructions below apply only to the separate synthetic routes.
 
 Patient: sign in as `patient@example.test` and follow **Preview medication
 delivery tracking (synthetic data)** from `/patient`, or open

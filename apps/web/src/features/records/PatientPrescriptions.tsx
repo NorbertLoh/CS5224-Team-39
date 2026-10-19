@@ -142,5 +142,5 @@ function PatientDetail({
     return (
       <ErrorState message="This prescription is unavailable to your account." />
     )
-  return <PrescriptionDetails prescription={query.data} />
+  return <PrescriptionDetails prescription={query.data} allowOrdering />
 }

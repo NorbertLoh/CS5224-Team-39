@@ -1,9 +1,10 @@
 # B06 medication and delivery checkout
 
 Implements the billing side of C04, tracked by issue #181 / PR #182.
-The real fulfilment reservation/quote adapter and paid-and-ready delivery journey
-remain unfinished (D02/D04-D07/I03). Tests use explicit C04 fulfilment and Stripe
-fixtures; they do not establish real provider or fulfilment integration.
+D07 implements the real fulfilment reservation adapter and connects the local
+paid-and-ready sandbox journey. See [D07 setup and evidence](../../docs/D07-live-fulfilment.md).
+B06 unit/service tests use explicit C04 and Stripe fixtures; actual doctor issuance,
+physical delivery and deployed AWS integration remain separate I03 work.
 
 ## Public checkout
 
@@ -40,7 +41,7 @@ reconcile the prior failure before releasing acceptance for a new attempt.
 Set `SERVICE_FULFILMENT_URL` to the service base URL (without `/api/v1/fulfilment`
 when calling service-local routes) and independent `SERVICE_FULFILMENT_SECRET`
 (at least 32 bytes). Both are required by full API readiness. Match the credential
-on the eventual fulfilment adapter. Keep it distinct from scheduling/tenant keys.
+on the fulfilment adapter. Keep it distinct from scheduling/tenant keys.
 There is no implicit fixture mode or fallback to browser pricing.
 
 Billing sends POST `/internal/orders/{order_id}/checkout-reservation` with
@@ -48,10 +49,10 @@ Billing sends POST `/internal/orders/{order_id}/checkout-reservation` with
 not a browser field. Authentication is a 60-second HS256 service JWT:
 issuer `telelink-service:billing`, subject `billing`, audience
 `telelink-fulfilment-billing`, signed by the fulfilment secret. Request IDs propagate.
-The future adapter must enforce the C04 atomic reservation checks, including issued
+The D07 adapter enforces the C04 atomic reservation checks, including issued
 prescription quantities, order/quote tenant and patient ownership, exact quote
-expiry, one accepted attempt and frozen pricing. Billing cannot independently
-prove those fulfilment-owned facts from an untrusted service implementation.
+expiry, one accepted attempt and frozen pricing. Billing additionally validates the returned minimum projection; clinical-record
+access and atomic quote ownership remain fulfilment-owned responsibilities.
 
 The 200 response projection used by this adapter is:
 
@@ -65,16 +66,18 @@ The 200 response projection used by this adapter is:
   "status": "awaiting_payment",
   "payment_status": "pending",
   "quote_status": "accepted",
-  "items": [{
-    "prescription_item_id": "<issued item UUID>",
-    "medication_id": "<catalogue UUID>",
-    "quantity": 2,
-    "unit_price": {"amount_minor": 1000, "currency": "SGD"},
-    "line_total": {"amount_minor": 2000, "currency": "SGD"}
-  }],
-  "medication_subtotal": {"amount_minor": 2000, "currency": "SGD"},
-  "delivery_fee": {"amount_minor": 500, "currency": "SGD"},
-  "total": {"amount_minor": 2500, "currency": "SGD"},
+  "items": [
+    {
+      "prescription_item_id": "<issued item UUID>",
+      "medication_id": "<catalogue UUID>",
+      "quantity": 2,
+      "unit_price": { "amount_minor": 1000, "currency": "SGD" },
+      "line_total": { "amount_minor": 2000, "currency": "SGD" }
+    }
+  ],
+  "medication_subtotal": { "amount_minor": 2000, "currency": "SGD" },
+  "delivery_fee": { "amount_minor": 500, "currency": "SGD" },
+  "total": { "amount_minor": 2500, "currency": "SGD" },
   "expires_at": "<original quote deadline with timezone>"
 }
 ```
@@ -111,6 +114,14 @@ python -m app.payment_worker --publish
 See [CHECKOUT.md](CHECKOUT.md) and [PAYMENT_PROCESSING.md](PAYMENT_PROCESSING.md)
 for provider credentials, worker options and event-bus setup. Migration head is
 `0005`; it adds only billing-owned medication attempt/key tables.
+
+The reservation and its original deadline are durable before tenant/profile calls.
+For an expired reservation without a Payment row, the expiry worker closes the
+operation under its advisory lock; no Stripe create has begun. Fulfilment can read
+`GET /internal/medication-checkouts/{payment_id}` with its service JWT to verify
+exact operation context and terminal failure before releasing acceptance. The
+public patient reconciliation route is documented in the D07 setup. Pending,
+unknown and successful outcomes never release the binding.
 
 Expiry reconciles a lost create response using the original Stripe key, then
 expires/reads the provider session. Only verified expired/unpaid becomes failed;
@@ -152,7 +163,9 @@ On 18 October 2026, 285 billing tests plus 38 subtests passed on disposable
 PostgreSQL 18, alongside Ruff lint/format and `pip check`. Actual loopback HTTP
 also passed patient auth, checkout/replay, tampering/concealment, medication
 success/outbox and fulfilment read/resolution with explicitly synthetic upstream
-transports. Real Stripe delivery and fulfilment integration remain unverified.
+transports. These were fixture checks. D07 separately verified actual sandbox Stripe payment,
+signed receipts, local event consumption and Lalamove submission/tracking; see
+the linked evidence for limits and current suite totals.
 
 The B06 tests cover trusted totals/line arithmetic, ownership and role checks,
 tampering, expiry equality, concurrent requests, durable reservation/provider

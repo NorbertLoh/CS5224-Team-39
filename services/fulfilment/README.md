@@ -58,13 +58,13 @@ change shared Compose, frontend routing, infrastructure or contracts.
 
 ## APIs
 
-| Method / path | Policy / result |
-| --- | --- |
-| GET `/clinics/{tenant_id}/catalogue` | Active owning-clinic doctor/admin; active items only |
-| PUT `/clinics/{tenant_id}/catalogue/{medication_id}` | Active owning-clinic admin; 201 new / 200 updated |
-| POST `/orders` | Own patient, issued prescription; 201 new / 200 existing or replay |
-| GET `/orders/{order_id}` | Own patient, active owning-clinic admin or platform operational role |
-| GET `/orders` | Same scoped policy, optional `tenant_id` / `status` |
+| Method / path                                        | Policy / result                                                      |
+| ---------------------------------------------------- | -------------------------------------------------------------------- |
+| GET `/clinics/{tenant_id}/catalogue`                 | Active owning-clinic doctor/admin; active items only                 |
+| PUT `/clinics/{tenant_id}/catalogue/{medication_id}` | Active owning-clinic admin; 201 new / 200 updated                    |
+| POST `/orders`                                       | Own patient, issued prescription; 201 new / 200 existing or replay   |
+| GET `/orders/{order_id}`                             | Own patient, active owning-clinic admin or platform operational role |
+| GET `/orders`                                        | Same scoped policy, optional `tenant_id` / `status`                  |
 
 Catalogue writes accept only `display_name`, `unit_label`, `unit_price` (nonnegative
 integer SGD Money) and `active`. POST orders accepts only `prescription_id` and requires
@@ -97,33 +97,22 @@ the owning patient and active owning-clinic admins receive the full order shape.
 
 ## Dispensing integration boundary
 
-`app/dispensing.py` defines the minimum typed `DispensingSource` interface. The default
-returns 503 `unavailable`: a real clinical-records dispensing HTTP adapter is **not yet
-implemented** because R01/R02 are still in progress. D01 is explicitly allowed to use
-the agreed fixtures by the backlog. It does not claim real clinical-record integration.
+D07 supplies a real `HttpDispensing` adapter and an audited, minimum clinical-records
+projection. Configure `SERVICE_RECORDS_URL` (including `/api/v1/clinical-records`)
+and `SERVICE_RECORDS_SECRET`, matching records' `SERVICE_FULFILMENT_SECRET`.
+Only correctly linked issued prescriptions can create/reserve orders. Service JWTs
+are short-lived and purpose-bound; clinical instructions never enter the projection.
+Unconfigured or unavailable upstreams fail closed.
 
-For a synthetic local demonstration only, set:
+`SERVICE_DISPENSING_FIXTURE_PATH` remains an explicit local/test-only alternative
+for the agreed synthetic C04 projection. It cannot be enabled with the real records
+URL and is never an error fallback. Catalogue records are not auto-seeded.
 
-```powershell
-$env:SERVICE_DISPENSING_FIXTURE_PATH='../../contracts/examples/prescription-order-quote.json'
-```
-
-This explicitly loads the one agreed C04 issued prescription, drops all instructions
-and doctor content, and checks the requesting patient's ID. Fixture mode is rejected
-outside local/test. As an active admin of the fixture tenant, first PUT the fixture's
-medication ID into the catalogue with synthetic price/name/unit label; then its patient
-can POST that prescription ID. No catalogue data or patient claims are auto-seeded.
-
-Follow-up: wire `DispensingSource.get(prescription_id, patient_id, request_id)` to C04's
-service-only `/internal/prescriptions/{id}/dispensing` once R02 supplies agreed service
-authentication and patient-purpose checks. Return the validated minimum projection,
-enforce prescription/patient identity and fail closed for upstream errors. Never forward
-a browser token as a service credential or read clinical-record tables directly.
-Real medication pricing/payment integration remains I03. Quotes are implemented in
-D02; D03 implements readiness and D04 consumes verified medication-payment events.
-Checkout reservation and application cancellation remain separate integration work.
-D05 submits sandbox deliveries from paid/ready orders; D06 polls their stored provider
-references. No public callback route is exposed.
+D07 also implements billing's atomic checkout reservation and patient-scoped failed
+attempt reconciliation. Setup, live pages, worker requirements and actual sandbox
+verification are in [`docs/D07-live-fulfilment.md`](../../docs/D07-live-fulfilment.md).
+The full doctor-issued/physical delivery journey remains I03; no public provider
+callback route is exposed.
 
 ## Verification
 
@@ -143,4 +132,5 @@ Checks cover fresh/idempotent migrations, drift and rollback, restricted credent
 database constraints, current-role access, real signed-token verification with a mock
 identity HTTP transport, retry conflicts and concurrent creation, trusted totals,
 catalogue validation, cursor binding and fixture fail-closed configuration. These are
-local PostgreSQL/service checks, not proof of real clinical-records/payment integration.
+local PostgreSQL/service checks. D07 records separate actual HTTP/provider evidence
+in the linked integration document.
