@@ -1,5 +1,9 @@
 # P02 prescription PDF worker
 
+U17 also routes `medical_certificate_issued.v1` through this worker and publishes
+MC-specific `document_ready.v1` metadata. See [MC setup and recovery](../../../docs/medical-certificates.md)
+for the completion handoff, durable failure status and additional object prefix.
+
 ## Flow and boundaries
 
 R03 commits an issued prescription and an IDs-only event. The document worker
@@ -16,7 +20,7 @@ PDF is retained even if profile details later change. Existing issued medication
 content remains frozen by clinical records. The source models do not contain a
 clinic address or doctor registration number, so those prescription header fields
 are optional and omitted. Their authoritative storage/maintenance is follow-up
-work; receipt and MC template requirements remain unchanged. Existing font coverage
+work; U17 applies the same omission to unavailable MC profile fields. Existing font coverage
 limitations, including unsupported CJK names, still apply.
 
 P03 owns authorised document list/download APIs and browser-reachable signed URLs;

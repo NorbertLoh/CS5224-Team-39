@@ -5,6 +5,10 @@ The service provides PostgreSQL storage, appointment-scoped note and draft
 prescription APIs, durable read auditing and transactional prescription issuance.
 API shapes are defined by `contracts/prescription-order-quote.md`.
 
+U17 adds appointment MC drafts, a service-only consultation completion handoff and
+transactional MC issuance. Apply migration `0005` and configure the independent
+consultation callback secret. See [MC setup and verification](../../docs/medical-certificates.md).
+
 From the repository root, install the service into its own virtual environment
 (its `app` package name is shared with other independently deployed services):
 

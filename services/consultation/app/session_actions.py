@@ -1,10 +1,12 @@
 """Doctor-driven lifecycle with retryable scheduling handoff."""
 
+from zoneinfo import ZoneInfo
+
 from telelink_common.errors import DomainError
 
 from app.admissions import CONTEXT_FIELDS
 from app.lifecycle import ensure_session, transition
-from app.upstream import Appointment
+from app.upstream import Appointment, MCCompletion
 
 
 def act(db, sources, appointment_id, identity, request_id, action):
@@ -43,4 +45,30 @@ def act(db, sources, appointment_id, identity, request_id, action):
             getattr(result, field) != getattr(record, field) for field in CONTEXT_FIELDS
         ):
             raise DomainError(502, "upstream_error", "Invalid upstream appointment.")
+    if action == "complete":
+        # A lost callback response is safe: records seals the decision and stages
+        # issuance in one transaction, once per appointment. Retrying completion
+        # repeats this handoff even when scheduling was already completed.
+        links = {
+            key: str(getattr(record, key))
+            for key in ("appointment_id", "tenant_id", "patient_id", "doctor_id")
+        }
+        mc = sources.call(
+            "records",
+            f"/internal/appointments/{appointment_id}/complete-mc",
+            MCCompletion,
+            request_id,
+            {
+                **links,
+                "completed_at": record.ended_at.isoformat(),
+                "consultation_date": record.started_at.astimezone(ZoneInfo("Asia/Singapore"))
+                .date()
+                .isoformat(),
+            },
+        )
+        if (
+            any(str(getattr(mc, key)) != value for key, value in links.items())
+            or mc.finalized_at != record.ended_at
+        ):
+            raise DomainError(502, "upstream_error", "Invalid MC completion response.")
     return {"appointment_id": record.appointment_id, "status": target}

@@ -61,6 +61,33 @@ class RecordsClient:
     def close(self):
         self.client.close()
 
+    def medical_certificate(self, event):
+        from app.mc_generation import IssuedMC
+
+        try:
+            response = self.client.get(
+                self.settings.records_url
+                + f"/internal/medical-certificates/{event.data.medical_certificate_id}/document",
+                params={
+                    "tenant_id": str(event.tenant_id),
+                    "appointment_id": str(event.data.appointment_id),
+                    "purpose": "medical_certificate_pdf",
+                },
+                headers={
+                    "Authorization": "Bearer "
+                    + service_token(
+                        self.settings.records_secret, "document", "telelink-records-document"
+                    ),
+                    "X-Request-ID": str(event.correlation_id),
+                },
+            )
+            if response.status_code != 200:
+                raise ValueError()
+            result = IssuedMC.model_validate(response.json())
+            return result
+        except (httpx.RequestError, ValueError, TypeError):
+            raise RuntimeError("Issued medical certificate lookup failed") from None
+
     def prescription(self, event):
         try:
             response = self.client.get(

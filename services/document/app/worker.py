@@ -8,6 +8,7 @@ from telelink_common.inbox import consume_batch
 
 from app.database import create_database_engine
 from app.generation import GeneratePrescription
+from app.mc_generation import GenerateMedicalCertificate
 from app.models import event_inbox
 from app.records import RecordsClient
 from app.settings import Settings
@@ -29,7 +30,15 @@ def main():
         store.verify_private()
         queue_url = sqs.get_queue_url(QueueName=config.document_queue_name)["QueueUrl"]
         sessions = sessionmaker(engine, expire_on_commit=False)
-        handler = GeneratePrescription(records, store)
+        prescriptions = GeneratePrescription(records, store)
+        certificates = GenerateMedicalCertificate(records, store)
+
+        def handler(session, event):
+            if event.detail_type == "medical_certificate_issued.v1":
+                certificates(session, event)
+            else:
+                prescriptions(session, event)
+
         while True:
             result = consume_batch(
                 sessions,

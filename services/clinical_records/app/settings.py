@@ -12,6 +12,7 @@ class Settings(ServiceSettings):
     upstream_timeout_seconds: float = Field(default=3, ge=0.1, le=30)
     cursor_secret: SecretStr | None = None
     document_secret: SecretStr | None = None
+    consultation_secret: SecretStr | None = None
     identity_document_secret: SecretStr | None = None
     tenant_document_secret: SecretStr | None = None
     tenant_url: str | None = None
@@ -41,6 +42,7 @@ class Settings(ServiceSettings):
             for secret in (
                 self.cursor_secret,
                 self.document_secret,
+                self.consultation_secret,
                 self.identity_document_secret,
                 self.tenant_document_secret,
             )

@@ -3,6 +3,7 @@ import { accessToken } from '../clinics/api'
 import type { CursorPage } from '../../lib/api-types'
 import type { Medication, Note, Prescription, PrescriptionInput } from './types'
 import { prescriptionItems } from './types'
+import type { MedicalCertificate } from './medicalCertificate'
 
 async function request(path: string, init: RequestInit = {}) {
   return apiFetch(path, {
@@ -36,6 +37,44 @@ export async function readNote(
     if (error instanceof ApiError && error.status === 404) return null
     throw error
   }
+}
+export async function readMedicalCertificate(
+  appointmentId: string,
+  signal?: AbortSignal,
+): Promise<MedicalCertificate | null> {
+  try {
+    const result: MedicalCertificate = await (
+      await request(
+        `${base}/appointments/${id(appointmentId)}/medical-certificate`,
+        { signal },
+      )
+    ).json()
+    if (result.appointment_id !== appointmentId)
+      throw new Error('Invalid MC context')
+    return result
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null
+    throw error
+  }
+}
+export async function saveMedicalCertificate(
+  appointmentId: string,
+  body: {
+    selected: boolean
+    start_date: string | null
+    duration_days: number | null
+    additional_notes: string
+  },
+): Promise<MedicalCertificate> {
+  const result: MedicalCertificate = await (
+    await request(
+      `${base}/appointments/${id(appointmentId)}/medical-certificate`,
+      json('PUT', body),
+    )
+  ).json()
+  if (result.appointment_id !== appointmentId)
+    throw new Error('Invalid MC context')
+  return result
 }
 export async function saveNote(
   appointmentId: string,
@@ -145,7 +184,7 @@ export function recordsError(error: unknown) {
     if (error.status === 409)
       return 'The appointment, prescription or catalogue changed. Reload records before continuing.'
     if (error.status === 422)
-      return 'Check the note, medications, quantities and instructions.'
+      return 'Check the note, medications, quantities, instructions and MC dates/duration.'
   }
   return 'Could not complete the records request. Check your connection and reload records. If a save or issuance timed out, reload to check its outcome before trying again.'
 }

@@ -8,6 +8,7 @@ from telelink_common.events.payloads import (
     DeliveryStatusChanged,
     DocumentReady,
     EventData,
+    MedicalCertificateIssued,
     MedicationPaymentSucceeded,
     PrescriptionIssued,
 )
@@ -48,6 +49,12 @@ EVENT_TYPES = {
             "prescription_issued.v1",
             "telelink.clinical-records",
             PrescriptionIssued,
+            frozenset({"document"}),
+        ),
+        EventType(
+            "medical_certificate_issued.v1",
+            "telelink.clinical-records",
+            MedicalCertificateIssued,
             frozenset({"document"}),
         ),
         EventType(

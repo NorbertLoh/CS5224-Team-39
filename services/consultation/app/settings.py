@@ -9,6 +9,8 @@ class Settings(ServiceSettings):
     port: ServicePort = 8004
     scheduling_url: str | None = None
     billing_url: str | None = None
+    records_url: str | None = None
+    records_secret: SecretStr | None = None
     scheduling_secret: SecretStr | None = None
     billing_secret: SecretStr | None = None
     identity_secret: SecretStr | None = None
@@ -34,7 +36,7 @@ class Settings(ServiceSettings):
             )
         if self.turn_secret and len(self.turn_secret.get_secret_value().encode()) < 32:
             raise ValueError("TURN secret must contain at least 32 bytes")
-        for field in ("scheduling_url", "billing_url"):
+        for field in ("scheduling_url", "billing_url", "records_url"):
             value = getattr(self, field)
             if value is None:
                 continue
@@ -60,6 +62,7 @@ class Settings(ServiceSettings):
                 self.identity_secret,
                 self.signalling_secret,
                 self.turn_secret,
+                self.records_secret,
             )
             if s is not None
         ]

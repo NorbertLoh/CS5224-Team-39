@@ -1,10 +1,12 @@
 """C04 clinical data; IDs belonging to other services have no foreign keys."""
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     FetchedValue,
     ForeignKeyConstraint,
@@ -53,6 +55,40 @@ class Note(AppointmentContext, Base):
 
     note_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     text: Mapped[str] = mapped_column(Text)
+
+
+class MedicalCertificate(AppointmentContext, Base):
+    __tablename__ = "medical_certificates"
+    __table_args__ = (
+        UniqueConstraint("appointment_id", name="uq_mc_appointment"),
+        CheckConstraint("duration_days IS NULL OR duration_days > 0", name="ck_mc_duration"),
+        CheckConstraint(
+            "NOT selected OR (start_date IS NOT NULL AND duration_days IS NOT NULL)",
+            name="ck_mc_selected_period",
+        ),
+        CheckConstraint(
+            "(finalized_at IS NULL AND issued_at IS NULL AND consultation_date IS NULL) OR "
+            "(finalized_at IS NOT NULL AND consultation_date IS NOT NULL AND "
+            "((selected AND issued_at IS NOT NULL) OR (NOT selected AND issued_at IS NULL)))",
+            name="ck_mc_finalization",
+        ),
+    )
+    __mapper_args__ = {"eager_defaults": True}
+
+    medical_certificate_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    selected: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    start_date: Mapped[date | None] = mapped_column(Date)
+    duration_days: Mapped[int | None] = mapped_column(Integer)
+    additional_notes: Mapped[str] = mapped_column(Text, server_default=text("''"))
+    consultation_date: Mapped[date | None] = mapped_column(Date)
+    finalized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    @property
+    def end_date(self):
+        if self.start_date is not None and self.duration_days is not None:
+            return self.start_date + timedelta(days=self.duration_days - 1)
+        return None
 
 
 class Prescription(AppointmentContext, Base):
@@ -127,7 +163,7 @@ class ReadAudit(Base):
     __tablename__ = "read_audits"
     __table_args__ = (
         CheckConstraint(
-            "resource_type IN ('note', 'prescription', 'prescription_list')",
+            "resource_type IN ('note', 'prescription', 'prescription_list', 'medical_certificate')",
             name="ck_read_audit_type",
         ),
         Index("ix_read_audits_actor_time", "actor_id", "created_at"),
@@ -144,10 +180,18 @@ class ReadAudit(Base):
 
 class ServiceReadAudit(Base):
     __tablename__ = "service_read_audits"
+    __table_args__ = (
+        CheckConstraint(
+            "(prescription_id IS NOT NULL AND medical_certificate_id IS NULL) OR "
+            "(prescription_id IS NULL AND medical_certificate_id IS NOT NULL)",
+            name="ck_service_read_source",
+        ),
+    )
     audit_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     caller: Mapped[str] = mapped_column(Text)
     purpose: Mapped[str] = mapped_column(Text)
-    prescription_id: Mapped[UUID] = mapped_column(Uuid)
+    prescription_id: Mapped[UUID | None] = mapped_column(Uuid)
+    medical_certificate_id: Mapped[UUID | None] = mapped_column(Uuid)
     tenant_id: Mapped[UUID] = mapped_column(Uuid)
     appointment_id: Mapped[UUID] = mapped_column(Uuid)
     request_id: Mapped[str] = mapped_column(Text)

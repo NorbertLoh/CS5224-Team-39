@@ -62,7 +62,9 @@ def audit(session, request, identity, kind, record=None, appointment_id=None):
             actor_id=identity.subject_id,
             resource_type=kind,
             resource_id=(
-                getattr(record, "note_id", None) or getattr(record, "prescription_id", None)
+                getattr(record, "note_id", None)
+                or getattr(record, "prescription_id", None)
+                or getattr(record, "medical_certificate_id", None)
             ),
             tenant_id=getattr(record, "tenant_id", None),
             appointment_id=getattr(record, "appointment_id", appointment_id),

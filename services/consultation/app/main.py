@@ -78,6 +78,8 @@ def create_app(settings: Settings | None = None):
                 config.scheduling_secret,
                 config.billing_secret,
                 config.signalling_secret,
+                config.records_url,
+                config.records_secret,
             )
         )
         if available:

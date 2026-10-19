@@ -37,7 +37,8 @@ trusted committed charge snapshot. Payment purposes have separate event types.
 | `medication_payment_succeeded.v1` | `telelink.billing` | `payment_id`, `order_id`, `amount` | fulfilment |
 | `appointment_confirmed.v1` | `telelink.scheduling` | `appointment_id` | notification |
 | `prescription_issued.v1` | `telelink.clinical-records` | `prescription_id`, `appointment_id` | document |
-| `document_ready.v1` | `telelink.document` | `document_id`, `prescription_id`, `appointment_id` | notification |
+| `medical_certificate_issued.v1` | `telelink.clinical-records` | `medical_certificate_id`, `appointment_id`, `patient_id`, `doctor_id` | document |
+| `document_ready.v1` | `telelink.document` | `document_id`, `appointment_id`, exactly one of `prescription_id` / `medical_certificate_id` | notification |
 | `delivery_status_changed.v1` | `telelink.fulfilment` | `delivery_id`, `order_id`, `status` | notification |
 
 Delivery `status` is the fulfilment service's normalized, nonempty status string;
@@ -45,6 +46,16 @@ C04/D06 define legal values and transitions. C03/C04 own payment and booking
 state rules. A consultation payment does not override an expired hold; scheduling
 applies the late-payment policy. Fulfilment records payment but submits delivery
 only when its own paid AND ready conditions are met.
+
+U17 adds MC issuance after consultation has durably ended and scheduling has accepted
+completion. Clinical records seals the saved MC decision and stages the issuance event
+in one transaction. MC dates, additional notes and private consultation notes are never
+placed on the event bus. The document service fetches a context-bound, audited issued
+MC projection. MC `document_ready.v1` carries `medical_certificate_id`; prescription
+ready events retain their existing shape with `prescription_id`. Consumers must branch
+on the source ID instead of assuming every ready document is a prescription.
+The document queue's source/type allowlist now includes both clinical issuance events;
+rerun the F12 bootstrap to update existing rules. See [U17 handoff and setup](../docs/medical-certificates.md).
 
 ## Local resource mapping
 

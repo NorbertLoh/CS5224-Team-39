@@ -118,6 +118,15 @@ def render_medical_certificate(data: MedicalCertificate) -> bytes:
             f"(inclusive, {days} day(s))."
         ),
         _paragraph(f"Issued by: {data.doctor_name}"),
-        _paragraph(f"Medical registration: {data.doctor_registration}"),
+        *(
+            [_paragraph(f"Medical registration: {data.doctor_registration}")]
+            if data.doctor_registration
+            else []
+        ),
+        *(
+            [_paragraph(f"Additional notes: {data.additional_notes}")]
+            if data.additional_notes
+            else []
+        ),
     ]
     return _render("Medical Certificate", data, body)

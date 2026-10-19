@@ -1,4 +1,4 @@
-"""Publish committed prescription events through the shared M02 retrying publisher."""
+"""Publish committed prescription and MC events through the M02 retrying publisher."""
 
 import argparse
 import time
@@ -14,7 +14,9 @@ from app.settings import Settings
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Publish pending prescription issuance events")
+    parser = argparse.ArgumentParser(
+        description="Publish pending clinical document issuance events"
+    )
     parser.add_argument("--once", action="store_true", help="Publish one due batch, then exit")
     args = parser.parse_args()
     settings = Settings()
