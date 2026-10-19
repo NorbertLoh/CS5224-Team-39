@@ -46,6 +46,9 @@ def main():
     engine = create_database_engine(
         settings.database_url.get_secret_value() if settings.database_url else None
     )
+    if engine.url.host not in {"localhost", "127.0.0.1"}:
+        engine.dispose()
+        raise ValueError("Only a host-local verification database is allowed")
     sessions = sessionmaker(engine, expire_on_commit=False)
     directory = RecipientDirectory(settings)
     sender = SESEmailSender(settings)
@@ -167,9 +170,10 @@ def main():
         # Explicit local guard: this verification can never address a real mailbox.
         with sessions() as session:
             jobs = list(session.scalars(select(NotificationJob)))
-            assert len(jobs) == 4 and all(
+            if len(jobs) != 4 or not all(
                 row.recipient_email.endswith("@telelink.test") for row in jobs
-            )
+            ):
+                raise ValueError("Expected four synthetic @telelink.test recipient jobs")
         sender.client.verify_email_identity(EmailAddress=settings.email_sender)
         for email in {row.recipient_email for row in jobs}:
             sender.client.verify_email_identity(EmailAddress=email)
