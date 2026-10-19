@@ -7,10 +7,11 @@ from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.catalogue import router as catalogue_router
+from app.checkout import router as checkout_router
 from app.database import Database
 from app.deliveries import router as deliveries_router
 from app.delivery_provider import SandboxQuotes
-from app.dispensing import FixtureDispensing, UnavailableDispensing
+from app.dispensing import FixtureDispensing, HttpDispensing, UnavailableDispensing
 from app.health import router as health_router
 from app.orders import router as orders_router
 from app.quotes import router as quotes_router
@@ -30,6 +31,8 @@ def create_app(settings: Settings | None = None):
             app.state.ready = False
             app.state.identity_client.close()
             app.state.delivery_quotes.close()
+            if isinstance(app.state.dispensing, HttpDispensing):
+                app.state.dispensing.close()
             if app.state.database is not None:
                 app.state.database.close()
 
@@ -51,6 +54,8 @@ def create_app(settings: Settings | None = None):
     app.state.dispensing = (
         FixtureDispensing(config.dispensing_fixture_path)
         if config.dispensing_fixture_path
+        else HttpDispensing(config)
+        if config.records_url
         else UnavailableDispensing()
     )
     app.add_middleware(RequestLoggingMiddleware, service=config.name)
@@ -58,6 +63,7 @@ def create_app(settings: Settings | None = None):
     app.include_router(catalogue_router)
     app.include_router(orders_router)
     app.include_router(quotes_router)
+    app.include_router(checkout_router)
     app.include_router(deliveries_router)
     install_error_handlers(app)
     return app

@@ -51,6 +51,27 @@ Fulfilment = Annotated[
 ]
 
 
+@router.get("/internal/medication-checkouts/{payment_id}", tags=["internal"])
+def medication_attempt_status(
+    payment_id: UUID, caller: Fulfilment, session: Annotated[Session, Depends(get_session)]
+):
+    attempt = session.get(MedicationCheckoutAttempt, payment_id)
+    if attempt is None:
+        raise DomainError(404, "not_found", "Resource not found.")
+    payment = session.get(Payment, payment_id)
+    return {
+        "payment_id": str(payment_id),
+        "order_id": str(attempt.order_id),
+        "patient_id": str(attempt.patient_id),
+        "quote_id": str(attempt.quote_id),
+        "status": payment.status
+        if payment
+        else "failed"
+        if attempt.closed_at is not None
+        else "pending",
+    }
+
+
 @router.post(
     "/consultation-checkouts",
     response_model=CheckoutPublic,

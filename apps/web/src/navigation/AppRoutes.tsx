@@ -16,6 +16,7 @@ import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
 import { CheckoutPreview } from '../features/checkout/CheckoutPreview'
 import { MedicationOrderPreview } from '../features/medication-orders/MedicationOrderPreview'
 import { FulfilmentPreview } from '../features/fulfilment/FulfilmentPreview'
+import { LiveOrders } from '../features/fulfilment/LiveOrders'
 import { ClinicPayments } from '../features/payments/ClinicPayments'
 import { roleLabels } from './access'
 import type { Route } from './access'
@@ -43,6 +44,16 @@ export function AppRoutes({
       return <MedicationOrderPreview />
     case 'delivery-tracking-preview':
       return <FulfilmentPreview role="patient" />
+    case 'medication-orders':
+      return <LiveOrders role="patient" />
+    case 'orders':
+      return (
+        <LiveOrders
+          key={route.tenantId}
+          role="clinic_admin"
+          tenantId={route.tenantId}
+        />
+      )
     case 'fulfilment-preview':
       return (
         <FulfilmentPreview
@@ -79,6 +90,13 @@ export function AppRoutes({
             </section>
           )}
           {route.role === 'patient' && <PatientPrescriptions />}
+          {route.role === 'patient' && (
+            <p className="mt-6 text-sm">
+              <a className="underline" href="/patient/medication-orders">
+                Medication orders and delivery
+              </a>
+            </p>
+          )}
           {route.role === 'patient' && (
             <p className="mt-6 text-sm">
               <a className="underline" href="/patient/medication-order-preview">

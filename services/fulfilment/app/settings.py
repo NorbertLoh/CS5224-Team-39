@@ -10,6 +10,8 @@ class Settings(ServiceSettings):
     port: ServicePort = 8006
     cursor_secret: SecretStr | None = None
     dispensing_fixture_path: Path | None = None
+    records_url: str | None = None
+    records_secret: SecretStr | None = None
     lalamove_api_key: SecretStr | None = None
     lalamove_api_secret: SecretStr | None = None
     delivery_locations_path: Path | None = None
@@ -21,6 +23,30 @@ class Settings(ServiceSettings):
 
     @model_validator(mode="after")
     def validate_configuration(self):
+        for field in ("records_url",):
+            value = getattr(self, field)
+            if value is not None:
+                url = urlsplit(value)
+                if (
+                    url.scheme not in {"http", "https"}
+                    or not url.hostname
+                    or url.username
+                    or url.password
+                    or url.query
+                    or url.fragment
+                    or (url.scheme != "https" and self.environment not in {"local", "test"})
+                ):
+                    raise ValueError("Records URL requires HTTPS outside local/test")
+                setattr(self, field, value.rstrip("/"))
+        secrets = [
+            value.get_secret_value()
+            for value in (self.cursor_secret, self.billing_secret, self.records_secret)
+            if value is not None
+        ]
+        if any(len(value.encode()) < 32 for value in secrets) or len(secrets) != len(set(secrets)):
+            raise ValueError("Service/cursor secrets require distinct values of at least 32 bytes")
+        if self.records_url and self.dispensing_fixture_path:
+            raise ValueError("Choose real records or explicit fixtures, never both")
         if self.billing_url is not None:
             url = urlsplit(self.billing_url)
             if (

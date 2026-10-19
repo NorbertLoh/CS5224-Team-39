@@ -42,7 +42,13 @@ def expire_model(engine, provider, model, resource, deadline):
         with checkout_lock(engine, appointment_id) as session:
             attempt = session.get(model, payment_id)
             payment = session.get(Payment, payment_id)
-            if attempt.closed_at is not None or payment is None:
+            if attempt.closed_at is not None:
+                continue
+            if payment is None:
+                if model is MedicationCheckoutAttempt:
+                    attempt.closed_at = now()
+                    session.commit()  # No payment/provider request was ever created.
+                    outcomes["closed"] += 1
                 continue
             try:
                 expire_attempt(session, payment, attempt, provider)

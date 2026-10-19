@@ -103,6 +103,50 @@ def money(amount):
     return {"amount_minor": amount, "currency": "SGD"}
 
 
+def test_reserved_operation_without_payment_expires_safely_and_is_service_readable(
+    medication_api, monkeypatch
+):
+    from pydantic import SecretStr
+    from telelink_common.errors import DomainError
+
+    api, order_id, quote_id = medication_api
+    client, database = api[0], api[8]
+
+    def unavailable(*args):
+        raise DomainError(503, "unavailable", "Profile unavailable.")
+
+    monkeypatch.setattr(client.app.state.sources, "profile", unavailable)
+    assert checkout(medication_api).status_code == 503
+    with Session(database) as session:
+        attempt = session.scalar(
+            select(MedicationCheckoutAttempt).where(MedicationCheckoutAttempt.order_id == order_id)
+        )
+        payment_id = attempt.payment_id
+        assert attempt.quote_expires_at is not None and attempt.reservation is not None
+        assert session.get(Payment, payment_id) is None
+        attempt.quote_expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+        session.commit()
+    assert expire_due(database, client.app.state.provider)["closed"] == 1
+    path = f"/internal/medication-checkouts/{payment_id}"
+    assert client.get(path).status_code == 401
+    response = client.get(
+        path,
+        headers={
+            "Authorization": "Bearer "
+            + service_token(SecretStr(FULFILMENT), "fulfilment", "telelink-billing-fulfilment")
+        },
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "payment_id": str(payment_id),
+        "order_id": str(order_id),
+        "quote_id": str(quote_id),
+        "patient_id": str(api[3]),
+        "status": "failed",
+    }
+    assert api[7]["provider_calls"] == []
+
+
 def checkout(flow, key="medication", subject=None, body=None):
     api, order, quote = flow
     return api[0].post(

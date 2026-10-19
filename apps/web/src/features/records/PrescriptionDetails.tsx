@@ -2,8 +2,10 @@ import type { Prescription } from './types'
 
 export function PrescriptionDetails({
   prescription,
+  allowOrdering = false,
 }: {
   prescription: Prescription
+  allowOrdering?: boolean
 }) {
   return (
     <article className="space-y-4 rounded border p-4">
@@ -56,10 +58,14 @@ export function PrescriptionDetails({
           create an order.
         </p>
       )}
-      <p className="text-sm text-slate-600">
-        PDF downloads and medication orders will be available after their
-        services are connected.
-      </p>
+      {allowOrdering && prescription.status === 'issued' && (
+        <a
+          className="inline-block rounded border px-4 py-2 text-sm"
+          href={`/patient/medication-orders?prescription_id=${encodeURIComponent(prescription.prescription_id)}`}
+        >
+          Order medication
+        </a>
+      )}
     </article>
   )
 }

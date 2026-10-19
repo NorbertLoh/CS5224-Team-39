@@ -52,6 +52,21 @@ class StripeCheckout:
                 int((datetime.now(timezone.utc) + timedelta(minutes=35)).timestamp())
             ),
         }
+        if payment.purpose == "medication_delivery":
+            success = (
+                self.settings.medication_checkout_success_url
+                or urlsplit(self.settings.checkout_success_url)
+                ._replace(path="/patient/medication-orders")
+                .geturl()
+            )
+            cancel = (
+                self.settings.medication_checkout_cancel_url
+                or urlsplit(self.settings.checkout_cancel_url)
+                ._replace(path="/patient/medication-orders")
+                .geturl()
+            )
+            fields["success_url"] = success + "?order_id=" + str(payment.order_id)
+            fields["cancel_url"] = cancel + "?order_id=" + str(payment.order_id)
         if payment.commission_amount_minor:
             fields["payment_intent_data[application_fee_amount]"] = str(
                 payment.commission_amount_minor

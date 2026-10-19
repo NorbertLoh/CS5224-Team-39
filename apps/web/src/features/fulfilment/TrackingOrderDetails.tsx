@@ -3,15 +3,20 @@ import { MedicineReadiness } from './MedicineReadiness'
 import { orderLabels, paymentLabels, trackingTime } from './model'
 import type { PreviewContext, TrackingOrder } from './model'
 import { consultationPrice } from '../../lib/money'
+import type { ReactNode } from 'react'
 
 export function TrackingOrderDetails({
   order,
   context,
   onReady,
+  readiness,
+  preview = true,
 }: {
   order: TrackingOrder
   context: PreviewContext
   onReady: () => void
+  readiness?: ReactNode
+  preview?: boolean
 }) {
   return (
     <article
@@ -44,7 +49,11 @@ export function TrackingOrderDetails({
         </div>
         <div>
           <dt className="font-medium">Total (SGD)</dt>
-          <dd>{consultationPrice(order.total_minor, 'SGD')}</dd>
+          <dd>
+            {order.total_minor === null
+              ? 'Awaiting quote'
+              : consultationPrice(order.total_minor, 'SGD')}
+          </dd>
         </div>
         <div>
           <dt className="font-medium">Order updated</dt>
@@ -63,8 +72,10 @@ export function TrackingOrderDetails({
           ))}
         </ul>
       </section>
-      <MedicineReadiness order={order} context={context} onReady={onReady} />
-      <DeliveryTracking order={order} />
+      {readiness ?? (
+        <MedicineReadiness order={order} context={context} onReady={onReady} />
+      )}
+      <DeliveryTracking order={order} preview={preview} />
     </article>
   )
 }

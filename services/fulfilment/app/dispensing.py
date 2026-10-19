@@ -4,8 +4,10 @@ import json
 from typing import Literal, Protocol
 from uuid import UUID
 
+import httpx
 from pydantic import Field, model_validator
 from telelink_common.errors import DomainError
+from telelink_common.service_auth import service_token
 
 from app.schemas import StrictModel
 
@@ -41,6 +43,49 @@ class DispensingSource(Protocol):
 class UnavailableDispensing:
     def get(self, prescription_id, patient_id, request_id):
         raise DomainError(503, "unavailable", "Dispensing context is not configured.")
+
+
+class HttpDispensing:
+    def __init__(self, settings, *, transport=None):
+        self.settings = settings
+        self.client = httpx.Client(
+            timeout=3, trust_env=False, follow_redirects=False, transport=transport
+        )
+
+    def close(self):
+        self.client.close()
+
+    def get(self, prescription_id, patient_id, request_id):
+        config = self.settings
+        if not config.records_url or not config.records_secret:
+            raise DomainError(503, "unavailable", "Dispensing source is not configured.")
+        try:
+            response = self.client.get(
+                f"{config.records_url}/internal/prescriptions/{prescription_id}/dispensing",
+                params={"patient_id": str(patient_id), "purpose": "dispensing"},
+                headers={
+                    "Authorization": "Bearer "
+                    + service_token(
+                        config.records_secret, "fulfilment", "telelink-records-fulfilment"
+                    ),
+                    "X-Request-ID": request_id,
+                },
+            )
+        except httpx.RequestError:
+            raise DomainError(503, "unavailable", "Dispensing source is unavailable.") from None
+        if response.status_code == 404:
+            raise DomainError(404, "not_found", "Resource not found.")
+        if response.status_code == 409:
+            raise DomainError(409, "prescription_not_issued", "Prescription must be issued.")
+        if response.status_code != 200:
+            raise DomainError(503, "unavailable", "Dispensing source is unavailable.")
+        try:
+            result = DispensingContext.model_validate(response.json())
+            if (result.prescription_id, result.patient_id) != (prescription_id, patient_id):
+                raise ValueError("Context mismatch")
+            return result
+        except (ValueError, TypeError):
+            raise DomainError(502, "upstream_error", "Invalid dispensing response.") from None
 
 
 class FixtureDispensing:

@@ -11,6 +11,7 @@ from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.api import router
 from app.database import create_database_engine
+from app.dispensing import router as dispensing_router
 from app.documents import router as documents_router
 from app.mc_documents import router as mc_documents_router
 from app.medical_certificates import router as mc_router
@@ -65,6 +66,7 @@ def create_app(settings: Settings | None = None):
     install_error_handlers(app)
     app.include_router(router)
     app.include_router(documents_router)
+    app.include_router(dispensing_router)
     app.include_router(mc_router)
     app.include_router(mc_documents_router)
 

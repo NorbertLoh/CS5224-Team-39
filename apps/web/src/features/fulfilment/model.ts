@@ -26,9 +26,13 @@ export type TrackingOrder = {
     | 'exception'
   medicine_status: 'not_ready' | 'ready'
   payment_status:
-    'unpaid' | 'pending' | 'succeeded' | 'refund_required' | 'refunded'
+    | 'unpaid'
+    | 'pending'
+    | 'succeeded'
+    | 'refund_required'
+    | 'refunded'
   quote_check: 'valid' | 'expired' | 'fee_changed'
-  total_minor: number
+  total_minor: number | null
   items: { display_name: string; quantity: number }[]
   delivery: {
     delivery_id: string
@@ -99,7 +103,7 @@ export function markReady(
   }
 }
 
-export function trackingGuidance(order: TrackingOrder) {
+export function trackingGuidance(order: TrackingOrder, preview = true) {
   if (order.payment_status === 'refund_required')
     return 'Delivery is on hold. Contact the clinic with your order reference for manual refund review. No automatic refund is promised.'
   if (order.payment_status === 'refunded')
@@ -111,7 +115,9 @@ export function trackingGuidance(order: TrackingOrder) {
   if (order.delivery?.status === 'cancelled' || order.status === 'cancelled')
     return 'This order or delivery was cancelled. Contact the clinic about any payment resolution; cancellation does not itself confirm a refund.'
   if (order.delivery?.status === 'delivered')
-    return 'Delivery completion is confirmed in this example.'
+    return preview
+      ? 'Delivery completion is confirmed in this example.'
+      : 'Delivery completion is confirmed.'
   if (order.delivery?.status === 'picked_up')
     return 'The courier has picked up the medicine. Delivery is not yet confirmed.'
   if (order.delivery?.status === 'submitted')
