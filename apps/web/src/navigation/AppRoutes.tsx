@@ -14,6 +14,7 @@ import { DocumentList } from '../features/documents/DocumentList'
 import { BookedConsultation } from '../features/video/BookedConsultation'
 import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
 import { CheckoutPreview } from '../features/checkout/CheckoutPreview'
+import { MedicationOrderPreview } from '../features/medication-orders/MedicationOrderPreview'
 import { ClinicPayments } from '../features/payments/ClinicPayments'
 import { roleLabels } from './access'
 import type { Route } from './access'
@@ -37,6 +38,8 @@ export function AppRoutes({
       return <LiveCheckoutPage />
     case 'checkout-preview':
       return <CheckoutPreview />
+    case 'medication-order-preview':
+      return <MedicationOrderPreview />
     case 'consultation':
       return <BookedConsultation role={route.role} />
     case 'profile':
@@ -65,6 +68,13 @@ export function AppRoutes({
             </section>
           )}
           {route.role === 'patient' && <PatientPrescriptions />}
+          {route.role === 'patient' && (
+            <p className="mt-6 text-sm">
+              <a className="underline" href="/patient/medication-order-preview">
+                Preview medication order and delivery payment (synthetic data)
+              </a>
+            </p>
+          )}
           {route.role === 'patient' && <DocumentList role="patient" />}
           {route.role === 'patient' && (
             <p className="mt-6 text-sm">
