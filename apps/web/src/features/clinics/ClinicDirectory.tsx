@@ -9,9 +9,11 @@ import { Button } from '@/components/ui/button'
 export function ClinicLinks({
   clinics,
   edit = false,
+  readinessPreview = false,
 }: {
   clinics: Clinic[]
   edit?: boolean
+  readinessPreview?: boolean
 }) {
   return (
     <div className="mt-5 grid gap-5 sm:grid-cols-2">
@@ -48,6 +50,13 @@ export function ClinicLinks({
             {edit && (
               <a href={`/clinic-admin/clinics/${clinic.tenant_id}/payments`}>
                 Payments
+              </a>
+            )}
+            {edit && readinessPreview && (
+              <a
+                href={`/clinic-admin/clinics/${clinic.tenant_id}/fulfilment-preview`}
+              >
+                Preview readiness and tracking
               </a>
             )}
           </div>
