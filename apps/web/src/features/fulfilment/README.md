@@ -48,6 +48,12 @@ authorization, readiness writes and verified provider/payment refresh. U15 owns
 the separate fixture order/quote/payment screen; neither preview completes the
 real medication checkout or delivery journey.
 
+Order borders show urgency: red for problems/manual review (including unknown or
+cancelled delivery), amber for payment/preparation waits, blue for progress, green
+for verified delivery completion and grey for refunded orders. A matching text
+label keeps the meaning available without colour. Selection adds a separate ring
+and preserves the status border.
+
 ## Verification
 
 From `apps/web`: `npm test`, `npm run lint`, `npm run build` and Prettier checks.
