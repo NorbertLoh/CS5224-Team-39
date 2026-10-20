@@ -86,6 +86,10 @@ def test_hold_context_price_deadline_and_real_redis_ttl(holds):
     assert result["doctor_id"] == str(ids["doctor"])
     assert result["status"] == "held" and result["payment_id"] is None
     assert result["consultation_price"] == {"amount_minor": 3210, "currency": "SGD"}
+    names = {"patient_name": "patient", "doctor_name": "Doctor", "clinic_name": "Test Clinic"}
+    assert {key: result[key] for key in names} == names
+    detail = client.get(f"/appointments/{result['appointment_id']}", headers=user()).json()
+    assert {key: detail[key] for key in names} == names
     cache = client.app.state.hold_cache
     assert cache.client.get(cache.key(slot["slot_id"])) == result["appointment_id"]
     assert 590_000 < cache.client.pttl(cache.key(slot["slot_id"])) <= 600_000

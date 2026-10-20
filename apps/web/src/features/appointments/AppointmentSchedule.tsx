@@ -7,6 +7,7 @@ import { dateInSingapore, formatDate } from './display'
 import { listAppointments, schedulingError } from '../scheduling/api'
 import { singaporeDate } from '../scheduling/time'
 import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
+import { useClinicNames } from '../clinics/useClinicNames'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 
@@ -23,6 +24,12 @@ export function AppointmentSchedule({
     identity.data?.memberships.filter(
       (member) => member.status === 'active' && member.roles.includes(role),
     ) ?? []
+  const clinicName = useClinicNames(
+    role === 'clinic_admin' && !tenantId
+      ? memberships.map((member) => member.tenant_id)
+      : [],
+    true,
+  )
   const clinic =
     tenantId ??
     (role === 'clinic_admin'
@@ -65,7 +72,7 @@ export function AppointmentSchedule({
           >
             {memberships.map((member) => (
               <option key={member.tenant_id} value={member.tenant_id}>
-                {member.tenant_id}
+                {clinicName(member.tenant_id)}
               </option>
             ))}
           </select>

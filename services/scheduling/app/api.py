@@ -113,7 +113,7 @@ def list_slots(
     query = select(AvailabilitySlot, occupied.label("occupied")).where(
         AvailabilitySlot.tenant_id == tenant_id,
         AvailabilitySlot.withdrawn_at.is_(None),
-        AvailabilitySlot.doctor_id.in_(doctors),
+        AvailabilitySlot.doctor_id.in_(list(doctors)),
         AvailabilitySlot.starts_at >= start,
         AvailabilitySlot.starts_at < end,
         AvailabilitySlot.starts_at > datetime.now(timezone.utc),

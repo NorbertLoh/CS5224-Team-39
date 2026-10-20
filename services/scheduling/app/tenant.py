@@ -14,6 +14,7 @@ from app.schemas import Money
 
 class BookingProfile(BaseModel):
     tenant_id: UUID
+    name: str = Field(min_length=1)
     status: Literal["active"]
     consultation_price: Money
 
@@ -96,7 +97,8 @@ class TenantClient:
             raise DomainError(502, "upstream_error", "Invalid clinic response.") from None
 
     def active_doctors(self, tenant_id, request_id):
-        doctors, seen = set(), set()
+        """Return active doctors as {doctor_id: display_name}."""
+        doctors, seen = {}, set()
         cursor = None
         while True:
             params = {"limit": 100}
@@ -106,9 +108,9 @@ class TenantClient:
             try:
                 page = DoctorPage.model_validate(response.json())
                 ids = [doctor.doctor_id for doctor in page.items]
-                if len(ids) > 100 or len(ids) != len(set(ids)) or doctors.intersection(ids):
+                if len(ids) > 100 or len(ids) != len(set(ids)) or doctors.keys() & set(ids):
                     raise ValueError("Invalid doctor page")
-                doctors.update(ids)
+                doctors.update((doctor.doctor_id, doctor.display_name) for doctor in page.items)
                 cursor = page.next_cursor
                 if cursor is None:
                     return doctors

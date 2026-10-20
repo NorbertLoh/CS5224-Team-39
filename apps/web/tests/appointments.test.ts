@@ -172,3 +172,30 @@ test('detail view exposes trusted fixture status and refund resolution separatel
   assert.match(markup, /\$25.00/)
   assert.match(markup, new RegExp(appointment.appointment_id))
 })
+
+test('detail view shows booking-time names and falls back to identifiers', () => {
+  const appointment = shared.appointments[0] as Appointment
+  const render = (item: Appointment) =>
+    renderToStaticMarkup(
+      createElement(AppointmentDetails, { appointment: item, onClose: () => {} }),
+    )
+  const named = render({
+    ...appointment,
+    patient_name: 'Local Patient',
+    doctor_name: 'Local Doctor',
+    clinic_name: 'I01 Journey Clinic',
+  })
+  for (const name of ['Local Patient', 'Local Doctor', 'I01 Journey Clinic']) {
+    assert.match(named, new RegExp(name))
+  }
+  assert.doesNotMatch(named, new RegExp(appointment.patient_id))
+  const legacy = render({
+    ...appointment,
+    patient_name: null,
+    doctor_name: null,
+    clinic_name: null,
+  })
+  for (const id of [appointment.patient_id, appointment.doctor_id, appointment.tenant_id]) {
+    assert.match(legacy, new RegExp(id))
+  }
+})

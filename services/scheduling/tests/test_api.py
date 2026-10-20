@@ -158,6 +158,7 @@ def api(api_database):
                 200,
                 json={
                     "tenant_id": tenant_id,
+                    "name": "Test Clinic",
                     "status": "active",
                     "consultation_price": {"amount_minor": state["price"], "currency": "SGD"},
                 },
@@ -424,7 +425,7 @@ def test_rollback_refuses_to_destroy_replaced_slot_history(api):
     engine = api[-1]
     with engine.connect() as connection:
         assert (
-            connection.scalar(text("SELECT version_num FROM scheduling.alembic_version")) == "0006"
+            connection.scalar(text("SELECT version_num FROM scheduling.alembic_version")) == "0007"
         )
 
 

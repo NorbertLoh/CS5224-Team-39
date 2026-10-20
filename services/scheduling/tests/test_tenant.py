@@ -42,7 +42,7 @@ def test_directory_pagination():
 
     client = client_for(handler)
     try:
-        assert client.active_doctors(tenant_id, "test") == {first, second}
+        assert client.active_doctors(tenant_id, "test") == {first: "Doctor", second: "Doctor"}
         assert calls == [None, "next-page"]
     finally:
         client.close()
@@ -101,6 +101,7 @@ def test_profile_context_and_money_validation():
             200,
             json={
                 "tenant_id": str(uuid4()),
+                "name": "Test Clinic",
                 "status": "active",
                 "consultation_price": {"amount_minor": 2500, "currency": "SGD"},
             },
