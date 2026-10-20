@@ -31,7 +31,7 @@ Each business service owns its database schema and Alembic migrations. Do not wr
 
 Commit dependency lockfiles, migrations and sanitized configuration examples. Keep credentials, local environment overrides, generated output, Terraform state and runtime data out of Git. Use synthetic records only.
 
-F01 is skipped by team decision. The exact demo date, AWS budget/access and infrastructure tool still need to be confirmed when relevant tasks begin.
+F01 is skipped by team decision. W01 chose Terraform with a shared team AWS account in `ap-southeast-1` (see [infra/README.md](infra/README.md)). The exact demo date and AWS budget amount still need to be confirmed.
 
 ## Local sign-in accounts
 

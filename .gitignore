@@ -42,6 +42,7 @@ terraform.tfvars
 *.auto.tfvars
 *.tfvars.json
 !*.tfvars.example
+backend.hcl
 cdk.out/
 
 # Local runtime data

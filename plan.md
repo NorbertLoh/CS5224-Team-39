@@ -192,7 +192,7 @@ compose.yaml
 plan.md
 ```
 
-Proposed infrastructure tool: Terraform, subject to team preference. Use separate development/demo configuration and keep state out of Git. Infrastructure code should provision networking, ECR/ECS, routing, database/cache, Cognito, buckets, messaging, IAM, logs and alarms. No infrastructure code is being generated at this planning stage.
+Infrastructure tool: Terraform (chosen in W01), using one shared team AWS account, separate `dev`/`demo` environment roots and S3 remote state with native locking; see `infra/README.md`. Keep state out of Git. Infrastructure code should provision networking, ECR/ECS, routing, database/cache, Cognito, buckets, messaging, IAM, logs and alarms.
 
 ## 10. Delivery milestones and acceptance gates
 
@@ -248,7 +248,7 @@ Decisions needed to finalise calendar and infrastructure:
 1. Exact submission/demo date and the first week's integration coordinator; teammates claim individual ready tasks in the checklist.
 2. AWS budget/credits, existing account/permissions, region restrictions and domain availability.
 3. Validate and pin a Floci release against required auth, storage and messaging flows; retain real AWS compatibility checks in the connected profile.
-4. Terraform versus AWS CDK preference; required CI or deployment conventions.
+4. ~~Terraform versus AWS CDK preference~~ Terraform chosen in W01; required CI or deployment conventions.
 5. Availability of Stripe Connect test accounts, Lalamove sandbox credentials and SES verification.
 6. Whether prescription/medical certificate formats, refunds, delivery pricing and participant recruitment have course-specific requirements.
 7. Accept additional TURN infrastructure and review the cost of separate HTTP/signalling ingress.
