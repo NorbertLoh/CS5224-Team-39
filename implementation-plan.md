@@ -116,7 +116,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; B02 is co
 | [x] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. Completed in merged PR #108; clinic Book entry, date dropdown, 30-minute slot cells and checkout preview. 48 frontend tests, lint/build and CI passed. Issue #107 closed; live integration remains S07/B07, browser visual checks unverified. | F07, F08, C03 | M |
 | [x] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. Completed in merged PR #106; role-scoped date dropdown, half-hour cells and appointment details with focused components. Combined 53 frontend tests, lint/build and CI passed. Issue #105 closed; live integration remains S07, browser visual checks unverified. | F07, F08, C02, C03 | M |
 | [x] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. Completed in merged PR #112; 60 frontend tests, lint/build, real frontend adapter walkthrough with cleanup and CI passed. Issue #111 closed. Browser interaction and AWS remain unverified; billing checkout remains B07. | S04, U06-U08 | M |
-| [ ] | S08 | Fix scheduling readiness for the current migration head; current schema returns ready and stale/missing schemas remain unavailable. Assignee: cyhni; status: in progress. Issue #239. | F04, S07 | S |
+| [ ] | S08 | Fix scheduling readiness for the current migration head; current schema returns ready and stale/missing schemas remain unavailable. Assignee: cyhni; status: in progress. Issue #239 / open PR #241. | F04, S07 | S |
 
 ## Week 2: payments
 
@@ -207,13 +207,13 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [x] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. Completed in merged PR #235; issue #234 closed. Real local browser journey (platform approval, staff, availability, booking, hosted Stripe test Checkout) confirmed the appointment through verified webhooks, billing outbox, Floci EventBridge/SQS and the scheduling consumer; `tests/e2e/check_i01_journey.py` passed 7/7 for two paid bookings. Also added booking-time patient/doctor/clinic names (scheduling migration `0007`, optional C03 fields) and clinic names in selectors; 233 scheduling and 138 frontend tests and CI passed. Evidence: `docs/I01-local-journey.md`. Scheduling readiness `0005` check remains a follow-up; AWS remains I05. | A11, S05-S07, B04, B07 | M |
+| [x] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. Completed in merged PR #235; issue #234 closed. Real local browser journey (platform approval, staff, availability, booking, hosted Stripe test Checkout) confirmed the appointment through verified webhooks, billing outbox, Floci EventBridge/SQS and the scheduling consumer; `tests/e2e/check_i01_journey.py` passed 7/7 for two paid bookings. Also added booking-time patient/doctor/clinic names (scheduling migration `0007`, optional C03 fields) and clinic names in selectors; 233 scheduling and 138 frontend tests and CI passed. Evidence: `docs/I01-local-journey.md`. Scheduling readiness follow-up is tracked by S08 / issue #239; AWS remains I05. | A11, S05-S07, B04, B07 | M |
 | [ ] | I02 | Run actual booked pair -> consultation -> saved prescription -> private PDF. | I01, V04, R04, U14 | M |
 | [ ] | I03 | Run actual prescription -> quote -> separate medication payment -> ready -> one delivery. | I02, D07, B06 | M |
 | [ ] | I04 | Verify journey events produce booking/document/delivery messages. | I03, N02 | S |
 | [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
 | [ ] | Q01 | Reject clinic A access to clinic B appointment, record and file; reject wrong roles/tokens. | I05 | M |
-| [ ] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Assignee: cyhni; status: in progress. Issue #240. | S06 | S |
+| [ ] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Assignee: cyhni; status: in progress. Issue #240 / open PR #242. | S06 | S |
 | [ ] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. | I03, M04 | S |
 | [ ] | Q04 | Verify AWS video across networks and reject unrelated participant/file access. | I05 | S |
 | [ ] | Q05 | Walk through all four roles; record blockers and create small fix tasks. | I05 | M |
