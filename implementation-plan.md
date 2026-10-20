@@ -211,7 +211,7 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 | [ ] | I04 | Verify journey events produce booking/document/delivery messages. | I03, N02 | S |
 | [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
 | [ ] | Q01 | Reject clinic A access to clinic B appointment, record and file; reject wrong roles/tokens. | I05 | M |
-| [ ] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Assignee: cyhni; status: in progress. Issue #240. | S06 | S |
+| [ ] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Assignee: cyhni; status: in progress. Issue #240 / open PR #242. | S06 | S |
 | [ ] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. | I03, M04 | S |
 | [ ] | Q04 | Verify AWS video across networks and reject unrelated participant/file access. | I05 | S |
 | [ ] | Q05 | Walk through all four roles; record blockers and create small fix tasks. | I05 | M |
