@@ -120,10 +120,10 @@ and platform demo accounts.
 
 ## Findings and limits
 
-- Scheduling `/health/ready` compares the schema revision with `0005`, but head is
-  `0006`, so readiness returns 503 on a fully migrated database
-  (`services/scheduling/app/main.py`). The API and workers operate normally.
-  This is a suggested follow-up fix.
+- The journey exposed a stale scheduling readiness gate: it expected `0005`
+  after migrations had advanced. S08 updates it to head `0007` and adds current-head,
+  old/missing revision and unavailable database/Redis regression checks. Run
+  scheduling migrations to head before restarting the API.
 - Appointment views showed raw patient/doctor/clinic UUIDs. Fixed in this PR:
   scheduling now captures the patient, doctor and clinic names at booking (migration
   `0007`, optional C03 fields) and the frontend shows them. Older appointments still
