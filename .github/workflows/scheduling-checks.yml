@@ -8,6 +8,7 @@ on:
       - 'dev/check_scheduling_integration.py'
       - 'dev/check_booking_holds.py'
       - 'dev/check_appointment_api.py'
+      - 'tests/e2e/check_q02_booking.py'
       - '.github/workflows/scheduling-checks.yml'
   pull_request:
     paths:
@@ -16,6 +17,7 @@ on:
       - 'dev/check_scheduling_integration.py'
       - 'dev/check_booking_holds.py'
       - 'dev/check_appointment_api.py'
+      - 'tests/e2e/check_q02_booking.py'
       - '.github/workflows/scheduling-checks.yml'
 
 permissions:
@@ -79,4 +81,6 @@ jobs:
       - run: python -m ruff format --check ../../dev/check_booking_holds.py --config pyproject.toml
       - run: python -m ruff check ../../dev/check_appointment_api.py --config pyproject.toml
       - run: python -m ruff format --check ../../dev/check_appointment_api.py --config pyproject.toml
+      - run: python -m ruff check ../../tests/e2e/check_q02_booking.py --config pyproject.toml
+      - run: python -m ruff format --check ../../tests/e2e/check_q02_booking.py --config pyproject.toml
       - run: python -m pytest -q
