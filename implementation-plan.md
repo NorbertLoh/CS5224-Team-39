@@ -13,10 +13,10 @@ UI work can start against the agreed API fixtures after its listed contract depe
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
 Completion audit, updated 21 October 2026: reconciled the backlog with open/closed
-GitHub issues, open/merged PRs and the current implementation. **92 tasks are complete,
-F01 is skipped by user decision, and 37 tasks remain unfinished.** The 93 checked
+GitHub issues, open/merged PRs and the current implementation. **94 tasks are complete,
+F01 is skipped by user decision, and 35 tasks remain unfinished.** The 95 checked
 rows include that skipped task. Completed work comprises F02-F16, C01-C05,
-A01-A11, U01-U17, S01-S07, R01-R04, P01-P03, M01-M04, D01-D07, B01-B07, V01-V04, N01-N02, I01 and X01-X05.
+A01-A11, U01-U17, S01-S08, R01-R04, P01-P03, M01-M04, D01-D07, B01-B07, V01-V04, N01-N02, I01, Q02 and X01-X05.
 D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
 PR #138 and closed issue #137; P02 after merged PR #144 and closed issue #128;
 P03 after merged PR #148 and closed issue #147; U14 after merged PR #151 and
@@ -37,10 +37,10 @@ Current claims and remaining blockers:
 | Documents | P02 completed in merged PR #144; issue #128 closed. The authenticated/audited records projection, trusted current-name lookups and stored-PDF worker passed local transport/replay/recovery checks and CI. P03 completed in merged PR #148; issue #147 closed. Authorised/audited lists and signed downloads passed 89 document tests, local HTTP verification and CI. U14 completed in merged PR #151; issue #150 closed. Patient/doctor lists and downloads passed 82 frontend tests, live adapter/Vite checks, Prettier and CI. Address/registration fields remain optional prototype omissions. Browser interaction and AWS privacy/download verification remain unfinished. |
 | Records / fulfilment | R01-R04 and D01-D07 are complete. R04 (merged PR #142) connected records pages to real APIs; D07 (merged PR #224) added the audited dispensing projection and real fulfilment adapters. The actual booked consultation-to-prescription-to-private-PDF journey remains I02, claimed by Chronoxy in issue #237 / open PR #238. I03 depends on that journey. Setup and integration limits: `docs/records-frontend.md` and `docs/D07-live-fulfilment.md`. |
 | Delivery | D01-D07, U15-U16 and X05 are complete. D07 (merged PR #224; issue #223 closed) verified real local authentication, audited dispensing, atomic checkout reservation, Stripe sandbox payment with signed webhook/event consumption and one Lalamove sandbox submission/tracking; the synthetic courier order was cancelled for cleanup. Earlier permitted dispensing/payment fixtures were replaced for this local check. Setup: `docs/D07-live-fulfilment.md`. The starting prescription was operator-seeded; the full I03 journey, arbitrary-address geocoding, physical delivery and deployed AWS remain unfinished. |
-| AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01 completed in merged PR #235 and completion PR #236; I02 is claimed by Chronoxy in issue #237 / open PR #238. I03-I05, Q01-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
+| AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01 completed in merged PR #235 and completion PR #236; I02 is claimed by Chronoxy in issue #237 / open PR #238. Q02 completed in merged PR #242 with real local contention/expiry evidence and explicitly scoped billing fixtures for confirmation races. I03-I05, Q01, Q03-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
 Unclaimed tasks with complete listed dependencies:
-None currently. Q02 is claimed by cyhni in issue #240; S08 is claimed by cyhni in issue #239. W01 is already covered by draft PR #233.
+None currently. W01 is already covered by draft PR #233.
 N02 completed in merged PR #230; issue #228 is closed. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
 For every other unchecked task, the Depends on column identifies unfinished
@@ -116,7 +116,7 @@ Setup/contracts are complete. Claim a ready task from the audit above; B02 is co
 | [x] | U07 | Build patient slot picker and booking/checkout handoff using fixtures. Completed in merged PR #108; clinic Book entry, date dropdown, 30-minute slot cells and checkout preview. 48 frontend tests, lint/build and CI passed. Issue #107 closed; live integration remains S07/B07, browser visual checks unverified. | F07, F08, C03 | M |
 | [x] | U08 | Build patient/doctor/clinic appointment list and detail views using fixtures. Completed in merged PR #106; role-scoped date dropdown, half-hour cells and appointment details with focused components. Combined 53 frontend tests, lint/build and CI passed. Issue #105 closed; live integration remains S07, browser visual checks unverified. | F07, F08, C02, C03 | M |
 | [x] | S07 | Connect availability/booking/appointment pages to real scheduling APIs. Completed in merged PR #112; 60 frontend tests, lint/build, real frontend adapter walkthrough with cleanup and CI passed. Issue #111 closed. Browser interaction and AWS remain unverified; billing checkout remains B07. | S04, U06-U08 | M |
-| [ ] | S08 | Fix scheduling readiness for the current migration head; current schema returns ready and stale/missing schemas remain unavailable. Assignee: cyhni; status: in progress. Issue #239 / open PR #241. | F04, S07 | S |
+| [x] | S08 | Fix scheduling readiness for the current migration head; current schema returns ready and stale/missing schemas remain unavailable. Completed in merged PR #241; issue #239 closed. All 239 scheduling tests passed with two optional Floci checks skipped; current-head/stale-schema/dependency regressions and CI passed. The local API returned HTTP 200 ready against migration `0007`. No new configuration; apply migrations to head before restarting scheduling. | F04, S07 | S |
 
 ## Week 2: payments
 
@@ -207,13 +207,13 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [x] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. Completed in merged PR #235; issue #234 closed. Real local browser journey (platform approval, staff, availability, booking, hosted Stripe test Checkout) confirmed the appointment through verified webhooks, billing outbox, Floci EventBridge/SQS and the scheduling consumer; `tests/e2e/check_i01_journey.py` passed 7/7 for two paid bookings. Also added booking-time patient/doctor/clinic names (scheduling migration `0007`, optional C03 fields) and clinic names in selectors; 233 scheduling and 138 frontend tests and CI passed. Evidence: `docs/I01-local-journey.md`. Scheduling readiness follow-up is tracked by S08 / issue #239; AWS remains I05. | A11, S05-S07, B04, B07 | M |
+| [x] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. Completed in merged PR #235; issue #234 closed. Real local browser journey (platform approval, staff, availability, booking, hosted Stripe test Checkout) confirmed the appointment through verified webhooks, billing outbox, Floci EventBridge/SQS and the scheduling consumer; `tests/e2e/check_i01_journey.py` passed 7/7 for two paid bookings. Also added booking-time patient/doctor/clinic names (scheduling migration `0007`, optional C03 fields) and clinic names in selectors; 233 scheduling and 138 frontend tests and CI passed. Evidence: `docs/I01-local-journey.md`. Scheduling readiness subsequently fixed by S08 in merged PR #241; AWS remains I05. | A11, S05-S07, B04, B07 | M |
 | [ ] | I02 | Run actual booked pair -> consultation -> saved prescription -> private PDF. | I01, V04, R04, U14 | M |
 | [ ] | I03 | Run actual prescription -> quote -> separate medication payment -> ready -> one delivery. | I02, D07, B06 | M |
 | [ ] | I04 | Verify journey events produce booking/document/delivery messages. | I03, N02 | S |
 | [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
 | [ ] | Q01 | Reject clinic A access to clinic B appointment, record and file; reject wrong roles/tokens. | I05 | M |
-| [ ] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Assignee: cyhni; status: in progress. Issue #240 / open PR #242. | S06 | S |
+| [x] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Completed in merged PR #242; issue #240 closed. All ten real local contention/deadline/natural-expiry checks and API cleanup passed. Final combined S08/Q02 CI passed 242 scheduling tests with two optional Floci checks skipped, including cleanup regressions and existing confirmation races using explicit billing-response fixtures. Setup/evidence and provider limits: `docs/Q02-booking-verification.md`; use the I01 local services and allow about ten minutes. No new application configuration. | S06 | S |
 | [ ] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. | I03, M04 | S |
 | [ ] | Q04 | Verify AWS video across networks and reject unrelated participant/file access. | I05 | S |
 | [ ] | Q05 | Walk through all four roles; record blockers and create small fix tasks. | I05 | M |
