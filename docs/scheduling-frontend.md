@@ -9,7 +9,7 @@ fabricated appointment ID or client-set payment state is used.
 Start identity and tenant using [clinic backend setup](clinic-backend.md). Configure
 scheduling using [its API setup](../services/scheduling/docs/api.md), with the same
 Cognito pool/client and tenant scheduling key, a separate cursor key, PostgreSQL
-schema migrations through `0006`, and Redis. Keep local configuration in ignored
+schema migrations through `0007`, and Redis. Keep local configuration in ignored
 `.env` files. Start scheduling and its expiry worker from `services/scheduling`:
 
 ```powershell
@@ -41,8 +41,9 @@ There are no Compose, API/event contract or infrastructure changes.
 - Role workspaces list current authorized appointments with cursor pagination,
   date selection, detail polling and refresh. Patients see their own rows, doctors
   their assigned rows, and clinic admins their selected owning clinic. The backend
-  remains authoritative. Public metadata supplies subject/clinic IDs, so these are
-  displayed directly rather than substituted with fixture names. Cancellation is
+  remains authoritative. Cells and details show the patient, doctor and clinic
+  names that scheduling captured at booking (migration `0007`). Appointments booked
+  earlier have no names, so they show the identifiers instead. Cancellation is
   offered to the patient/clinic admin for eligible states; the server rechecks time,
   ownership and transitions. Refund review remains separate from payment truth.
 - Booking/list/detail refresh after scheduling writes. Queries use identity/session

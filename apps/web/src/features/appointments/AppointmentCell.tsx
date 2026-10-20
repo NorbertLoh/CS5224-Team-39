@@ -1,4 +1,4 @@
-import { formatTime, readableStatus } from './display'
+import { formatTime, nameOrId, readableStatus } from './display'
 import type { AppointmentRole } from './fixtures'
 import type { dayCells } from './display'
 
@@ -30,13 +30,13 @@ export function AppointmentCell({
             >
               <span className="block font-medium">
                 {role === 'patient'
-                  ? appointment.doctor_id
-                  : appointment.patient_id}
+                  ? nameOrId(appointment.doctor_name, appointment.doctor_id)
+                  : nameOrId(appointment.patient_name, appointment.patient_id)}
               </span>
               <span className="block text-slate-600">
-                {appointment.tenant_id}
+                {nameOrId(appointment.clinic_name, appointment.tenant_id)}
                 {role === 'clinic_admin' &&
-                  ` · ${appointment.doctor_id}`}
+                  ` · ${nameOrId(appointment.doctor_name, appointment.doctor_id)}`}
               </span>
               <span className="mt-1 block capitalize">
                 {readableStatus(appointment.status)}

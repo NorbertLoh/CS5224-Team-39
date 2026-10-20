@@ -4,6 +4,7 @@ import {
   dateInSingapore,
   formatDate,
   formatTime,
+  nameOrId,
   readableStatus,
 } from './display'
 import type { Appointment } from '../scheduling/api'
@@ -19,10 +20,12 @@ export function AppointmentDetails({
   useEffect(() => {
     heading.current?.focus()
   }, [appointment.appointment_id])
+  // Only enum labels are title-cased; names and identifiers keep their spelling.
+  const capitalized = new Set(['Status', 'Payment resolution'])
   const fields = [
-    ['Patient', appointment.patient_id],
-    ['Doctor', appointment.doctor_id],
-    ['Clinic', appointment.tenant_id],
+    ['Patient', nameOrId(appointment.patient_name, appointment.patient_id)],
+    ['Doctor', nameOrId(appointment.doctor_name, appointment.doctor_id)],
+    ['Clinic', nameOrId(appointment.clinic_name, appointment.tenant_id)],
     ['Date', formatDate(dateInSingapore(appointment.starts_at))],
     [
       'Time (Singapore)',
@@ -71,7 +74,11 @@ export function AppointmentDetails({
         {fields.map(([label, value]) => (
           <div key={label}>
             <dt className="text-sm text-slate-500">{label}</dt>
-            <dd className="break-words font-medium capitalize">{value}</dd>
+            <dd
+              className={`break-words font-medium ${capitalized.has(label) ? 'capitalize' : ''}`}
+            >
+              {value}
+            </dd>
           </div>
         ))}
       </dl>

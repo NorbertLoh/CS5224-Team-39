@@ -36,6 +36,11 @@ export function dayCells(appointments: Appointment[], date: string) {
   })
 }
 
+// Names are booking-time snapshots; older appointments only have identifiers.
+export function nameOrId(name: string | null | undefined, id: string) {
+  return name || id
+}
+
 export function readableStatus(value: string) {
   return value.replaceAll('_', ' ')
 }

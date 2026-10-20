@@ -21,6 +21,11 @@ Appointment responses require `appointment_id`, `tenant_id`, `patient_id`,
 `refund_required`, `refunded`), `created_at`, `updated_at`. Expired/cancelled
 appointments retain the former expiry for audit unless already confirmed.
 Patient/doctor/tenant links are immutable. No clinical content in this resource.
+Optional display snapshots `patient_name`, `doctor_name` and `clinic_name`
+(string or null) are captured at booking from the patient's identity, the clinic's
+active doctor directory and its booking profile. They are not refreshed after a rename.
+They are null for appointments booked before scheduling migration `0007`, so
+clients fall back to the identifiers.
 
 | Route (prefix `/api/v1/scheduling`) | Body / result | Policy |
 | --- | --- | --- |

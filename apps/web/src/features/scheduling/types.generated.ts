@@ -40,6 +40,9 @@ export type AppointmentPublic = {
     | 'confirmed'
     | 'refund_required'
     | 'refunded'
+  patient_name?: string | null
+  doctor_name?: string | null
+  clinic_name?: string | null
   created_at: string
   updated_at: string
 }

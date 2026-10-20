@@ -19,7 +19,7 @@ Follow the existing setup guides; this run used them unchanged:
 All four service schemas live in the persistent `telelink-clinic-postgres`
 container (port 55411). Scheduling uses Compose Redis (`redis://127.0.0.1:6379/0`).
 Each schema is provisioned with its service's `scripts/create-local-schema.sql`
-and migrated to head (identity `0002`, tenant `0003`, scheduling `0006`, billing `0005`).
+and migrated to head (identity `0002`, tenant `0003`, scheduling `0007`, billing `0005`).
 
 Thirteen processes run alongside Compose:
 
@@ -124,6 +124,11 @@ and platform demo accounts.
   `0006`, so readiness returns 503 on a fully migrated database
   (`services/scheduling/app/main.py`). The API and workers operate normally.
   This is a suggested follow-up fix.
+- Appointment views showed raw patient/doctor/clinic UUIDs. Fixed in this PR:
+  scheduling now captures the patient, doctor and clinic names at booking (migration
+  `0007`, optional C03 fields) and the frontend shows them. Older appointments still
+  show identifiers. Verified with a second paid booking (`83553bba-…`), whose detail
+  view showed the names for the patient, doctor and clinic admin.
 - There is no clinic application UI; clinic onboarding is API-only (consistent
   with the plan's seeded clinics and manual review).
 - Not covered: AWS deployment, refunds/late-payment recovery in the browser, and
