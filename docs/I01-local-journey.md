@@ -129,6 +129,10 @@ and platform demo accounts.
   `0007`, optional C03 fields) and the frontend shows them. Older appointments still
   show identifiers. Verified with a second paid booking (`83553bba-…`), whose detail
   view showed the names for the patient, doctor and clinic admin.
+- The clinic selectors on the clinic admin appointments page and the doctor
+  availability page listed clinic UUIDs. They now show clinic names: tenant clinic
+  reads for clinic administrators and the public directory for doctors, falling
+  back to the ID if a name is unavailable.
 - There is no clinic application UI; clinic onboarding is API-only (consistent
   with the plan's seeded clinics and manual review).
 - Not covered: AWS deployment, refunds/late-payment recovery in the browser, and

@@ -3,6 +3,7 @@ import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
 import { DoctorTimetable } from './DoctorTimetable'
+import { useClinicNames } from '../clinics/useClinicNames'
 
 export function AvailabilityEditor({
   tenantId: routeClinic,
@@ -15,6 +16,9 @@ export function AvailabilityEditor({
     identity.data?.memberships.filter(
       (member) => member.status === 'active' && member.roles.includes('doctor'),
     ) ?? []
+  const clinicName = useClinicNames(
+    memberships.map((member) => member.tenant_id),
+  )
   const tenantId =
     routeClinic ??
     (memberships.some((member) => member.tenant_id === selectedClinic)
@@ -50,7 +54,7 @@ export function AvailabilityEditor({
         >
           {memberships.map((member) => (
             <option key={member.tenant_id} value={member.tenant_id}>
-              {member.tenant_id}
+              {clinicName(member.tenant_id)}
             </option>
           ))}
         </select>
