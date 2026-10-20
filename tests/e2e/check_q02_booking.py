@@ -29,6 +29,41 @@ IDENTITY = "http://127.0.0.1:8001"
 SCHEDULING = "http://127.0.0.1:8003"
 
 
+def cleanup(request, http, client_id, tokens, appointments, slot):
+    errors = []
+    for actor, appointment_id in appointments:
+        try:
+            path = "/appointments/" + appointment_id
+            current = request("GET", SCHEDULING, path, actor)
+            if current["status"] in {"held", "pending_payment"}:
+                response = http.post(
+                    SCHEDULING + path + "/cancel",
+                    headers={"Authorization": "Bearer " + tokens[actor]["access_token"]},
+                    json={"reason": "Synthetic Q02 verification complete"},
+                )
+                if response.status_code == 409:
+                    current = request("GET", SCHEDULING, path, actor)
+                    if current["status"] != "expired":
+                        response.raise_for_status()
+                else:
+                    response.raise_for_status()
+        except Exception as exc:
+            errors.append(f"appointment {appointment_id}: {type(exc).__name__}")
+    if slot is not None:
+        try:
+            request("DELETE", SCHEDULING, "/slots/" + slot["slot_id"], "doctor", expected=204)
+        except Exception as exc:
+            errors.append(f"slot {slot['slot_id']}: {type(exc).__name__}")
+    for actor, token in tokens.items():
+        try:
+            result = cognito(http, "RevokeToken", ClientId=client_id, Token=token["refresh_token"])
+            if result.status_code != 200:
+                raise RuntimeError("RevokeToken failed")
+        except Exception as exc:
+            errors.append(f"token {actor}: {type(exc).__name__}")
+    return errors
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tenant-id", required=True, type=UUID)
@@ -210,26 +245,21 @@ def main():
             )
             report["complete"] = True
         finally:
-            cleanup_ok = True
-            for actor, appointment_id in appointments:
-                current = request("GET", SCHEDULING, "/appointments/" + appointment_id, actor)
-                if current["status"] in {"held", "pending_payment"}:
-                    request(
-                        "POST",
-                        SCHEDULING,
-                        "/appointments/" + appointment_id + "/cancel",
-                        actor,
-                        json={"reason": "Synthetic Q02 verification complete"},
-                    )
-            if slot is not None:
-                request("DELETE", SCHEDULING, "/slots/" + slot["slot_id"], "doctor", expected=204)
-            for token in tokens.values():
-                result = cognito(
-                    http, "RevokeToken", ClientId=client_id, Token=token["refresh_token"]
-                )
-                cleanup_ok = cleanup_ok and result.status_code == 200
-            report["cleanup_complete"] = cleanup_ok
-            save()
+            verification_failed = sys.exc_info()[0] is not None
+            errors = cleanup(request, http, client_id, tokens, appointments, slot)
+            report["cleanup_errors"] = errors
+            report["cleanup_complete"] = not errors
+            report["complete"] = report["complete"] and not errors
+            try:
+                save()
+            except OSError:
+                if not verification_failed:
+                    raise
+                print("Cleanup report could not be saved", file=sys.stderr)
+            if errors:
+                print("Cleanup incomplete: " + "; ".join(errors), file=sys.stderr)
+                if not verification_failed:
+                    raise RuntimeError("Cleanup incomplete; see the evidence report")
     print(
         "Q02 race/expiry checks passed; provider limits are documented separately.",
         flush=True,

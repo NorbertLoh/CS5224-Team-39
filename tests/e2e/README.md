@@ -8,3 +8,4 @@ Reserved for focused integration checks when justified by implementation. I01-I0
   slot and uses read-only PostgreSQL/Redis checks; cleanup uses the APIs. Run with
   scheduling's environment and `--tenant-id <active demo clinic UUID>`; allow about
   ten minutes. Use `--config-root <checkout>` when configuration is in another checkout.
+  Setup, observed evidence and confirmation limits: [Q02 verification](../../docs/Q02-booking-verification.md).
