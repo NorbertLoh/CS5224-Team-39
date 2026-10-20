@@ -205,7 +205,7 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. | A11, S05-S07, B04, B07 | M |
+| [x] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. Completed in merged PR #235; issue #234 closed. Real local browser journey (platform approval, staff, availability, booking, hosted Stripe test Checkout) confirmed the appointment through verified webhooks, billing outbox, Floci EventBridge/SQS and the scheduling consumer; `tests/e2e/check_i01_journey.py` passed 7/7 for two paid bookings. Also added booking-time patient/doctor/clinic names (scheduling migration `0007`, optional C03 fields) and clinic names in selectors; 233 scheduling and 138 frontend tests and CI passed. Evidence: `docs/I01-local-journey.md`. Scheduling readiness `0005` check remains a follow-up; AWS remains I05. | A11, S05-S07, B04, B07 | M |
 | [ ] | I02 | Run actual booked pair -> consultation -> saved prescription -> private PDF. | I01, V04, R04, U14 | M |
 | [ ] | I03 | Run actual prescription -> quote -> separate medication payment -> ready -> one delivery. | I02, D07, B06 | M |
 | [ ] | I04 | Verify journey events produce booking/document/delivery messages. | I03, N02 | S |
