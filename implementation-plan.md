@@ -208,7 +208,7 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [x] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. | A11, S05-S07, B04, B07 | M |
-| [ ] | I02 | Run actual booked pair -> consultation -> saved prescription -> private PDF. | I01, V04, R04, U14 | M |
+| [x] | I02 | Run actual booked pair -> consultation -> saved prescription -> private PDF. | I01, V04, R04, U14 | M |
 | [ ] | I03 | Run actual prescription -> quote -> separate medication payment -> ready -> one delivery. | I02, D07, B06 | M |
 | [ ] | I04 | Verify journey events produce booking/document/delivery messages. | I03, N02 | S |
 | [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
