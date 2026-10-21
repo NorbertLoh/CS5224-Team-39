@@ -30,7 +30,10 @@ BILLING = "http://127.0.0.1:8009"
 def token(client, role):
     client_id = dotenv_values(ROOT / "services/identity/.env")["SERVICE_AUTH_CLIENT_ID"]
     client.cookies.clear()
-    return login(client, client_id, username=f"{role}@example.test")["access_token"]
+    # cognito.sh always registers the 127.0.0.1 callback, whatever COGNITO_CALLBACK_URL is.
+    callback = "http://127.0.0.1:5173/auth/callback"
+    tokens = login(client, client_id, callback=callback, username=f"{role}@example.test")
+    return tokens["access_token"]
 
 
 def get(client, base, path, access_token):

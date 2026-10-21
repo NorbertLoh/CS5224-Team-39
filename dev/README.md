@@ -4,3 +4,5 @@ Root Compose runs the local dependencies and template API. `floci/bootstrap.sh` 
 
 `clinic_local.py` configures real local clinic APIs and explicit database-backed
 local accounts; see [clinic backend setup](../docs/clinic-backend.md).
+
+`local_stack.ps1` starts, checks or stops the full local I01/I02 stack in the background; see [I02 local journey](../docs/I02-local-journey.md).

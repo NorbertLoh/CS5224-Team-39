@@ -104,18 +104,18 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
       <ErrorState message={setup.error ?? 'Call configuration unavailable.'} />
     )
   return (
-    <>
-      {role === 'doctor' && (
-        <ConsultationActions appointment={appointment.data} />
-      )}
-      <VideoRoom
-        key={`${id}:${subject}:${identity.token}`}
-        role={role}
-        connection={setup.connection}
-        appointmentId={id}
-        token={identity.token}
-        subjectId={subject}
-      />
-    </>
+    <VideoRoom
+      key={`${id}:${subject}:${identity.token}`}
+      role={role}
+      connection={setup.connection}
+      appointmentId={id}
+      token={identity.token}
+      subjectId={subject}
+      actions={
+        role === 'doctor' && (
+          <ConsultationActions appointment={appointment.data} />
+        )
+      }
+    />
   )
 }

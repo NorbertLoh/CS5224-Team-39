@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { listAppointments } from '../scheduling/api'
 import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
 import { RecordWorkspace } from './RecordWorkspace'
+import { nameOrId, readableStatus } from '../appointments/display'
 import { recordsError } from './api'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
@@ -87,7 +88,8 @@ function DoctorAppointments({
                     dateStyle: 'medium',
                     timeStyle: 'short',
                   }).format(new Date(item.starts_at))}{' '}
-                  SGT · {item.status} · {item.appointment_id}
+                  SGT · {nameOrId(item.patient_name, item.patient_id)} ·{' '}
+                  {readableStatus(item.status)}
                 </option>
               ))}
             </select>

@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { appointmentDetail } from '../scheduling/api'
+import { nameOrId, readableStatus } from '../appointments/display'
 import { readNote, appointmentPrescriptions, recordsError } from './api'
 import { ConsultationNoteForm } from './ConsultationNoteForm'
 import { MedicalCertificateForm } from './MedicalCertificateForm'
@@ -48,15 +49,19 @@ export function RecordWorkspace({
       <dl className="grid gap-2 text-sm">
         <div>
           <dt className="font-medium">Patient</dt>
-          <dd className="break-all">{context.patient_id}</dd>
+          <dd className="break-all">
+            {nameOrId(context.patient_name, context.patient_id)}
+          </dd>
         </div>
         <div>
           <dt className="font-medium">Clinic</dt>
-          <dd className="break-all">{context.tenant_id}</dd>
+          <dd className="break-all">
+            {nameOrId(context.clinic_name, context.tenant_id)}
+          </dd>
         </div>
         <div>
           <dt className="font-medium">Session</dt>
-          <dd>{context.status}</dd>
+          <dd className="capitalize">{readableStatus(context.status)}</dd>
         </div>
       </dl>
       <button
