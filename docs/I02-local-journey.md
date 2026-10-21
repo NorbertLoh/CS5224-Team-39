@@ -31,6 +31,10 @@ Seven processes are added to I01's thirteen:
 | document PDF worker | `python -m app.worker` |
 | document event publisher | `python -m app.publish_events` |
 
+After the one-time setup, `dev/local_stack.ps1 start` (Windows PowerShell) starts the
+containers and all twenty processes in the background; `status` and `stop` check and
+stop them. Logs go to `.local/stack/`. Pass `-StripeCli <path>` when `stripe` is not on `PATH`.
+
 Vite runs with `npm run dev -- --host 0.0.0.0` so the signalling proxy container
 can reach it. The browser uses **https://localhost:8443** (Caddy's local CA), which
 serves the app, the API proxy and the admitted PeerServer from one origin.
