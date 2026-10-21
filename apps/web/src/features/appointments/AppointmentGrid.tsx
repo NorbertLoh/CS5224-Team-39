@@ -16,12 +16,18 @@ export function AppointmentGrid({
   selectedId: string | null
   onSelect: (id: string) => void
 }) {
+  // Patients only need their own bookings; staff see the full day timetable.
+  const cells = dayCells(appointments, date).filter(
+    (cell) => role !== 'patient' || cell.appointments.length,
+  )
+  if (!cells.length)
+    return <p className="text-slate-600">No appointments on this date.</p>
   return (
     <div
       aria-label="30-minute appointment cells"
       className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
     >
-      {dayCells(appointments, date).map((cell) => (
+      {cells.map((cell) => (
         <AppointmentCell
           key={cell.startsAt}
           cell={cell}

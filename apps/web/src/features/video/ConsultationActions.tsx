@@ -10,7 +10,8 @@ export function ConsultationActions({
   const cache = useQueryClient()
   const action = appointment.status === 'confirmed' ? 'start' : 'complete'
   const mutation = useMutation({
-    mutationFn: () => consultationAction(appointment.appointment_id, action),
+    mutationFn: (requested: 'start' | 'complete') =>
+      consultationAction(appointment.appointment_id, requested),
     onSettled: async () => {
       await Promise.all(
         ['consultation', 'records', 'scheduling', 'documents'].map((key) =>
@@ -22,7 +23,7 @@ export function ConsultationActions({
   })
   return (
     <section
-      className="mx-auto max-w-[1600px] space-y-3 px-4 pt-6 sm:px-8"
+      className="mb-6 space-y-3 rounded-xl border bg-white p-6 text-sm"
       aria-label="Consultation lifecycle"
     >
       <p>
@@ -38,7 +39,7 @@ export function ConsultationActions({
           mutation.isPending ||
           (action === 'start' && Date.now() < Date.parse(appointment.starts_at))
         }
-        onClick={() => mutation.mutate()}
+        onClick={() => mutation.mutate(action)}
       >
         {mutation.isPending
           ? 'Updating consultation...'
@@ -56,7 +57,7 @@ export function ConsultationActions({
       )}
       {mutation.isSuccess && (
         <p role="status">
-          {action === 'complete'
+          {mutation.variables === 'complete'
             ? 'Consultation completion and MC decision confirmed. Refresh Documents for PDF status.'
             : 'Consultation started.'}
         </p>

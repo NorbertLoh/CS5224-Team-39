@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { CallStage } from './CallStage'
 import { CallControls } from './CallControls'
 import { useExpandedRoom } from './useExpandedRoom'
@@ -14,12 +15,14 @@ export function VideoRoom({
   appointmentId,
   token,
   subjectId,
+  actions,
 }: {
   role: 'patient' | 'doctor'
   connection?: RoomConnection
   appointmentId?: string
   token?: string
   subjectId?: string
+  actions?: ReactNode
 }) {
   const media = useLocalMedia()
   const call = useRemoteCall(connection, role, media)
@@ -140,6 +143,7 @@ export function VideoRoom({
             aria-label="Doctor workspace"
             className={`min-w-0 [&_select]:w-full [&_select]:min-w-0 ${expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}`}
           >
+            {actions}
             {appointmentId && token && subjectId ? (
               <RecordWorkspace
                 appointmentId={appointmentId}

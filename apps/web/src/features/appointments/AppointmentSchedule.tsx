@@ -175,8 +175,8 @@ function LiveSchedule({
                 (item) => dateInSingapore(item.starts_at) === date,
               ).length
             }{' '}
-            appointments on {formatDate(date)}. Empty cells are not booking
-            availability.
+            appointments on {formatDate(date)}.
+            {role !== 'patient' && ' Empty cells are not booking availability.'}
           </p>
           <AppointmentGrid
             appointments={appointments}
