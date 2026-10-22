@@ -134,7 +134,8 @@ def main():
                     and bool(rows[0][1])
                     and rows[0][2] is not None,
                 )
-            print(f"I03 verified; delivery status={delivery['status']} (sandbox evidence only).")
+            print(f"I03 persisted-state checks passed; delivery status={delivery['status']}.")
+            print("Provider and transport observations: docs/I03-local-journey.md")
         finally:
             verification_failed = sys.exc_info()[0] is not None
             try:
