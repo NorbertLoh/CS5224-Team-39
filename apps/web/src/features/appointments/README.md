@@ -10,5 +10,4 @@ See [setup, boundaries and verification](../../../../../docs/scheduling-frontend
 `AppointmentSchedule` coordinates current identity and role scope; `AppointmentGrid`
 and `AppointmentCell` display half-hour cells. `LiveAppointmentDetails` fetches detail
 and handles eligible cancellations; `AppointmentDetails` renders server metadata.
-`display` contains pure formatting/grid helpers. Older fixture helpers and demo
-filters remain test-only and are not mounted by the application.
+`display` contains pure formatting/grid helpers.

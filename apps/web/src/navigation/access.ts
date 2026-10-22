@@ -7,14 +7,11 @@ export type Route =
   | { kind: 'storefront'; slug: string }
   | { kind: 'booking'; role: 'patient'; slug: string }
   | { kind: 'checkout'; role: 'patient' }
-  | { kind: 'checkout-preview'; role: 'patient' }
-  | { kind: 'medication-order-preview'; role: 'patient' }
-  | { kind: 'delivery-tracking-preview'; role: 'patient' }
   | { kind: 'medication-orders'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | {
-      kind: 'profile' | 'staff' | 'payments' | 'fulfilment-preview' | 'orders'
+      kind: 'profile' | 'staff' | 'payments' | 'orders'
       role: 'clinic_admin'
       tenantId: string
     }
@@ -54,7 +51,7 @@ export function hasRole(identity: Identity, role: Role) {
 export function canAccess(identity: Identity, route: Route) {
   if (!('role' in route)) return true
   // Medicine readiness requires active owning-clinic administration (D03).
-  if (route.kind === 'fulfilment-preview' || route.kind === 'orders')
+  if (route.kind === 'orders')
     return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
   // Tenant APIs explicitly permit platform administrators to manage clinics.
   if (
@@ -85,12 +82,6 @@ export function parseRoute(path: string): Route {
   )
     return { kind: 'checkout', role: 'patient' }
   if (normalized === '/patient') return { kind: 'role', role: 'patient' }
-  if (normalized === '/patient/checkout-preview')
-    return { kind: 'checkout-preview', role: 'patient' }
-  if (normalized === '/patient/medication-order-preview')
-    return { kind: 'medication-order-preview', role: 'patient' }
-  if (normalized === '/patient/delivery-tracking-preview')
-    return { kind: 'delivery-tracking-preview', role: 'patient' }
   if (normalized === '/patient/medication-orders')
     return { kind: 'medication-orders', role: 'patient' }
   if (normalized === '/doctor') return { kind: 'role', role: 'doctor' }
@@ -117,17 +108,12 @@ export function parseRoute(path: string): Route {
       tenantId: platform[1].toLowerCase(),
     }
   const clinic =
-    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|fulfilment-preview|orders)$/.exec(
+    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|orders)$/.exec(
       normalized,
     )
   if (clinic && uuid.test(clinic[1]))
     return {
-      kind: clinic[2] as
-        | 'profile'
-        | 'staff'
-        | 'payments'
-        | 'fulfilment-preview'
-        | 'orders',
+      kind: clinic[2] as 'profile' | 'staff' | 'payments' | 'orders',
       role: 'clinic_admin',
       tenantId: clinic[1].toLowerCase(),
     }

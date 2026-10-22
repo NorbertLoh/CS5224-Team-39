@@ -1,5 +1,5 @@
 import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
-import type { PreviewContext } from './model'
+import type { OrderContext } from './model'
 import { OrderWorkspace } from './OrderWorkspace'
 
 type Props = { role: 'patient' } | { role: 'clinic_admin'; tenantId: string }
@@ -17,7 +17,7 @@ export function LiveOrders(props: Props) {
         Checking order access...
       </p>
     )
-  const context: PreviewContext =
+  const context: OrderContext =
     props.role === 'patient'
       ? { role: 'patient', patientId: identity.data.subject_id }
       : { role: 'clinic_admin', tenantId: props.tenantId }

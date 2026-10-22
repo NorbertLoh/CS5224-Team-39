@@ -3,7 +3,7 @@ import { fulfilmentError, readyOrder } from './api'
 import type { Order } from './api'
 import { canMarkReady } from './model'
 import { trackingOrder } from './api'
-import type { PreviewContext } from './model'
+import type { OrderContext } from './model'
 
 export function LiveMedicineReadiness({
   order,
@@ -11,7 +11,7 @@ export function LiveMedicineReadiness({
   onRefresh,
 }: {
   order: Order
-  context: PreviewContext
+  context: OrderContext
   onRefresh: () => void
 }) {
   const ready = useMutation({

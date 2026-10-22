@@ -24,8 +24,7 @@ switching context unmounts the previous call. Its contract is in `connection.ts`
 V02/V03 provide admission enforcement and signalling. V04 supplies the real
 adapter, scoped discovery, booking navigation and explicit doctor start/complete
 actions. Setup: `docs/V04-booked-video.md`. Neither a URL role nor an incoming
-call's metadata establishes identity. Admission fixtures in the browser tests do
-not complete V04 or a real patient booking/payment journey.
+call's metadata establishes identity.
 
 ## Room behavior
 
@@ -55,43 +54,9 @@ include raw provider errors, credentials, SDP or ICE addresses.
 
 ## Verification
 
-From `apps/web`:
-
-```powershell
-npm ci
-npm test
-npm run lint
-npm run build
-# Explicit isolated browser adapters; not application authentication:
-$env:SIGNALLING_SECRET='v03-test-only-signalling-secret-at-least-32-bytes'
-$env:CONSULTATION_URL='http://host.docker.internal:9050'
-$env:CONSULTATION_UPSTREAM='host.docker.internal:9050'
-docker compose -f ../../services/signalling/compose.yaml -f tests/browser/compose.yaml up --build --wait --wait-timeout 90
-npx playwright install chromium
-npx playwright test --config playwright.video.config.mjs
-node tests/browser/turn.mjs
-docker compose -f ../../services/signalling/compose.yaml -f tests/browser/compose.yaml down
-```
-
-The test-only HTML entry is outside the production build. Playwright starts Vite
-on 5174 and explicit fixture APIs on 9050/9051 for Docker access. A test-only Caddy
-configuration serves that harness through localhost HTTPS/WSS; ordinary production
-signalling routing remains unchanged. Fixtures and synthetic record caches verify
-room behavior, not backend integration. Do not use the test Compose override for
-normal development/deployment.
-
-The TURN helper creates a fresh temporary HMAC key and 15-minute credentials,
-starts coturn bound strictly to loopback with host networking and no published
-ports, and removes its container/config afterward. Docker Desktop needs host
-networking support; Linux CI uses native host networking. It tests forced UDP and
-TCP relay with selected-candidate and bidirectional audio/video RTP assertions.
-No host certificate trust is changed by these tests.
-
-Local checks: 107 frontend tests, lint and production build passed. Three direct
-Chromium scenarios passed: actual two-way audio/video RTP/playback; controls,
-leave/rejoin and doctor note retention; revocation and expiry cleanup; permission
-denial, device loss, mobile layout and navigation. Separate lifecycle regression
-checks cover cancellation races, late PeerJS creation, verified incoming-call
-answer order and forced-relay validation. TURN/CI results are recorded in PR #199.
-Independent-network, physical-device and AWS observations remain RF01; application
-admission/booking/clinical lifecycle integration is documented in `docs/V04-booked-video.md`.
+From `apps/web`, run `npm ci`, `npm run lint` and `npm run build`.
+For live admission, discovery, media and doctor lifecycle setup, use
+[the booked-video guide](../../../../../docs/V04-booked-video.md).
+Historical automated browser/TURN results remain recorded in PR #199 and that
+guide; the frontend test harness and its CI workflow were removed in RF04.
+Independent-network, physical-device and AWS observations remain RF01.

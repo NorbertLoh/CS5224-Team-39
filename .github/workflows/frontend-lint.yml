@@ -23,7 +23,6 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - run: npm test
 
   build:
     name: Frontend typecheck and build

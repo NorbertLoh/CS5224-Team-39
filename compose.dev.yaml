@@ -156,7 +156,6 @@ services:
       CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./contracts:/workspace/contracts:ro
-      - ./dev/fixtures:/workspace/dev/fixtures:ro
       - ./apps/web/src:/workspace/apps/web/src:ro
       - ./apps/web/public:/workspace/apps/web/public:ro
       - ./apps/web/vite.config.ts:/workspace/apps/web/vite.config.ts:ro

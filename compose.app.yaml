@@ -209,7 +209,6 @@ services:
       context: ./apps/web
       additional_contexts:
         contracts: ./contracts
-        fixtures: ./dev/fixtures
     image: telelink-web:local
     env_file:
       - path: ./.local/compose/web.env

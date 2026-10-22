@@ -1,6 +1,6 @@
 import type { OrderSnapshot } from './api'
 import { trackingOrder } from './api'
-import type { PreviewContext } from './model'
+import type { OrderContext } from './model'
 import { LiveMedicationCheckout } from './LiveMedicationCheckout'
 import { TrackingOrderDetails } from './TrackingOrderDetails'
 import { LiveMedicineReadiness } from './LiveMedicineReadiness'
@@ -11,7 +11,7 @@ export function OrderDetailsPanel({
   refresh,
 }: {
   snapshot: OrderSnapshot
-  context: PreviewContext
+  context: OrderContext
   refresh: () => Promise<OrderSnapshot>
 }) {
   const patient = context.role === 'patient'
@@ -28,9 +28,6 @@ export function OrderDetailsPanel({
       <TrackingOrderDetails
         key={snapshot.order.order_id}
         order={trackingOrder(snapshot.order, snapshot.delivery)}
-        context={context}
-        onReady={() => undefined}
-        preview={false}
         readiness={
           patient ? (
             <></>

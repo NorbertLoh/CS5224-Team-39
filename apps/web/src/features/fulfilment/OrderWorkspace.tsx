@@ -8,7 +8,7 @@ import {
   trackingOrder,
 } from './api'
 import type { OrderSnapshot } from './api'
-import type { PreviewContext } from './model'
+import type { OrderContext } from './model'
 import { TrackingOrderList } from './TrackingOrderList'
 import { CreateMedicationOrder } from './CreateMedicationOrder'
 import { OrderDetailsPanel } from './OrderDetailsPanel'
@@ -19,7 +19,7 @@ export function OrderWorkspace({
   context,
   token,
 }: {
-  context: PreviewContext
+  context: OrderContext
   token: string
 }) {
   const patient = context.role === 'patient'
