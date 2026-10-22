@@ -1,5 +1,8 @@
 # Local development
 
+For the complete application in containers, use [full-stack Compose](compose-stack.md).
+The foundation-only template/host-frontend workflow remains below.
+
 Compose runs the FastAPI template alongside PostgreSQL, Redis and optional
 Floci. Run the frontend on the host; Vite forwards `/api/v1/template` to the
 API container. Bootstrap supplies S3, synthetic secrets, messaging and Cognito

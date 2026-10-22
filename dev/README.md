@@ -6,3 +6,7 @@ Root Compose runs the local dependencies and template API. `floci/bootstrap.sh` 
 local accounts; see [clinic backend setup](../docs/clinic-backend.md).
 
 `local_stack.ps1` starts, checks or stops the full local I01/I02 stack in the background; see [I02 local journey](../docs/I02-local-journey.md).
+
+`compose.ps1` runs all implemented services and workers in Docker, with explicit
+setup/migrations, database adoption and development reload. See
+[full-stack Compose setup](../docs/compose-stack.md).
