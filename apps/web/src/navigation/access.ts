@@ -3,6 +3,7 @@ import type { Identity } from '../features/clinics/api'
 export type Role = 'patient' | 'doctor' | 'clinic_admin' | 'platform_admin'
 export type Route =
   | { kind: 'home' }
+  | { kind: 'sign-in' }
   | { kind: 'storefront'; slug: string }
   | { kind: 'booking'; role: 'patient'; slug: string }
   | { kind: 'checkout'; role: 'patient' }
@@ -74,6 +75,7 @@ export function canAccess(identity: Identity, route: Route) {
 
 export function parseRoute(path: string): Route {
   const normalized = path.replace(/\/$/, '') || '/'
+  if (normalized === '/sign-in') return { kind: 'sign-in' }
   if (normalized === '/' || normalized === '/auth/callback')
     return { kind: 'home' }
   if (

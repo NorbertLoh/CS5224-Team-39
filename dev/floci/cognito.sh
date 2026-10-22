@@ -40,7 +40,7 @@ aws_local cognito-idp update-user-pool-client --user-pool-id "$pool_id" \
   --allowed-o-auth-scopes openid email profile \
   --callback-urls "$COGNITO_CALLBACK_URL" http://127.0.0.1:5173/auth/callback \
   --logout-urls "$COGNITO_LOGOUT_URL" http://127.0.0.1:5173/ \
-  --explicit-auth-flows ALLOW_REFRESH_TOKEN_AUTH \
+  --explicit-auth-flows ALLOW_USER_PASSWORD_AUTH ALLOW_REFRESH_TOKEN_AUTH \
   --prevent-user-existence-errors ENABLED > /dev/null
 
 for role in patient doctor clinic_admin platform_admin; do

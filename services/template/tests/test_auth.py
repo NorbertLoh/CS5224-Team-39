@@ -13,8 +13,8 @@ from app.main import create_app
 from app.settings import Settings
 
 
-@pytest.fixture
-def auth():
+@pytest.fixture(params=[False, True])
+def auth(request):
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     jwk = json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(key.public_key()))
     jwk.update(kid="test-key", use="sig", alg="RS256")
@@ -25,6 +25,7 @@ def auth():
         auth_jwks_url="http://localhost:4566/pool/.well-known/jwks.json",
         auth_client_id="web",
         auth_required_scopes="openid",
+        auth_allow_password_tokens=request.param,
     )
     app = create_app(settings)
     app.state.token_verifier.jwks.fetch_data = lambda: {"keys": [jwk]}
@@ -89,6 +90,29 @@ def test_signature_and_algorithm(auth):
 def test_missing_scope(auth):
     client, mint, _ = auth
     assert probe(client, mint(scope="email")).status_code == 403
+
+
+def test_password_scope_requires_explicit_opt_in(auth):
+    client, mint, app = auth
+    settings = app.state.token_verifier.settings
+    settings.auth_allow_password_tokens = False
+    token = mint(scope="aws.cognito.signin.user.admin")
+    assert probe(client, token).status_code == 403
+    settings.auth_allow_password_tokens = True
+    response = probe(client, token)
+    assert response.status_code == 200
+    assert response.json()["scopes"] == ["aws.cognito.signin.user.admin"]
+
+
+def test_password_scope_never_replaces_custom_api_scopes(auth):
+    client, mint, app = auth
+    settings = app.state.token_verifier.settings
+    settings.auth_allow_password_tokens = True
+    settings.auth_required_scopes = "openid records.read"
+    assert probe(client, mint(scope="aws.cognito.signin.user.admin")).status_code == 403
+    token = mint(scope="aws.cognito.signin.user.admin records.read")
+    assert probe(client, token).status_code == 200
+    assert probe(client, mint(scope="openid records.read")).status_code == 200
 
 
 def test_unavailable_keys(auth):

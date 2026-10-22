@@ -17,6 +17,7 @@ export function AppShell({ route, children }: { route: Route; children: (session
     queryKey: ['identity', session?.accessToken], queryFn: currentIdentity,
     enabled: Boolean(session), staleTime: 0, refetchOnWindowFocus: true, refetchInterval: 30000,
   })
+  if (route.kind === 'sign-in') return <AuthControls presentation="page" onSessionChange={setSession} />
   let content = children(session)
   if ('role' in route) {
     if (!session) content = <p role="status" className="p-6">Sign in to access this page.</p>

@@ -1,0 +1,491 @@
+.sign-in-page {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  color: #183d38;
+  background: #fbfcfa;
+}
+.sign-in-page a,
+.sign-in-page button {
+  -webkit-tap-highlight-color: transparent;
+}
+.sign-in-page a:focus-visible,
+.sign-in-page button:focus-visible {
+  outline: 3px solid #3e9d8c;
+  outline-offset: 5px;
+}
+.sign-in-skip {
+  position: absolute;
+  z-index: 2;
+  left: 1rem;
+  top: 1rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  color: #154e44;
+  transform: translateY(-200%);
+  border-radius: 0.5rem;
+}
+.sign-in-skip:focus {
+  transform: translateY(0);
+}
+.sign-in-story {
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem clamp(2rem, 5vw, 5.5rem);
+  color: #f4fbf7;
+  background:
+    radial-gradient(ellipse at 0% 100%, #24695e 0%, transparent 65%), #123e36;
+  overflow: hidden;
+}
+.sign-in-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: fit-content;
+  font-weight: 650;
+  font-size: 1.2rem;
+  letter-spacing: -0.04em;
+}
+.sign-in-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  border: 1px solid #ffffff40;
+  border-radius: 0.8rem;
+}
+.sign-in-brand-light {
+  font-weight: 400;
+}
+.sign-in-story-body {
+  width: 100%;
+  max-width: 30rem;
+  margin: auto;
+  padding: 4.5rem 0 3.5rem;
+}
+.sign-in-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.sign-in-story .sign-in-eyebrow {
+  color: #b9d8cd;
+}
+.sign-in-eyebrow > span {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #bddb99;
+}
+.sign-in-story h2 {
+  font-size: clamp(2.7rem, 4.5vw, 4.8rem);
+  line-height: 1.08;
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  margin: 1.5rem 0;
+}
+.sign-in-story-description {
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: #c1d8cf;
+}
+.sign-in-journey {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding: 0 1.5rem 0 0;
+}
+.sign-in-journey-line {
+  position: absolute;
+  width: 1px;
+  top: 2rem;
+  bottom: 2rem;
+  left: 2.4rem;
+  background: #ffffff30;
+}
+.sign-in-journey-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid #ffffff20;
+  border-radius: 1rem;
+  background: #ffffff08;
+}
+.sign-in-journey-card-middle {
+  margin-left: 1.5rem;
+  margin-right: -1.5rem;
+  background: #e7f0e4;
+  color: #173f36;
+  border-color: #e7f0e4;
+  box-shadow: 0 12px 30px #052a2720;
+}
+.sign-in-journey-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.6rem;
+  height: 2.8rem;
+  border-radius: 0.7rem;
+  background: #ffffff12;
+  color: #d4e9d3;
+}
+.sign-in-journey-card-middle .sign-in-journey-icon {
+  background: #d2e2ce;
+  color: #285d4e;
+}
+.sign-in-journey-card div:not(.sign-in-journey-line) {
+  display: grid;
+  gap: 0.25rem;
+}
+.sign-in-journey-card small {
+  font-size: 0.48rem;
+  letter-spacing: 0.13em;
+  opacity: 0.75;
+  font-weight: 600;
+}
+.sign-in-journey-card strong {
+  font-size: 0.9rem;
+  font-weight: 550;
+}
+.sign-in-journey-card div > span {
+  font-size: 0.66rem;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+.sign-in-journey-check,
+.sign-in-live-dot {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.sign-in-journey-check {
+  color: #b4d5bc;
+}
+.sign-in-live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #437754;
+  box-shadow: 0 0 0 5px #43775415;
+}
+.sign-in-story-footer {
+  font-size: 0.68rem;
+  color: #c1d8cf;
+  border-top: 1px solid #ffffff20;
+  padding-top: 1.4rem;
+}
+.sign-in-main-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 2.8rem clamp(1.5rem, 4vw, 4.5rem) 2rem;
+}
+.sign-in-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.7rem;
+  color: #62756e;
+}
+.sign-in-topbar a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+.sign-in-topbar a:hover,
+.sign-in-browse a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.sign-in-topbar > span {
+  font-size: 0.65rem;
+}
+.sign-in-content {
+  width: 100%;
+  max-width: 24rem;
+  margin: auto;
+  padding: 4rem 0;
+  outline: none;
+}
+.sign-in-welcome-icon {
+  display: grid;
+  place-items: center;
+  width: 3.8rem;
+  height: 3.8rem;
+  background: #eaf0e6;
+  color: #316352;
+  border: 1px solid #dce6d7;
+  border-radius: 1.2rem;
+  margin-bottom: 2rem;
+}
+.sign-in-content .sign-in-eyebrow {
+  color: #61736a;
+}
+.sign-in-content h1 {
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1.18;
+  letter-spacing: -0.055em;
+  font-weight: 550;
+  margin-top: 0.85rem;
+}
+.sign-in-intro {
+  color: #667970;
+  font-size: 0.9rem;
+  line-height: 1.85;
+  margin-top: 1rem;
+  max-width: 22rem;
+}
+.sign-in-action-area {
+  margin-top: 2rem;
+}
+.sign-in-fields {
+  display: grid;
+  gap: 1.15rem;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.sign-in-field {
+  display: grid;
+  gap: 0.5rem;
+}
+.sign-in-field label {
+  font-size: 0.8rem;
+  font-weight: 550;
+}
+.sign-in-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 3.1rem;
+  border: 1px solid #c5d3c8;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #183d38;
+  padding: 0.75rem 0.9rem;
+  font-size: 1rem;
+}
+.sign-in-field input::placeholder {
+  color: #78877e;
+}
+.sign-in-field input:focus-visible {
+  outline: 2px solid #3e9d8c;
+  outline-offset: 2px;
+}
+.sign-in-fields:disabled {
+  opacity: 0.65;
+}
+.sign-in-password-wrap {
+  position: relative;
+}
+.sign-in-password-wrap input {
+  padding-right: 3.25rem;
+}
+.sign-in-password-toggle {
+  position: absolute;
+  right: 0.25rem;
+  top: 0.25rem;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  color: #526f60;
+  border-radius: 0.45rem;
+  cursor: pointer;
+}
+.sign-in-password-toggle:hover {
+  background: #edf2e9;
+}
+.sign-in-hosted {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 1rem auto 0;
+  padding: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 550;
+  color: #215c4d;
+  cursor: pointer;
+}
+.sign-in-hosted:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.sign-in-hosted:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.sign-in-primary {
+  display: flex;
+  width: 100%;
+  min-height: 3.4rem;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: 0.7rem;
+  color: #fff;
+  background: #215c4d;
+  font-size: 0.85rem;
+  font-weight: 550;
+  border: 1px solid #215c4d;
+  cursor: pointer;
+}
+.sign-in-primary:hover {
+  background: #174839;
+}
+.sign-in-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.sign-in-explanation {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.4rem;
+  color: #67796f;
+  font-size: 0.65rem;
+  line-height: 1.5;
+  margin-top: 0.9rem;
+}
+.sign-in-explanation svg {
+  flex-shrink: 0;
+}
+.sign-in-notice {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  border-radius: 0.6rem;
+  color: #714c19;
+  background: #fff3db;
+  overflow-wrap: anywhere;
+}
+.sign-in-account-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  border-top: 1px solid #e0e7dd;
+  padding-top: 1.5rem;
+  margin-top: 2rem;
+}
+.sign-in-account-note-icon {
+  color: #698175;
+  margin-top: 0.1rem;
+}
+.sign-in-account-note h2 {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.sign-in-account-note p {
+  color: #6b7c72;
+  font-size: 0.72rem;
+  line-height: 1.8;
+  margin-top: 0.4rem;
+}
+.sign-in-browse {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  color: #6b7c72;
+  font-size: 0.7rem;
+  margin-top: 2rem;
+}
+.sign-in-browse a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #215c4d;
+  font-weight: 600;
+}
+.sign-in-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid #e0e7dd;
+  padding-top: 1.4rem;
+  color: #6b7c72;
+  font-size: 0.65rem;
+}
+@media (min-width: 1600px) {
+  .sign-in-story-body {
+    padding-block: 6rem;
+  }
+}
+@media (max-width: 1100px) {
+  .sign-in-topbar > span {
+    display: none;
+  }
+  .sign-in-journey {
+    padding-right: 0.75rem;
+  }
+  .sign-in-journey-card {
+    gap: 0.7rem;
+    padding: 0.9rem;
+  }
+}
+@media (max-width: 760px) {
+  .sign-in-page {
+    grid-template-columns: 1fr;
+  }
+  .sign-in-story {
+    padding: 1.25rem 1.5rem 1.6rem;
+  }
+  .sign-in-brand {
+    font-size: 1.05rem;
+  }
+  .sign-in-brand-mark {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 0.65rem;
+  }
+  .sign-in-story-body {
+    max-width: none;
+    padding: 1.6rem 0 0;
+    margin: 0;
+  }
+  .sign-in-story .sign-in-eyebrow,
+  .sign-in-journey,
+  .sign-in-story-footer,
+  .sign-in-desktop-break {
+    display: none;
+  }
+  .sign-in-story h2 {
+    font-size: 2.4rem;
+    margin: 0;
+  }
+  .sign-in-story h2 br {
+    display: none;
+  }
+  .sign-in-story-description {
+    margin-top: 0.7rem;
+    max-width: 26rem;
+    font-size: 0.8rem;
+    line-height: 1.75;
+  }
+  .sign-in-main-panel {
+    padding: 1.25rem 1.5rem;
+  }
+  .sign-in-content {
+    padding: 2.5rem 0;
+  }
+  .sign-in-welcome-icon {
+    display: none;
+  }
+  .sign-in-content h1 {
+    font-size: 2.25rem;
+  }
+  .sign-in-footer {
+    padding-top: 1rem;
+  }
+}
