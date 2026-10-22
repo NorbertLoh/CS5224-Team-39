@@ -188,6 +188,8 @@ def main():
                 len(messages) == 1
                 and messages[0].get("Source") == settings.email_sender
                 and messages[0].get("Destination", {}).get("ToAddresses") == [recipient.email]
+                and not messages[0].get("Destination", {}).get("CcAddresses")
+                and not messages[0].get("Destination", {}).get("BccAddresses")
                 and messages[0].get("Subject") == expected.subject
                 and messages[0].get("Body", {}).get("text_part") == expected.text
                 and messages[0].get("Body", {}).get("html_part") == expected.html,
