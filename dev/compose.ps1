@@ -60,6 +60,14 @@ function Build-Stack {
     }
 }
 
+function Start-Stack {
+    # Warm APIs and the browser entry point before the sixteen worker processes.
+    $apis = @($Services | Where-Object { $_ -ne 'notification-image' })
+    Compose up -d --wait --wait-timeout 600 @apis
+    Compose up -d --wait --wait-timeout 600 web signalling tls
+    Compose up -d --wait --wait-timeout 600
+}
+
 function Stop-HostStack {
     # Only processes tracked by the established host launcher are stopped.
     & (Join-Path $PSScriptRoot 'local_stack.ps1') stop
@@ -142,7 +150,7 @@ try {
             Compose --profile setup run --rm -T setup seed
             Configure-Stripe
             Stop-HostStack
-            Compose up -d --wait --wait-timeout 600
+            Start-Stack
             Compose --profile setup run --rm -T setup check
             Write-Host 'Open https://localhost:8443'
         }
@@ -150,7 +158,7 @@ try {
             if (-not (Test-Path (Join-Path $State 'web.env'))) { throw 'Run ./dev/compose.ps1 setup first.' }
             Assert-DatabaseExclusive
             Configure-Stripe
-            Compose up -d --wait --wait-timeout 600
+            Start-Stack
             Write-Host 'Open https://localhost:8443'
         }
         'check' { Compose --profile setup run --rm -T setup check }
