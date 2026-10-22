@@ -85,6 +85,9 @@ rewritten by this workflow.
 ./dev/compose.ps1 down
 ```
 
+Startup waits for API readiness and the browser entry point before launching the
+workers, reducing contention on a busy development machine.
+
 Open **https://localhost:8443**. Caddy uses a development CA; export its public root
 certificate if needed for your dedicated development browser:
 
@@ -121,6 +124,9 @@ after edits. Dependency or migration changes need a rebuild and explicit setup/
 migration run. Production Python images install locked dependencies and the shared
 package, use an unprivileged user and contain no `.env` or virtualenv from the host.
 Each service keeps its own image, entry point, schema and migrations.
+The frontend image preserves the shared contracts and development fixtures in
+their repository-relative locations and runs the TypeScript and production build
+checks. Development mode mounts those shared directories as well.
 
 ## Raw Compose commands and configuration
 
