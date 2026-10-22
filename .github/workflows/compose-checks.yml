@@ -44,3 +44,15 @@ jobs:
           $parseErrors = $null
           [System.Management.Automation.Language.Parser]::ParseFile("$PWD/dev/compose.ps1", [ref]$null, [ref]$parseErrors) | Out-Null
           if ($parseErrors) { throw ($parseErrors | Out-String) }
+
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build every application and setup image
+        run: |
+          set -e
+          for group in 'identity tenant' 'scheduling consultation' 'clinical_records fulfilment' 'document billing' 'notification-image web' 'signalling setup'; do
+            docker compose -f compose.yaml -f compose.app.yaml --profile setup build $group
+          done
