@@ -13,6 +13,16 @@ PKCE flow. Accounts requiring MFA, password changes or another challenge are not
 given a session by the password form; they can continue through hosted sign-in.
 Signup and password recovery are outside this task.
 
+## Components
+
+- `SignInPage` composes the page layout and signed-in/notice states.
+- `PasswordSignInForm` owns the email, password and visibility state and form controls.
+- `SignInStory` contains the static branding and decorative journey panel.
+- `AuthControls` coordinates authentication, session refresh and logout.
+
+The login components, session module, stylesheet and session tests are formatted
+with Prettier using single quotes and no semicolons.
+
 ## Authentication policy
 
 Cognito password-login tokens carry `aws.cognito.signin.user.admin` instead of the

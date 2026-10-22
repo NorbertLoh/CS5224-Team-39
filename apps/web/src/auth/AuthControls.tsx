@@ -2,7 +2,16 @@ import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
 import { SignInPage } from './SignInPage'
-import { authConfig, beginLogin, clearSession, endSession, finishLogin, readSession, refreshSession, signInWithPassword } from './session'
+import {
+  authConfig,
+  beginLogin,
+  clearSession,
+  endSession,
+  finishLogin,
+  readSession,
+  refreshSession,
+  signInWithPassword,
+} from './session'
 import type { AuthConfig, Session } from './session'
 
 // Configuration is fixed for this Vite build. Callback work is shared across StrictMode mounts.
@@ -13,12 +22,16 @@ try {
 } catch (error) {
   configurationError = (error as Error).message
 }
-const callbackSearch = location.pathname === '/auth/callback' ? location.search : null
+const callbackSearch =
+  location.pathname === '/auth/callback' ? location.search : null
 let callback: Promise<Session> | undefined
 const logoutWarning = sessionStorage.getItem('telelink.logout-warning') || ''
 sessionStorage.removeItem('telelink.logout-warning')
 
-export function AuthControls({ onSessionChange, presentation = 'inline' }: {
+export function AuthControls({
+  onSessionChange,
+  presentation = 'inline',
+}: {
   onSessionChange?: (session: Session | null) => void
   presentation?: 'inline' | 'page'
 }) {
@@ -26,7 +39,9 @@ export function AuthControls({ onSessionChange, presentation = 'inline' }: {
   const [session, setSession] = useState(readSession)
   const [message, setMessage] = useState(logoutWarning)
   const [busy, setBusy] = useState(false)
-  useEffect(() => { onSessionChange?.(session) }, [session, onSessionChange])
+  useEffect(() => {
+    onSessionChange?.(session)
+  }, [session, onSessionChange])
 
   const signOut = useCallback(
     (notice = '') => {
@@ -107,20 +122,33 @@ export function AuthControls({ onSessionChange, presentation = 'inline' }: {
       setSession(value)
       location.assign('/')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to sign in. Please try again.')
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : 'Unable to sign in. Please try again.',
+      )
       setBusy(false)
     }
   }
 
   if (presentation === 'page') {
-    return <SignInPage
-      signedIn={Boolean(session)}
-      busy={busy}
-      message={message}
-      configurationError={config ? '' : configurationError || 'Sign-in is not available right now. Please try again later.'}
-      onSignIn={handlePasswordSignIn}
-      onHostedSignIn={() => { void handleClick() }}
-    />
+    return (
+      <SignInPage
+        signedIn={Boolean(session)}
+        busy={busy}
+        message={message}
+        configurationError={
+          config
+            ? ''
+            : configurationError ||
+              'Sign-in is not available right now. Please try again later.'
+        }
+        onSignIn={handlePasswordSignIn}
+        onHostedSignIn={() => {
+          void handleClick()
+        }}
+      />
+    )
   }
 
   if (!config)
@@ -136,9 +164,21 @@ export function AuthControls({ onSessionChange, presentation = 'inline' }: {
         {message || (session ? 'Signed in' : 'Signed out')}
       </span>
       {!session ? (
-        <a href="/sign-in" className="inline-flex min-h-9 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-4">Sign in</a>
+        <a
+          href="/sign-in"
+          className="inline-flex min-h-9 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-4"
+        >
+          Sign in
+        </a>
       ) : (
-        <Button disabled={busy} onClick={() => { void handleClick() }}>Sign out</Button>
+        <Button
+          disabled={busy}
+          onClick={() => {
+            void handleClick()
+          }}
+        >
+          Sign out
+        </Button>
       )}
     </div>
   )
