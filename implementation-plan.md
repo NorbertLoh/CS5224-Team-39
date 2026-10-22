@@ -209,8 +209,8 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 | --- | --- | --- | --- | --- |
 | [x] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. | A11, S05-S07, B04, B07 | M |
 | [x] | I02 | Run actual booked pair -> consultation -> saved prescription -> private PDF. | I01, V04, R04, U14 | M |
-| [ ] | I03 | Run actual prescription -> quote -> separate medication payment -> ready -> one delivery. | I02, D07, B06 | M |
-| [ ] | I04 | Verify journey events produce booking/document/delivery messages. | I03, N02 | S |
+| [ ] | I03 | Run actual prescription -> quote -> separate medication payment -> ready -> one delivery. Assignee: cyhni; status: in progress. Issue #247. | I02, D07, B06 | M |
+| [ ] | I04 | Verify journey events produce booking/document/delivery messages. Assignee: cyhni; status: in progress. Issue #248; waiting for I03 to merge before implementation. | I03, N02 | S |
 | [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
 | [ ] | Q01 | Reject clinic A access to clinic B appointment, record and file; reject wrong roles/tokens. | I05 | M |
 | [x] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Completed in merged PR #242; issue #240 closed. All ten real local contention/deadline/natural-expiry checks and API cleanup passed. Final combined S08/Q02 CI passed 242 scheduling tests with two optional Floci checks skipped, including cleanup regressions and existing confirmation races using explicit billing-response fixtures. Setup/evidence and provider limits: `docs/Q02-booking-verification.md`; use the I01 local services and allow about ten minutes. No new application configuration. | S06 | S |
