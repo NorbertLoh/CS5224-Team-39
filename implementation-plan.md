@@ -234,7 +234,7 @@ These tasks do not establish AWS integration until their evidence is recorded.
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [ ] | RF01 | Verify AWS self-hosted PeerJS/TURN across two independently routed networks; record normal and forced-relay two-way human audio/video, selected relay/RTP evidence from both ends, transport/TLS and invalid/expired-credential observations, and leave/rejoin behaviour. Issue #155; planned, unassigned. Deferred from X01 by user decision on 16 October 2026. This is W11's verification portion; share evidence with W11/Q04 rather than duplicate deployment/testing. | X01, W11 deployment ready (not W11 verification complete) | M |
-| [ ] | RF03 | Design a branded, responsive `/sign-in` entry page linked from the signed-out header; preserve hosted PKCE login, callback, refresh and logout. Include pending/error feedback, keyboard access and signed-in navigation. Verify desktop/mobile layout and frontend checks. Issue #254; assignee: NorbertLoh; status: in progress. | F06, A01, A02, U05 (complete) | S |
+| [ ] | RF03 | Build the branded, responsive `/sign-in` email/password form using Cognito USER_PASSWORD_AUTH, with hosted PKCE fallback for additional verification. Reuse validated sessions, refresh, logout and role checks; include password visibility, pending/error feedback and keyboard access. Verify real local success/invalid credentials, desktop/mobile layout and frontend checks. Issue #254; assignee: NorbertLoh; status: in progress. | F06, A01, A02, U05 (complete) | S |
 
 ## Completion checklist
 

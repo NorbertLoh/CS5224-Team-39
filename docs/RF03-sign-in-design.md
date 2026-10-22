@@ -1,54 +1,86 @@
-# RF03: sign-in page
+# RF03: custom login form
 
 Open `/sign-in`, or choose **Sign in** from the signed-out application header.
-The page uses a forest-green introduction panel, a clear sign-in action and a
-compact mobile layout. It includes keyboard focus indicators and a skip link.
-Signed-in visitors can return home to select their existing workspace.
+The branded email/password form includes a password visibility toggle,
+password-manager autocomplete, keyboard focus/skip navigation, pending feedback
+and safe retry messages. Passwords are cleared after each submitted attempt and
+are never persisted or logged by the application. Tokens use the existing
+session storage, refresh and logout implementation.
 
-**Continue to sign in** starts the existing hosted authorization-code + PKCE
-flow. Credentials are entered on the provider's page. Configuration errors
-disable the action, pending requests disable repeat clicks, and failures show
-retry feedback. Callback, refresh, logout and role authorization retain their
-existing behavior.
+**Sign in** calls Cognito `InitiateAuth` with `USER_PASSWORD_AUTH` on the configured
+public client. **More sign-in options** retains the hosted authorization-code +
+PKCE flow. Accounts requiring MFA, password changes or another challenge are not
+given a session by the password form; they can continue through hosted sign-in.
+Signup and password recovery are outside this task.
+
+## Authentication policy
+
+Cognito password-login tokens carry `aws.cognito.signin.user.admin` instead of the
+OAuth `openid` scope. The new service setting
+`SERVICE_AUTH_ALLOW_PASSWORD_TOKENS=true` explicitly permits that reserved scope
+as an alternative to the `openid` authentication scope. It defaults to false.
+All other configured custom API scopes remain required, and the verifier still
+checks RS256 signatures, issuer, client, token use and expiry. The original
+scope claim is returned unchanged. A Cognito self-service scope never grants a
+TeleLink platform or clinic administrative role: database-backed role and tenant
+checks still control access.
+
+This policy change was explicitly approved by the requesting user. The local
+bootstrap/configuration generators enable it; existing deployments must opt in
+and restart/rebuild services. See [AWS authentication models](https://docs.aws.amazon.com/cognito/latest/developerguide/authentication-flows-public-server-side.html).
 
 ## Setup
 
-No new dependencies, environment variables, migrations or backend changes.
-Use the existing `apps/web/.env` Cognito configuration and registered callback
-origin documented in [the local journey](I02-local-journey.md). Run
-`npm run dev` from `apps/web`. A different development port must be registered
-with the authentication provider before completing an actual login.
+No new package dependencies or migrations.
 
-The local review client also has callback URLs
-`http://127.0.0.1:5174/auth/callback` and `http://localhost:5174/auth/callback`,
-with matching logout URLs at each origin's `/`. These local registrations
-preserve the existing 8443/5173 URLs. Rerunning the standard Cognito bootstrap
-replaces the allowlist, so register the preview URLs again if that setup is reset.
+- The public Cognito app client must allow `ALLOW_USER_PASSWORD_AUTH` alongside
+  `ALLOW_REFRESH_TOKEN_AUTH`. `dev/floci/cognito.sh` and `dev/clinic_local.py` now
+  configure both. Retain the existing OAuth code flow for hosted sign-in.
+- Set `SERVICE_AUTH_ALLOW_PASSWORD_TOKENS=true` for APIs requiring `openid`.
+  Updated local environment examples and `dev/compose/setup.py` include it.
+  Existing host `.env` files are preserved by setup helpers, so add the setting
+  explicitly and restart them using this checkout's shared Python package.
+- Keep the existing frontend Cognito endpoint/client/issuer variables. Passwords
+  go only to the configured authentication endpoint. AWS configuration requires
+  HTTPS; plain HTTP remains restricted to local development endpoints.
+- The browser origin must be allowed by Floci CORS. The port-5174 local preview
+  uses `http://127.0.0.1:5174` and `http://localhost:5174` in root
+  `COGNITO_CORS_ORIGINS`, followed by recreation of Floci.
+- Hosted fallback/logout also needs the preview callback URLs
+  `http://127.0.0.1:5174/auth/callback` and
+  `http://localhost:5174/auth/callback`, with matching logout URLs at `/`.
+  These have been added locally while preserving 8443/5173. Standard bootstrap
+  replaces the callback allowlist; re-register extra preview origins after reset.
+
+For AWS, explicitly enable the client flow and service policy and verify API
+Gateway's accepted scopes support both authentication methods. AWS deployment,
+real staff MFA/recovery and federated sign-in remain unverified; this PR does not
+claim deployed compatibility.
 
 ## Verification
 
 Verified locally on 23 October 2026:
 
-- Frontend lint, TypeScript and production build.
-- All 138 existing frontend tests, including session and navigation/access tests.
-- Chromium layouts at 320, 390, 768 and 1440 pixels; no horizontal overflow.
-- Keyboard skip-link navigation and header-to-sign-in navigation.
-- A simulated handoff failure displays feedback and re-enables the action.
-- Authorization handoff includes state, an S256 challenge and the correct
-  callback origin. The destination was intercepted for inspection; this check
-  does not claim a completed live provider login or AWS validation.
-- After registering the preview origin, the real local authorization redirect
-  successfully opened the Floci username/password sign-in form.
-- Signed-in state exposes workspace navigation without another sign-in action.
-- No browser page errors during these checks.
+- Frontend lint, TypeScript and production build; all 140 frontend tests pass.
+- 27 backend token-policy tests pass, covering default rejection, explicit opt-in,
+  required custom scopes, invalid signatures/algorithms, wrong issuer/client,
+  ID tokens and expiry with the policy both disabled and enabled.
+- Ruff checks pass for the changed Python modules; Cognito bootstrap shell syntax passes.
+- Chromium layouts at 320, 390, 768 and 1440 pixels have no horizontal overflow.
+- Real Floci password login, identity API role navigation and logout pass for
+  patient, doctor, clinic administrator and platform administrator demo accounts.
+- A real password-login refresh preserves access; the patient remains denied
+  access to the platform administration workspace.
+- Incorrect real credentials create no session and clear the password field.
+- Keyboard skip navigation, password visibility and hosted fallback work; no
+  browser page errors were observed.
 
-Screenshots use synthetic page content. Journey cards are decorative illustrations,
-not patient records or live appointment status.
+Screenshots contain only decorative content, not patient records or live status.
 
 ## Desktop
 
-![Desktop sign-in page](images/RF03-sign-in-desktop.png)
+![Desktop login form](images/RF03-sign-in-desktop.png)
 
 ## Mobile
 
-![Mobile sign-in page](images/RF03-sign-in-mobile.png)
+![Mobile login form](images/RF03-sign-in-mobile.png)

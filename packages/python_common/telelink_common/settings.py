@@ -34,6 +34,7 @@ class ServiceSettings(BaseSettings):
     auth_jwks_url: str | None = None
     auth_client_id: str | None = Field(default=None, min_length=1)
     auth_required_scopes: str = ""
+    auth_allow_password_tokens: bool = False
     identity_url: str | None = None
     identity_timeout_seconds: int = Field(default=3, ge=1, le=30)
     aws_region: str = Field(default="ap-southeast-1", pattern=r"^[a-z]{2}(-[a-z]+)+-\d$")

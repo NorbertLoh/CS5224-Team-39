@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
 import { SignInPage } from './SignInPage'
-import { authConfig, beginLogin, clearSession, endSession, finishLogin, readSession, refreshSession } from './session'
+import { authConfig, beginLogin, clearSession, endSession, finishLogin, readSession, refreshSession, signInWithPassword } from './session'
 import type { AuthConfig, Session } from './session'
 
 // Configuration is fixed for this Vite build. Callback work is shared across StrictMode mounts.
@@ -97,13 +97,29 @@ export function AuthControls({ onSessionChange, presentation = 'inline' }: {
     }
   }
 
+  async function handlePasswordSignIn(email: string, password: string) {
+    if (!config || busy) return
+    setBusy(true)
+    setMessage('')
+    try {
+      const value = await signInWithPassword(config, email, password)
+      queryClient.clear()
+      setSession(value)
+      location.assign('/')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to sign in. Please try again.')
+      setBusy(false)
+    }
+  }
+
   if (presentation === 'page') {
     return <SignInPage
       signedIn={Boolean(session)}
       busy={busy}
       message={message}
       configurationError={config ? '' : configurationError || 'Sign-in is not available right now. Please try again later.'}
-      onSignIn={() => { void handleClick() }}
+      onSignIn={handlePasswordSignIn}
+      onHostedSignIn={() => { void handleClick() }}
     />
   }
 

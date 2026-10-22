@@ -155,6 +155,7 @@ def configure():
             SERVICE_AUTH_JWKS_URL=f"http://floci:4566/{pool}/.well-known/jwks.json",
             SERVICE_AUTH_CLIENT_ID=client_id,
             SERVICE_AUTH_REQUIRED_SCOPES="openid",
+            SERVICE_AUTH_ALLOW_PASSWORD_TOKENS="true",
             SERVICE_IDENTITY_URL="http://identity:8000",
             SERVICE_AWS_REGION="ap-southeast-1",
             SERVICE_AWS_ENDPOINT_URL="http://floci:4566",

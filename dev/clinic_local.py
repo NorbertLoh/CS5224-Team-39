@@ -69,7 +69,7 @@ def main():
         AllowedOAuthFlowsUserPoolClient=True,
         AllowedOAuthFlows=["code"],
         AllowedOAuthScopes=["openid", "email", "profile"],
-        ExplicitAuthFlows=["ALLOW_REFRESH_TOKEN_AUTH"],
+        ExplicitAuthFlows=["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"],
         PreventUserExistenceErrors="ENABLED",
         CallbackURLs=sorted(callbacks),
         LogoutURLs=sorted(logouts),
@@ -100,6 +100,7 @@ def main():
         "SERVICE_AUTH_JWKS_URL": f"http://localhost:4566/{pool}/.well-known/jwks.json",
         "SERVICE_AUTH_CLIENT_ID": client_id,
         "SERVICE_AUTH_REQUIRED_SCOPES": "openid",
+        "SERVICE_AUTH_ALLOW_PASSWORD_TOKENS": "true",
         "SERVICE_TENANT_SECRET": keys["tenant"],
         "SERVICE_IDENTITY_SECRET": keys["identity"],
     }

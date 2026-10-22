@@ -170,6 +170,43 @@ export async function beginLogin(config: AuthConfig, storage: Storage = sessionS
   return url.toString()
 }
 
+export async function signInWithPassword(
+  config: AuthConfig,
+  username: string,
+  password: string,
+  storage: Storage = sessionStorage,
+): Promise<Session> {
+  if (!username.trim() || !password) throw new Error('Enter your email and password.')
+  let response: Response
+  try {
+    response = await cognito(config, 'InitiateAuth', {
+      AuthFlow: 'USER_PASSWORD_AUTH',
+      ClientId: config.clientId,
+      AuthParameters: { USERNAME: username.trim(), PASSWORD: password },
+    })
+  } catch {
+    throw new Error('Unable to sign in. Check your email and password, then try again. You can also use more sign-in options below.')
+  }
+  let result
+  try {
+    result = await response.json()
+  } catch {
+    throw new Error('Sign-in could not be completed. Please try again.')
+  }
+  if (result?.ChallengeName) {
+    throw new Error('Your account needs an additional sign-in step. Choose more sign-in options below to continue.')
+  }
+  const tokens = result?.AuthenticationResult
+  let session: Session
+  try {
+    session = validateSession(config, tokens?.AccessToken, tokens?.RefreshToken, tokens?.ExpiresIn)
+  } catch {
+    throw new Error('Sign-in could not be completed. Please try again.')
+  }
+  storage.removeItem(pendingKey)
+  return saveSession(session, storage)
+}
+
 export async function finishLogin(
   config: AuthConfig,
   search: string,
