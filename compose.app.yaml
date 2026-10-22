@@ -197,6 +197,8 @@ services:
       floci: {condition: service_healthy}
   web:
     <<: *runtime
+    environment:
+      __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS: web
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "-T", "5", "http://127.0.0.1:5173/"]
       interval: 15s
