@@ -42,6 +42,7 @@ $Workers = @(
     @{ Name = 'bill-expiry';        Dir = 'services\billing';          Exe = (Venv billing);          Args = '-m app.expire_checkouts' }
     @{ Name = 'bill-processor';     Dir = 'services\billing';          Exe = (Venv billing);          Args = '-m app.payment_worker' }
     @{ Name = 'bill-publisher';     Dir = 'services\billing';          Exe = (Venv billing);          Args = '-m app.payment_worker --publish' }
+    @{ Name = 'fulfilment-payment-worker'; Dir = 'services\fulfilment'; Exe = (Venv fulfilment); Args = '-m app.payment_worker' }
     @{ Name = 'records-publisher';  Dir = 'services\clinical_records'; Exe = (Venv clinical_records); Args = '-m app.publish_events' }
     @{ Name = 'document-worker';    Dir = 'services\document';         Exe = (Venv document);         Args = '-m app.worker' }
     @{ Name = 'document-publisher'; Dir = 'services\document';         Exe = (Venv document);         Args = '-m app.publish_events' }
