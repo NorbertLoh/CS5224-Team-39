@@ -13,9 +13,6 @@ import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
 import { DocumentList } from '../features/documents/DocumentList'
 import { BookedConsultation } from '../features/video/BookedConsultation'
 import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
-import { CheckoutPreview } from '../features/checkout/CheckoutPreview'
-import { MedicationOrderPreview } from '../features/medication-orders/MedicationOrderPreview'
-import { FulfilmentPreview } from '../features/fulfilment/FulfilmentPreview'
 import { LiveOrders } from '../features/fulfilment/LiveOrders'
 import { ClinicPayments } from '../features/payments/ClinicPayments'
 import { roleLabels } from './access'
@@ -38,25 +35,11 @@ export function AppRoutes({
       return <ClinicBooking slug={route.slug} />
     case 'checkout':
       return <LiveCheckoutPage />
-    case 'checkout-preview':
-      return <CheckoutPreview />
-    case 'medication-order-preview':
-      return <MedicationOrderPreview />
-    case 'delivery-tracking-preview':
-      return <FulfilmentPreview role="patient" />
     case 'medication-orders':
       return <LiveOrders role="patient" />
     case 'orders':
       return (
         <LiveOrders
-          key={route.tenantId}
-          role="clinic_admin"
-          tenantId={route.tenantId}
-        />
-      )
-    case 'fulfilment-preview':
-      return (
-        <FulfilmentPreview
           key={route.tenantId}
           role="clinic_admin"
           tenantId={route.tenantId}
@@ -97,31 +80,7 @@ export function AppRoutes({
               </a>
             </p>
           )}
-          {route.role === 'patient' && (
-            <p className="mt-6 text-sm">
-              <a className="underline" href="/patient/medication-order-preview">
-                Preview medication order and delivery payment (synthetic data)
-              </a>
-            </p>
-          )}
           {route.role === 'patient' && <DocumentList role="patient" />}
-          {route.role === 'patient' && (
-            <p className="mt-6 text-sm">
-              <a
-                className="underline"
-                href="/patient/delivery-tracking-preview"
-              >
-                Preview medication delivery tracking (synthetic data)
-              </a>
-            </p>
-          )}
-          {route.role === 'patient' && (
-            <p className="mt-6 text-sm">
-              <a className="underline" href="/patient/checkout-preview">
-                Preview checkout outcomes (synthetic data)
-              </a>
-            </p>
-          )}
           {route.role === 'clinic_admin' && session && (
             <ManagedClinics session={session} />
           )}

@@ -1,5 +1,5 @@
 import { formatBookingTime } from './display'
-import type { BookingSlot } from './fixtures'
+import type { BookingSlot } from './types'
 
 export function BookingSlotCell({
   slot,

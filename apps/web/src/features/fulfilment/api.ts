@@ -3,7 +3,7 @@ import type { CursorPage } from '../../lib/api-types'
 import { accessToken } from '../clinics/api'
 import { paymentDetail } from '../payments/api'
 import type { Checkout, Payment } from '../payments/api'
-import type { PreviewContext, TrackingOrder } from './model'
+import type { OrderContext, TrackingOrder } from './model'
 
 type Money = { amount_minor: number; currency: 'SGD' }
 export type Order = {
@@ -166,14 +166,14 @@ export async function medicationCheckout(
     })
   ).json()
 }
-export function ownsOrder(order: Order, context: PreviewContext) {
+export function ownsOrder(order: Order, context: OrderContext) {
   return context.role === 'patient'
     ? order.patient_id === context.patientId
     : order.tenant_id === context.tenantId
 }
 export async function orderSnapshot(
   id: string,
-  context: PreviewContext,
+  context: OrderContext,
   signal?: AbortSignal,
 ): Promise<OrderSnapshot> {
   const order = await readOrder(id, signal)

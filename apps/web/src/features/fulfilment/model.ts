@@ -1,4 +1,4 @@
-export type PreviewContext =
+export type OrderContext =
   | { role: 'patient'; patientId: string }
   | { role: 'clinic_admin'; tenantId: string }
 export type DeliveryStatus =
@@ -68,18 +68,7 @@ export const deliveryLabels: Record<DeliveryStatus, string> = {
   unknown: 'Delivery outcome unknown',
 }
 
-export function visibleOrders(
-  orders: TrackingOrder[],
-  context: PreviewContext,
-) {
-  return orders.filter((order) =>
-    context.role === 'patient'
-      ? order.patient_id === context.patientId
-      : order.tenant_id === context.tenantId,
-  )
-}
-
-export function canMarkReady(order: TrackingOrder, context: PreviewContext) {
+export function canMarkReady(order: TrackingOrder, context: OrderContext) {
   return (
     context.role === 'clinic_admin' &&
     order.tenant_id === context.tenantId &&
@@ -89,21 +78,7 @@ export function canMarkReady(order: TrackingOrder, context: PreviewContext) {
   )
 }
 
-// Readiness is independent of payment and delivery, including on repeated actions.
-export function markReady(
-  order: TrackingOrder,
-  context: PreviewContext,
-): TrackingOrder {
-  if (!canMarkReady(order, context) || order.medicine_status === 'ready')
-    return order
-  return {
-    ...order,
-    medicine_status: 'ready',
-    updated_at: '2026-10-12T03:05:00Z',
-  }
-}
-
-export function trackingGuidance(order: TrackingOrder, preview = true) {
+export function trackingGuidance(order: TrackingOrder) {
   if (order.payment_status === 'refund_required')
     return 'Delivery is on hold. Contact the clinic with your order reference for manual refund review. No automatic refund is promised.'
   if (order.payment_status === 'refunded')
@@ -115,9 +90,7 @@ export function trackingGuidance(order: TrackingOrder, preview = true) {
   if (order.delivery?.status === 'cancelled' || order.status === 'cancelled')
     return 'This order or delivery was cancelled. Contact the clinic about any payment resolution; cancellation does not itself confirm a refund.'
   if (order.delivery?.status === 'delivered')
-    return preview
-      ? 'Delivery completion is confirmed in this example.'
-      : 'Delivery completion is confirmed.'
+    return 'Delivery completion is confirmed.'
   if (order.delivery?.status === 'picked_up')
     return 'The courier has picked up the medicine. Delivery is not yet confirmed.'
   if (order.delivery?.status === 'submitted')

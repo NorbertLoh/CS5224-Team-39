@@ -57,7 +57,7 @@ export function ManagedClinics({ session }: { session: Session }) {
         onRetry={() => void clinics.refetch()}
       />
     )
-  else content = <ClinicLinks clinics={clinics.data} edit readinessPreview />
+  else content = <ClinicLinks clinics={clinics.data} edit showOrders />
 
   return (
     <section className="mt-10">

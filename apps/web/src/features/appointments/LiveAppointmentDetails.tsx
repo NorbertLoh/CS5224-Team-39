@@ -10,7 +10,7 @@ import {
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { DocumentList } from '../documents/DocumentList'
-import type { AppointmentRole } from './fixtures'
+import type { AppointmentRole } from './types'
 import { roomEligibility } from '../video/admission'
 
 export function LiveAppointmentDetails({

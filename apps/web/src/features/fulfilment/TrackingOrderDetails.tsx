@@ -1,22 +1,15 @@
 import { DeliveryTracking } from './DeliveryTracking'
-import { MedicineReadiness } from './MedicineReadiness'
 import { orderLabels, paymentLabels, trackingTime } from './model'
-import type { PreviewContext, TrackingOrder } from './model'
+import type { TrackingOrder } from './model'
 import { consultationPrice } from '../../lib/money'
 import type { ReactNode } from 'react'
 
 export function TrackingOrderDetails({
   order,
-  context,
-  onReady,
   readiness,
-  preview = true,
 }: {
   order: TrackingOrder
-  context: PreviewContext
-  onReady: () => void
-  readiness?: ReactNode
-  preview?: boolean
+  readiness: ReactNode
 }) {
   return (
     <article
@@ -72,10 +65,8 @@ export function TrackingOrderDetails({
           ))}
         </ul>
       </section>
-      {readiness ?? (
-        <MedicineReadiness order={order} context={context} onReady={onReady} />
-      )}
-      <DeliveryTracking order={order} preview={preview} />
+      {readiness}
+      <DeliveryTracking order={order} />
     </article>
   )
 }

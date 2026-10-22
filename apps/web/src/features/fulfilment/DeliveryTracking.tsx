@@ -1,13 +1,7 @@
 import { deliveryLabels, trackingGuidance, trackingTime } from './model'
 import type { TrackingOrder } from './model'
 
-export function DeliveryTracking({
-  order,
-  preview = true,
-}: {
-  order: TrackingOrder
-  preview?: boolean
-}) {
+export function DeliveryTracking({ order }: { order: TrackingOrder }) {
   return (
     <section
       className="space-y-3 rounded-xl bg-slate-50 p-4"
@@ -22,7 +16,7 @@ export function DeliveryTracking({
             ? deliveryLabels[order.delivery.status]
             : 'No delivery confirmed'}
         </p>
-        <p className="text-sm">{trackingGuidance(order, preview)}</p>
+        <p className="text-sm">{trackingGuidance(order)}</p>
       </div>
       {order.delivery && (
         <dl className="space-y-2 text-sm">

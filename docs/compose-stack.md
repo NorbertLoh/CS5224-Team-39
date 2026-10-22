@@ -124,9 +124,10 @@ after edits. Dependency or migration changes need a rebuild and explicit setup/
 migration run. Production Python images install locked dependencies and the shared
 package, use an unprivileged user and contain no `.env` or virtualenv from the host.
 Each service keeps its own image, entry point, schema and migrations.
-The frontend image preserves the shared contracts and development fixtures in
-their repository-relative locations and runs the TypeScript and production build
-checks. Development mode mounts those shared directories as well.
+The frontend image preserves the shared contracts in their repository-relative
+location and runs the TypeScript and production build checks. Development mode
+mounts the contracts directory as well. The frontend does not consume development
+fixtures.
 
 ## Raw Compose commands and configuration
 

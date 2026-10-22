@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { Slot } from './fixtures'
+import type { Slot } from '../scheduling/api'
 import { isSelected, times } from './timetable'
 import type { Selection } from './timetable'
 import { TimetableCell } from './TimetableCell'

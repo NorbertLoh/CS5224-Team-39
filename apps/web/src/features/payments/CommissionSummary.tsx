@@ -1,10 +1,9 @@
 import { consultationPrice } from '../../lib/money'
-import type { commissionTotals } from './model'
 
 export function CommissionSummary({
   totals,
 }: {
-  totals: ReturnType<typeof commissionTotals>
+  totals: { count: number; amount: number; commission: number; clinic: number }
 }) {
   const cards = [
     ['Eligible payments', String(totals.count)],

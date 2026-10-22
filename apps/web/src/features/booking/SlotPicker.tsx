@@ -1,7 +1,7 @@
 import { BookingSlotCell } from './BookingSlotCell'
 import { BookingSelection } from './BookingSelection'
 import { singaporeDate } from '../scheduling/time'
-import type { BookingSlot } from './fixtures'
+import type { BookingSlot } from './types'
 
 export function SlotPicker({
   slots,

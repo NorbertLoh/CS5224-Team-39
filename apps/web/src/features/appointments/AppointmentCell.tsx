@@ -1,5 +1,5 @@
 import { formatTime, nameOrId, readableStatus } from './display'
-import type { AppointmentRole } from './fixtures'
+import type { AppointmentRole } from './types'
 import type { dayCells } from './display'
 
 export function AppointmentCell({

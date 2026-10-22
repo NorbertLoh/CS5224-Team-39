@@ -102,5 +102,4 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-  preview: { strictPort: true },
 }))
