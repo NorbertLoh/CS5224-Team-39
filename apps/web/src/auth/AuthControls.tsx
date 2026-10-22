@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
+import { SignInPage } from './SignInPage'
 import { authConfig, beginLogin, clearSession, endSession, finishLogin, readSession, refreshSession } from './session'
 import type { AuthConfig, Session } from './session'
 
@@ -17,7 +18,10 @@ let callback: Promise<Session> | undefined
 const logoutWarning = sessionStorage.getItem('telelink.logout-warning') || ''
 sessionStorage.removeItem('telelink.logout-warning')
 
-export function AuthControls({ onSessionChange }: { onSessionChange?: (session: Session | null) => void }) {
+export function AuthControls({ onSessionChange, presentation = 'inline' }: {
+  onSessionChange?: (session: Session | null) => void
+  presentation?: 'inline' | 'page'
+}) {
   const queryClient = useQueryClient()
   const [session, setSession] = useState(readSession)
   const [message, setMessage] = useState(logoutWarning)
@@ -93,6 +97,16 @@ export function AuthControls({ onSessionChange }: { onSessionChange?: (session: 
     }
   }
 
+  if (presentation === 'page') {
+    return <SignInPage
+      signedIn={Boolean(session)}
+      busy={busy}
+      message={message}
+      configurationError={config ? '' : configurationError || 'Sign-in is not available right now. Please try again later.'}
+      onSignIn={() => { void handleClick() }}
+    />
+  }
+
   if (!config)
     return (
       <p role="status" className="text-sm text-muted-foreground">
@@ -105,14 +119,11 @@ export function AuthControls({ onSessionChange }: { onSessionChange?: (session: 
       <span role="status" className="text-sm">
         {message || (session ? 'Signed in' : 'Signed out')}
       </span>
-      <Button
-        disabled={busy}
-        onClick={() => {
-          void handleClick()
-        }}
-      >
-        {session ? 'Sign out' : 'Sign in'}
-      </Button>
+      {!session ? (
+        <a href="/sign-in" className="inline-flex min-h-9 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-4">Sign in</a>
+      ) : (
+        <Button disabled={busy} onClick={() => { void handleClick() }}>Sign out</Button>
+      )}
     </div>
   )
 }
