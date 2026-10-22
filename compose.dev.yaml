@@ -1,0 +1,160 @@
+services:
+  identity:
+    command: ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--reload-dir", "/shared/telelink_common", "--no-access-log"]
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/identity/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  tenant:
+    command: ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--reload-dir", "/shared/telelink_common", "--no-access-log"]
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/tenant/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  scheduling:
+    command: ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--reload-dir", "/shared/telelink_common", "--no-access-log"]
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/scheduling/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  consultation:
+    command: ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--reload-dir", "/shared/telelink_common", "--no-access-log"]
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/consultation/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  clinical_records:
+    command: ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--reload-dir", "/shared/telelink_common", "--no-access-log"]
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/clinical_records/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  fulfilment:
+    command: ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--reload-dir", "/shared/telelink_common", "--no-access-log"]
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/fulfilment/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  document:
+    command: ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--reload-dir", "/shared/telelink_common", "--no-access-log"]
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/document/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  billing:
+    command: ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app", "--reload-dir", "/shared/telelink_common", "--no-access-log"]
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/billing/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  sched-expiry:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/scheduling/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  sched-consumer:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/scheduling/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  sched-publisher:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/scheduling/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  sched-resolver:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/scheduling/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  bill-expiry:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/billing/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  bill-processor:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/billing/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  bill-publisher:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/billing/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  records-publisher:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/clinical_records/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  document-worker:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/document/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  document-publisher:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/document/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  fulfilment-consumer:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/fulfilment/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  delivery-worker:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/fulfilment/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  delivery-resolver:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/fulfilment/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  delivery-publisher:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/fulfilment/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  delivery-tracker:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/fulfilment/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  notification-worker:
+    environment:
+      PYTHONPATH: /shared:/app
+    volumes:
+      - ./services/notification/app:/app/app:ro
+      - ./packages/python_common:/shared:ro
+  web:
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./apps/web/src:/app/src:ro
+      - ./apps/web/public:/app/public:ro
+      - ./apps/web/vite.config.ts:/app/vite.config.ts:ro

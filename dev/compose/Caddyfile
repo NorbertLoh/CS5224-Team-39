@@ -1,0 +1,18 @@
+{
+    auto_https disable_redirects
+    log {
+        output discard
+    }
+}
+https://localhost:8443 {
+    tls internal
+    header Cache-Control "no-store"
+    header Referrer-Policy "no-referrer"
+    header X-Content-Type-Options "nosniff"
+    handle /peerjs/* {
+        reverse_proxy signalling:9000
+    }
+    handle {
+        reverse_proxy web:5173
+    }
+}

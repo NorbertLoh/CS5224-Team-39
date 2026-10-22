@@ -1,0 +1,412 @@
+# Full local application overlay: see docs/compose-stack.md.
+# docker compose -f compose.yaml -f compose.app.yaml ...
+x-runtime: &runtime
+  init: true
+  restart: unless-stopped
+x-api: &api
+  <<: *runtime
+  healthcheck:
+    test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=5)"]
+    interval: 10s
+    timeout: 8s
+    start_period: 120s
+    retries: 12
+services:
+  template:
+    profiles: ["template"]
+  floci:
+    profiles: !reset []
+    environment:
+      EXTRA_CORS_ALLOWED_ORIGINS: https://localhost:8443,http://localhost:5173,http://127.0.0.1:5173
+  bootstrap:
+    environment:
+      COGNITO_CALLBACK_URL: https://localhost:8443/auth/callback
+      COGNITO_LOGOUT_URL: https://localhost:8443/
+  # CORS must include the browser's HTTPS origin.
+  # The Floci volume and its public issuer remain unchanged.
+  identity:
+    <<: *api
+    image: telelink-identity:local
+    build:
+      context: ./services/identity
+      additional_contexts:
+        python_common: ./packages/python_common
+    env_file:
+      - path: ./.local/compose/identity.env
+        required: false
+        format: raw
+    ports:
+      - "127.0.0.1:8001:8000"
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+  tenant:
+    <<: *api
+    image: telelink-tenant:local
+    build:
+      context: ./services/tenant
+      additional_contexts:
+        python_common: ./packages/python_common
+    env_file:
+      - path: ./.local/compose/tenant.env
+        required: false
+        format: raw
+    ports:
+      - "127.0.0.1:8002:8000"
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+  scheduling:
+    <<: *api
+    image: telelink-scheduling:local
+    build:
+      context: ./services/scheduling
+      additional_contexts:
+        python_common: ./packages/python_common
+    env_file:
+      - path: ./.local/compose/scheduling.env
+        required: false
+        format: raw
+    ports:
+      - "127.0.0.1:8003:8000"
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+      redis: {condition: service_healthy}
+  consultation:
+    <<: *api
+    image: telelink-consultation:local
+    build:
+      context: ./services/consultation
+      additional_contexts:
+        python_common: ./packages/python_common
+    env_file:
+      - path: ./.local/compose/consultation.env
+        required: false
+        format: raw
+    ports:
+      - "127.0.0.1:8004:8000"
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+  clinical_records:
+    <<: *api
+    image: telelink-clinical_records:local
+    build:
+      context: ./services/clinical_records
+      additional_contexts:
+        python_common: ./packages/python_common
+    env_file:
+      - path: ./.local/compose/clinical_records.env
+        required: false
+        format: raw
+    ports:
+      - "127.0.0.1:8005:8000"
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+  fulfilment:
+    <<: *api
+    image: telelink-fulfilment:local
+    volumes:
+      - ./.local/compose/delivery:/delivery:ro
+    build:
+      context: ./services/fulfilment
+      additional_contexts:
+        python_common: ./packages/python_common
+    env_file:
+      - path: ./.local/compose/fulfilment.env
+        required: false
+        format: raw
+    ports:
+      - "127.0.0.1:8006:8000"
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+  document:
+    <<: *api
+    image: telelink-document:local
+    build:
+      context: ./services/document
+      additional_contexts:
+        python_common: ./packages/python_common
+    env_file:
+      - path: ./.local/compose/document.env
+        required: false
+        format: raw
+    ports:
+      - "127.0.0.1:8007:8000"
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+  billing:
+    <<: *api
+    image: telelink-billing:local
+    build:
+      context: ./services/billing
+      additional_contexts:
+        python_common: ./packages/python_common
+    env_file:
+      - path: ./.local/compose/billing.env
+        required: false
+        format: raw
+    ports:
+      - "127.0.0.1:8009:8000"
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+  notification-image:
+    image: telelink-notification:local
+    build:
+      context: ./services/notification
+      additional_contexts:
+        python_common: ./packages/python_common
+    profiles: ["setup"]
+    command: ["python", "-m", "app.worker"]
+  setup:
+    image: telelink-setup:local
+    build:
+      context: ./dev/compose
+      additional_contexts:
+        document: service:document
+    profiles: ["setup"]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-telelink-local-only}
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: ap-southeast-1
+      AWS_EC2_METADATA_DISABLED: "true"
+    volumes:
+      - .:/workspace:ro
+      - ./.local/compose:/state
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+  web:
+    <<: *runtime
+    build: ./apps/web
+    image: telelink-web:local
+    env_file:
+      - path: ./.local/compose/web.env
+        required: false
+        format: raw
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      identity: {condition: service_healthy}
+      tenant: {condition: service_healthy}
+  signalling:
+    <<: *runtime
+    build: ./services/signalling
+    image: telelink-signalling:local
+    environment:
+      SIGNALLING_ENVIRONMENT: local
+      SIGNALLING_HOST: 0.0.0.0
+      SIGNALLING_ORIGINS: https://localhost:8443
+      CONSULTATION_URL: http://consultation:8000
+      SIGNALLING_SECRET: ${SIGNALLING_SECRET:-}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      consultation: {condition: service_healthy}
+  tls:
+    <<: *runtime
+    image: caddy:2@sha256:685ae3d7c34d9b5f8caeddc5d14051db7bbd88ff1f5a2fa0c16bd8ca328fb7af
+    ports:
+      - "127.0.0.1:8443:8443"
+    volumes:
+      - ./dev/compose/Caddyfile:/etc/caddy/Caddyfile:ro
+      - app_tls_data:/data
+      - app_tls_config:/config
+    depends_on:
+      signalling: {condition: service_healthy}
+      web: {condition: service_healthy}
+  stripe:
+    <<: *runtime
+    image: stripe/stripe-cli:v1.33.0
+    profiles: ["payments"]
+    environment:
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-}
+    command: ["listen", "--events", "checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed", "--forward-to", "http://billing:8000/webhooks/stripe"]
+    depends_on:
+      billing: {condition: service_healthy}
+  sched-expiry:
+    <<: *runtime
+    image: telelink-scheduling:local
+    command: ["python","-m","app.expire_holds"]
+    env_file:
+      - path: ./.local/compose/scheduling.env
+        required: false
+        format: raw
+    depends_on:
+      scheduling: {condition: service_healthy}
+  sched-consumer:
+    <<: *runtime
+    image: telelink-scheduling:local
+    command: ["python","-m","app.payment_worker"]
+    env_file:
+      - path: ./.local/compose/scheduling.env
+        required: false
+        format: raw
+    depends_on:
+      scheduling: {condition: service_healthy}
+      billing: {condition: service_healthy}
+      tenant: {condition: service_healthy}
+  sched-publisher:
+    <<: *runtime
+    image: telelink-scheduling:local
+    command: ["python","-m","app.payment_worker","--publish"]
+    env_file:
+      - path: ./.local/compose/scheduling.env
+        required: false
+        format: raw
+    depends_on:
+      scheduling: {condition: service_healthy}
+  sched-resolver:
+    <<: *runtime
+    image: telelink-scheduling:local
+    command: ["python","-m","app.payment_worker","--resolve"]
+    env_file:
+      - path: ./.local/compose/scheduling.env
+        required: false
+        format: raw
+    depends_on:
+      scheduling: {condition: service_healthy}
+      billing: {condition: service_healthy}
+  bill-expiry:
+    <<: *runtime
+    image: telelink-billing:local
+    command: ["python","-m","app.expire_checkouts"]
+    env_file:
+      - path: ./.local/compose/billing.env
+        required: false
+        format: raw
+    depends_on:
+      billing: {condition: service_healthy}
+  bill-processor:
+    <<: *runtime
+    image: telelink-billing:local
+    command: ["python","-m","app.payment_worker"]
+    env_file:
+      - path: ./.local/compose/billing.env
+        required: false
+        format: raw
+    depends_on:
+      billing: {condition: service_healthy}
+      scheduling: {condition: service_healthy}
+      fulfilment: {condition: service_healthy}
+  bill-publisher:
+    <<: *runtime
+    image: telelink-billing:local
+    command: ["python","-m","app.payment_worker","--publish"]
+    env_file:
+      - path: ./.local/compose/billing.env
+        required: false
+        format: raw
+    depends_on:
+      billing: {condition: service_healthy}
+  records-publisher:
+    <<: *runtime
+    image: telelink-clinical_records:local
+    command: ["python","-m","app.publish_events"]
+    env_file:
+      - path: ./.local/compose/clinical_records.env
+        required: false
+        format: raw
+    depends_on:
+      clinical_records: {condition: service_healthy}
+  document-worker:
+    <<: *runtime
+    image: telelink-document:local
+    command: ["python","-m","app.worker"]
+    env_file:
+      - path: ./.local/compose/document.env
+        required: false
+        format: raw
+    depends_on:
+      document: {condition: service_healthy}
+      clinical_records: {condition: service_healthy}
+  document-publisher:
+    <<: *runtime
+    image: telelink-document:local
+    command: ["python","-m","app.publish_events"]
+    env_file:
+      - path: ./.local/compose/document.env
+        required: false
+        format: raw
+    depends_on:
+      document: {condition: service_healthy}
+  fulfilment-consumer:
+    <<: *runtime
+    image: telelink-fulfilment:local
+    command: ["python","-m","app.payment_worker"]
+    env_file:
+      - path: ./.local/compose/fulfilment.env
+        required: false
+        format: raw
+    depends_on:
+      fulfilment: {condition: service_healthy}
+      billing: {condition: service_healthy}
+  delivery-worker:
+    <<: *runtime
+    image: telelink-fulfilment:local
+    volumes:
+      - ./.local/compose/delivery:/delivery:ro
+    command: ["python","-m","app.delivery_worker"]
+    env_file:
+      - path: ./.local/compose/fulfilment.env
+        required: false
+        format: raw
+    depends_on:
+      fulfilment: {condition: service_healthy}
+      billing: {condition: service_healthy}
+  delivery-resolver:
+    <<: *runtime
+    image: telelink-fulfilment:local
+    command: ["python","-m","app.delivery_worker","--resolve"]
+    env_file:
+      - path: ./.local/compose/fulfilment.env
+        required: false
+        format: raw
+    depends_on:
+      fulfilment: {condition: service_healthy}
+      billing: {condition: service_healthy}
+  delivery-publisher:
+    <<: *runtime
+    image: telelink-fulfilment:local
+    command: ["python","-m","app.delivery_worker","--publish"]
+    env_file:
+      - path: ./.local/compose/fulfilment.env
+        required: false
+        format: raw
+    depends_on:
+      fulfilment: {condition: service_healthy}
+  delivery-tracker:
+    <<: *runtime
+    image: telelink-fulfilment:local
+    volumes:
+      - ./.local/compose/delivery:/delivery:ro
+    command: ["python","-m","app.tracking_worker"]
+    env_file:
+      - path: ./.local/compose/fulfilment.env
+        required: false
+        format: raw
+    depends_on:
+      fulfilment: {condition: service_healthy}
+  notification-worker:
+    <<: *runtime
+    image: telelink-notification:local
+    command: ["python","-m","app.worker"]
+    env_file:
+      - path: ./.local/compose/notification.env
+        required: false
+        format: raw
+    depends_on:
+      identity: {condition: service_healthy}
+      scheduling: {condition: service_healthy}
+      document: {condition: service_healthy}
+      fulfilment: {condition: service_healthy}
+volumes:
+  app_tls_data:
+  app_tls_config:

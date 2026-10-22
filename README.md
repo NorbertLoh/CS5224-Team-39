@@ -4,7 +4,11 @@ CS5224 Team 39's multi-tenant teleconsultation prototype. Planned stack: React +
 
 ## Current status
 
-This repository contains a [React frontend](apps/web/README.md), a runnable [FastAPI service template](services/template/README.md), and [local Compose dependencies](docs/local-development.md). Business-service integration and AWS infrastructure remain planned work. The template can run independently without AWS or a database.
+This repository contains a [React frontend](apps/web/README.md), independent business
+APIs and workers, and a [full local Compose stack](docs/compose-stack.md). See the
+[implementation backlog](implementation-plan.md) for completed local integrations
+and remaining journey/AWS work. The [FastAPI template](services/template/README.md)
+can also run independently.
 
 ## Repository layout
 
@@ -23,6 +27,10 @@ This repository contains a [React frontend](apps/web/README.md), a runnable [Fas
 Each business service owns its database schema and Alembic migrations. Do not write another service's tables. Frontend and backend work can be claimed separately using agreed contracts.
 
 ## Getting started
+
+For the complete local application, follow [full-stack Compose setup](docs/compose-stack.md):
+`./dev/compose.ps1 setup -Payments`, then open `https://localhost:8443`.
+Existing host-stack users can preserve their database with `setup -UseExistingDatabase -Payments`.
 
 1. Read [AGENTS.md](AGENTS.md) for the issue-first claim workflow.
 2. Find a ready task in [implementation-plan.md](implementation-plan.md); create/reuse its GitHub issue and claim it before coding.
@@ -49,5 +57,5 @@ Follow [clinic backend setup](docs/clinic-backend.md) to create the local Cognit
 accounts, provision their backend roles and link the doctor to the local clinic.
 These accounts are for local Floci development only. Backend roles and clinic
 memberships determine access; Cognito groups alone do not grant permissions.
-Currently, the clinic list, storefront and profile editor are implemented; the
-remaining role pages are still planned.
+Use [full-stack Compose](docs/compose-stack.md) to run the implemented role pages
+against the local services.
