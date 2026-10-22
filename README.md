@@ -35,7 +35,7 @@ Existing host-stack users can preserve their database with `setup -UseExistingDa
 1. Read [AGENTS.md](AGENTS.md) for the issue-first claim workflow.
 2. Find a ready task in [implementation-plan.md](implementation-plan.md); create/reuse its GitHub issue and claim it before coding.
 3. Read [plan.md](plan.md) for architecture, scope and the four-week schedule.
-4. Run the [service template](services/template/README.md) for the F03 foundation. Follow [local setup](docs/local-development.md) as later tasks supply the full local stack. For cloud work, see [AWS setup](docs/aws-deployment.md).
+4. Run the [full local Compose stack](docs/compose-stack.md), or the [service template](services/template/README.md) for isolated foundation work. For cloud work, see [AWS setup](docs/aws-deployment.md).
 
 Commit dependency lockfiles, migrations and sanitized configuration examples. Keep credentials, local environment overrides, generated output, Terraform state and runtime data out of Git. Use synthetic records only.
 
@@ -43,8 +43,9 @@ F01 is skipped by team decision. The exact demo date, AWS budget/access and infr
 
 ## Local sign-in accounts
 
-All four roles use the same **Sign in** button at http://localhost:5173 or
-http://127.0.0.1:5173. Each local account uses the password `LocalDemo123!`.
+All four roles use the same **Sign in** button at https://localhost:8443 with
+the full Compose stack. Host-only frontend URLs depend on the callback registered
+by that setup guide. Each local account uses the password `LocalDemo123!`.
 
 | Role | Email |
 | --- | --- |

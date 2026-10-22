@@ -110,15 +110,23 @@ function Configure-Stripe {
     Write-Host 'Stripe test webhook secret configured (value kept private).'
 }
 
+function Assert-DatabaseExclusive {
+    if (-not (Test-Path (Join-Path $State 'database.yaml'))) { return }
+    $running = & docker ps --filter 'name=^/telelink-clinic-postgres$' --format '{{.ID}}'
+    if ($LASTEXITCODE -ne 0) { throw 'Could not check the legacy database container.' }
+    if ($running) { throw 'Stop telelink-clinic-postgres before using Compose with its adopted volume.' }
+}
+
 Push-Location $Root
 try {
     Set-ComposeArgs
     if ($UseExistingDatabase -and $Action -ne 'setup') { throw '-UseExistingDatabase is only supported with setup.' }
     switch ($Action) {
         'setup' {
-            Build-Stack
             if ($UseExistingDatabase) { Adopt-Database; Set-ComposeArgs }
-            Compose up -d --wait --wait-timeout 300 postgres redis floci
+            Assert-DatabaseExclusive
+            Compose up -d --wait --wait-timeout 600 postgres redis floci
+            Build-Stack
             Compose run --rm -T bootstrap
             Compose --profile setup run --rm -T setup configure
             Set-ComposeArgs
@@ -129,14 +137,15 @@ try {
             Compose --profile setup run --rm -T setup seed
             Configure-Stripe
             Stop-HostStack
-            Compose up -d --wait --wait-timeout 300
+            Compose up -d --wait --wait-timeout 600
             Compose --profile setup run --rm -T setup check
             Write-Host 'Open https://localhost:8443'
         }
         'up' {
             if (-not (Test-Path (Join-Path $State 'web.env'))) { throw 'Run ./dev/compose.ps1 setup first.' }
+            Assert-DatabaseExclusive
             Configure-Stripe
-            Compose up -d --wait --wait-timeout 300
+            Compose up -d --wait --wait-timeout 600
             Write-Host 'Open https://localhost:8443'
         }
         'check' { Compose --profile setup run --rm -T setup check }

@@ -12,6 +12,15 @@ x-api: &api
     start_period: 120s
     retries: 12
 services:
+  postgres:
+    init: true
+    stop_grace_period: 60s
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "telelink", "-t", "5"]
+      interval: 10s
+      timeout: 10s
+      start_period: 120s
+      retries: 48
   template:
     profiles: ["template"]
   floci:

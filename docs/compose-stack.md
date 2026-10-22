@@ -19,6 +19,11 @@ profiles, memberships, application rows and Docker volumes. Migrations are never
 part of API replica startup.
 
 The launcher builds images in batches of two to reduce memory pressure on Windows.
+Dependencies reach health before image builds begin. PostgreSQL runs with an init
+process, a direct health probe and a 60-second shutdown grace period; these avoid
+the [orphaned shell-probe restart issue](https://github.com/super-productivity/super-productivity/pull/9917)
+and allow clean database shutdowns. Its startup health window also permits slow
+cold recovery on Docker Desktop.
 
 The billing API needs an actual Stripe **test** key and an active clinic's connected
 account mapping to pass readiness. Keep these in ignored `services/billing/.env`

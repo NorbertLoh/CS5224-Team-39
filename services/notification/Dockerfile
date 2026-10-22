@@ -18,4 +18,4 @@ COPY --from=build /opt/venv /opt/venv
 COPY --from=build /app /app
 RUN useradd --uid 10001 --create-home app
 USER app
-CMD ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
+CMD ["python", "-m", "app.worker"]
