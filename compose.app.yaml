@@ -166,6 +166,10 @@ services:
       floci: {condition: service_healthy}
   notification-image:
     image: telelink-notification:local
+    env_file:
+      - path: ./.local/compose/notification.env
+        required: false
+        format: raw
     build:
       context: ./services/notification
       additional_contexts:
