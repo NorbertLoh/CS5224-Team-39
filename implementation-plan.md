@@ -243,4 +243,4 @@ These tasks do not establish AWS integration until their evidence is recorded.
 - [ ] Independent service deployments, service-owned migrations and Floci setup are documented.
 - [ ] Essential checks and known limitations have brief evidence.
 - [ ] Demo script, backup recording and report are ready.
-| [ ] | RF04 | Remove frontend test harnesses, synthetic preview routes and fixture-only code; retain live application flows and build tooling, with passing lint/type/build checks. Issue #258; Assignee: NorbertLoh; status: in progress. | F06-F08, S07, B07, R04, D07, V04 (complete) | M |
+| [x] | RF04 | Remove frontend test harnesses, synthetic preview routes and fixture-only code; retain live application flows and build tooling. Completed in merged PR #259; issue #258 closed. Clean npm install, lint, typecheck/production build, live-route/removed-preview/clinic-access smoke checks, Compose configuration and CI image builds passed. Current setup: `apps/web/README.md`; no new configuration or migrations. | F06-F08, S07, B07, R04, D07, V04 (complete) | M |
