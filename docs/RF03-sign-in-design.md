@@ -19,6 +19,12 @@ origin documented in [the local journey](I02-local-journey.md). Run
 `npm run dev` from `apps/web`. A different development port must be registered
 with the authentication provider before completing an actual login.
 
+The local review client also has callback URLs
+`http://127.0.0.1:5174/auth/callback` and `http://localhost:5174/auth/callback`,
+with matching logout URLs at each origin's `/`. These local registrations
+preserve the existing 8443/5173 URLs. Rerunning the standard Cognito bootstrap
+replaces the allowlist, so register the preview URLs again if that setup is reset.
+
 ## Verification
 
 Verified locally on 23 October 2026:
@@ -31,6 +37,8 @@ Verified locally on 23 October 2026:
 - Authorization handoff includes state, an S256 challenge and the correct
   callback origin. The destination was intercepted for inspection; this check
   does not claim a completed live provider login or AWS validation.
+- After registering the preview origin, the real local authorization redirect
+  successfully opened the Floci username/password sign-in form.
 - Signed-in state exposes workspace navigation without another sign-in action.
 - No browser page errors during these checks.
 
