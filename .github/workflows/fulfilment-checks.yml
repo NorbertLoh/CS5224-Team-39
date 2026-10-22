@@ -5,11 +5,13 @@ on:
     paths:
       - 'services/fulfilment/**'
       - 'packages/python_common/**'
+      - 'tests/e2e/check_i03_journey.py'
       - '.github/workflows/fulfilment-checks.yml'
   pull_request:
     paths:
       - 'services/fulfilment/**'
       - 'packages/python_common/**'
+      - 'tests/e2e/check_i03_journey.py'
       - '.github/workflows/fulfilment-checks.yml'
 
 permissions:
@@ -57,6 +59,8 @@ jobs:
           psql -h 127.0.0.1 -U postgres -d telelink -v ON_ERROR_STOP=1 -f scripts/create-test-sentinel.sql
       - run: python -m ruff check .
       - run: python -m ruff format --check .
+      - run: python -m ruff check ../../tests/e2e/check_i03_journey.py --config pyproject.toml
+      - run: python -m ruff format --check ../../tests/e2e/check_i03_journey.py --config pyproject.toml
       - run: python -m pytest -q
       - name: Verify protected sentinel survived
         env:
