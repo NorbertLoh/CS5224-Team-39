@@ -237,6 +237,12 @@ These tasks do not establish AWS integration until their evidence is recorded.
 
 ## Completion checklist
 
+Sign-in refinement requested 23 October 2026:
+
+| Done | ID | Task and completion criterion | Depends on | Effort |
+| --- | --- | --- | --- | --- |
+| [ ] | RF03 | Design a branded, responsive `/sign-in` entry page linked from the signed-out header; preserve hosted PKCE login, callback, refresh and logout. Include pending/error feedback, keyboard access and signed-in navigation. Verify desktop/mobile layout and frontend checks. Issue #254; assignee: NorbertLoh; status: in progress. | F06, A01, A02, U05 (complete) | S |
+
 - [ ] Actual AWS patient journey works with two separate payment purposes and paid+ready delivery gating.
 - [ ] All four role views support the journey; two clinics demonstrate tenant separation.
 - [ ] Independent service deployments, service-owned migrations and Floci setup are documented.
