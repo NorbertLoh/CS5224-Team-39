@@ -12,11 +12,11 @@ UI work can start against the agreed API fixtures after its listed contract depe
 
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
-Completion audit, updated 21 October 2026: reconciled the backlog with open/closed
-GitHub issues, open/merged PRs and the current implementation. **94 tasks are complete,
-F01 is skipped by user decision, and 35 tasks remain unfinished.** The 95 checked
+Completion audit, updated 22 October 2026: reconciled the backlog with open/closed
+GitHub issues, open/merged PRs and the current implementation. **96 tasks are complete,
+F01 is skipped by user decision, and 33 tasks remain unfinished.** The 97 checked
 rows include that skipped task. Completed work comprises F02-F16, C01-C05,
-A01-A11, U01-U17, S01-S08, R01-R04, P01-P03, M01-M04, D01-D07, B01-B07, V01-V04, N01-N02, I01, Q02 and X01-X05.
+A01-A11, U01-U17, S01-S08, R01-R04, P01-P03, M01-M04, D01-D07, B01-B07, V01-V04, N01-N02, I01-I03, Q02 and X01-X05.
 D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
 PR #138 and closed issue #137; P02 after merged PR #144 and closed issue #128;
 P03 after merged PR #148 and closed issue #147; U14 after merged PR #151 and
@@ -40,7 +40,7 @@ Current claims and remaining blockers:
 | AWS / integration | W01-W21 remain unchecked. F01 was skipped, so AWS budget/access and the IaC choice still need resolution before affected provisioning. Issue #54 tracks real Cognito revocation/private-document checks. I01 completed in merged PR #235 and completion PR #236; I02 is claimed by Chronoxy in issue #237 / open PR #238. Q02 completed in merged PR #242 with real local contention/expiry evidence and explicitly scoped billing fixtures for confirmation races. I03-I05, Q01, Q03-Q06 and E01-E04 remain unchecked; service-level tests and local emulator evidence do not complete these gates. |
 
 Unclaimed tasks with complete listed dependencies:
-None currently. W01 is already covered by draft PR #233.
+Q03 is available after merged I03. I04 is claimed by cyhni in issue #248. W01 is already covered by draft PR #233; AWS implementation is deferred.
 N02 completed in merged PR #230; issue #228 is closed. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
 For every other unchecked task, the Depends on column identifies unfinished
@@ -209,8 +209,8 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 | --- | --- | --- | --- | --- |
 | [x] | I01 | Run real local clinic approval -> booking -> Stripe payment -> confirmed appointment. Target end of Week 2. | A11, S05-S07, B04, B07 | M |
 | [x] | I02 | Run actual booked pair -> consultation -> saved prescription -> private PDF. | I01, V04, R04, U14 | M |
-| [ ] | I03 | Run actual prescription -> quote -> separate medication payment -> ready -> one delivery. Assignee: cyhni; status: in progress. Issue #247. | I02, D07, B06 | M |
-| [ ] | I04 | Verify journey events produce booking/document/delivery messages. Assignee: cyhni; status: in progress. Issue #248; waiting for I03 to merge before implementation. | I03, N02 | S |
+| [x] | I03 | Run actual prescription -> quote -> separate medication payment -> ready -> one delivery. Completed in merged PR #249; issue #247 closed. Actual doctor issuance, separate Stripe test payment, real Lalamove quote/submission, paid-and-ready gate and repeated-worker checks passed; eight read-only journey checks and 325-test CI passed. The synthetic courier order was cancelled and verified by provider GET/tracking for cleanup. Evidence/setup/provider limits: `docs/I03-local-journey.md`; physical delivery, refunds and AWS are not claimed. | I02, D07, B06 | M |
+| [ ] | I04 | Verify journey events produce booking/document/delivery messages. Assignee: cyhni; status: in progress. Issue #248; I03 merged in PR #249. | I03, N02 | S |
 | [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
 | [ ] | Q01 | Reject clinic A access to clinic B appointment, record and file; reject wrong roles/tokens. | I05 | M |
 | [x] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Completed in merged PR #242; issue #240 closed. All ten real local contention/deadline/natural-expiry checks and API cleanup passed. Final combined S08/Q02 CI passed 242 scheduling tests with two optional Floci checks skipped, including cleanup regressions and existing confirmation races using explicit billing-response fixtures. Setup/evidence and provider limits: `docs/Q02-booking-verification.md`; use the I01 local services and allow about ten minutes. No new application configuration. | S06 | S |
