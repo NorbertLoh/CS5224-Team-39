@@ -54,5 +54,6 @@ jobs:
         run: |
           set -e
           for group in 'identity tenant' 'scheduling consultation' 'clinical_records fulfilment' 'document billing' 'notification-image web' 'signalling setup'; do
-            docker compose -f compose.yaml -f compose.app.yaml --profile setup build $group
+            docker compose -f compose.yaml -f compose.app.yaml --profile setup build --print $group > /tmp/telelink-build.json
+            docker buildx bake --file /tmp/telelink-build.json --progress plain
           done

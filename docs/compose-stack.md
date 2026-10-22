@@ -128,6 +128,10 @@ The PowerShell wrapper only orchestrates Docker. The equivalent files are root
 `compose.yaml` plus `compose.app.yaml`, optionally `compose.dev.yaml` and the
 generated database adoption override. For example, after setup on this machine:
 
+Image builds run in pairs through a generated Bake definition file. This avoids
+the intermittent Compose/Bake closed-stdin error described in
+[Docker Compose #13243](https://github.com/docker/compose/issues/13243).
+
 ```powershell
 docker compose --env-file .local/compose/compose.env -f compose.yaml -f compose.app.yaml -f .local/compose/database.yaml --profile payments ps
 ```

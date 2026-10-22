@@ -51,7 +51,12 @@ function Build-Stack {
     for ($index = 0; $index -lt $targets.Count; $index += 2) {
         $batch = @($targets[$index])
         if ($index + 1 -lt $targets.Count) { $batch += $targets[$index + 1] }
-        Compose --profile setup build @batch
+        # A file avoids Compose/Bake's intermittent closed-stdin pipe error.
+        $definition = Compose --profile setup build --print @batch
+        $buildFile = Join-Path $State 'build.json'
+        Write-Utf8 $buildFile (($definition -join "`n") + "`n")
+        & docker buildx bake --file $buildFile --progress plain
+        if ($LASTEXITCODE -ne 0) { throw "Docker image build failed ($LASTEXITCODE)." }
     }
 }
 
