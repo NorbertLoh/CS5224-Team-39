@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 import type { Prescription } from './types'
 import type { Order } from '../fulfilment/api'
-import { OpenMedicationOrderButton } from '../fulfilment/OpenMedicationOrderButton'
 import {
   canReviewMedicinePayment,
   medicineProgress,
 } from '../fulfilment/patientMedicines'
-import { consultationPrice } from '../../lib/money'
+import { MedicationOrderStatus } from './MedicationOrderStatus'
+import { MedicationOrderAction } from './MedicationOrderAction'
 
 export function PatientMedicationCard({
   prescription,
@@ -25,7 +25,6 @@ export function PatientMedicationCard({
     return children
   const review = canReviewMedicinePayment(order)
   const progress = medicineProgress(order)
-  const paid = order?.payment_status === 'succeeded'
   return (
     <article className="space-y-4 rounded-xl border border-teal-200 bg-teal-50 p-5">
       <div>
@@ -60,65 +59,8 @@ export function PatientMedicationCard({
         </p>
       ) : (
         <>
-          <p role="status" className="font-medium text-teal-900">
-            {progress}
-          </p>
-          {order && (
-            <p className="text-sm">
-              {order.total ? 'Medicines + delivery: ' : 'Medicines: '}
-              {consultationPrice(
-                (order.total ?? order.medication_subtotal).amount_minor,
-                'SGD',
-              )}
-              {!order.total &&
-                ' · Delivery calculated after entering your address'}
-            </p>
-          )}
-          {paid && (
-            <ol
-              aria-label="Medication delivery progress"
-              className="flex flex-wrap gap-3 text-sm"
-            >
-              <li>Payment confirmed</li>
-              <li
-                aria-current={
-                  progress === 'Preparing medicines' ? 'step' : undefined
-                }
-              >
-                {order.medicine_status === 'ready'
-                  ? 'Medicines prepared'
-                  : 'Preparing medicines'}
-              </li>
-              {progress !== 'Preparing medicines' && (
-                <li aria-current="step">{progress}</li>
-              )}
-            </ol>
-          )}
-          {review ? (
-            <>
-              <OpenMedicationOrderButton
-                prescriptionId={prescription.prescription_id}
-                subject={prescription.patient_id}
-              />
-              <p className="text-sm text-slate-600">
-                Confirm your delivery address and review the full total before
-                paying.
-              </p>
-            </>
-          ) : (
-            order && (
-              <a
-                className="inline-block rounded-lg bg-teal-800 px-5 py-3 font-medium text-white"
-                href={`/patient/medication-orders?order_id=${encodeURIComponent(order.order_id)}`}
-              >
-                {order.payment_status === 'pending'
-                  ? 'Check payment status'
-                  : paid
-                    ? 'View delivery details'
-                    : 'View medication order'}
-              </a>
-            )
-          )}
+          <MedicationOrderStatus order={order} />
+          <MedicationOrderAction prescription={prescription} order={order} />
         </>
       )}
     </article>
