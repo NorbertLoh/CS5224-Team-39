@@ -155,6 +155,7 @@ services:
     environment:
       CHOKIDAR_USEPOLLING: "true"
     volumes:
+      - ./contracts:/contracts:ro
       - ./apps/web/src:/app/src:ro
       - ./apps/web/public:/app/public:ro
       - ./apps/web/vite.config.ts:/app/vite.config.ts:ro

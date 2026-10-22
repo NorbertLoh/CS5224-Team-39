@@ -203,7 +203,10 @@ services:
       timeout: 10s
       start_period: 120s
       retries: 12
-    build: ./apps/web
+    build:
+      context: ./apps/web
+      additional_contexts:
+        contracts: ./contracts
     image: telelink-web:local
     env_file:
       - path: ./.local/compose/web.env
