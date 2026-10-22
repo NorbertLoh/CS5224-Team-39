@@ -5,11 +5,13 @@ on:
     paths:
       - 'services/notification/**'
       - 'packages/python_common/**'
+      - 'tests/e2e/check_i04_journey.py'
       - '.github/workflows/notification-checks.yml'
   pull_request:
     paths:
       - 'services/notification/**'
       - 'packages/python_common/**'
+      - 'tests/e2e/check_i04_journey.py'
       - '.github/workflows/notification-checks.yml'
 
 permissions:
@@ -56,4 +58,6 @@ jobs:
           psql -h 127.0.0.1 -U postgres -d telelink -v ON_ERROR_STOP=1 -f scripts/create-local-schema.sql
       - run: python -m ruff check .
       - run: python -m ruff format --check .
+      - run: python -m ruff check ../../tests/e2e/check_i04_journey.py --config pyproject.toml
+      - run: python -m ruff format --check ../../tests/e2e/check_i04_journey.py --config pyproject.toml
       - run: python -m pytest -q
