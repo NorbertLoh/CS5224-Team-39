@@ -5,11 +5,25 @@ Root Compose runs the local dependencies and template API. `floci/bootstrap.sh` 
 `clinic_local.py` configures real local clinic APIs and explicit database-backed
 local accounts; see [clinic backend setup](../docs/clinic-backend.md).
 
-`local_stack.ps1` starts, checks or stops the full local I01/I02 stack in the background; see [I02 local journey](../docs/I02-local-journey.md).
-It also starts the fulfilment payment consumer so verified medication payments
-update orders from pending to paid. The worker uses the existing
-[medication payment configuration](../services/fulfilment/PAYMENTS.md); its logs
-are `.local/stack/fulfilment-payment-worker.out.log` and `.err.log`.
+`local_stack.ps1` starts, checks or stops all implemented local APIs and workers
+in the background; see [I02 local journey](../docs/I02-local-journey.md). This includes
+payment confirmation, delivery submission/resolution/publishing/tracking, document
+generation and notification intake/email capture. It reuses an already-running
+`telelink-local-stripe-forwarder` Docker container, or starts the supplied Stripe CLI.
+
+Before starting, install each service's virtualenv and migrate its schema, including
+`notification`. Configure fulfilment's sandbox credentials, saved pickup/postcode
+directory and synthetic contacts using [payment setup](../services/fulfilment/PAYMENTS.md)
+and [delivery setup](../services/fulfilment/DELIVERIES.md). Configure notification's
+four matching upstream keys and local Floci SES using [notification setup](../services/notification/WORKER.md).
+All worker logs and PIDs are under `.local/stack/<name>.*`; `status` includes every
+worker. A failed worker startup makes `start` fail rather than report success.
+
+```powershell
+./dev/local_stack.ps1 start
+./dev/local_stack.ps1 status
+./dev/local_stack.ps1 stop
+```
 
 `compose.ps1` runs all implemented services and workers in Docker, with explicit
 setup/migrations, database adoption and development reload. See
