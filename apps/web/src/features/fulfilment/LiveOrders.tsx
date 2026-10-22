@@ -67,6 +67,7 @@ function OrderWorkspace({
         : null),
   )
   const validId = selectedId !== null && uuid.test(selectedId)
+  const directReview = patient && supplied !== null && validId
   const list = useInfiniteQuery({
     queryKey: ['fulfilment', 'orders', token, context],
     initialPageParam: null as string | null,
@@ -116,6 +117,21 @@ function OrderWorkspace({
           ? 'Medication orders and delivery'
           : 'Medicine readiness and delivery'}
       </h1>
+      {patient && (
+        <p className="text-sm text-slate-600">
+          Review your medicines, enter your delivery address, then confirm the
+          total before paying. Medication and delivery are separate from your
+          consultation fee.
+        </p>
+      )}
+      {directReview && (
+        <a
+          className="inline-block text-sm underline"
+          href="/patient/medication-orders"
+        >
+          View all medication orders
+        </a>
+      )}
       {!patient && (
         <p className="break-all text-sm text-slate-600">
           Clinic {context.tenantId}
@@ -151,8 +167,14 @@ function OrderWorkspace({
       ) : list.isError ? (
         <p role="alert">{fulfilmentError(list.error)}</p>
       ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-          <div className="space-y-3">
+        <div
+          className={
+            directReview
+              ? 'space-y-6'
+              : 'grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]'
+          }
+        >
+          <div className={directReview ? 'hidden' : 'space-y-3'}>
             <TrackingOrderList
               orders={rows.map((order) =>
                 trackingOrder(
@@ -189,6 +211,14 @@ function OrderWorkspace({
               ) : (
                 snapshot && (
                   <>
+                    {patient && (
+                      <LiveMedicationCheckout
+                        key={snapshot.order.order_id}
+                        snapshot={snapshot}
+                        subject={context.patientId}
+                        refresh={refresh}
+                      />
+                    )}
                     <TrackingOrderDetails
                       key={snapshot.order.order_id}
                       order={trackingOrder(snapshot.order, snapshot.delivery)}
@@ -209,14 +239,6 @@ function OrderWorkspace({
                         )
                       }
                     />
-                    {patient && (
-                      <LiveMedicationCheckout
-                        key={snapshot.order.order_id}
-                        snapshot={snapshot}
-                        subject={context.patientId}
-                        refresh={refresh}
-                      />
-                    )}
                   </>
                 )
               ))}

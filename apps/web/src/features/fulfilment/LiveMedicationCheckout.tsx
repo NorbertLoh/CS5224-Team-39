@@ -46,8 +46,28 @@ export function LiveMedicationCheckout({
       aria-labelledby="medication-checkout-heading"
     >
       <h2 id="medication-checkout-heading" className="text-xl font-semibold">
-        Medication and delivery payment
+        {order.payment_status === 'succeeded'
+          ? 'Your medicines'
+          : 'Review medicines & pay'}
       </h2>
+      <ul
+        className="space-y-2 rounded-xl border p-4"
+        aria-label="Your medicines"
+      >
+        {order.items.map((item) => (
+          <li
+            key={item.prescription_item_id}
+            className="flex flex-wrap justify-between gap-3 text-sm"
+          >
+            <span>
+              {item.display_name} · Quantity: {item.quantity}
+            </span>
+            <span>
+              {consultationPrice(item.line_total.amount_minor, 'SGD')}
+            </span>
+          </li>
+        ))}
+      </ul>
       <dl className="space-y-2 rounded-xl border p-4 text-sm">
         <div className="flex justify-between gap-3">
           <dt>Medication subtotal</dt>
@@ -132,8 +152,8 @@ export function LiveMedicationCheckout({
           {checkout.isPending
             ? 'Opening secure checkout...'
             : order.payment_id
-              ? 'Resume Stripe test Checkout'
-              : 'Continue to Stripe test Checkout'}
+              ? 'Resume payment'
+              : `Pay ${consultationPrice(quote!.total.amount_minor, 'SGD')}`}
         </button>
       )}
       {checkout.isError && (
@@ -142,9 +162,8 @@ export function LiveMedicationCheckout({
         </p>
       )}
       <p className="text-sm text-slate-600">
-        Stripe test mode. Returning from checkout does not establish payment
-        status. Short quote deadlines use a best-effort expiry worker; do not
-        pay after the deadline.
+        Stripe test checkout. Your payment status updates here after
+        confirmation.
       </p>
     </section>
   )

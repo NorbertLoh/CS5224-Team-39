@@ -56,8 +56,8 @@ export function LiveDestinationForm({
     >
       <h3 className="font-semibold">Delivery address</h3>
       <p className="text-sm">
-        Singapore delivery. The local prototype supports configured postcodes
-        only. A new quote refreshes medication prices and the delivery fee.
+        Enter your Singapore delivery address to calculate the full total.
+        Delivery is currently available for supported postcodes only.
       </p>
       <fieldset disabled={quote.isPending} className="space-y-3">
         <label className="block text-sm font-medium">
@@ -91,7 +91,9 @@ export function LiveDestinationForm({
           />
         </label>
         <button className="rounded-lg border px-4 py-2" type="submit">
-          {quote.isPending ? 'Requesting quote...' : 'Request delivery quote'}
+          {quote.isPending
+            ? 'Calculating total...'
+            : 'Calculate delivery & total'}
         </button>
       </fieldset>
       {quote.isError && (

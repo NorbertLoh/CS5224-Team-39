@@ -102,5 +102,5 @@ export function paymentMessage({ order, payment }: OrderSnapshot) {
     return 'The previous payment failure is verified. Obtain a fresh quote or retry before the quote deadline.'
   if (order.payment_id)
     return 'Payment pending or awaiting reconciliation. Returning from Stripe does not confirm success or failure. Check this attempt before starting another payment.'
-  return 'Request a delivery quote, review the server total, then continue to Stripe test Checkout.'
+  return 'Confirm your delivery address, review the full total, then pay securely.'
 }
