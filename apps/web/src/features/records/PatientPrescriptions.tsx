@@ -81,6 +81,7 @@ function PatientList({
             <div key={prescription.prescription_id} className="space-y-3">
               <PrescriptionSummary
                 prescription={prescription}
+                token={token}
                 selected={selected === prescription.prescription_id}
                 onToggle={() =>
                   setSelected((current) =>

@@ -4,6 +4,7 @@ import { createElement } from 'react'
 import { DoctorRecordForm } from '../src/features/records/DoctorRecordForm'
 import { PrescriptionEditor } from '../src/features/records/PrescriptionEditor'
 import { RecordWorkspace } from '../src/features/records/RecordWorkspace'
+import { PrescriptionSummary } from '../src/features/records/PrescriptionSummary'
 import example from '../../../contracts/examples/prescription-order-quote.json'
 import { validItems, prescriptionItems } from '../src/features/records/types'
 import {
@@ -25,6 +26,40 @@ const item = {
   quantity: 2,
   instructions: '  Synthetic instructions.  ',
 }
+
+test('patient prescription displays its clinic name without exposing a raw clinic ID', () => {
+  const client = schedulingClient()
+  const prescription = { ...example.prescription, status: 'issued' as const }
+  const key = ['records', 'context', 's07-test', prescription.appointment_id]
+  const appointment = {
+    appointment_id: prescription.appointment_id,
+    tenant_id: prescription.tenant_id,
+    patient_id: prescription.patient_id,
+    clinic_name: 'Local Clinic',
+  }
+  const render = () =>
+    renderScheduling(
+      client,
+      createElement(PrescriptionSummary, {
+        prescription,
+        token: 's07-test',
+        selected: false,
+        onToggle: () => {},
+      }),
+    )
+  try {
+    client.setQueryData(key, appointment)
+    assert.match(render(), /Clinic: Local Clinic/)
+    assert.doesNotMatch(render(), new RegExp(prescription.tenant_id))
+    client.setQueryData(key, { ...appointment, clinic_name: null })
+    assert.match(render(), /Clinic name unavailable/)
+    client.setQueryData(key, { ...appointment, tenant_id: 'another-clinic' })
+    assert.doesNotMatch(render(), /Clinic: Local Clinic/)
+    assert.match(render(), /Clinic name unavailable/)
+  } finally {
+    client.clear()
+  }
+})
 
 test('doctor prescription history follows pagination rather than missing an existing live draft', async (context) => {
   const client = schedulingClient()
