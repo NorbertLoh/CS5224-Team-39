@@ -83,13 +83,13 @@ export function AppRoutes({
       return (
         <main className="mx-auto max-w-6xl px-6 py-10">
           <h1 className="text-3xl font-semibold">{roleLabels[route.role]}</h1>
+          {route.role === 'patient' && <PatientPrescriptions />}
           {route.role === 'patient' && (
             <section className="mt-8">
               <h2 className="text-xl font-semibold">Explore clinics</h2>
               <ClinicDirectory />
             </section>
           )}
-          {route.role === 'patient' && <PatientPrescriptions />}
           {route.role === 'patient' && (
             <p className="mt-6 text-sm">
               <a className="underline" href="/patient/medication-orders">

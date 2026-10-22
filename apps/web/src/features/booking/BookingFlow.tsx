@@ -108,10 +108,8 @@ export function BookingFlow({
                   doctors.find((doctor) => doctor.doctor_id === slot.doctor_id)
                     ?.display_name ?? slot.doctor_id,
               }))}
-              dates={[date]}
               date={date}
               selectedId={selectedId}
-              onDate={() => {}}
               onSelect={setSelectedId}
               onCheckout={() => booking.mutate()}
             />

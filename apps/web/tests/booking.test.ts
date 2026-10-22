@@ -133,15 +133,13 @@ test('picker disables unavailable times and requires an available selection on t
   const slot = slots.find((item) => item.availability === 'available')!
   const props = {
     slots,
-    dates,
     date: dates[0],
     selectedId: null,
-    onDate: () => {},
     onSelect: () => {},
     onCheckout: () => {},
   }
   const empty = renderToStaticMarkup(createElement(SlotPicker, props))
-  assert.match(empty, /Date<select/)
+  assert.doesNotMatch(empty, /<select/)
   assert.match(empty, /disabled=""[^>]*>Continue to checkout/)
   assert.match(empty, /Unavailable/)
   const selected = renderToStaticMarkup(

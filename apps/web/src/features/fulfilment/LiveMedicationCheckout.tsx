@@ -10,7 +10,7 @@ import { fulfilmentError, reconcileOrderPayment } from './api'
 import type { OrderSnapshot } from './api'
 import { LiveDestinationForm } from './LiveDestinationForm'
 import { consultationPrice } from '../../lib/money'
-import { trackingTime } from './model'
+import { MedicationCheckoutSummary } from './MedicationCheckoutSummary'
 
 export function LiveMedicationCheckout({
   snapshot,
@@ -46,41 +46,11 @@ export function LiveMedicationCheckout({
       aria-labelledby="medication-checkout-heading"
     >
       <h2 id="medication-checkout-heading" className="text-xl font-semibold">
-        Medication and delivery payment
+        {order.payment_status === 'succeeded'
+          ? 'Your medicines'
+          : 'Review medicines & pay'}
       </h2>
-      <dl className="space-y-2 rounded-xl border p-4 text-sm">
-        <div className="flex justify-between gap-3">
-          <dt>Medication subtotal</dt>
-          <dd>
-            {consultationPrice(order.medication_subtotal.amount_minor, 'SGD')}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-3">
-          <dt>Delivery fee</dt>
-          <dd>
-            {order.delivery_fee
-              ? consultationPrice(order.delivery_fee.amount_minor, 'SGD')
-              : 'Awaiting quote'}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-3 font-semibold">
-          <dt>Total (SGD)</dt>
-          <dd>
-            {order.total
-              ? consultationPrice(order.total.amount_minor, 'SGD')
-              : 'Awaiting quote'}
-          </dd>
-        </div>
-        {quote && (
-          <div>
-            <dt>Quote deadline</dt>
-            <dd>
-              {trackingTime(quote.expires_at)}{' '}
-              {Date.parse(quote.expires_at) <= now ? '(expired)' : ''}
-            </dd>
-          </div>
-        )}
-      </dl>
+      <MedicationCheckoutSummary snapshot={snapshot} now={now} />
       {canQuote(snapshot) && (
         <LiveDestinationForm
           orderId={order.order_id}
@@ -132,8 +102,8 @@ export function LiveMedicationCheckout({
           {checkout.isPending
             ? 'Opening secure checkout...'
             : order.payment_id
-              ? 'Resume Stripe test Checkout'
-              : 'Continue to Stripe test Checkout'}
+              ? 'Resume payment'
+              : `Pay ${consultationPrice(quote!.total.amount_minor, 'SGD')}`}
         </button>
       )}
       {checkout.isError && (
@@ -142,9 +112,8 @@ export function LiveMedicationCheckout({
         </p>
       )}
       <p className="text-sm text-slate-600">
-        Stripe test mode. Returning from checkout does not establish payment
-        status. Short quote deadlines use a best-effort expiry worker; do not
-        pay after the deadline.
+        Stripe test checkout. Your payment status updates here after
+        confirmation.
       </p>
     </section>
   )

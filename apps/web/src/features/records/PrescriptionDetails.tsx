@@ -1,4 +1,5 @@
 import type { Prescription } from './types'
+import { OpenMedicationOrderButton } from '../fulfilment/OpenMedicationOrderButton'
 
 export function PrescriptionDetails({
   prescription,
@@ -59,12 +60,10 @@ export function PrescriptionDetails({
         </p>
       )}
       {allowOrdering && prescription.status === 'issued' && (
-        <a
-          className="inline-block rounded border px-4 py-2 text-sm"
-          href={`/patient/medication-orders?prescription_id=${encodeURIComponent(prescription.prescription_id)}`}
-        >
-          Order medication
-        </a>
+        <OpenMedicationOrderButton
+          prescriptionId={prescription.prescription_id}
+          subject={prescription.patient_id}
+        />
       )}
     </article>
   )

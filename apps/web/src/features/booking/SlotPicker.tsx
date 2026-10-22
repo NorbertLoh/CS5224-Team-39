@@ -1,23 +1,18 @@
 import { BookingSlotCell } from './BookingSlotCell'
 import { BookingSelection } from './BookingSelection'
-import { formatBookingDate } from './display'
 import { singaporeDate } from '../scheduling/time'
 import type { BookingSlot } from './fixtures'
 
 export function SlotPicker({
   slots,
-  dates,
   date,
   selectedId,
-  onDate,
   onSelect,
   onCheckout,
 }: {
   slots: BookingSlot[]
-  dates: string[]
   date: string
   selectedId: string | null
-  onDate: (date: string) => void
   onSelect: (id: string) => void
   onCheckout: () => void
 }) {
@@ -32,20 +27,6 @@ export function SlotPicker({
       <h2 id="slot-heading" className="text-2xl font-semibold">
         Choose a time
       </h2>
-      <label className="flex max-w-sm flex-col gap-2 text-sm font-medium">
-        Date
-        <select
-          className="rounded-lg border bg-white px-3 py-3"
-          value={date}
-          onChange={(event) => onDate(event.target.value)}
-        >
-          {dates.map((item) => (
-            <option key={item} value={item}>
-              {formatBookingDate(item)}
-            </option>
-          ))}
-        </select>
-      </label>
       <p className="text-sm text-slate-600">
         30-minute consultations · Singapore time (SGT)
       </p>

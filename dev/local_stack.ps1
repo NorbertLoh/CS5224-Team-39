@@ -1,5 +1,5 @@
 <#
-Starts, stops or checks the full local I01/I02 stack in the background.
+Starts, stops or checks all implemented local APIs and workers in the background.
 
   powershell -ExecutionPolicy Bypass -File dev/local_stack.ps1 start
   powershell -ExecutionPolicy Bypass -File dev/local_stack.ps1 status
@@ -42,9 +42,15 @@ $Workers = @(
     @{ Name = 'bill-expiry';        Dir = 'services\billing';          Exe = (Venv billing);          Args = '-m app.expire_checkouts' }
     @{ Name = 'bill-processor';     Dir = 'services\billing';          Exe = (Venv billing);          Args = '-m app.payment_worker' }
     @{ Name = 'bill-publisher';     Dir = 'services\billing';          Exe = (Venv billing);          Args = '-m app.payment_worker --publish' }
+    @{ Name = 'fulfilment-payment-worker'; Dir = 'services\fulfilment'; Exe = (Venv fulfilment); Args = '-m app.payment_worker' }
+    @{ Name = 'delivery-worker';    Dir = 'services\fulfilment';      Exe = (Venv fulfilment);      Args = '-m app.delivery_worker' }
+    @{ Name = 'delivery-resolver';  Dir = 'services\fulfilment';      Exe = (Venv fulfilment);      Args = '-m app.delivery_worker --resolve' }
+    @{ Name = 'delivery-publisher'; Dir = 'services\fulfilment';      Exe = (Venv fulfilment);      Args = '-m app.delivery_worker --publish' }
+    @{ Name = 'delivery-tracker';   Dir = 'services\fulfilment';      Exe = (Venv fulfilment);      Args = '-m app.tracking_worker' }
     @{ Name = 'records-publisher';  Dir = 'services\clinical_records'; Exe = (Venv clinical_records); Args = '-m app.publish_events' }
     @{ Name = 'document-worker';    Dir = 'services\document';         Exe = (Venv document);         Args = '-m app.worker' }
     @{ Name = 'document-publisher'; Dir = 'services\document';         Exe = (Venv document);         Args = '-m app.publish_events' }
+    @{ Name = 'notification-worker'; Dir = 'services\notification';   Exe = (Venv notification);     Args = '-m app.worker' }
 )
 $StripeEvents = 'checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed'
 
@@ -61,6 +67,15 @@ function Get-RunningPid($name) {
 function Test-Port($port) {
     $client = New-Object System.Net.Sockets.TcpClient
     try { return $client.ConnectAsync('127.0.0.1', $port).Wait(500) } catch { return $false } finally { $client.Dispose() }
+}
+
+function Test-Ready($p) {
+    if (-not (Test-Port $p.Port)) { return $false }
+    $path = if ($p.Name -eq 'vite') { '/' } else { '/health/ready' }
+    try {
+        $response = Invoke-WebRequest -Uri "http://127.0.0.1:$($p.Port)$path" -UseBasicParsing -TimeoutSec 5
+        return $response.StatusCode -eq 200
+    } catch { return $false }
 }
 
 function Start-One($p) {
@@ -94,7 +109,16 @@ function Start-Containers {
     throw 'telelink-clinic-postgres did not become ready'
 }
 
+function Test-StripeContainer {
+    try {
+        $names = & docker ps --filter 'name=^/telelink-local-stripe-forwarder$' --filter 'status=running' --format '{{.Names}}' 2>$null
+        return $names -contains 'telelink-local-stripe-forwarder'
+    } catch { return $false }
+}
+
 function Start-Stripe {
+    if (Test-StripeContainer) { Write-Host '  Stripe forwarder already running (Docker)'; return }
+    if (Get-RunningPid 'stripe-listen') { Write-Host '  Stripe forwarder already running'; return }
     if (-not (Get-Command $StripeCli -ErrorAction SilentlyContinue)) {
         Write-Warning "Stripe CLI '$StripeCli' not found; payments will not confirm. Pass -StripeCli <path to stripe.exe>."
         return
@@ -103,7 +127,7 @@ function Start-Stripe {
     if (-not $env:STRIPE_API_KEY) { $env:STRIPE_API_KEY = Read-DotEnv $billingEnv 'SERVICE_STRIPE_SECRET_KEY' }
     $secret = (& $StripeCli listen --print-secret).Trim()
     if ($secret -ne (Read-DotEnv $billingEnv 'SERVICE_STRIPE_WEBHOOK_SECRET')) {
-        Write-Warning "Stripe webhook secret changed. Set SERVICE_STRIPE_WEBHOOK_SECRET=$secret in services/billing/.env, then run stop and start."
+        Write-Warning 'Stripe webhook signing secret differs from services/billing/.env. Update SERVICE_STRIPE_WEBHOOK_SECRET privately, then restart billing.'
     }
     Start-One @{ Name = 'stripe-listen'; Dir = '.'; Exe = (Get-Command $StripeCli).Source
                  Args = "listen --events $StripeEvents --forward-to http://127.0.0.1:8009/webhooks/stripe" }
@@ -118,13 +142,21 @@ function Start-Stack {
     Start-Containers
     Write-Host 'APIs'
     $Apis | ForEach-Object { Start-One $_ }
-    Write-Host 'Waiting for API ports...'
-    $deadline = (Get-Date).AddSeconds(60)
-    while ((Get-Date) -lt $deadline -and ($Apis | Where-Object { -not (Test-Port $_.Port) })) { Start-Sleep -Seconds 1 }
+    Write-Host 'Waiting for API readiness...'
+    $deadline = (Get-Date).AddSeconds(120)
+    do {
+        $unready = @($Apis | Where-Object { -not (Test-Ready $_) })
+        if ($unready.Count -eq 0) { break }
+        Start-Sleep -Seconds 1
+    } while ((Get-Date) -lt $deadline)
+    if ($unready.Count) { throw "APIs not ready: $($unready.Name -join ', '). Inspect .local/stack logs." }
     Write-Host 'Workers'
-    $Workers | ForEach-Object { Start-One $_ }
+    $Workers | ForEach-Object { Start-One $_; Start-Sleep -Milliseconds 500 }
     Start-Stripe
+    Start-Sleep -Seconds 2
     Show-Status
+    $stopped = $Workers | Where-Object { -not (Get-RunningPid $_.Name) }
+    if ($stopped) { throw "Workers failed to start: $($stopped.Name -join ', '). Inspect .local/stack logs." }
     Write-Host "`nOpen https://localhost:8443  (logs: .local\stack\<name>.err.log)"
 }
 
@@ -140,6 +172,7 @@ function Show-Status {
     Write-Host "`nStatus"
     foreach ($p in $Apis + $Workers + @(@{ Name = 'stripe-listen' })) {
         $state = if (Get-RunningPid $p.Name) { 'running' } else { 'STOPPED' }
+        if ($p.Name -eq 'stripe-listen' -and (Test-StripeContainer)) { $state = 'running (Docker)' }
         if ($p.Port -and $state -eq 'running' -and -not (Test-Port $p.Port)) { $state = "running, port $($p.Port) not open" }
         '  {0,-20} {1}' -f $p.Name, $state | Write-Host
     }
