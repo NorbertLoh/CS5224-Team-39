@@ -1,5 +1,5 @@
 import { AppointmentCell } from './AppointmentCell'
-import { dateInSingapore, dayCells } from './display'
+import { dayCells } from './display'
 import type { Appointment } from '../scheduling/api'
 import type { AppointmentRole } from './types'
 import { useAppointmentNames } from './useAppointmentNames'
@@ -22,7 +22,6 @@ export function AppointmentGrid({
   // Staff retain the half-hour timetable for viewing overlapping appointments.
   const cells = role === 'patient'
     ? namedAppointments
-        .filter((appointment) => dateInSingapore(appointment.starts_at) === date)
         .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
         .map((appointment) => ({
           startsAt: appointment.starts_at,
@@ -31,7 +30,7 @@ export function AppointmentGrid({
         }))
     : dayCells(namedAppointments, date)
   if (!cells.length)
-    return <p className="text-slate-600">No appointments on this date.</p>
+    return <p className="text-slate-600">{role === 'patient' ? 'No appointments yet.' : 'No appointments on this date.'}</p>
   return (
     <div
       aria-label={role === 'patient' ? 'Appointments' : '30-minute appointment cells'}

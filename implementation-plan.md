@@ -245,6 +245,8 @@ The local legacy name snapshots also required repair: 13 appointments had no sav
 patient/doctor/clinic names, including suspended test clinics absent from public
 directories. Missing snapshots were filled from existing local profiles, preserving
 saved names; patient-name fallbacks now use a readable label rather than UUIDs.
+The patient date dropdown is replaced by a chronological list across dates with
+the Singapore date and time on every appointment card; pagination is retained.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused

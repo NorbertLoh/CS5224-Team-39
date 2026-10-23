@@ -1,4 +1,4 @@
-import { formatTime, nameOrId, readableStatus } from './display'
+import { dateInSingapore, formatDate, formatTime, nameOrId, readableStatus } from './display'
 import type { AppointmentRole } from './types'
 import type { dayCells } from './display'
 
@@ -15,6 +15,11 @@ export function AppointmentCell({
 }) {
   return (
     <div className="min-h-24 rounded-lg border bg-slate-50 p-3">
+      {role === 'patient' && (
+        <p className="text-sm font-medium text-slate-600">
+          {formatDate(dateInSingapore(cell.startsAt))}
+        </p>
+      )}
       <p className="mb-2 text-sm font-medium text-slate-600">
         {formatTime(cell.startsAt)}–{formatTime(cell.endsAt)}
       </p>

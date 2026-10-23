@@ -27,3 +27,15 @@ The patient API returned all 16 bookings with all three names; doctor and clinic
 admin scopes each returned four fully named bookings. Cards and selected details
 in all three workspaces displayed names, including patient names, with no UUID or
 unavailable-name fallback in the checked fields.
+
+## Patient appointment list
+
+The patient workspace displays appointments across all loaded dates in time order,
+with the Singapore date and complete time range on each card. The date dropdown
+is removed; cursor pagination still offers Load more appointments when needed.
+Doctor and clinic-admin views retain their date-based timetables.
+
+Lint and production build passed. Authenticated browser checks verified all 16
+local patient appointments across dates, each date/time label, no patient dropdown,
+one selected card after each of 16 clicks, names and details. Doctor and clinic-admin
+appointment card/detail checks also passed.

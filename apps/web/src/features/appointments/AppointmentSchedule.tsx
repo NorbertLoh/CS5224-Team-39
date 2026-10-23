@@ -59,8 +59,9 @@ export function AppointmentSchedule({
         Appointments
       </h2>
       <p className="text-slate-600">
-        Choose a date, then select an appointment to see its details. All times
-        are Singapore time (SGT).
+        {role === 'patient'
+          ? 'Select an appointment to see its details. All dates and times are Singapore time (SGT).'
+          : 'Choose a date, then select an appointment to see its details. All times are Singapore time (SGT).'}
       </p>
       {role === 'clinic_admin' && !tenantId && (
         <label className="flex max-w-sm flex-col gap-2">
@@ -135,23 +136,25 @@ function LiveSchedule({
   return (
     <>
       <div className="flex flex-wrap gap-4">
-        <label className="flex flex-col gap-2">
-          Date
-          <select
-            className="rounded border bg-white p-2"
-            value={date}
-            onChange={(event) => {
-              setSelectedDate(event.target.value)
-              setSelectedId(null)
-            }}
-          >
-            {dates.map((item) => (
-              <option key={item} value={item}>
-                {formatDate(item)}
-              </option>
-            ))}
-          </select>
-        </label>
+        {role !== 'patient' && (
+          <label className="flex flex-col gap-2">
+            Date
+            <select
+              className="rounded border bg-white p-2"
+              value={date}
+              onChange={(event) => {
+                setSelectedDate(event.target.value)
+                setSelectedId(null)
+              }}
+            >
+              {dates.map((item) => (
+                <option key={item} value={item}>
+                  {formatDate(item)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <button
           className="self-end rounded border px-4 py-2"
           disabled={query.isFetching}
@@ -170,13 +173,16 @@ function LiveSchedule({
       ) : (
         <>
           <p role="status">
-            {
-              appointments.filter(
-                (item) => dateInSingapore(item.starts_at) === date,
-              ).length
-            }{' '}
-            appointments on {formatDate(date)}.
-            {role !== 'patient' && ' Empty cells are not booking availability.'}
+            {role === 'patient' ? (
+              `${appointments.length} appointments.`
+            ) : (
+              <>
+                {appointments.filter(
+                  (item) => dateInSingapore(item.starts_at) === date,
+                ).length}{' '}
+                appointments on {formatDate(date)}. Empty cells are not booking availability.
+              </>
+            )}
           </p>
           <AppointmentGrid
             appointments={appointments}
@@ -191,7 +197,7 @@ function LiveSchedule({
               disabled={query.isFetchingNextPage}
               onClick={() => void query.fetchNextPage()}
             >
-              Load more appointments and dates
+              Load more appointments
             </button>
           )}
           {selectedId && (
