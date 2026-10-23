@@ -130,3 +130,49 @@ def test_invalid_snapshots_fail(factory, overrides):
 def test_single_day_mc():
     text = PdfReader(BytesIO(render_medical_certificate(mc(unfit_through=date(2026, 10, 15)))))
     assert "1 day(s)" in text.pages[0].extract_text()
+
+
+def test_single_very_long_instruction_splits_across_pages():
+    item = PrescriptionItem(
+        display_name="Long directions sample",
+        quantity=1,
+        instructions=("Sample instruction. " * 900) + "FINAL DIRECTIONS",
+    )
+    reader = PdfReader(BytesIO(render_prescription(prescription(items=(item,)))))
+    assert len(reader.pages) > 1
+    assert "FINAL DIRECTIONS" in "\n".join(page.extract_text() for page in reader.pages)
+    for page in reader.pages:
+        assert "Medicine and directions" in page.extract_text()
+
+
+def test_long_receipt_and_mc_content_is_preserved():
+    items = tuple(
+        ReceiptItem(description=f"Sample charge {number}: " + "description " * 12, amount_minor=100)
+        for number in range(100)
+    )
+    receipt_reader = PdfReader(BytesIO(render_receipt(receipt(items=items, total_minor=10000))))
+    assert len(receipt_reader.pages) > 1
+    assert "Sample charge 99" in "\n".join(page.extract_text() for page in receipt_reader.pages)
+    assert "SGD 100.00" in receipt_reader.pages[-1].extract_text()
+    certificate = mc(
+        patient_name="Long sample name " * 10,
+        additional_notes="Sample notes only. " * 800 + "FINAL NOTE",
+    )
+    mc_reader = PdfReader(BytesIO(render_medical_certificate(certificate)))
+    assert len(mc_reader.pages) > 1
+    assert "FINAL NOTE" in "\n".join(page.extract_text() for page in mc_reader.pages)
+    assert "Dr Synthetic" in mc_reader.pages[-1].extract_text()
+
+
+@pytest.mark.parametrize(
+    "render,data",
+    [
+        (render_prescription, prescription(doctor_registration=None, clinic_address=None)),
+        (render_medical_certificate, mc(doctor_registration=None, clinic_address=None)),
+    ],
+)
+def test_optional_fields_do_not_create_placeholder_credentials(render, data):
+    text = "\n".join(page.extract_text() for page in PdfReader(BytesIO(render(data))).pages)
+    assert "Dr Synthetic" in text
+    assert "Medical registration" not in text
+    assert "Signature" not in text

@@ -237,6 +237,9 @@ Issue #244; Assignee: NorbertLoh; status: in progress. Dependencies: P01 and U17
 (complete). Effort: M. Preserve existing template-data contracts, glyph rejection,
 private metadata and offline fonts. Verify document tests and attach synthetic
 sample PDFs to the draft PR. Receipt generation wiring and signatures are out of scope.
+Draft PR #263; design and synthetic PDF previews: `docs/RF02-pdf-design.md`.
+Verification: 105 document tests passed against disposable PostgreSQL; changed-file
+Ruff checks passed. Keep the task open until merge.
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
