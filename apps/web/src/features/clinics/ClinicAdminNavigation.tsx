@@ -20,7 +20,7 @@ export function ClinicAdminNavigation({
     ? `/clinic-admin/clinics/${tenantId}/profile`
     : '/clinic-admin'
   const active =
-    route.kind === 'clinic-appointments'
+    route.kind === 'clinic-appointments' && !tenantId
       ? '/clinic-admin/appointments'
       : '/clinic-admin'
 
@@ -44,8 +44,12 @@ export function ClinicAdminNavigation({
       {tenantId && (
         <ClinicManagementNavigation
           tenantId={tenantId}
-          active={route.kind}
-          showOrders={clinicIds(identity, 'clinic_admin').includes(tenantId)}
+          active={
+            route.kind === 'clinic-appointments' ? 'appointments' : route.kind
+          }
+          hasClinicMembership={clinicIds(identity, 'clinic_admin').includes(
+            tenantId,
+          )}
         />
       )}
     </>

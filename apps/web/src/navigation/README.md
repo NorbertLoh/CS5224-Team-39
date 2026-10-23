@@ -42,9 +42,12 @@ source of access to appointments and clinic data. No configuration or migrations
 
 Selecting a clinic opens its profile as the management landing page. A persistent
 Clinic management navbar shows the selected clinic's name and Profile, Staff,
-Payments and Medicine & delivery links, preserving that clinic in every URL.
-Medicine & delivery is shown only for active administrators of that clinic, in
-line with the existing orders access rule. Change clinic returns to the list;
+Appointments, Payments and Medicine & delivery links, preserving that clinic in
+every URL. Appointments opens `/clinic-admin/clinics/<UUID>/appointments` with the
+schedule fixed to that clinic and no clinic selector. Both the scoped schedule
+and Medicine & delivery require active administration of the selected clinic;
+platform access to profile/staff/payments does not grant those clinical views.
+Change clinic returns to the list;
 Manage clinic stays within the selected clinic. The clinic choice is never stored
 in browser storage, and the shared identity gate blocks revoked/other-clinic links.
 

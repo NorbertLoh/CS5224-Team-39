@@ -5,6 +5,7 @@ import { readClinic } from '../clinic-profile/logo-api'
 const pages = [
   { kind: 'profile', label: 'Profile' },
   { kind: 'staff', label: 'Staff' },
+  { kind: 'appointments', label: 'Appointments' },
   { kind: 'payments', label: 'Payments' },
   { kind: 'orders', label: 'Medicine & delivery' },
 ]
@@ -12,11 +13,11 @@ const pages = [
 export function ClinicManagementNavigation({
   tenantId,
   active,
-  showOrders,
+  hasClinicMembership,
 }: {
   tenantId: string
   active: string
-  showOrders: boolean
+  hasClinicMembership: boolean
 }) {
   const clinic = useQuery({
     queryKey: ['clinic-profile', readSession()?.accessToken, tenantId],
@@ -40,7 +41,11 @@ export function ClinicManagementNavigation({
         </div>
         <nav aria-label="Clinic management" className="flex flex-wrap gap-2">
           {pages
-            .filter((page) => page.kind !== 'orders' || showOrders)
+            .filter(
+              (page) =>
+                !['orders', 'appointments'].includes(page.kind) ||
+                hasClinicMembership,
+            )
             .map((page) => (
               <a
                 key={page.kind}

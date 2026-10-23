@@ -308,6 +308,12 @@ The clinic-specific refinement also passed lint/typecheck/build and real clinic
 admin sign-in through Tailscale. Profile, Staff, Payments and Medicine & delivery
 kept the selected clinic and correct active tab; Change clinic returned to the
 list. The management navbar wrapped within a 390px viewport. PR remains a draft.
+User refinement: add an Appointments tab for each selected clinic, with its real
+schedule fixed to that clinic and no clinic selector. The scoped route requires
+active clinic administration; the overall Appointments entry remains available.
+Scoped appointments passed lint/typecheck/build, route/membership access checks
+and a Tailscale browser check of the active clinic tab with no clinic selector.
+The real scheduling API returned four appointments, all for the selected clinic.
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |

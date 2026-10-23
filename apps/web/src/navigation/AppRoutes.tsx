@@ -58,7 +58,11 @@ export function AppRoutes({
       return (
         <main className="mx-auto max-w-6xl px-6 py-10">
           <h1 className="text-3xl font-semibold">Clinic appointments</h1>
-          <AppointmentSchedule role="clinic_admin" />
+          <AppointmentSchedule
+            key={route.tenantId}
+            role="clinic_admin"
+            tenantId={route.tenantId}
+          />
         </main>
       )
     case 'platform':

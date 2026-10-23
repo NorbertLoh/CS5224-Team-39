@@ -10,7 +10,7 @@ export type Route =
   | { kind: 'medication-orders'; role: 'patient' }
   | { kind: 'prescriptions' | 'documents'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
-  | { kind: 'clinic-appointments'; role: 'clinic_admin' }
+  | { kind: 'clinic-appointments'; role: 'clinic_admin'; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | {
       kind: 'profile' | 'staff' | 'payments' | 'orders'
@@ -52,8 +52,10 @@ export function hasRole(identity: Identity, role: Role) {
 
 export function canAccess(identity: Identity, route: Route) {
   if (!('role' in route)) return true
-  // Medicine readiness requires active owning-clinic administration (D03).
+  // Orders and clinic-scoped schedules require active owning-clinic administration.
   if (route.kind === 'orders')
+    return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
+  if (route.kind === 'clinic-appointments' && route.tenantId)
     return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
   // Tenant APIs explicitly permit platform administrators to manage clinics.
   if (
@@ -116,15 +118,22 @@ export function parseRoute(path: string): Route {
       tenantId: platform[1].toLowerCase(),
     }
   const clinic =
-    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|orders)$/.exec(
+    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|orders|appointments)$/.exec(
       normalized,
     )
-  if (clinic && uuid.test(clinic[1]))
+  if (clinic && uuid.test(clinic[1])) {
+    if (clinic[2] === 'appointments')
+      return {
+        kind: 'clinic-appointments',
+        role: 'clinic_admin',
+        tenantId: clinic[1].toLowerCase(),
+      }
     return {
       kind: clinic[2] as 'profile' | 'staff' | 'payments' | 'orders',
       role: 'clinic_admin',
       tenantId: clinic[1].toLowerCase(),
     }
+  }
   const doctor = /^\/doctor\/clinics\/([^/]+)$/.exec(normalized)
   if (doctor && uuid.test(doctor[1]))
     return { kind: 'role', role: 'doctor', tenantId: doctor[1].toLowerCase() }
