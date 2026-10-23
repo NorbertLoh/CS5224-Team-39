@@ -295,6 +295,11 @@ Issue #265; assignee NorbertLoh; status In progress. Dependencies: F06-F08, U05,
 S07 and RF05 (complete). Effort: S. Completion requires separated pages, correct
 active navigation, narrow-screen wrapping, lint/typecheck/build and real local
 clinic admin navigation checks. No configuration or migrations required.
+Draft PR #266 implements the split. Frontend lint and typecheck/production build
+passed. Live local browser checks verified separate management/schedule content,
+active navigation, existing profile links and clinic selection; a 390px viewport
+kept both navigation links within the page. The Tailscale appointments direct link
+redirected a signed-out browser to sign-in. Awaiting user review/merge.
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |

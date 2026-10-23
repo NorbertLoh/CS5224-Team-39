@@ -26,11 +26,19 @@ workspace navigation on the public directory and clinic storefronts.
 
 The clinic choice is the URL, checked against current active memberships for the
 route's role. Clinic administrators choose a named clinic from the Manage clinics
-cards in their workspace. The navigation contains role links only, without a
-duplicate clinic dropdown. There is no persisted clinic choice to carry between
+cards in their workspace. The role navigation has no duplicate clinic dropdown.
+There is no persisted clinic choice to carry between
 users. Platform administrators
 select clinics from the existing paginated platform list and retain the tenant
 APIs' explicit clinic administration access without a membership.
+
+Clinic administration has a shared workspace navigation matching the patient
+navigation: Manage clinic (`/clinic-admin`) contains the existing management
+cards/actions, while Appointments (`/clinic-admin/appointments`) contains the real
+schedule and its membership-scoped clinic selector. Profile, staff, payments and
+orders retain their existing direct links and highlight Manage clinic. Both entry
+pages use the existing sign-in and identity gates; backend permissions remain the
+source of access to appointments and clinic data. No configuration or migrations.
 
 Routes: `/patient`, `/doctor`, `/doctor/clinics/<UUID>`, `/clinic-admin`, existing
 clinic profile/staff routes, and existing platform clinic routes. Unknown paths

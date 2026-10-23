@@ -10,6 +10,7 @@ export type Route =
   | { kind: 'medication-orders'; role: 'patient' }
   | { kind: 'prescriptions' | 'documents'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
+  | { kind: 'clinic-appointments'; role: 'clinic_admin' }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | {
       kind: 'profile' | 'staff' | 'payments' | 'orders'
@@ -96,6 +97,8 @@ export function parseRoute(path: string): Route {
     return { kind: 'consultation', role: 'doctor' }
   if (normalized === '/clinic-admin')
     return { kind: 'role', role: 'clinic_admin' }
+  if (normalized === '/clinic-admin/appointments')
+    return { kind: 'clinic-appointments', role: 'clinic_admin' }
   const booking = /^\/patient\/clinics\/([^/]+)\/book$/.exec(normalized)
   if (booking) return { kind: 'booking', role: 'patient', slug: booking[1] }
   if (

@@ -7,6 +7,7 @@ import { ErrorState } from '../components/ErrorState'
 import { LoadingState } from '../components/LoadingState'
 import { RoleNavigation } from './RoleNavigation'
 import { PatientNavigation } from '../features/patient/PatientNavigation'
+import { ClinicAdminNavigation } from '../features/clinics/ClinicAdminNavigation'
 import { canAccess, hasRole } from './access'
 import type { Route } from './access'
 import type { ReactNode } from 'react'
@@ -76,6 +77,13 @@ export function AppShell({
         {session && !('role' in route) && identity.isPending && (
           <LoadingState message="Loading your roles..." />
         )}
+        {session &&
+          identity.isSuccess &&
+          'role' in route &&
+          route.role === 'clinic_admin' &&
+          canAccess(identity.data, route) && (
+            <ClinicAdminNavigation route={route} />
+          )}
         {session && !('role' in route) && identity.isError && (
           <ErrorState
             message="Could not load your roles. Check your session and connection."

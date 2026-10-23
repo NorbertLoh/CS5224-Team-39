@@ -54,6 +54,13 @@ export function AppRoutes({
       return <StaffManagement tenantId={route.tenantId} />
     case 'payments':
       return <ClinicPayments key={route.tenantId} tenantId={route.tenantId} />
+    case 'clinic-appointments':
+      return (
+        <main className="mx-auto max-w-6xl px-6 py-10">
+          <h1 className="text-3xl font-semibold">Clinic appointments</h1>
+          <AppointmentSchedule role="clinic_admin" />
+        </main>
+      )
     case 'platform':
       return (
         session && (
@@ -91,8 +98,7 @@ export function AppRoutes({
             </section>
           )}
           {(route.role === 'patient' ||
-            route.role === 'doctor' ||
-            route.role === 'clinic_admin') && (
+            route.role === 'doctor') && (
             <AppointmentSchedule
               key={`${route.role}:${route.tenantId ?? ''}`}
               role={route.role}
