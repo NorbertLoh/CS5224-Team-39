@@ -335,3 +335,5 @@ Staff/Payments cleanup passed frontend lint and typecheck/production build.
 - [ ] Essential checks and known limitations have brief evidence.
 - [ ] Demo script, backup recording and report are ready.
 | [x] | RF04 | Remove frontend test harnesses, synthetic preview routes and fixture-only code; retain live application flows and build tooling. Completed in merged PR #259; issue #258 closed. Clean npm install, lint, typecheck/production build, live-route/removed-preview/clinic-access smoke checks, Compose configuration and CI image builds passed. Current setup: `apps/web/README.md`; no new configuration or migrations. | F06-F08, S07, B07, R04, D07, V04 (complete) | M |
+
+- [ ] RF08: Clinic admins issue full consultation refunds from their own clinic Payments, with required reason, confirmation, durable audit, Stripe idempotency/reconciliation and scheduling/patient status updates. No medication/delivery refund action; preserve delivery exception review. Issue #269 assigned NorbertLoh, status: in progress. Dependencies: B01-B07 and S04-S06 (complete), RF06 / PR #266 (stacked dependency). Effort: L.
