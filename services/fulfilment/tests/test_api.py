@@ -324,6 +324,39 @@ def test_catalogue_invalid_inputs(api, changes):
     )
 
 
+@pytest.mark.parametrize("equal_times", [False, True])
+def test_newest_order_pagination_and_sort_scope(api, equal_times):
+    client, state, _ = api
+    ids = []
+    for _ in range(3):
+        rx = uuid4()
+        result = create(client, key=str(rx), rx=rx)
+        assert result.status_code == 201
+        ids.append(result.json()["order_id"])
+    # Equal timestamps exercise the ID tie-breaker at every page boundary.
+    if equal_times:
+        with state.sessions.begin() as db:
+            for row in db.scalars(select(Order)):
+                row.created_at = NOW
+    expected = sorted(ids, reverse=True) if equal_times else list(reversed(ids))
+    page = client.get("/orders", params={"sort": "newest", "limit": 1}).json()
+    cursor = page["next_cursor"]
+    seen = [page["items"][0]["order_id"]]
+    while page["next_cursor"]:
+        page = client.get("/orders", params={
+            "sort": "newest", "limit": 1, "cursor": page["next_cursor"],
+        }).json()
+        seen.extend(row["order_id"] for row in page["items"])
+    assert seen == expected
+    assert client.get("/orders").json()["items"][0]["order_id"] == expected[-1]
+    assert client.get("/orders", params={"limit": 1, "cursor": cursor}).status_code == 422
+    oldest_cursor = client.get("/orders", params={"limit": 1}).json()["next_cursor"]
+    assert client.get("/orders", params={
+        "sort": "newest", "limit": 1, "cursor": oldest_cursor,
+    }).status_code == 422
+    assert client.get("/orders", params={"sort": "invalid"}).status_code == 422
+
+
 def test_cursor_scope_pagination_filters_and_tampering(api):
     client, state, _ = api
     for _ in range(3):

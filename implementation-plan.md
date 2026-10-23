@@ -264,6 +264,9 @@ with technical references and settled-order pricing collapsed instead of repeate
 cards. Pre-payment pricing, payment/refund guidance and delivery status remain visible.
 Remove the redundant View all medication orders link; direct order URLs already
 show and expand the requested order within the full accordion list.
+Patient medication orders request newest-first API pagination; direct-linked
+orders are inserted by creation date, with a stable ID tie-breaker, rather than
+pinned at the top. Default staff/API order remains oldest first.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused

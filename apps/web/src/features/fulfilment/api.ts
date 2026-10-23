@@ -75,8 +75,10 @@ export async function listOrders(
   tenantId?: string,
   cursor?: string | null,
   signal?: AbortSignal,
+  sort: 'oldest' | 'newest' = 'oldest',
 ): Promise<CursorPage<Order>> {
   const params = new URLSearchParams({ limit: '25' })
+  if (sort === 'newest') params.set('sort', sort)
   if (tenantId) params.set('tenant_id', tenantId)
   if (cursor) params.set('cursor', cursor)
   const page: CursorPage<Order> = await (

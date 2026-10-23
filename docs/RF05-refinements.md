@@ -137,3 +137,18 @@ references, one medicine list, keyboard controls and mobile screenshots. Additio
 intercepted-response UI checks verified full pricing/address/payment controls for
 an unpaid order, pending-payment guidance and upstream refund-review/refunded
 messages. No quote or payment was requested during verification.
+
+## Medication-order chronology
+
+Patient medication orders now use newest-created-first API pagination, matching
+the prescription list. The optional `sort=newest` parameter uses descending
+creation time and order ID with a direction-bound cursor; the default API/staff
+order remains oldest first. Direct-linked orders are positioned by date rather
+than prepended above newer orders.
+
+Frontend lint/build and Python Ruff passed. All 42 fulfilment API tests passed in
+a separate disposable database, including newest-first pages, timestamp ties and
+cross-direction cursor rejection; the disposable database was removed afterward.
+The fulfilment API was restarted and live checks verified newest-first pagination
+and accordion order, with an older deep-linked order expanded in its proper place.
+No migration or new configuration is needed.

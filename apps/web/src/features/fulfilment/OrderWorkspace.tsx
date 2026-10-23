@@ -38,13 +38,20 @@ export function OrderWorkspace({
   )
   const validId = selectedId !== null && uuid.test(selectedId)
   const list = useInfiniteQuery({
-    queryKey: ['fulfilment', 'orders', token, context],
+    queryKey: [
+      'fulfilment',
+      'orders',
+      token,
+      context,
+      patient ? 'newest' : 'oldest',
+    ],
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) =>
       listOrders(
         context.role === 'clinic_admin' ? context.tenantId : undefined,
         pageParam,
         signal,
+        patient ? 'newest' : 'oldest',
       ),
     getNextPageParam: (page) => page.next_cursor ?? undefined,
     retry: false,
@@ -73,12 +80,19 @@ export function OrderWorkspace({
     if (result.isError || !result.data) throw new Error('Order unavailable.')
     return result.data
   }
-  const visibleRows =
+  const combinedRows =
     patient &&
     snapshot &&
     !rows.some((order) => order.order_id === snapshot.order.order_id)
       ? [snapshot.order, ...rows]
       : rows
+  const visibleRows = patient
+    ? [...combinedRows].sort(
+        (a, b) =>
+          Date.parse(b.created_at) - Date.parse(a.created_at) ||
+          b.order_id.localeCompare(a.order_id),
+      )
+    : combinedRows
   const orderDetails =
     selectedId && !validId ? (
       <p role="alert">
@@ -128,10 +142,7 @@ export function OrderWorkspace({
         aria-labelledby="orders-page-heading"
       >
         {!patient && (
-          <a
-            className="text-sm underline"
-            href="/clinic-admin"
-          >
+          <a className="text-sm underline" href="/clinic-admin">
             Back to your clinics
           </a>
         )}
