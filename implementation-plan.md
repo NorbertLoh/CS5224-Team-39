@@ -234,7 +234,9 @@ These tasks do not establish AWS integration until their evidence is recorded.
 - [ ] RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
 access message while preserving public routes and signed-in access checks. Remove
 the redundant Explore clinics section from the patient workspace, retaining clinic
-discovery on the public home page, as additionally requested by the user.
+discovery on the public home page, as additionally requested by the user. Remove
+the patient's standalone video consultation card while retaining appointment-based
+joining.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused

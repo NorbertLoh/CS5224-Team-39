@@ -83,7 +83,7 @@ export function AppRoutes({
               tenantId={route.tenantId}
             />
           )}
-          {(route.role === 'patient' || route.role === 'doctor') && (
+          {route.role === 'doctor' && (
             <section className="mt-8 rounded-xl border bg-slate-50 p-6">
               <h2 className="text-xl font-semibold">Video consultation</h2>
               <p className="mt-2 text-sm text-slate-600">
