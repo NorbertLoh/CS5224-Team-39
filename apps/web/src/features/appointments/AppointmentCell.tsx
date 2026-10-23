@@ -11,17 +11,19 @@ import type { dayCells } from './display'
 export function AppointmentCell({
   cell,
   role,
+  showDate = role === 'patient',
   selectedId,
   onSelect,
 }: {
   cell: ReturnType<typeof dayCells>[number]
   role: AppointmentRole
+  showDate?: boolean
   selectedId: string | null
   onSelect: (id: string) => void
 }) {
   return (
     <div className="min-h-24 rounded-lg border bg-slate-50 p-3">
-      {role === 'patient' && (
+      {showDate && (
         <p className="text-sm font-medium text-slate-600">
           {formatDate(dateInSingapore(cell.startsAt))}
         </p>

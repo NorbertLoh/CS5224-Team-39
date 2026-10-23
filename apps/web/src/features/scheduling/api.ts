@@ -9,6 +9,7 @@ export type {
   SlotPublic as Slot,
   AppointmentPublic as Appointment,
 } from './types.generated'
+export type AppointmentPeriod = 'upcoming' | 'past'
 
 async function request(
   path: string,
@@ -88,10 +89,12 @@ export async function listAppointments(
   tenantId?: string,
   cursor?: string | null,
   signal?: AbortSignal,
+  period?: AppointmentPeriod,
 ): Promise<CursorPage<Appointment>> {
   const query = new URLSearchParams({ limit: '100' })
   if (tenantId) query.set('tenant_id', tenantId)
   if (cursor) query.set('cursor', cursor)
+  if (period) query.set('period', period)
   return (await request(`/appointments?${query}`, { signal })).json()
 }
 export async function appointmentDetail(
@@ -134,7 +137,7 @@ export function canCancel(appointment: Appointment, now = Date.now()) {
   if (appointment.status === 'held' || appointment.status === 'pending_payment')
     return Boolean(
       appointment.hold_expires_at &&
-        Date.parse(appointment.hold_expires_at) > now,
+      Date.parse(appointment.hold_expires_at) > now,
     )
   return (
     appointment.status === 'confirmed' &&

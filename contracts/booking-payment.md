@@ -33,7 +33,7 @@ clients fall back to the identifiers.
 | POST `/clinics/{tenant_id}/slots` | `starts_at`, `ends_at`; slot, 201 | Active member doctor; server sets doctor_id to caller; active clinic |
 | DELETE `/slots/{slot_id}` | 204 | Owning active doctor; 409 `slot_reserved` if an active reservation exists |
 | POST `/appointments` | `tenant_id`, `slot_id`; appointment in held state, 201 | Patient role; server resolves patient_id, doctor and price |
-| GET `/appointments` | Optional `tenant_id`, `status`, `from`, `to`; C01 pagination ordered starts_at, appointment_id ascending | C02 scoped patient/assigned doctor/clinic admin/platform metadata |
+| GET `/appointments` | Optional `tenant_id`, `status`, `from`, `to`, `period=upcoming\|past`; C01 pagination ordered starts_at, appointment_id ascending for upcoming/default, descending for past; period-bound cursors | C02 scoped patient/assigned doctor/clinic admin/platform metadata |
 | GET `/appointments/{appointment_id}` | Appointment, 200 | C02 tenant/participant policy |
 | POST `/appointments/{appointment_id}/cancel` | `{ "reason": "Patient requested cancellation" }`; appointment, 200 | Owning patient or active owning-clinic admin; no platform-only cancellation |
 
