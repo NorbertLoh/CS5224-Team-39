@@ -40,6 +40,14 @@ descending ID tie-breakers. Cursor scopes include the ordering so previously iss
 ascending cursors cannot be used to page descending results. Patient visit grouping
 and upcoming appointment chronology remain as designed. Track issue #271 / PR #272.
 
+RF10 appointment refinement (23 October 2026): patient, doctor and clinic-admin
+workspaces use shared Upcoming/Past cards across dates, including clinic-specific
+appointments. The scheduling API classifies effective expiry and filters periods
+before pagination: upcoming is active/ongoing with a future end, nearest first;
+past is ended/terminal, newest appointment date first. Existing role/clinic scope
+and booking, availability, payment and consultation rules remain unchanged.
+Track issue #273 / PR #274.
+
 ## 2. Frontend design
 
 Use one React application initially, with role-specific route groups and shared components. Clinics get branded storefronts through configuration, not separate code deployments.

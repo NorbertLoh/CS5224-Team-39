@@ -36,6 +36,10 @@ with the Singapore date and complete time range on each card. The date dropdown
 is removed; cursor pagination still offers Load more appointments when needed.
 Doctor and clinic-admin views retain their date-based timetables.
 
+RF10 supersedes that staff layout: patient, doctor and clinic-admin appointment
+views now share Upcoming/Past cards with server-filtered pagination. See
+[RF10 appointment periods](RF10-appointment-periods.md).
+
 Lint and production build passed. Authenticated browser checks verified all 16
 local patient appointments across dates, each date/time label, no patient dropdown,
 one selected card after each of 16 clicks, names and details. Doctor and clinic-admin
