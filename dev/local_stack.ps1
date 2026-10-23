@@ -12,6 +12,8 @@ Logs and PIDs go to .local/stack/. Containers are left running on stop.
 param(
     [ValidateSet('start', 'stop', 'status')]
     [string]$Action = 'start',
+    # Serve a built frontend without Vite's live-update websocket/reload client.
+    [switch]$StableFrontend,
     # Stripe CLI executable; skipped with a warning when not found.
     [string]$StripeCli = 'stripe'
 )
@@ -135,6 +137,26 @@ function Start-Stripe {
 
 function Start-Stack {
     New-Item -ItemType Directory -Force $StateDir | Out-Null
+    $frontendModePath = Join-Path $StateDir 'frontend-mode.txt'
+    $frontendMode = if ($StableFrontend) { 'preview' } elseif (Test-Path $frontendModePath) { (Get-Content $frontendModePath -Raw).Trim() } else { 'dev' }
+    if ($frontendMode -eq 'preview') {
+        Push-Location (Join-Path $Root 'apps\web')
+        try {
+            & npm.cmd run build
+            if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed; existing frontend left running.' }
+        } finally { Pop-Location }
+        $previousMode = if (Test-Path $frontendModePath) { (Get-Content $frontendModePath -Raw).Trim() } else { 'dev' }
+        if ($previousMode -ne 'preview') {
+            $frontendPid = Get-RunningPid 'vite'
+            if ($frontendPid) {
+                $frontendProcess = Get-CimInstance Win32_Process -Filter "ProcessId=$frontendPid"
+                if (-not $frontendProcess.CommandLine.Contains('npm')) { throw 'Frontend process identity mismatch.' }
+                taskkill /PID $frontendPid /T /F | Out-Null
+            }
+        }
+        ($Apis | Where-Object { $_.Name -eq 'vite' }).Args = 'run preview -- --host 0.0.0.0'
+    }
+    Set-Content $frontendModePath $frontendMode
     # Floci EventBridge/SQS clients read credentials from the process environment only.
     $env:AWS_ACCESS_KEY_ID = 'test'
     $env:AWS_SECRET_ACCESS_KEY = 'test'

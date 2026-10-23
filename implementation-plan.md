@@ -381,3 +381,5 @@ RF11 expired-hold refinement: Booking hold expired shows only Browse clinics, re
 RF11 booking-hold refinement: remove the redundant Appointments link beneath Continue to payment and Release booking and change time. Frontend lint/typecheck/build passed.
 
 RF11 confirmation-card refinement: hide Check payment status and Appointments for both confirming and confirmed appointments; automatic status polling remains. Frontend lint/typecheck/build and focused no-action rendering checks passed.
+
+RF11 frontend stability refinement: browser evidence showed a lost Vite live-update connection followed by polling for restart despite a running frontend process. Add local_stack.ps1 start -StableFrontend to build and serve preview on port 5173 with the existing API proxies, remembering preview mode under ignored .local/stack/frontend-mode.txt. No live-reload client in this mode; rebuild and refresh manually after edits. Live stack switched to preview and affected doctor tab reloaded. PowerShell parse, frontend lint/typecheck/build, no-live-client HTML check, clinic API proxy and all stack status checks passed.
