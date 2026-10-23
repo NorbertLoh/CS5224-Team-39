@@ -231,6 +231,13 @@ Week 4: finish essential checks in the first half; freeze features, rehearse and
 Deferred verification is tracked separately from accepted local deliverables.
 These tasks do not establish AWS integration until their evidence is recorded.
 
+RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
+access message while preserving public routes and signed-in access checks.
+Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
+and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
+feature mounting while signed out, and passing frontend lint/build and focused
+local navigation checks. Further refinements require explicit user scope.
+
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [ ] | RF01 | Verify AWS self-hosted PeerJS/TURN across two independently routed networks; record normal and forced-relay two-way human audio/video, selected relay/RTP evidence from both ends, transport/TLS and invalid/expired-credential observations, and leave/rejoin behaviour. Issue #155; planned, unassigned. Deferred from X01 by user decision on 16 October 2026. This is W11's verification portion; share evidence with W11/Q04 rather than duplicate deployment/testing. | X01, W11 deployment ready (not W11 verification complete) | M |
