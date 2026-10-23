@@ -1,5 +1,9 @@
 # Local development support
 
+For repeatable synthetic demo data, see [the local demo seed](demo_seed/README.md).
+Its default command is read-only preflight; explicit `--reset` backs up the
+configured host stack before replacing local accounts and linked examples.
+
 Use `refund_demo.py` to prepare a real Stripe sandbox consultation payment after
 seeding; see [the repeatable refund demo](../docs/refund-demo.md). It keeps provider
 transactions separate from the simulated seed and leaves refunds to clinic admins.

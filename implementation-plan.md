@@ -329,6 +329,21 @@ Staff/Payments cleanup passed frontend lint and typecheck/production build.
 
 ## Completion checklist
 
+- [ ] RF07: Save the clean local demo seed under `dev/` with a documented reset
+command, mandatory backup, local-target guards, relative paths and configurable
+app origin. Keep credentials, manifests, PDFs and backups ignored. Issue #267;
+assignee NorbertLoh; In progress. Depends on F17 and existing migrated local
+schemas (complete). Effort: M. Completion requires non-destructive preflight,
+unsafe-target rejection, representative field/link coverage and focused checks
+of repeatability. No seed payment/courier calls; no reset of the current demo is
+required to package the tool. Merge only on explicit user instruction.
+Draft PR #268 adds the command, documentation and dedicated safeguard CI. Ruff and
+13 offline checks passed. Two disposable-storage backup/reset/seed/render cycles
+preserved all nine migration markers, verified eight logins and 19 business tables,
+and reproduced 8 accounts, 5 clinics, 32 appointments, 14 orders and 42 PDFs without
+duplicates. Read-only preflight and packaged API verification passed against the
+current host demo; its data was not reset. Awaiting review/merge.
+
 - [ ] Actual AWS patient journey works with two separate payment purposes and paid+ready delivery gating.
 - [ ] All four role views support the journey; two clinics demonstrate tenant separation.
 - [ ] Independent service deployments, service-owned migrations and Floci setup are documented.
