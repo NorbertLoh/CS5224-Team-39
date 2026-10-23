@@ -231,6 +231,60 @@ Week 4: finish essential checks in the first half; freeze features, rehearse and
 Deferred verification is tracked separately from accepted local deliverables.
 These tasks do not establish AWS integration until their evidence is recorded.
 
+- [ ] RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
+access message while preserving public routes and signed-in access checks. Remove
+the redundant Explore clinics section from the patient workspace, retaining clinic
+discovery on the public home page, as additionally requested by the user. Remove
+the patient's standalone video consultation card while retaining appointment-based
+joining.
+Patient appointments also display once per booking with their full time range,
+preventing duplicate selection when a booking spans multiple half-hour cells.
+Resolve missing legacy clinic/doctor names for appointment cards and details using
+the existing public directories, with readable unavailable labels instead of IDs.
+The local legacy name snapshots also required repair: 13 appointments had no saved
+patient/doctor/clinic names, including suspended test clinics absent from public
+directories. Missing snapshots were filled from existing local profiles, preserving
+saved names; patient-name fallbacks now use a readable label rather than UUIDs.
+The patient date dropdown is replaced by a chronological list across dates with
+the Singapore date and time on every appointment card; pagination is retained.
+Keep the consultation join control visible in appointment details, disabled with
+an explanation when unavailable, and update eligibility as time passes.
+Only payable unpaid patient bookings show Pay consultation fee; details show
+readable payment status, including Paid, and expired holds lose the payment action.
+Patient appointments have Upcoming/Past tabs with counts and keyboard navigation;
+ongoing/future active bookings appear nearest first, past/closed bookings newest first.
+Patient prescriptions/medicines and documents move to dedicated protected pages,
+with shared patient navigation linking appointments, prescriptions, medication
+orders/delivery and documents. Appointments remain the default patient page.
+Patient prescription and medication-order pages use Documents-style divided
+accordion rows, with one item expanded and medication/payment/delivery actions
+inside its content; direct order links and staff workflows remain supported.
+Expanded patient records prioritise medicines/instructions and relevant actions,
+with technical references and settled-order pricing collapsed instead of repeated
+cards. Pre-payment pricing, payment/refund guidance and delivery status remain visible.
+Remove the redundant View all medication orders link; direct order URLs already
+show and expand the requested order within the full accordion list.
+Patient medication orders request newest-first API pagination; direct-linked
+orders are inserted by creation date, with a stable ID tie-breaker, rather than
+pinned at the top. Default staff/API order remains oldest first.
+The standalone patient Documents page groups available PDFs by visit in shared
+accordion rows, with visit names/date/time, document counts and existing downloads.
+Appointment-scoped and staff document lists retain their flat presentation.
+Patient navigation starts with Find a clinic (existing home directory), then
+Appointments, Prescriptions, Orders & delivery and Documents. Successful patient
+sign-in defaults to Appointments using the backend identity's patient role.
+Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
+and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
+feature mounting while signed out, and passing frontend lint/build and focused
+local navigation checks. Draft PR #262 implements the redirect; lint and production
+build passed, along with local browser checks for eight protected routes, four
+public routes, browser Back, real patient sign-in/access and wrong-role denial.
+The patient workspace cleanup also passed lint/build and a real signed-in browser
+check: clinic discovery is absent, prescriptions/documents/appointments and the
+medication-order link remain, and public home-page clinic discovery is present.
+No new configuration or migrations. Keep in progress until merge.
+Further refinements require explicit user scope.
+
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [ ] | RF01 | Verify AWS self-hosted PeerJS/TURN across two independently routed networks; record normal and forced-relay two-way human audio/video, selected relay/RTP evidence from both ends, transport/TLS and invalid/expired-credential observations, and leave/rejoin behaviour. Issue #155; planned, unassigned. Deferred from X01 by user decision on 16 October 2026. This is W11's verification portion; share evidence with W11/Q04 rather than duplicate deployment/testing. | X01, W11 deployment ready (not W11 verification complete) | M |

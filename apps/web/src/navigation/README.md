@@ -5,10 +5,24 @@
 - `RoleNavigation.tsx`: granted role links.
 - `AppRoutes.tsx`: route-to-feature mapping; forms and API calls stay in their features.
 
+Patient navigation starts with Find a clinic (`/#clinics`, the existing public
+directory), followed by Appointments, Prescriptions, Orders & delivery and Documents.
+The four protected pages are `/patient` (appointments, default),
+`/patient/prescriptions` (prescriptions and medicines), the existing
+`/patient/medication-orders` (orders and delivery), and `/patient/documents`.
+The patient feature owns the shared page navigation and records-page composition.
+Direct links retain the normal authentication/identity gates. Checkout and video
+remain appointment actions, and medication order query links keep their existing URLs.
+
 Roles come from `/identity/me`, never Cognito groups or browser role storage.
 Identity is refreshed on page load, window focus and every 30 seconds. Protected
 features wait for a successful identity lookup; a failed refresh or revoked
 membership blocks them. Backend checks still enforce every protected API operation.
+Signed-out protected-page visits replace the current browser history entry with
+`/sign-in` before rendering feature content. Public pages remain accessible, and
+successful patient sign-in opens `/patient` after checking the backend identity.
+Other roles retain the home-page destination. Signed-in patients also keep their
+workspace navigation on the public directory and clinic storefronts.
 
 The clinic choice is the URL, checked against current active memberships for the
 route's role. Clinic administrators choose a named clinic from the Manage clinics

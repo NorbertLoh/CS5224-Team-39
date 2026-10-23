@@ -52,6 +52,12 @@ closed when a next cursor is needed. Protected endpoints fail closed without ide
 and token configuration; no header bypass exists. Readiness verifies the migrated
 orders table and requires database configuration.
 
+`GET /orders` accepts `sort=oldest` (default) or `sort=newest`. Ordering uses creation
+time and order ID together, and cursors bind the selected direction. The patient
+medication-order page requests newest first; existing staff callers retain the
+default. No schema migration or new configuration is required; restart the API
+after updating its code.
+
 Direct service paths are listed below. An ingress strips `/api/v1/fulfilment` before
 forwarding; `SERVICE_ROOT_PATH` is OpenAPI metadata, not a router prefix. D01 does not
 change shared Compose, frontend routing, infrastructure or contracts.

@@ -8,22 +8,31 @@ import {
   readableStatus,
 } from './display'
 import type { Appointment } from '../scheduling/api'
+import { useAppointmentNames } from './useAppointmentNames'
 
 export function AppointmentDetails({
-  appointment,
+  appointment: booking,
   onClose,
 }: {
   appointment: Appointment
   onClose: () => void
 }) {
+  const [appointment] = useAppointmentNames([booking])
   const heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => {
     heading.current?.focus()
   }, [appointment.appointment_id])
   // Only enum labels are title-cased; names and identifiers keep their spelling.
-  const capitalized = new Set(['Status', 'Payment resolution'])
+  const capitalized = new Set(['Status'])
+  const paymentStatus = {
+    none: 'Unpaid',
+    awaiting_payment: 'Awaiting payment',
+    confirmed: 'Paid',
+    refund_required: 'Refund review needed',
+    refunded: 'Refunded',
+  }[appointment.payment_resolution]
   const fields = [
-    ['Patient', nameOrId(appointment.patient_name, appointment.patient_id)],
+    ['Patient', appointment.patient_name || 'Patient name unavailable'],
     ['Doctor', nameOrId(appointment.doctor_name, appointment.doctor_id)],
     ['Clinic', nameOrId(appointment.clinic_name, appointment.tenant_id)],
     ['Date', formatDate(dateInSingapore(appointment.starts_at))],
@@ -39,7 +48,7 @@ export function AppointmentDetails({
         appointment.consultation_price.currency,
       ),
     ],
-    ['Payment resolution', readableStatus(appointment.payment_resolution)],
+    ['Payment status', paymentStatus],
     [
       'Hold expires',
       appointment.hold_expires_at

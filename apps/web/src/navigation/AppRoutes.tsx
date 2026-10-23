@@ -7,10 +7,8 @@ import { ClinicProfileEditor } from '../features/clinic-profile/ClinicProfileEdi
 import { StaffManagement } from '../features/staff/StaffManagement'
 import { PlatformClinics } from '../features/platform-clinics/PlatformClinics'
 import { ManagedClinics } from '../features/clinics/ManagedClinics'
-import { ClinicDirectory } from '../features/clinics/ClinicDirectory'
 import { ErrorState } from '../components/ErrorState'
-import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
-import { DocumentList } from '../features/documents/DocumentList'
+import { PatientRecordsPage } from '../features/patient/PatientRecordsPage'
 import { BookedConsultation } from '../features/video/BookedConsultation'
 import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
 import { LiveOrders } from '../features/fulfilment/LiveOrders'
@@ -37,6 +35,9 @@ export function AppRoutes({
       return <LiveCheckoutPage />
     case 'medication-orders':
       return <LiveOrders role="patient" />
+    case 'prescriptions':
+    case 'documents':
+      return <PatientRecordsPage page={route.kind} />
     case 'orders':
       return (
         <LiveOrders
@@ -66,21 +67,6 @@ export function AppRoutes({
       return (
         <main className="mx-auto max-w-6xl px-6 py-10">
           <h1 className="text-3xl font-semibold">{roleLabels[route.role]}</h1>
-          {route.role === 'patient' && <PatientPrescriptions />}
-          {route.role === 'patient' && (
-            <section className="mt-8">
-              <h2 className="text-xl font-semibold">Explore clinics</h2>
-              <ClinicDirectory />
-            </section>
-          )}
-          {route.role === 'patient' && (
-            <p className="mt-6 text-sm">
-              <a className="underline" href="/patient/medication-orders">
-                Medication orders and delivery
-              </a>
-            </p>
-          )}
-          {route.role === 'patient' && <DocumentList role="patient" />}
           {route.role === 'clinic_admin' && session && (
             <ManagedClinics session={session} />
           )}
@@ -90,7 +76,7 @@ export function AppRoutes({
               tenantId={route.tenantId}
             />
           )}
-          {(route.role === 'patient' || route.role === 'doctor') && (
+          {route.role === 'doctor' && (
             <section className="mt-8 rounded-xl border bg-slate-50 p-6">
               <h2 className="text-xl font-semibold">Video consultation</h2>
               <p className="mt-2 text-sm text-slate-600">

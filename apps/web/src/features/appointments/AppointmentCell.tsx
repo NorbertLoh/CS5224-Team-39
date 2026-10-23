@@ -1,4 +1,10 @@
-import { formatTime, nameOrId, readableStatus } from './display'
+import {
+  dateInSingapore,
+  formatDate,
+  formatTime,
+  nameOrId,
+  readableStatus,
+} from './display'
 import type { AppointmentRole } from './types'
 import type { dayCells } from './display'
 
@@ -15,6 +21,11 @@ export function AppointmentCell({
 }) {
   return (
     <div className="min-h-24 rounded-lg border bg-slate-50 p-3">
+      {role === 'patient' && (
+        <p className="text-sm font-medium text-slate-600">
+          {formatDate(dateInSingapore(cell.startsAt))}
+        </p>
+      )}
       <p className="mb-2 text-sm font-medium text-slate-600">
         {formatTime(cell.startsAt)}–{formatTime(cell.endsAt)}
       </p>
@@ -31,7 +42,7 @@ export function AppointmentCell({
               <span className="block font-medium">
                 {role === 'patient'
                   ? nameOrId(appointment.doctor_name, appointment.doctor_id)
-                  : nameOrId(appointment.patient_name, appointment.patient_id)}
+                  : appointment.patient_name || 'Patient name unavailable'}
               </span>
               <span className="block text-slate-600">
                 {nameOrId(appointment.clinic_name, appointment.tenant_id)}
