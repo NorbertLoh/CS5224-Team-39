@@ -7,7 +7,6 @@ import { ClinicProfileEditor } from '../features/clinic-profile/ClinicProfileEdi
 import { StaffManagement } from '../features/staff/StaffManagement'
 import { PlatformClinics } from '../features/platform-clinics/PlatformClinics'
 import { ManagedClinics } from '../features/clinics/ManagedClinics'
-import { ClinicDirectory } from '../features/clinics/ClinicDirectory'
 import { ErrorState } from '../components/ErrorState'
 import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
 import { DocumentList } from '../features/documents/DocumentList'
@@ -67,12 +66,6 @@ export function AppRoutes({
         <main className="mx-auto max-w-6xl px-6 py-10">
           <h1 className="text-3xl font-semibold">{roleLabels[route.role]}</h1>
           {route.role === 'patient' && <PatientPrescriptions />}
-          {route.role === 'patient' && (
-            <section className="mt-8">
-              <h2 className="text-xl font-semibold">Explore clinics</h2>
-              <ClinicDirectory />
-            </section>
-          )}
           {route.role === 'patient' && (
             <p className="mt-6 text-sm">
               <a className="underline" href="/patient/medication-orders">

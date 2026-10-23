@@ -232,13 +232,18 @@ Deferred verification is tracked separately from accepted local deliverables.
 These tasks do not establish AWS integration until their evidence is recorded.
 
 - [ ] RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
-access message while preserving public routes and signed-in access checks.
+access message while preserving public routes and signed-in access checks. Remove
+the redundant Explore clinics section from the patient workspace, retaining clinic
+discovery on the public home page, as additionally requested by the user.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused
 local navigation checks. Draft PR #262 implements the redirect; lint and production
 build passed, along with local browser checks for eight protected routes, four
 public routes, browser Back, real patient sign-in/access and wrong-role denial.
+The patient workspace cleanup also passed lint/build and a real signed-in browser
+check: clinic discovery is absent, prescriptions/documents/appointments and the
+medication-order link remain, and public home-page clinic discovery is present.
 No new configuration or migrations. Keep in progress until merge.
 Further refinements require explicit user scope.
 
