@@ -239,6 +239,8 @@ the patient's standalone video consultation card while retaining appointment-bas
 joining.
 Patient appointments also display once per booking with their full time range,
 preventing duplicate selection when a booking spans multiple half-hour cells.
+Resolve missing legacy clinic/doctor names for appointment cards and details using
+the existing public directories, with readable unavailable labels instead of IDs.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused

@@ -8,14 +8,16 @@ import {
   readableStatus,
 } from './display'
 import type { Appointment } from '../scheduling/api'
+import { useAppointmentNames } from './useAppointmentNames'
 
 export function AppointmentDetails({
-  appointment,
+  appointment: booking,
   onClose,
 }: {
   appointment: Appointment
   onClose: () => void
 }) {
+  const [appointment] = useAppointmentNames([booking])
   const heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => {
     heading.current?.focus()

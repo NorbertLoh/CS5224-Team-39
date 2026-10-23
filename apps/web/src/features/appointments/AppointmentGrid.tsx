@@ -2,6 +2,7 @@ import { AppointmentCell } from './AppointmentCell'
 import { dateInSingapore, dayCells } from './display'
 import type { Appointment } from '../scheduling/api'
 import type { AppointmentRole } from './types'
+import { useAppointmentNames } from './useAppointmentNames'
 
 export function AppointmentGrid({
   appointments,
@@ -16,10 +17,11 @@ export function AppointmentGrid({
   selectedId: string | null
   onSelect: (id: string) => void
 }) {
+  const namedAppointments = useAppointmentNames(appointments)
   // Show each patient booking once, including its full duration.
   // Staff retain the half-hour timetable for viewing overlapping appointments.
   const cells = role === 'patient'
-    ? appointments
+    ? namedAppointments
         .filter((appointment) => dateInSingapore(appointment.starts_at) === date)
         .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
         .map((appointment) => ({
@@ -27,7 +29,7 @@ export function AppointmentGrid({
           endsAt: appointment.ends_at,
           appointments: [appointment],
         }))
-    : dayCells(appointments, date)
+    : dayCells(namedAppointments, date)
   if (!cells.length)
     return <p className="text-slate-600">No appointments on this date.</p>
   return (
