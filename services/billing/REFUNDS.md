@@ -1,6 +1,7 @@
 # RF08 consultation refunds
 
 Clinic admin: **Manage clinic → select clinic → Payments → Payment details → Refund payment**.
+For a fresh refundable Stripe sandbox example, follow [the repeatable demo](../../docs/refund-demo.md).
 Enter a reason, review the full amount and confirm. No platform approval is required.
 The reason and requester name are visible in the payment's refund history; use a
 short operational reason, not clinical notes.
