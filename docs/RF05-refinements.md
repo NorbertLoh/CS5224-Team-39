@@ -152,3 +152,18 @@ cross-direction cursor rejection; the disposable database was removed afterward.
 The fulfilment API was restarted and live checks verified newest-first pagination
 and accordion order, with an older deep-linked order expanded in its proper place.
 No migration or new configuration is needed.
+
+## Documents grouped by visit
+
+The standalone patient Documents page uses the shared accordion, grouping loaded
+PDF metadata by appointment and clinic. Visit summaries show date/time, clinic,
+doctor and available document count/types, ordered newest visit first. Prescription,
+receipt and medical certificate PDFs appear only when issued, with their existing
+ready/pending/failed and download states. Appointment-specific and staff lists stay
+flat. Visit-context lookup failure does not hide the underlying document rows.
+
+Lint/build and real local checks passed: three existing PDFs grouped into one
+visit, names/counts, one-open/keyboard collapse, mobile layout and a signed download
+validated as a PDF. Intercepted metadata checks verified same-visit merging across
+cursor pages, separation of distinct visits, and no download controls for pending
+or failed PDFs. No new documents were generated and no service access rules changed.

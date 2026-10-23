@@ -6,6 +6,7 @@ import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { documentsError, listDocuments } from './api'
 import { DocumentRow } from './DocumentRow'
+import { VisitDocumentList } from './VisitDocumentList'
 
 type Props = {
   role: 'patient' | 'doctor'
@@ -42,6 +43,7 @@ export function DocumentList(props: Props) {
 }
 
 export function DocumentResults({
+  role,
   appointmentId,
   tenantId,
   token,
@@ -49,6 +51,7 @@ export function DocumentResults({
   headingLevel = 2,
 }: Props & { token: string; scope: string }) {
   const headingId = useId()
+  const groupByVisit = role === 'patient' && !appointmentId
   const Heading = headingLevel === 1 ? 'h1' : 'h2'
   const query = useInfiniteQuery({
     queryKey: [
@@ -80,13 +83,22 @@ export function DocumentResults({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Heading id={headingId} className={headingLevel === 1 ? 'text-3xl font-semibold' : 'text-xl font-semibold'}>
+          <Heading
+            id={headingId}
+            className={
+              headingLevel === 1
+                ? 'text-3xl font-semibold'
+                : 'text-xl font-semibold'
+            }
+          >
             Documents
           </Heading>
           <p className="mt-1 text-sm text-slate-600">
             {appointmentId
               ? 'PDFs for this appointment.'
-              : 'Your available prescriptions, receipts and medical certificates.'}
+              : groupByVisit
+                ? 'Your PDFs grouped by visit. Expand a visit to download its documents.'
+                : 'Your available prescriptions, receipts and medical certificates.'}
           </p>
         </div>
         <button
@@ -115,15 +127,18 @@ export function DocumentResults({
               prepared.
             </p>
           )}
-          {items.length > 0 && (
-            <ul className="divide-y">
-              {items.map((item) => (
-                <li key={item.document_id}>
-                  <DocumentRow document={item} />
-                </li>
-              ))}
-            </ul>
-          )}
+          {items.length > 0 &&
+            (groupByVisit ? (
+              <VisitDocumentList documents={items} token={token} />
+            ) : (
+              <ul className="divide-y">
+                {items.map((item) => (
+                  <li key={item.document_id}>
+                    <DocumentRow document={item} />
+                  </li>
+                ))}
+              </ul>
+            ))}
           {query.hasNextPage && (
             <button
               type="button"
