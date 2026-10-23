@@ -9,7 +9,6 @@
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "dev": "vite --host 127.0.0.1",
-    "preview": "vite preview --host 127.0.0.1 --port 5173",
     "typecheck": "tsc --noEmit",
     "build": "npm run typecheck && vite build"
   },

@@ -1,13 +1,5 @@
 # Upcoming demo slots and early video joining
 
-For stable demo browsing without a live-update websocket or automatic reloads,
-run `powershell -ExecutionPolicy Bypass -File dev/local_stack.ps1 start -StableFrontend`.
-The script builds and serves the frontend preview on the same port with the same
-API proxies. The selected mode is remembered under ignored `.local/stack/` for
-subsequent starts. Rerun start to rebuild after edits, then refresh manually.
-To restore development mode, stop the stack, remove
-`.local/stack/frontend-mode.txt`, then start normally.
-
 Start the normal host stack first: `powershell -ExecutionPolicy Bypass -File dev/local_stack.ps1 start`.
 
 Add upcoming 30-minute availability for `doctor@example.test` at the seeded
