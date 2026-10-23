@@ -1,4 +1,10 @@
-import { dateInSingapore, formatDate, formatTime, nameOrId, readableStatus } from './display'
+import {
+  dateInSingapore,
+  formatDate,
+  formatTime,
+  nameOrId,
+  readableStatus,
+} from './display'
 import type { AppointmentRole } from './types'
 import type { dayCells } from './display'
 

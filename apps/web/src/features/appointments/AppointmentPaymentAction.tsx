@@ -2,15 +2,22 @@ import { useEffect, useState } from 'react'
 import type { Appointment } from '../scheduling/api'
 import { canCheckout } from '../checkout/live'
 
-export function AppointmentPaymentAction({ appointment }: { appointment: Appointment }) {
+export function AppointmentPaymentAction({
+  appointment,
+}: {
+  appointment: Appointment
+}) {
   const [now, setNow] = useState(Date.now)
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])
 
-  if (!['none', 'awaiting_payment'].includes(appointment.payment_resolution)
-    || !canCheckout(appointment, null, now)) return null
+  if (
+    !['none', 'awaiting_payment'].includes(appointment.payment_resolution) ||
+    !canCheckout(appointment, null, now)
+  )
+    return null
 
   return (
     <a

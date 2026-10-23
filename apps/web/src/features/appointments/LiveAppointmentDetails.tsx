@@ -64,7 +64,11 @@ export function LiveAppointmentDetails({
     <div className="space-y-4">
       <AppointmentDetails appointment={appointment} onClose={onClose} />
       {(role === 'patient' || role === 'doctor') && (
-        <AppointmentJoinButton appointment={appointment} role={role} subjectId={subjectId} />
+        <AppointmentJoinButton
+          appointment={appointment}
+          role={role}
+          subjectId={subjectId}
+        />
       )}
       {((role === 'patient' && appointment.patient_id === subjectId) ||
         (role === 'doctor' && appointment.doctor_id === subjectId)) && (

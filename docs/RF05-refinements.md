@@ -192,3 +192,15 @@ generic Receipt label. Download button accessibility labels use the same name.
 
 Build/typecheck and lint passed. Live browser checks verified both stored receipt
 names and their download controls, plus generic fallback on a failed payment lookup.
+
+## Merge preparation
+
+Shared patient accordion, navigation, appointment controls and document row
+components are retained. Receipt-purpose lookup and signed-download state now live
+in focused `useDocumentName` and `useDocumentDownload` hooks, leaving DocumentRow
+responsible for presentation. Prettier 3.6.2 formats the PR's changed TypeScript
+files with single quotes, no semicolons and trailing commas. No formatter dependency
+was added. Ruff formatting fixes the two fulfilment files flagged by CI.
+
+Frontend lint/typecheck/build and fulfilment Ruff checks pass. The receipt browser
+check also verifies the actual signed PDF download after the hook extraction.

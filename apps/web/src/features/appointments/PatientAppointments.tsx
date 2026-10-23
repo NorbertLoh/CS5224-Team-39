@@ -4,7 +4,11 @@ import type { Appointment } from '../scheduling/api'
 import { AppointmentGrid } from './AppointmentGrid'
 import { LiveAppointmentDetails } from './LiveAppointmentDetails'
 
-export function PatientAppointments({ appointments, token, subjectId }: {
+export function PatientAppointments({
+  appointments,
+  token,
+  subjectId,
+}: {
   appointments: Appointment[]
   token?: string
   subjectId: string
@@ -18,27 +22,38 @@ export function PatientAppointments({ appointments, token, subjectId }: {
   }, [])
 
   const isUpcoming = (appointment: Appointment) =>
-    ['held', 'pending_payment', 'confirmed', 'in_progress'].includes(appointment.status)
-    && Date.parse(appointment.ends_at) > now
+    ['held', 'pending_payment', 'confirmed', 'in_progress'].includes(
+      appointment.status,
+    ) && Date.parse(appointment.ends_at) > now
   const groups = [
     {
-      value: 'upcoming', label: 'Upcoming',
-      items: appointments.filter(isUpcoming)
+      value: 'upcoming',
+      label: 'Upcoming',
+      items: appointments
+        .filter(isUpcoming)
         .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at)),
     },
     {
-      value: 'past', label: 'Past',
-      items: appointments.filter((appointment) => !isUpcoming(appointment))
+      value: 'past',
+      label: 'Past',
+      items: appointments
+        .filter((appointment) => !isUpcoming(appointment))
         .sort((a, b) => Date.parse(b.starts_at) - Date.parse(a.starts_at)),
     },
   ]
 
   return (
-    <Tabs.Root value={period} onValueChange={(value) => {
-      setPeriod(value)
-      setSelectedId(null)
-    }}>
-      <Tabs.List aria-label="Appointment period" className="mb-5 flex w-fit gap-1 rounded-lg bg-slate-100 p-1">
+    <Tabs.Root
+      value={period}
+      onValueChange={(value) => {
+        setPeriod(value)
+        setSelectedId(null)
+      }}
+    >
+      <Tabs.List
+        aria-label="Appointment period"
+        className="mb-5 flex w-fit gap-1 rounded-lg bg-slate-100 p-1"
+      >
         {groups.map((group) => (
           <Tabs.Trigger
             key={group.value}
@@ -50,7 +65,11 @@ export function PatientAppointments({ appointments, token, subjectId }: {
         ))}
       </Tabs.List>
       {groups.map((group) => (
-        <Tabs.Content key={group.value} value={group.value} className="space-y-5 focus-visible:outline-2 focus-visible:outline-offset-2">
+        <Tabs.Content
+          key={group.value}
+          value={group.value}
+          className="space-y-5 focus-visible:outline-2 focus-visible:outline-offset-2"
+        >
           {group.items.length ? (
             <AppointmentGrid
               appointments={group.items}
@@ -60,18 +79,23 @@ export function PatientAppointments({ appointments, token, subjectId }: {
               onSelect={setSelectedId}
             />
           ) : (
-            <p role="status" className="text-slate-600">No {group.value} appointments.</p>
+            <p role="status" className="text-slate-600">
+              No {group.value} appointments.
+            </p>
           )}
-          {selectedId && group.items.some((appointment) => appointment.appointment_id === selectedId) && (
-            <LiveAppointmentDetails
-              key={selectedId}
-              id={selectedId}
-              token={token}
-              subjectId={subjectId}
-              role="patient"
-              onClose={() => setSelectedId(null)}
-            />
-          )}
+          {selectedId &&
+            group.items.some(
+              (appointment) => appointment.appointment_id === selectedId,
+            ) && (
+              <LiveAppointmentDetails
+                key={selectedId}
+                id={selectedId}
+                token={token}
+                subjectId={subjectId}
+                role="patient"
+                onClose={() => setSelectedId(null)}
+              />
+            )}
         </Tabs.Content>
       ))}
     </Tabs.Root>

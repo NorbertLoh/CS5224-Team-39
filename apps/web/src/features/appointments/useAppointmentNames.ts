@@ -18,7 +18,8 @@ async function doctorNames(tenantId: string) {
   let cursor: string | null = null
   do {
     const page = await clinicDoctors(tenantId, cursor)
-    for (const doctor of page.items) names.set(doctor.doctor_id, doctor.display_name)
+    for (const doctor of page.items)
+      names.set(doctor.doctor_id, doctor.display_name)
     cursor = page.next_cursor
   } while (cursor)
   return names
@@ -32,10 +33,13 @@ export function useAppointmentNames(appointments: Appointment[]) {
     enabled: appointments.some((appointment) => !appointment.clinic_name),
     staleTime: 60000,
   })
-  const tenantIds = [...new Set(
-    appointments.filter((appointment) => !appointment.doctor_name)
-      .map((appointment) => appointment.tenant_id),
-  )]
+  const tenantIds = [
+    ...new Set(
+      appointments
+        .filter((appointment) => !appointment.doctor_name)
+        .map((appointment) => appointment.tenant_id),
+    ),
+  ]
   const doctors = useQueries({
     queries: tenantIds.map((tenantId) => ({
       queryKey: ['appointment-doctor-names', tenantId],
@@ -43,13 +47,18 @@ export function useAppointmentNames(appointments: Appointment[]) {
       staleTime: 60000,
     })),
   })
-  const doctorsByClinic = new Map(tenantIds.map((id, index) => [id, doctors[index].data]))
+  const doctorsByClinic = new Map(
+    tenantIds.map((id, index) => [id, doctors[index].data]),
+  )
   return appointments.map((appointment) => ({
     ...appointment,
-    clinic_name: appointment.clinic_name || clinics.data?.get(appointment.tenant_id)
-      || 'Clinic name unavailable',
-    doctor_name: appointment.doctor_name
-      || doctorsByClinic.get(appointment.tenant_id)?.get(appointment.doctor_id)
-      || 'Doctor name unavailable',
+    clinic_name:
+      appointment.clinic_name ||
+      clinics.data?.get(appointment.tenant_id) ||
+      'Clinic name unavailable',
+    doctor_name:
+      appointment.doctor_name ||
+      doctorsByClinic.get(appointment.tenant_id)?.get(appointment.doctor_id) ||
+      'Doctor name unavailable',
   }))
 }

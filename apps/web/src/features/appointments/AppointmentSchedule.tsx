@@ -174,14 +174,21 @@ function LiveSchedule({
       ) : (
         <>
           {role === 'patient' ? (
-            <PatientAppointments appointments={appointments} token={token} subjectId={subjectId} />
+            <PatientAppointments
+              appointments={appointments}
+              token={token}
+              subjectId={subjectId}
+            />
           ) : (
             <>
               <p role="status">
-                {appointments.filter(
-                  (item) => dateInSingapore(item.starts_at) === date,
-                ).length}{' '}
-                appointments on {formatDate(date)}. Empty cells are not booking availability.
+                {
+                  appointments.filter(
+                    (item) => dateInSingapore(item.starts_at) === date,
+                  ).length
+                }{' '}
+                appointments on {formatDate(date)}. Empty cells are not booking
+                availability.
               </p>
               <AppointmentGrid
                 appointments={appointments}

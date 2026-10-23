@@ -250,11 +250,13 @@ def list_orders(
         position = tuple_(Order.created_at, Order.order_id)
         query = query.where(
             position < tuple_(created_at, resource_id)
-            if sort == "newest" else position > tuple_(created_at, resource_id)
+            if sort == "newest"
+            else position > tuple_(created_at, resource_id)
         )
     ordering = (
         (Order.created_at.desc(), Order.order_id.desc())
-        if sort == "newest" else (Order.created_at, Order.order_id)
+        if sort == "newest"
+        else (Order.created_at, Order.order_id)
     )
     rows = session.scalars(query.order_by(*ordering).limit(limit + 1)).all()
     next_cursor = None
