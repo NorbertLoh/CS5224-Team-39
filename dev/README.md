@@ -1,5 +1,9 @@
 # Local development support
 
+For repeatable synthetic demo data, see [the local demo seed](demo_seed/README.md).
+Its default command is read-only preflight; explicit `--reset` backs up the
+configured host stack before replacing local accounts and linked examples.
+
 Root Compose runs the local dependencies and template API. `floci/bootstrap.sh` seeds the document bucket and synthetic provider secrets, then runs `events.sh` for messaging and `cognito.sh` for the public SPA client and four demo identities. Run all with `docker compose --profile offline run --rm bootstrap`. See [local development](../docs/local-development.md) for resource names, demo login configuration and safe reruns. [Shared workflow fixtures](fixtures/README.md) provide deterministic two-clinic data for mock UI/service development. [Authentication](../docs/authentication.md) covers login/session setup; [F16 verification](../docs/floci-verification.md) covers six-service API/persistence checks and the tested image pin. Keep generated runtime data under ignored `.local/` or managed Docker volumes.
 
 `clinic_local.py` configures real local clinic APIs and explicit database-backed
