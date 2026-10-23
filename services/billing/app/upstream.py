@@ -44,13 +44,18 @@ class CheckoutSources:
                 "prescription_not_issued",
                 "medication_unavailable",
                 "invalid_order_transition",
+                "refund_appointment_active",
             }
             try:
                 code = result.json()["error"]["code"]
             except (ValueError, KeyError, TypeError):
                 code = "upstream_conflict"
             raise DomainError(
-                409, code if code in allowed else "upstream_conflict", "Checkout cannot proceed."
+                409,
+                code if code in allowed else "upstream_conflict",
+                "Cancel the active appointment before requesting a refund."
+                if code == "refund_appointment_active"
+                else "Checkout cannot proceed.",
             )
         if result.status_code != 200:
             raise DomainError(503, "unavailable", "Checkout source is unavailable.")

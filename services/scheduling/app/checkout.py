@@ -41,7 +41,7 @@ def refund_appointment(appointment_id, body, session):
         if appointment.status not in {"cancelled", "expired", "completed", "no_show"}:
             raise DomainError(
                 409,
-                "invalid_appointment_transition",
+                "refund_appointment_active",
                 "Cancel the appointment before requesting a refund.",
             )
     else:
