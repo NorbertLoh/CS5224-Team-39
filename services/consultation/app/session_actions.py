@@ -26,6 +26,11 @@ def act(db, sources, appointment_id, identity, request_id, action):
         tenant_id=record.tenant_id,
         doctor_id=identity.subject_id,
         action="start" if action == "start" else "end",
+        early_minutes=(
+            sources.settings.test_join_early_minutes
+            if sources.settings.test_join_early_minutes > 10
+            else 0
+        ),
     )
     target = "in_progress" if action == "start" else "completed"
     # Persist the authorised local intent before contacting scheduling. If the

@@ -100,6 +100,7 @@ def transition(
     doctor_id: UUID,
     action: str,
     now: datetime | None = None,
+    early_minutes: int = 0,
 ):
     """Lock and apply doctor-driven start/end; retries preserve original times."""
     record = locked_session(db, session_id=session_id, tenant_id=tenant_id)
@@ -109,8 +110,11 @@ def transition(
     if action == "start":
         if record.status == "in_progress":
             return record
-        if record.status != "scheduled" or not record.starts_at <= instant < record.ends_at:
+        if record.status != "scheduled" or not (
+            record.starts_at - timedelta(minutes=early_minutes) <= instant < record.ends_at
+        ):
             raise DomainError(409, "invalid_session_transition", "Session cannot start.")
+        record.test_start_early_minutes = early_minutes
         record.status, record.started_at = "in_progress", instant
     elif action == "end":
         if record.status == "completed":

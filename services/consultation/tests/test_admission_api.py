@@ -26,7 +26,7 @@ from app import admissions
 from app.database import create_database_engine
 from app.lifecycle import transition
 from app.main import create_app
-from app.models import Admission
+from app.models import Admission, ConsultationSession
 from app.settings import Settings
 from app.upstream import AdmissionSources
 
@@ -237,6 +237,7 @@ def internal(api, action, grant, *, secret=None, caller="signalling", **override
 
 
 def test_grant_consumption_release_and_fresh_rejoin(api):
+    assert api.client.get("/health/ready").status_code == 200
     response = issue(api)
     assert response.status_code == 201, response.text
     assert response.headers["cache-control"] == "no-store"
@@ -272,6 +273,35 @@ def test_local_extended_window_covers_issue_consume_and_check(api):
     assert internal(api, "check", grant).status_code == 200
     api.settings.test_join_early_minutes = 10
     assert internal(api, "check", grant).status_code == 403
+
+
+def test_local_early_clinical_start_and_completion(api):
+    start = api.state["clock"] + timedelta(hours=2)
+    api.state["appointment"].update(
+        starts_at=start.isoformat(), ends_at=(start + timedelta(minutes=30)).isoformat()
+    )
+    route = f"/appointments/{api.appointment_id}"
+    headers = api.headers(api.doctor)
+    assert api.client.post(route + "/start", headers=headers).status_code == 409
+    api.settings.test_join_early_minutes = 180
+    assert api.client.post(route + "/start", headers=api.headers()).status_code == 404
+    response = api.client.post(route + "/start", headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "in_progress"
+    assert api.client.post(route + "/start", headers=headers).status_code == 200
+    assert api.client.post(route + "/complete", headers=headers).status_code == 200
+    with Session(api.database) as db:
+        row = db.scalar(
+            select(ConsultationSession).where(
+                ConsultationSession.appointment_id == api.appointment_id
+            )
+        )
+        assert row.test_start_early_minutes == 180
+        assert row.started_at < row.starts_at
+        assert row.ended_at >= row.started_at
+        # Remove only this isolated test record so downgrade/isolation tests can run.
+        db.delete(row)
+        db.commit()
 
 
 def test_pending_rotation_and_durable_hash_only_storage(api):
