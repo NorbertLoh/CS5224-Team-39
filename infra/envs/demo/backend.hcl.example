@@ -1,0 +1,2 @@
+# Copy to backend.hcl (gitignored). Use the state_bucket output from infra/bootstrap.
+bucket = "cs5224-team39-tfstate-123456789012"
