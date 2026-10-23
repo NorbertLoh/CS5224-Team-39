@@ -22,12 +22,14 @@ export function ClinicPayments({ tenantId }: { tenantId: string }) {
     getNextPageParam: (page) => page.next_cursor ?? undefined,
     retry: false,
     refetchOnWindowFocus: true,
+    refetchInterval: 5000,
   })
   const totals = useQuery({
     queryKey: ['billing', 'totals', token, tenantId, purpose],
     queryFn: ({ signal }) => paymentTotals(tenantId, purpose, signal),
     retry: false,
     refetchOnWindowFocus: true,
+    refetchInterval: 5000,
   })
   const refresh = () => {
     void history.refetch()

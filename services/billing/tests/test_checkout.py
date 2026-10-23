@@ -35,7 +35,8 @@ def api(database, database_url):
         connection.execute(
             text(
                 "TRUNCATE billing.checkout_keys, billing.checkout_attempts, billing.payments, "
-                "billing.medication_checkout_keys, billing.medication_checkout_attempts"
+                "billing.medication_checkout_keys, billing.medication_checkout_attempts, "
+                "billing.refund_attempts"
             )
         )
     patient, other, tenant, appointment = uuid4(), uuid4(), uuid4(), uuid4()

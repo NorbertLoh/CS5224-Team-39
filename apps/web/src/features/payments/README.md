@@ -8,4 +8,7 @@ See [B07 setup and verification](../../../../../docs/B07-live-billing.md).
 Purpose changes both history and totals; status changes only history. The server
 controls authorization and immutable commission snapshots. Loading and errors
 show explicit states, with no synthetic rows or substitute totals. Refund review
-is guidance only; this page does not initiate refunds or payouts. Totals come from the billing API.
+allows clinic admins to issue full consultation refunds with a required reason and
+confirmation. Medication/delivery payments have no refund action. See
+[`services/billing/REFUNDS.md`](../../../../../services/billing/REFUNDS.md).
+Totals come from the billing API.

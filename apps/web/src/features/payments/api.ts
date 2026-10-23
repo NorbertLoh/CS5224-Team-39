@@ -13,6 +13,12 @@ export type Payment = {
   quote_id: string | null
   status: string
   resolution: string
+  refund_availability:
+    | 'available'
+    | 'demo_payment'
+    | 'unsupported_purpose'
+    | 'not_paid'
+    | 'unsupported_payment'
   amount: Money
   commission_bps: number
   commission_amount: Money
@@ -25,6 +31,40 @@ export type Totals = {
   amount: Money
   commission_amount: Money
   clinic_amount: Money
+}
+export type Refund = {
+  refund_id: string
+  payment_id: string
+  requested_by: string
+  requested_by_name: string
+  reason: string
+  status: 'pending' | 'succeeded' | 'failed' | 'review'
+  created_at: string
+  updated_at: string
+  last_error: string | null
+  retry_allowed: boolean
+}
+
+export async function refundHistory(
+  id: string,
+  signal?: AbortSignal,
+): Promise<Refund[]> {
+  return (
+    await request(`/payments/${encodeURIComponent(id)}/refunds`, { signal })
+  ).json()
+}
+
+export async function refundPayment(
+  id: string,
+  reason: string,
+): Promise<Refund> {
+  return (
+    await request(`/payments/${encodeURIComponent(id)}/refunds`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    })
+  ).json()
 }
 export type Checkout = {
   payment: Payment

@@ -44,13 +44,18 @@ class CheckoutSources:
                 "prescription_not_issued",
                 "medication_unavailable",
                 "invalid_order_transition",
+                "refund_appointment_active",
             }
             try:
                 code = result.json()["error"]["code"]
             except (ValueError, KeyError, TypeError):
                 code = "upstream_conflict"
             raise DomainError(
-                409, code if code in allowed else "upstream_conflict", "Checkout cannot proceed."
+                409,
+                code if code in allowed else "upstream_conflict",
+                "Cancel the active appointment before requesting a refund."
+                if code == "refund_appointment_active"
+                else "Checkout cannot proceed.",
             )
         if result.status_code != 200:
             raise DomainError(503, "unavailable", "Checkout source is unavailable.")
@@ -77,6 +82,41 @@ class CheckoutSources:
             return value
         except (ValueError, TypeError):
             raise DomainError(502, "upstream_error", "Invalid reservation response.") from None
+
+    def refund_action(self, payment, request_id, action):
+        result = self.request(
+            "POST",
+            self.settings.scheduling_url,
+            self.settings.scheduling_secret,
+            "telelink-scheduling-billing",
+            f"/internal/appointments/{payment.appointment_id}/{action}",
+            request_id,
+            json={
+                "patient_id": str(payment.patient_id),
+                "payment_id": str(payment.payment_id),
+                "tenant_id": str(payment.tenant_id),
+            },
+        )
+        try:
+            value = result.json()
+        except ValueError:
+            raise DomainError(
+                502, "upstream_error", "Invalid appointment refund context."
+            ) from None
+        if not isinstance(value, dict):
+            raise DomainError(502, "upstream_error", "Invalid appointment refund context.")
+        if any(
+            value.get(field) != str(getattr(payment, field))
+            for field in ("appointment_id", "patient_id", "tenant_id")
+        ):
+            raise DomainError(502, "upstream_error", "Invalid appointment refund context.")
+        return value
+
+    def prepare_refund(self, payment, request_id):
+        return self.refund_action(payment, request_id, "refund-review")
+
+    def complete_refund(self, payment, request_id):
+        return self.refund_action(payment, request_id, "refund-complete")
 
     def profile(self, tenant_id, request_id):
         result = self.request(

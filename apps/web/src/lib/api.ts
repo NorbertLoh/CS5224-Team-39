@@ -2,7 +2,7 @@ type ApiFetchOptions = RequestInit & { accessToken?: string }
 import { apiBaseUrl } from './backend-config'
 
 export class ApiError extends Error {
-  constructor(public status: number) { super(`Request failed (HTTP ${status}).`) }
+  constructor(public status: number, public code?: string) { super(`Request failed (HTTP ${status}).`) }
 }
 
 /** Like fetch(), with the API base, optional bearer token and HTTP error checking. */
@@ -23,6 +23,15 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}): Pro
     cache: 'no-store',
     redirect: 'error',
   })
-  if (!response.ok) throw new ApiError(response.status)
+  if (!response.ok) {
+    let code: string | undefined
+    try {
+      const body: { error?: { code?: unknown } } = await response.json()
+      if (typeof body?.error?.code === 'string') code = body.error.code
+    } catch {
+      // Non-JSON failures retain the HTTP status without exposing raw response text.
+    }
+    throw new ApiError(response.status, code)
+  }
   return response
 }
