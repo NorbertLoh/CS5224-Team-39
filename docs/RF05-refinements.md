@@ -1,7 +1,8 @@
 # RF05 local refinement verification
 
-Draft PR #262 and issue #261 track the requested navigation and patient-workspace
-refinements. No new dependencies or service configuration are required.
+PR #262 merged on 23 October 2026 (commit `2f5a438`); issue #261 is closed.
+The requested navigation and patient-workspace refinements are complete.
+No new dependencies or service configuration are required.
 
 ## Legacy appointment names
 
@@ -204,3 +205,5 @@ was added. Ruff formatting fixes the two fulfilment files flagged by CI.
 
 Frontend lint/typecheck/build and fulfilment Ruff checks pass. The receipt browser
 check also verifies the actual signed PDF download after the hook extraction.
+Final GitHub CI passed for frontend lint/typecheck/build, backend Ruff and the
+full fulfilment PostgreSQL/API suite, including the protected sentinel check.
