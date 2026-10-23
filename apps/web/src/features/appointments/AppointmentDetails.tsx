@@ -23,7 +23,14 @@ export function AppointmentDetails({
     heading.current?.focus()
   }, [appointment.appointment_id])
   // Only enum labels are title-cased; names and identifiers keep their spelling.
-  const capitalized = new Set(['Status', 'Payment resolution'])
+  const capitalized = new Set(['Status'])
+  const paymentStatus = {
+    none: 'Unpaid',
+    awaiting_payment: 'Awaiting payment',
+    confirmed: 'Paid',
+    refund_required: 'Refund review needed',
+    refunded: 'Refunded',
+  }[appointment.payment_resolution]
   const fields = [
     ['Patient', appointment.patient_name || 'Patient name unavailable'],
     ['Doctor', nameOrId(appointment.doctor_name, appointment.doctor_id)],
@@ -41,7 +48,7 @@ export function AppointmentDetails({
         appointment.consultation_price.currency,
       ),
     ],
-    ['Payment resolution', readableStatus(appointment.payment_resolution)],
+    ['Payment status', paymentStatus],
     [
       'Hold expires',
       appointment.hold_expires_at

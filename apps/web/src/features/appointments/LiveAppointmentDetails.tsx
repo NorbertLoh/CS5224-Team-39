@@ -12,6 +12,7 @@ import { LoadingState } from '../../components/LoadingState'
 import { DocumentList } from '../documents/DocumentList'
 import type { AppointmentRole } from './types'
 import { AppointmentJoinButton } from './AppointmentJoinButton'
+import { AppointmentPaymentAction } from './AppointmentPaymentAction'
 
 export function LiveAppointmentDetails({
   id,
@@ -75,12 +76,7 @@ export function LiveAppointmentDetails({
         />
       )}
       {role === 'patient' && appointment.patient_id === subjectId && (
-        <a
-          className="inline-block rounded border px-4 py-3"
-          href={`/patient/checkout?appointment_id=${appointment.appointment_id}`}
-        >
-          Payment status and checkout
-        </a>
+        <AppointmentPaymentAction appointment={appointment} />
       )}
       {allowed && (
         <form

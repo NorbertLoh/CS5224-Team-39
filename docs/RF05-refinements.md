@@ -54,3 +54,16 @@ intercepted appointment responses and a controlled clock verified disabled acces
 before opening, automatic enabling in the join window, automatic disabling at the
 end, and disabled cancelled/completed/expired/no-show/unpaid states. These UI checks
 did not modify bookings, start calls or establish new admission integration evidence.
+
+## Appointment payment controls
+
+Details label payment resolution in readable terms: Unpaid, Awaiting payment,
+Paid, Refund review needed or Refunded. Only the owning patient sees Pay
+consultation fee, and only for an unpaid held/pending-payment booking whose hold
+has not expired. Existing checkout eligibility is reused; checkout still verifies
+current billing state before payment. A timer removes the action at the deadline.
+
+Lint/build and browser UI checks passed for active unpaid/pending holds, automatic
+hold expiry, paid/expired/cancelled/completed/no-show bookings and refund states.
+Payment-state UI checks used intercepted appointment responses and a browser clock;
+they did not start checkout, create payments or change persisted booking/payment data.
