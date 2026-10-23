@@ -8,6 +8,7 @@ scheduling migration `0007` fall back to identifiers.
 See [setup, boundaries and verification](../../../../../docs/scheduling-frontend.md).
 
 `AppointmentSchedule` coordinates current identity and role scope; `AppointmentGrid`
-and `AppointmentCell` display half-hour cells. `LiveAppointmentDetails` fetches detail
+and `AppointmentCell` display each patient booking once with its full time range;
+staff retain the half-hour timetable. `LiveAppointmentDetails` fetches detail
 and handles eligible cancellations; `AppointmentDetails` renders server metadata.
 `display` contains pure formatting/grid helpers.

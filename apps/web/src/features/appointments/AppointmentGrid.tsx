@@ -1,5 +1,5 @@
 import { AppointmentCell } from './AppointmentCell'
-import { dayCells } from './display'
+import { dateInSingapore, dayCells } from './display'
 import type { Appointment } from '../scheduling/api'
 import type { AppointmentRole } from './types'
 
@@ -16,20 +16,28 @@ export function AppointmentGrid({
   selectedId: string | null
   onSelect: (id: string) => void
 }) {
-  // Patients only need their own bookings; staff see the full day timetable.
-  const cells = dayCells(appointments, date).filter(
-    (cell) => role !== 'patient' || cell.appointments.length,
-  )
+  // Show each patient booking once, including its full duration.
+  // Staff retain the half-hour timetable for viewing overlapping appointments.
+  const cells = role === 'patient'
+    ? appointments
+        .filter((appointment) => dateInSingapore(appointment.starts_at) === date)
+        .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
+        .map((appointment) => ({
+          startsAt: appointment.starts_at,
+          endsAt: appointment.ends_at,
+          appointments: [appointment],
+        }))
+    : dayCells(appointments, date)
   if (!cells.length)
     return <p className="text-slate-600">No appointments on this date.</p>
   return (
     <div
-      aria-label="30-minute appointment cells"
+      aria-label={role === 'patient' ? 'Appointments' : '30-minute appointment cells'}
       className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
     >
       {cells.map((cell) => (
         <AppointmentCell
-          key={cell.startsAt}
+          key={role === 'patient' ? cell.appointments[0].appointment_id : cell.startsAt}
           cell={cell}
           role={role}
           selectedId={selectedId}

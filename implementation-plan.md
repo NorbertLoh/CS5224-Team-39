@@ -237,6 +237,8 @@ the redundant Explore clinics section from the patient workspace, retaining clin
 discovery on the public home page, as additionally requested by the user. Remove
 the patient's standalone video consultation card while retaining appointment-based
 joining.
+Patient appointments also display once per booking with their full time range,
+preventing duplicate selection when a booking spans multiple half-hour cells.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused
