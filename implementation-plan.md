@@ -288,6 +288,14 @@ frontend files pass Prettier, lint, typecheck/build and live receipt download ch
 All final frontend, backend Ruff and fulfilment PostgreSQL/API CI checks passed.
 Further refinements require explicit user scope.
 
+- [ ] RF06: Separate clinic admin Manage clinic and Appointments pages with shared
+patient-style workspace navigation. Preserve clinic management actions, appointment
+clinic selection, existing direct links and authentication/membership checks.
+Issue #265; assignee NorbertLoh; status In progress. Dependencies: F06-F08, U05,
+S07 and RF05 (complete). Effort: S. Completion requires separated pages, correct
+active navigation, narrow-screen wrapping, lint/typecheck/build and real local
+clinic admin navigation checks. No configuration or migrations required.
+
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [ ] | RF01 | Verify AWS self-hosted PeerJS/TURN across two independently routed networks; record normal and forced-relay two-way human audio/video, selected relay/RTP evidence from both ends, transport/TLS and invalid/expired-credential observations, and leave/rejoin behaviour. Issue #155; planned, unassigned. Deferred from X01 by user decision on 16 October 2026. This is W11's verification portion; share evidence with W11/Q04 rather than duplicate deployment/testing. | X01, W11 deployment ready (not W11 verification complete) | M |
