@@ -1,4 +1,5 @@
 import { HomePage } from '../features/clinics/HomePage'
+import { ClinicRegistration } from '../features/clinics/ClinicRegistration'
 import { ClinicBooking } from '../features/booking/ClinicBooking'
 import { AvailabilityEditor } from '../features/availability/AvailabilityEditor'
 import { AppointmentSchedule } from '../features/appointments/AppointmentSchedule'
@@ -25,6 +26,8 @@ export function AppRoutes({
   session: Session | null
 }) {
   switch (route.kind) {
+    case 'clinic-registration':
+      return <ClinicRegistration />
     case 'doctor-availability':
       return (
         <main className="mx-auto max-w-6xl px-6 py-10">

@@ -4,6 +4,7 @@ export type Role = 'patient' | 'doctor' | 'clinic_admin' | 'platform_admin'
 export type Route =
   | { kind: 'home' }
   | { kind: 'sign-in' }
+  | { kind: 'clinic-registration' }
   | { kind: 'storefront'; slug: string }
   | { kind: 'booking'; role: 'patient'; slug: string }
   | { kind: 'checkout'; role: 'patient' }
@@ -34,6 +35,13 @@ export const rolePaths: Record<Role, string> = {
   platform_admin: '/platform-admin/clinics',
 }
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export function defaultWorkspace(identity: Identity) {
+  const role = (
+    ['platform_admin', 'clinic_admin', 'doctor', 'patient'] as const
+  ).find((item) => hasRole(identity, item))
+  return role ? rolePaths[role] : '/'
+}
 
 export function clinicIds(identity: Identity, role: 'doctor' | 'clinic_admin') {
   return [
@@ -78,6 +86,7 @@ export function canAccess(identity: Identity, route: Route) {
 export function parseRoute(path: string): Route {
   const normalized = path.replace(/\/$/, '') || '/'
   if (normalized === '/sign-in') return { kind: 'sign-in' }
+  if (normalized === '/register-clinic') return { kind: 'clinic-registration' }
   if (normalized === '/' || normalized === '/auth/callback')
     return { kind: 'home' }
   if (

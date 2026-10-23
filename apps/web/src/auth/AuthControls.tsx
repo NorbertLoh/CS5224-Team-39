@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
 import { SignInPage } from './SignInPage'
 import { currentIdentity } from '../features/clinics/api'
+import { defaultWorkspace } from '../navigation/access'
 import {
   authConfig,
   beginLogin,
@@ -32,7 +33,11 @@ sessionStorage.removeItem('telelink.logout-warning')
 async function signInDestination() {
   try {
     const identity = await currentIdentity()
-    return identity.global_roles.includes('patient') ? '/patient' : '/'
+    const destination = sessionStorage.getItem('telelink.after-sign-in')
+    sessionStorage.removeItem('telelink.after-sign-in')
+    return destination === '/register-clinic'
+      ? destination
+      : defaultWorkspace(identity)
   } catch {
     return '/'
   }

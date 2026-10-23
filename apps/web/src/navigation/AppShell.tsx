@@ -30,10 +30,15 @@ export function AppShell({
     refetchOnWindowFocus: true,
     refetchInterval: 30000,
   })
-  const requiresSignIn = 'role' in route && !session
+  const requiresSignIn =
+    ('role' in route || route.kind === 'clinic-registration') && !session
   useEffect(() => {
-    if (requiresSignIn) window.location.replace('/sign-in')
-  }, [requiresSignIn])
+    if (requiresSignIn) {
+      if (route.kind === 'clinic-registration')
+        sessionStorage.setItem('telelink.after-sign-in', '/register-clinic')
+      window.location.replace('/sign-in')
+    }
+  }, [requiresSignIn, route.kind])
 
   if (requiresSignIn)
     return <LoadingState message="Redirecting to sign in..." />
