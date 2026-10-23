@@ -13,8 +13,6 @@ from telelink_common.errors import DomainError
 
 from app.models import ConsultationSession
 
-JOIN_EARLY = timedelta(minutes=10)
-
 
 def utc(value: datetime) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
@@ -83,10 +81,12 @@ def locked_session(db, *, session_id: UUID, tenant_id: UUID):
     return record
 
 
-def can_join(record: ConsultationSession, *, now: datetime | None = None) -> bool:
+def can_join(
+    record: ConsultationSession, *, now: datetime | None = None, early_minutes: int = 10
+) -> bool:
     """Window eligibility only, never an admission/authorization decision."""
     instant = server_time(now)
-    opens_at = utc(record.starts_at) - JOIN_EARLY
+    opens_at = utc(record.starts_at) - timedelta(minutes=early_minutes)
     return record.status in {"scheduled", "in_progress"} and opens_at <= instant < utc(
         record.ends_at
     )
@@ -100,6 +100,7 @@ def transition(
     doctor_id: UUID,
     action: str,
     now: datetime | None = None,
+    early_minutes: int = 0,
 ):
     """Lock and apply doctor-driven start/end; retries preserve original times."""
     record = locked_session(db, session_id=session_id, tenant_id=tenant_id)
@@ -109,8 +110,11 @@ def transition(
     if action == "start":
         if record.status == "in_progress":
             return record
-        if record.status != "scheduled" or not record.starts_at <= instant < record.ends_at:
+        if record.status != "scheduled" or not (
+            record.starts_at - timedelta(minutes=early_minutes) <= instant < record.ends_at
+        ):
             raise DomainError(409, "invalid_session_transition", "Session cannot start.")
+        record.test_start_early_minutes = early_minutes
         record.status, record.started_at = "in_progress", instant
     elif action == "end":
         if record.status == "completed":
