@@ -6,6 +6,7 @@ import { currentIdentity } from '../features/clinics/api'
 import { ErrorState } from '../components/ErrorState'
 import { LoadingState } from '../components/LoadingState'
 import { RoleNavigation } from './RoleNavigation'
+import { DoctorNavigation } from './DoctorNavigation'
 import { PatientNavigation } from '../features/patient/PatientNavigation'
 import { ClinicAdminNavigation } from '../features/clinics/ClinicAdminNavigation'
 import { canAccess, hasRole } from './access'
@@ -77,6 +78,11 @@ export function AppShell({
         {session && !('role' in route) && identity.isPending && (
           <LoadingState message="Loading your roles..." />
         )}
+        {session &&
+          identity.isSuccess &&
+          'role' in route &&
+          route.role === 'doctor' &&
+          canAccess(identity.data, route) && <DoctorNavigation route={route} />}
         {session &&
           identity.isSuccess &&
           'role' in route &&

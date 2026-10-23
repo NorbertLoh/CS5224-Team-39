@@ -10,6 +10,7 @@ export type Route =
   | { kind: 'medication-orders'; role: 'patient' }
   | { kind: 'prescriptions' | 'documents'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
+  | { kind: 'doctor-availability'; role: 'doctor'; tenantId?: string }
   | { kind: 'clinic-appointments'; role: 'clinic_admin'; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | {
@@ -93,6 +94,8 @@ export function parseRoute(path: string): Route {
   if (normalized === '/patient/medication-orders')
     return { kind: 'medication-orders', role: 'patient' }
   if (normalized === '/doctor') return { kind: 'role', role: 'doctor' }
+  if (normalized === '/doctor/availability')
+    return { kind: 'doctor-availability', role: 'doctor' }
   if (normalized === '/patient/consultation')
     return { kind: 'consultation', role: 'patient' }
   if (normalized === '/doctor/consultation')
@@ -134,8 +137,12 @@ export function parseRoute(path: string): Route {
       tenantId: clinic[1].toLowerCase(),
     }
   }
-  const doctor = /^\/doctor\/clinics\/([^/]+)$/.exec(normalized)
+  const doctor = /^\/doctor\/clinics\/([^/]+)(\/availability)?$/.exec(normalized)
   if (doctor && uuid.test(doctor[1]))
-    return { kind: 'role', role: 'doctor', tenantId: doctor[1].toLowerCase() }
+    return {
+      kind: doctor[2] ? 'doctor-availability' : 'role',
+      role: 'doctor',
+      tenantId: doctor[1].toLowerCase(),
+    }
   return { kind: 'missing' }
 }

@@ -25,6 +25,13 @@ export function AppRoutes({
   session: Session | null
 }) {
   switch (route.kind) {
+    case 'doctor-availability':
+      return (
+        <main className="mx-auto max-w-6xl px-6 py-10">
+          <h1 className="text-3xl font-semibold">Doctor availability</h1>
+          <AvailabilityEditor key={route.tenantId} tenantId={route.tenantId} />
+        </main>
+      )
     case 'home':
       return <HomePage />
     case 'storefront':
@@ -80,12 +87,6 @@ export function AppRoutes({
           <h1 className="text-3xl font-semibold">{roleLabels[route.role]}</h1>
           {route.role === 'clinic_admin' && session && (
             <ManagedClinics session={session} />
-          )}
-          {route.role === 'doctor' && (
-            <AvailabilityEditor
-              key={route.tenantId}
-              tenantId={route.tenantId}
-            />
           )}
           {(route.role === 'patient' ||
             route.role === 'doctor') && (

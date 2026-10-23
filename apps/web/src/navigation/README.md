@@ -69,3 +69,5 @@ denied patient/doctor platform reads and hosted logout/token revocation. Access
 rules were also run against the four live identity responses. Browser interaction,
 visual/mobile layout and AWS integration were not verified: no browser surface was
 available through the session's UI tool.
+
+Doctor workspace navigation separates Appointments at /doctor from Availability at /doctor/availability. Clinic-scoped /doctor/clinics/<tenant UUID> URLs support the /availability suffix and preserve clinic scope across tabs. Both pages retain authentication and doctor membership checks.
