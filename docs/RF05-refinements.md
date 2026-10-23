@@ -67,3 +67,18 @@ Lint/build and browser UI checks passed for active unpaid/pending holds, automat
 hold expiry, paid/expired/cancelled/completed/no-show bookings and refund states.
 Payment-state UI checks used intercepted appointment responses and a browser clock;
 they did not start checkout, create payments or change persisted booking/payment data.
+
+## Upcoming and Past tabs
+
+The patient appointment list now defaults to Upcoming. Future/ongoing active
+bookings are ordered nearest first; ended, cancelled, expired, completed and no-show
+bookings appear in Past, newest first. Tabs show counts of loaded bookings and
+support keyboard navigation through the existing Radix dependency. Switching tabs
+clears selection. A timer moves ended bookings to Past without reloading the page.
+
+Lint/build and live three-role checks passed. All 16 current patient bookings were
+correctly in Past, with date/time ordering, names, details and single selection
+preserved. Controlled-clock UI checks additionally covered an empty Upcoming tab,
+a future cancelled booking in Past, loading an upcoming booking from another page,
+selection reset and automatic movement at the end time. Intercepted-response checks
+did not change persisted bookings. The build passes with a bundle-size advisory.

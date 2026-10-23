@@ -251,6 +251,8 @@ Keep the consultation join control visible in appointment details, disabled with
 an explanation when unavailable, and update eligibility as time passes.
 Only payable unpaid patient bookings show Pay consultation fee; details show
 readable payment status, including Paid, and expired holds lose the payment action.
+Patient appointments have Upcoming/Past tabs with counts and keyboard navigation;
+ongoing/future active bookings appear nearest first, past/closed bookings newest first.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused

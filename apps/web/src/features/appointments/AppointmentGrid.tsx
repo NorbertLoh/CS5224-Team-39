@@ -22,7 +22,6 @@ export function AppointmentGrid({
   // Staff retain the half-hour timetable for viewing overlapping appointments.
   const cells = role === 'patient'
     ? namedAppointments
-        .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
         .map((appointment) => ({
           startsAt: appointment.starts_at,
           endsAt: appointment.ends_at,

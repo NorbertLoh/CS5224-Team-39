@@ -14,6 +14,9 @@ See [setup, boundaries and verification](../../../../../docs/scheduling-frontend
 and `AppointmentCell` display each patient booking once with its full time range;
 staff retain the half-hour timetable. `LiveAppointmentDetails` fetches detail
 and handles eligible cancellations; `AppointmentDetails` renders server metadata.
-Patient bookings appear together across dates, with the Singapore date and time
-on each card; there is no patient date filter. Pagination retains Load more appointments.
+Patient bookings appear across dates in Upcoming/Past tabs, with the Singapore
+date and time on each card; there is no patient date filter. Upcoming is selected
+by default and includes ongoing/future active bookings, nearest first. Ended or
+terminal-status bookings appear in Past, newest first. Pagination retains Load more
+appointments, and tab counts reflect the loaded bookings.
 `display` contains pure formatting/grid helpers.

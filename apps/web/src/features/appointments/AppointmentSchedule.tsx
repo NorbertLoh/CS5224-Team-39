@@ -10,6 +10,7 @@ import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
 import { useClinicNames } from '../clinics/useClinicNames'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
+import { PatientAppointments } from './PatientAppointments'
 
 export function AppointmentSchedule({
   role,
@@ -172,25 +173,25 @@ function LiveSchedule({
         />
       ) : (
         <>
-          <p role="status">
-            {role === 'patient' ? (
-              `${appointments.length} appointments.`
-            ) : (
-              <>
+          {role === 'patient' ? (
+            <PatientAppointments appointments={appointments} token={token} subjectId={subjectId} />
+          ) : (
+            <>
+              <p role="status">
                 {appointments.filter(
                   (item) => dateInSingapore(item.starts_at) === date,
                 ).length}{' '}
                 appointments on {formatDate(date)}. Empty cells are not booking availability.
-              </>
-            )}
-          </p>
-          <AppointmentGrid
-            appointments={appointments}
-            date={date}
-            role={role}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
+              </p>
+              <AppointmentGrid
+                appointments={appointments}
+                date={date}
+                role={role}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+              />
+            </>
+          )}
           {query.hasNextPage && (
             <button
               className="rounded border px-4 py-2"
@@ -200,7 +201,7 @@ function LiveSchedule({
               Load more appointments
             </button>
           )}
-          {selectedId && (
+          {role !== 'patient' && selectedId && (
             <LiveAppointmentDetails
               key={selectedId}
               id={selectedId}
