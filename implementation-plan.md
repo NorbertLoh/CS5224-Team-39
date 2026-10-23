@@ -288,6 +288,40 @@ frontend files pass Prettier, lint, typecheck/build and live receipt download ch
 All final frontend, backend Ruff and fulfilment PostgreSQL/API CI checks passed.
 Further refinements require explicit user scope.
 
+- [ ] RF06: Separate clinic admin Manage clinic and Appointments pages with shared
+patient-style workspace navigation. Preserve clinic management actions, appointment
+clinic selection, existing direct links and authentication/membership checks.
+Issue #265; assignee NorbertLoh; status In progress. Dependencies: F06-F08, U05,
+S07 and RF05 (complete). Effort: S. Completion requires separated pages, correct
+active navigation, narrow-screen wrapping, lint/typecheck/build and real local
+clinic admin navigation checks. No configuration or migrations required.
+User refinement: selecting one clinic opens its profile as the management landing
+page, with persistent Profile, Staff, Payments and Medicine & delivery navigation
+for that clinic and a Change clinic link. Replace the repeated per-card action
+links with one clinic entry; preserve existing URL and membership checks.
+Draft PR #266 implements the split. Frontend lint and typecheck/production build
+passed. Live local browser checks verified separate management/schedule content,
+active navigation, existing profile links and clinic selection; a 390px viewport
+kept both navigation links within the page. The Tailscale appointments direct link
+redirected a signed-out browser to sign-in. Awaiting user review/merge.
+The clinic-specific refinement also passed lint/typecheck/build and real clinic
+admin sign-in through Tailscale. Profile, Staff, Payments and Medicine & delivery
+kept the selected clinic and correct active tab; Change clinic returned to the
+list. The management navbar wrapped within a 390px viewport. PR remains a draft.
+User refinement: add an Appointments tab for each selected clinic, with its real
+schedule fixed to that clinic and no clinic selector. The scoped route requires
+active clinic administration; the overall Appointments entry remains available.
+Scoped appointments passed lint/typecheck/build, route/membership access checks
+and a Tailscale browser check of the active clinic tab with no clinic selector.
+The real scheduling API returned four appointments, all for the selected clinic.
+User refinement: remove the redundant Medicine & delivery back link and clinic
+UUID line, using the selected clinic name in the shared navbar. Staff and payments
+use readable loading/unavailable clinic labels rather than UUID fallbacks.
+This label/link cleanup passed frontend lint and typecheck/production build.
+User refinement: Staff and Payments also remove repeated clinic details from
+their page bodies, relying on the clinic name in the shared management navbar.
+Staff/Payments cleanup passed frontend lint and typecheck/production build.
+
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [ ] | RF01 | Verify AWS self-hosted PeerJS/TURN across two independently routed networks; record normal and forced-relay two-way human audio/video, selected relay/RTP evidence from both ends, transport/TLS and invalid/expired-credential observations, and leave/rejoin behaviour. Issue #155; planned, unassigned. Deferred from X01 by user decision on 16 October 2026. This is W11's verification portion; share evidence with W11/Q04 rather than duplicate deployment/testing. | X01, W11 deployment ready (not W11 verification complete) | M |

@@ -11,6 +11,10 @@ commands, recovery and sandbox evidence are in
 server delivery states and guidance for uncertain outcomes or refund review.
 These components use live APIs and do not generate example orders.
 
+Clinic Medicine & delivery uses the selected clinic's name and navigation in the
+shared management navbar. It does not repeat a clinic UUID or a back-to-clinics
+link in the page body; Change clinic remains available in the navbar.
+
 Order borders and text labels show payment/preparation waits, delivery progress,
 completion and problems requiring review. Selection preserves the status border.
 
