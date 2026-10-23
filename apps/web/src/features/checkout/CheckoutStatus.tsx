@@ -19,7 +19,7 @@ const messages: Record<
   ],
   pending: [
     'Payment pending',
-    'Payment has not been confirmed. Check again shortly. Do not start another payment while the outcome is uncertain.',
+    'Payment has not been confirmed. Continue to secure checkout to resume your existing payment.',
   ],
   failed: [
     'Payment unsuccessful',
@@ -156,7 +156,7 @@ export function CheckoutStatus({
         </dl>
       )}
       <div className="mt-6 flex flex-wrap gap-3">
-        {state === 'ready' && (
+        {(state === 'ready' || state === 'pending') && (
           <button
             type="button"
             className="rounded-lg bg-slate-900 px-4 py-3 text-white"
@@ -166,7 +166,7 @@ export function CheckoutStatus({
             Continue to secure checkout
           </button>
         )}
-        {state !== 'missing' && state !== 'ready' && (
+        {state !== 'missing' && state !== 'ready' && state !== 'pending' && (
           <button
             type="button"
             className="rounded-lg bg-slate-900 px-4 py-3 text-white"
@@ -186,7 +186,7 @@ export function CheckoutStatus({
             Retry payment
           </button>
         )}
-        {state !== 'ready' && (
+        {state !== 'ready' && state !== 'pending' && (
           <a className="rounded-lg border px-4 py-3" href="/patient">
             Appointments
           </a>

@@ -116,18 +116,6 @@ function PaymentReturn({
             : undefined
         }
       />
-      {data &&
-        canCheckout(data.appointment, data.payment) &&
-        state !== 'ready' &&
-        state !== 'failed' && (
-          <button
-            className="rounded border px-4 py-3"
-            disabled={checkout.isPending || query.isFetching}
-            onClick={() => checkout.mutate()}
-          >
-            Continue to secure checkout
-          </button>
-        )}
       {checkout.isError && (
         <ErrorState
           message={billingError}
