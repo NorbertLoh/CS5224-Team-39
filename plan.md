@@ -27,6 +27,13 @@ Deliver a complete journey: clinic approval -> booking -> consultation payment -
 
 Premium subscriptions, promoted placement, extensive analytics, custom clinic domains, video recording, and production onboarding are later work.
 
+RF08 scope override (23 October 2026): user-requested, clinic-admin full consultation
+refunds are now in scope. No platform approval queue or medication/delivery refund
+action is included. Use durable provider idempotency, current clinic membership,
+audit history and provider polling. Preserve existing delivery exception review;
+payment alone does not guarantee dispatch. Broader automatic/partial/out-of-band
+refund reconciliation remains deferred. Track implementation in issue #269 / PR #270.
+
 ## 2. Frontend design
 
 Use one React application initially, with role-specific route groups and shared components. Clinics get branded storefronts through configuration, not separate code deployments.

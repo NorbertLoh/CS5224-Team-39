@@ -12,7 +12,7 @@ from app.api import DB
 from app.billing import BillingClient
 from app.booking import appointment_public
 from app.holds import expire_slot_holds, server_now
-from app.models import Appointment
+from app.models import Appointment, PaymentRecovery
 from app.payments import PaymentEventRejected
 from app.schemas import AppointmentPublic
 from app.transitions import lock_appointment
@@ -27,6 +27,75 @@ class CheckoutReservation(BaseModel):
     model_config = ConfigDict(extra="forbid")
     patient_id: UUID
     payment_id: UUID
+
+
+class RefundContext(CheckoutReservation):
+    tenant_id: UUID
+
+
+def refund_appointment(appointment_id, body, session):
+    appointment = lock_appointment(session, appointment_id)
+    if appointment.patient_id != body.patient_id or appointment.tenant_id != body.tenant_id:
+        raise DomainError(404, "not_found", "Resource not found.")
+    if appointment.payment_id == body.payment_id:
+        if appointment.status not in {"cancelled", "expired", "completed", "no_show"}:
+            raise DomainError(
+                409,
+                "invalid_appointment_transition",
+                "Cancel the appointment before requesting a refund.",
+            )
+    else:
+        recovery = session.get(PaymentRecovery, body.payment_id)
+        if (
+            recovery is None
+            or recovery.appointment_id != appointment_id
+            or recovery.outcome != "refund_required"
+        ):
+            raise DomainError(409, "invalid_appointment_transition", "Payment requires review.")
+    return appointment
+
+
+@router.post(
+    "/internal/appointments/{appointment_id}/refund-review", response_model=AppointmentPublic
+)
+def refund_review(appointment_id: UUID, body: RefundContext, caller: Billing, session: DB):
+    appointment = refund_appointment(appointment_id, body, session)
+    if appointment.payment_id == body.payment_id and appointment.payment_resolution != "refunded":
+        appointment.payment_resolution = "refund_required"
+    session.commit()
+    return appointment_public(appointment)
+
+
+@router.post(
+    "/internal/appointments/{appointment_id}/refund-complete", response_model=AppointmentPublic
+)
+def refund_complete(
+    appointment_id: UUID, body: RefundContext, caller: Billing, session: DB, request: Request
+):
+    # Verify independently; a service call alone is not evidence money was refunded.
+    with_client = BillingClient(request.app.state.settings)
+    try:
+        payment = with_client.payment(body.payment_id)
+    except PaymentEventRejected:
+        raise DomainError(503, "unavailable", "Refund verification unavailable.") from None
+    finally:
+        with_client.close()
+    if (
+        payment.status != "refunded"
+        or payment.payment_id != body.payment_id
+        or payment.purpose != "consultation"
+        or payment.appointment_id != appointment_id
+        or payment.tenant_id != body.tenant_id
+        or payment.patient_id != body.patient_id
+    ):
+        raise DomainError(409, "invalid_appointment_transition", "Refund is not confirmed.")
+    appointment = refund_appointment(appointment_id, body, session)
+    if payment.amount.amount_minor != appointment.consultation_price_minor:
+        raise DomainError(409, "invalid_appointment_transition", "Payment amount differs.")
+    if appointment.payment_id == body.payment_id:
+        appointment.payment_resolution = "refunded"
+    session.commit()
+    return appointment_public(appointment)
 
 
 @router.post(

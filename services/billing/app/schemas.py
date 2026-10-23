@@ -26,7 +26,14 @@ class MedicationResolution(BaseModel):
     resolution: Literal["refund_required"]
     resource_id: UUID
     reason: Literal[
-        "quote_expired", "order_cancelled", "delivery_price_changed", "duplicate_charge"
+        "quote_expired",
+        "order_cancelled",
+        "delivery_price_changed",
+        "duplicate_charge",
+        "late_payment",
+        "slot_reallocated",
+        "appointment_cancelled",
+        "appointment_unavailable",
     ]
 
 

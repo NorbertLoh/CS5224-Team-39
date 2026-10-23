@@ -26,6 +26,40 @@ export type Totals = {
   commission_amount: Money
   clinic_amount: Money
 }
+export type Refund = {
+  refund_id: string
+  payment_id: string
+  requested_by: string
+  requested_by_name: string
+  reason: string
+  status: 'pending' | 'succeeded' | 'failed' | 'review'
+  created_at: string
+  updated_at: string
+  last_error: string | null
+  retry_allowed: boolean
+}
+
+export async function refundHistory(
+  id: string,
+  signal?: AbortSignal,
+): Promise<Refund[]> {
+  return (
+    await request(`/payments/${encodeURIComponent(id)}/refunds`, { signal })
+  ).json()
+}
+
+export async function refundPayment(
+  id: string,
+  reason: string,
+): Promise<Refund> {
+  return (
+    await request(`/payments/${encodeURIComponent(id)}/refunds`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    })
+  ).json()
+}
 export type Checkout = {
   payment: Payment
   checkout_url: string

@@ -1,10 +1,16 @@
 import type { Payment } from './api'
 import { consultationPrice } from '../../lib/money'
 import { paymentTime } from './model'
+import { ConsultationRefund } from './ConsultationRefund'
+import { useState } from 'react'
 
 export function PaymentDetails({ payment }: { payment: Payment }) {
+  const [open, setOpen] = useState(false)
   return (
-    <details className="min-w-48">
+    <details
+      className="min-w-48"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary className="cursor-pointer font-medium underline">
         Payment details
       </summary>
@@ -52,9 +58,13 @@ export function PaymentDetails({ payment }: { payment: Payment }) {
       </dl>
       {payment.resolution === 'refund_required' && (
         <p className="mt-3 text-sm text-amber-800">
-          Manual refund review required. Contact platform support with this
-          payment reference. No refund is initiated here.
+          {payment.purpose === 'consultation'
+            ? 'Refund review required. Review the consultation and issue a full refund below.'
+            : 'Delivery exception requires review. Contact platform support with this payment reference.'}
         </p>
+      )}
+      {open && payment.purpose === 'consultation' && (
+        <ConsultationRefund key={payment.payment_id} payment={payment} />
       )}
     </details>
   )
