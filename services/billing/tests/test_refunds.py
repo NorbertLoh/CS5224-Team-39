@@ -16,6 +16,7 @@ from app.models import CheckoutAttempt, Payment, RefundAttempt
 from app.provider import ProviderRejected, ProviderUncertain, StripeCheckout
 from app.refunds import process_refunds
 from app.settings import Settings
+from app.upstream import CheckoutSources
 from tests.test_queries import api as api
 
 
@@ -49,7 +50,7 @@ def flow(api):
     def prepare(payment, request_id):
         operations["prepare"] += 1
         if operations.get("active"):
-            raise DomainError(409, "invalid_appointment_transition", "Cancel first")
+            raise DomainError(409, "refund_appointment_active", "Cancel first")
 
     def complete(payment, request_id):
         operations["complete"] += 1
@@ -184,7 +185,9 @@ def test_only_current_own_clinic_admin_can_refund(flow, role, status):
 def test_medication_seeded_unpaid_active_and_invalid_body_rejected(flow):
     api, payment_id, operations, _ = flow
     operations["active"] = True
-    assert request(flow).status_code == 409
+    active_response = request(flow)
+    assert active_response.status_code == 409
+    assert active_response.json()["error"]["code"] == "refund_appointment_active"
     operations["active"] = False
     assert request(flow, reason="   ").status_code == 422
     assert request(flow, amount=1).status_code == 422
@@ -206,6 +209,65 @@ def test_medication_seeded_unpaid_active_and_invalid_body_rejected(flow):
         == 409
     )
     assert not operations["post"]
+
+
+def test_demo_payment_explains_unavailability_before_scheduling_or_provider(flow):
+    api, payment_id, operations, _ = flow
+    with Session(api[-1].state.database_engine) as session, session.begin():
+        payment = session.get(Payment, payment_id)
+        payment.provider = "demo_seed"
+        payment.resolution = "refund_required"
+    response = api[0].get(f"/payments/{payment_id}", headers=api[1]())
+    assert response.status_code == 200
+    assert response.json()["refund_availability"] == "demo_payment"
+    assert response.json()["status"] == "succeeded"
+    refused = request(flow)
+    assert refused.status_code == 409
+    assert refused.json()["error"]["code"] == "refund_demo_payment"
+    assert "cancel" not in refused.json()["error"]["message"].lower()
+    assert operations["prepare"] == 0 and not operations["post"]
+    with Session(api[-1].state.database_engine) as session:
+        assert session.scalar(select(RefundAttempt)) is None
+
+
+def test_real_paid_payment_and_unpaid_payment_report_different_availability(flow):
+    api, payment_id, _, _ = flow
+    path = f"/payments/{payment_id}"
+    assert api[0].get(path, headers=api[1]()).json()["refund_availability"] == "available"
+    with Session(api[-1].state.database_engine) as session, session.begin():
+        session.get(Payment, payment_id).status = "pending"
+    assert api[0].get(path, headers=api[1]()).json()["refund_availability"] == "not_paid"
+    refused = request(flow)
+    assert refused.status_code == 409
+    assert refused.json()["error"]["code"] == "refund_not_available"
+
+
+def test_scheduling_active_error_code_survives_billing_adapter():
+    settings = Settings(
+        _env_file=None,
+        environment="test",
+        scheduling_url="http://scheduling.test",
+        scheduling_secret="rf08-source-error-test-key-at-least-32-bytes",
+    )
+    sources = CheckoutSources(
+        settings,
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(
+                409,
+                json={"error": {"code": "refund_appointment_active", "message": "Cancel first"}},
+            )
+        ),
+    )
+    payment = SimpleNamespace(
+        **{name: uuid4() for name in ("payment_id", "appointment_id", "patient_id", "tenant_id")}
+    )
+    try:
+        with pytest.raises(DomainError) as error:
+            sources.prepare_refund(payment, "rf08-error-check")
+        assert error.value.code == "refund_appointment_active"
+        assert "active appointment" in error.value.detail
+    finally:
+        sources.close()
 
 
 def test_lost_response_recovers_without_second_post(flow):

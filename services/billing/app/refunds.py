@@ -17,6 +17,7 @@ from app.models import Payment, RefundAttempt
 from app.provider import ProviderRejected, ProviderUncertain
 from app.queries import access_scope
 from app.reconciliation import ReceiptRejected
+from app.refund_policy import refund_availability
 from app.refund_provider import reconcile_refund
 
 router = APIRouter(tags=["refunds"])
@@ -98,14 +99,12 @@ def request_refund(
     )
     if latest and not (latest.status == "failed" and latest.last_error == "provider_failed"):
         return public(latest)
-    if (
-        payment.purpose != "consultation"
-        or payment.provider != "stripe"
-        or payment.provider_account_id is not None
-        or not payment.provider_payment_id
-        or payment.amount_minor <= 0
-        or payment.status not in {"succeeded", "refund_failed"}
-    ):
+    availability = refund_availability(payment)
+    if availability == "demo_payment":
+        raise DomainError(
+            409, "refund_demo_payment", "This is a demo payment. No actual charge was made."
+        )
+    if availability != "available":
         raise DomainError(
             409, "refund_not_available", "Only paid Stripe consultations can be refunded."
         )

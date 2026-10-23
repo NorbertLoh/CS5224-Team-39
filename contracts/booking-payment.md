@@ -107,6 +107,14 @@ link is present: consultation -> appointment, null order/quote;
 medication_delivery -> order and quote, null appointment. Provider IDs and
 webhook payloads are internal, never returned in ordinary patient responses.
 
+RF08 adds `refund_availability` to public payments: `available`, `demo_payment`,
+`unsupported_purpose`, `not_paid` or `unsupported_payment`. This is a payment-level
+capability, not refund authority or confirmation of appointment eligibility;
+current clinic membership and booking state are independently checked on POST.
+Demo payments report `demo_payment` and cannot call the provider. Refund refusals
+use `refund_demo_payment`, `refund_appointment_active` or `refund_not_available`
+so clients do not mistake every HTTP 409 for an active appointment.
+
 Billing obtains consultation price from scheduling's hold snapshot and commission
 from tenant through authenticated APIs. It rejects inactive/expired/cancelled or
 foreign appointments. C04 defines the trusted order/quote snapshot for medication.

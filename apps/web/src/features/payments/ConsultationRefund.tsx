@@ -13,6 +13,18 @@ const labels = {
   review: 'Support review required',
 }
 
+function refundError(error: unknown) {
+  if (error instanceof ApiError) {
+    if (error.code === 'refund_demo_payment')
+      return 'This is a demo payment. No actual charge was made, so there is nothing to refund.'
+    if (error.code === 'refund_appointment_active')
+      return 'The appointment is still active. Cancel it in Appointments, then request the refund.'
+    if (error.status === 409)
+      return 'A refund is unavailable for this payment. Refresh its status or contact support with the payment reference.'
+  }
+  return 'Could not confirm the refund request. Refresh the history before retrying; an accepted request will continue processing.'
+}
+
 export function ConsultationRefund({ payment }: { payment: Payment }) {
   const [reason, setReason] = useState('')
   const [confirming, setConfirming] = useState(false)
@@ -21,6 +33,7 @@ export function ConsultationRefund({ payment }: { payment: Payment }) {
   const history = useQuery({
     queryKey: ['billing', 'refunds', token, payment.payment_id],
     queryFn: ({ signal }) => refundHistory(payment.payment_id, signal),
+    enabled: payment.refund_availability !== 'demo_payment',
     refetchInterval: 5000,
     retry: false,
   })
@@ -40,12 +53,27 @@ export function ConsultationRefund({ payment }: { payment: Payment }) {
   })
   const latest = history.data?.[0]
   const available =
+    payment.refund_availability === 'available' &&
     history.isSuccess &&
     ((payment.status === 'succeeded' && !latest) || latest?.retry_allowed)
   const amount = consultationPrice(
     payment.amount.amount_minor,
     payment.amount.currency,
   )
+  if (payment.refund_availability === 'demo_payment') {
+    return (
+      <section
+        className="mt-4 space-y-3 rounded border p-3"
+        aria-label="Consultation refund"
+      >
+        <h3 className="font-semibold">Demo payment</h3>
+        <p>
+          This is a simulated payment. No actual charge was made, so there is
+          nothing to refund.
+        </p>
+      </section>
+    )
+  }
   return (
     <section
       className="mt-4 space-y-3 rounded border p-3"
@@ -53,8 +81,9 @@ export function ConsultationRefund({ payment }: { payment: Payment }) {
     >
       <h3 className="font-semibold">Consultation refund</h3>
       <p className="text-sm">
-        Full refunds only. Cancel an upcoming appointment in Appointments first.
-        Completed and no-show consultations can also be reviewed here.
+        Full refunds only. If the appointment is still active, cancel it in
+        Appointments first. Completed and no-show consultations can also be
+        reviewed here.
       </p>
       {history.isPending && <p role="status">Loading refund history…</p>}
       {history.isError && (
@@ -139,13 +168,12 @@ export function ConsultationRefund({ payment }: { payment: Payment }) {
           )}
         </form>
       )}
-      {refund.isError && (
-        <p role="alert">
-          {refund.error instanceof ApiError && refund.error.status === 409
-            ? 'This payment cannot be refunded. Cancel an active appointment first, or contact support with the payment reference.'
-            : 'Could not confirm the refund request. Refresh the history before retrying; an accepted request will continue processing.'}
-        </p>
-      )}
+      {history.isSuccess &&
+        !latest &&
+        payment.refund_availability !== 'available' && (
+          <p>No refundable charge is available for this payment.</p>
+        )}
+      {refund.isError && <p role="alert">{refundError(refund.error)}</p>}
       {refund.isSuccess && (
         <p role="status">
           Refund request recorded. Check the status above for completion.

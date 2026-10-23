@@ -11,6 +11,13 @@ Medicine/delivery payments have no refund action and are rejected by the backend
 Payment alone does not guarantee dispatch: paid-and-ready gating, expired quote,
 changed fee, provider uncertainty and cancellation exceptions remain visible.
 
+Public payment responses include `refund_availability`. Demo payment details show
+that no actual charge was made and omit the refund form. Backend attempts against
+these payments return `refund_demo_payment` before contacting scheduling or Stripe.
+Only an actually active booking returns `refund_appointment_active`; other 409
+responses use general unavailability guidance. The frontend preserves these safe
+error codes rather than inferring cancellation requirements from HTTP status.
+
 Cancel upcoming consultations in Appointments first. Completed, no-show, cancelled
 and expired bookings may be reviewed for a full refund. Recorded duplicate/late
 payment exceptions can be refunded without cancelling a different valid payment's
