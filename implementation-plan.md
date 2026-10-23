@@ -262,6 +262,8 @@ inside its content; direct order links and staff workflows remain supported.
 Expanded patient records prioritise medicines/instructions and relevant actions,
 with technical references and settled-order pricing collapsed instead of repeated
 cards. Pre-payment pricing, payment/refund guidance and delivery status remain visible.
+Remove the redundant View all medication orders link; direct order URLs already
+show and expand the requested order within the full accordion list.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused

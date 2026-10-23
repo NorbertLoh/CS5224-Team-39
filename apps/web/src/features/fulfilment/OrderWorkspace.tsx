@@ -37,7 +37,6 @@ export function OrderWorkspace({
         : null),
   )
   const validId = selectedId !== null && uuid.test(selectedId)
-  const directReview = patient && supplied !== null && validId
   const list = useInfiniteQuery({
     queryKey: ['fulfilment', 'orders', token, context],
     initialPageParam: null as string | null,
@@ -153,14 +152,6 @@ export function OrderWorkspace({
           </div>
           {refreshButton}
         </div>
-        {directReview && (
-          <a
-            className="inline-block text-sm underline"
-            href="/patient/medication-orders"
-          >
-            View all medication orders
-          </a>
-        )}
         {!patient && (
           <p className="break-all text-sm text-slate-600">
             Clinic {context.tenantId}
