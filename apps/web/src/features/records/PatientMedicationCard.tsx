@@ -26,9 +26,9 @@ export function PatientMedicationCard({
   const review = canReviewMedicinePayment(order)
   const progress = medicineProgress(order)
   return (
-    <article className="space-y-4 rounded-xl border border-teal-200 bg-teal-50 p-5">
+    <div className="space-y-4">
       <div>
-        <h3 className="text-xl font-semibold">
+        <h3 className="font-semibold">
           {checking || unavailable
             ? 'Your prescribed medicines'
             : review
@@ -40,17 +40,6 @@ export function PatientMedicationCard({
         </p>
       </div>
       {children}
-      <ul className="space-y-2">
-        {prescription.items.map((item) => (
-          <li
-            key={item.prescription_item_id}
-            className="flex flex-wrap justify-between gap-2 text-sm"
-          >
-            <span className="font-medium">{item.display_name}</span>
-            <span>Quantity: {item.quantity}</span>
-          </li>
-        ))}
-      </ul>
       {checking ? (
         <p role="status">Checking your medication order...</p>
       ) : unavailable ? (
@@ -63,6 +52,6 @@ export function PatientMedicationCard({
           <MedicationOrderAction prescription={prescription} order={order} />
         </>
       )}
-    </article>
+    </div>
   )
 }

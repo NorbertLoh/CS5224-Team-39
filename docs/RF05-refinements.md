@@ -98,3 +98,23 @@ checks passed for page links, active navigation, direct reloads and successful
 backend reads (16 appointments, two prescriptions, two orders and three documents).
 Signed-out visits to all four pages redirect to sign-in; a real doctor account
 was denied the new patient records routes. Navigation wraps at a 390-pixel viewport.
+
+## Prescription and medication-order accordions
+
+Both patient pages use the Documents page's white bordered container, header with
+refresh action and divided summary rows. A chevron indicates expandable content;
+one item opens at a time, with native button keyboard support and labelled regions.
+Prescription medicine/order actions and order payment/delivery controls are inside
+the expanded row. Repeated medicine summaries are removed; the authoritative
+prescription detail still shows quantities and instructions.
+
+The patient order list replaces its previous side-by-side layout with inline
+details. Direct order links expand their requested order, including an authorised
+order outside the loaded list page. Prescription-order creation links, pagination,
+live status queries and the clinic-admin order workflow remain available.
+
+Lint/build and live browser checks passed for both lists, real detail loading,
+single expansion, collapse, Enter/Space controls, 390-pixel layouts and clinic-admin
+order selection. A deep-link check omitted the requested real order from the list
+response and confirmed it still opened through its authorised detail endpoint.
+No order, quote, payment or delivery was created during these checks.

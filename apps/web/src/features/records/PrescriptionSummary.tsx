@@ -1,17 +1,21 @@
 ﻿import type { Prescription } from './types'
 import { useQuery } from '@tanstack/react-query'
 import { appointmentDetail } from '../scheduling/api'
+import type { ReactNode } from 'react'
+import { PatientAccordionItem } from '../patient/PatientAccordionItem'
 
 export function PrescriptionSummary({
   prescription,
   token,
   selected,
   onToggle,
+  children,
 }: {
   prescription: Prescription
   token: string
   selected: boolean
   onToggle: () => void
+  children: ReactNode
 }) {
   const appointment = useQuery({
     queryKey: ['records', 'context', token, prescription.appointment_id],
@@ -28,32 +32,37 @@ export function PrescriptionSummary({
       ? context.clinic_name?.trim()
       : undefined
   return (
-    <button
-      type="button"
-      className="w-full rounded border p-4 text-left"
-      onClick={onToggle}
-      aria-expanded={selected}
+    <PatientAccordionItem
+      title={
+        <>
+          Prescription ·{' '}
+          <span className="capitalize">{prescription.status}</span>
+        </>
+      }
+      open={selected}
+      onToggle={onToggle}
+      summary={
+        <>
+          <span className="block text-sm">
+            {new Intl.DateTimeFormat('en-SG', {
+              timeZone: 'Asia/Singapore',
+              dateStyle: 'medium',
+            }).format(
+              new Date(prescription.issued_at ?? prescription.created_at),
+            )}{' '}
+            · {prescription.items.length} medication(s)
+          </span>
+          <span className="block text-sm">
+            Clinic:{' '}
+            {clinicName ||
+              (appointment.isPending
+                ? 'Loading clinic name...'
+                : 'Clinic name unavailable')}
+          </span>
+        </>
+      }
     >
-      <span className="block font-medium">
-        Prescription · {prescription.status}
-      </span>
-      <span className="block text-sm">
-        {new Intl.DateTimeFormat('en-SG', {
-          timeZone: 'Asia/Singapore',
-          dateStyle: 'medium',
-        }).format(
-          new Date(prescription.issued_at ?? prescription.created_at),
-        )}{' '}
-        · {prescription.items.length} medication(s) ·{' '}
-        {selected ? 'Hide details' : 'View details'}
-      </span>
-      <span className="block text-sm">
-        Clinic:{' '}
-        {clinicName ||
-          (appointment.isPending
-            ? 'Loading clinic name...'
-            : 'Clinic name unavailable')}
-      </span>
-    </button>
+      {children}
+    </PatientAccordionItem>
   )
 }
