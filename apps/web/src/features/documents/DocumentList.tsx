@@ -134,7 +134,7 @@ export function DocumentResults({
               <ul className="divide-y">
                 {items.map((item) => (
                   <li key={item.document_id}>
-                    <DocumentRow document={item} />
+                    <DocumentRow document={item} token={token} />
                   </li>
                 ))}
               </ul>

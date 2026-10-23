@@ -125,7 +125,7 @@ export function VisitDocumentList({
                 )
                 .map((document) => (
                   <li key={document.document_id}>
-                    <DocumentRow document={document} />
+                    <DocumentRow document={document} token={token} />
                   </li>
                 ))}
             </ul>

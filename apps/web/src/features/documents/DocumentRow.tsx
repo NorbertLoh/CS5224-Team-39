@@ -1,13 +1,35 @@
 import { useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { paymentDetail } from '../payments/api'
 import { documentDownloadUrl, documentsError } from './api'
 import { documentDate, documentNames, documentStates } from './types'
 import type { DocumentMetadata } from './types'
 
 export function DocumentRow({
   document: item,
+  token,
 }: {
   document: DocumentMetadata
+  token: string
 }) {
+  const payment = useQuery({
+    queryKey: ['documents', 'receipt-payment', token, item.payment_id],
+    queryFn: ({ signal }) => paymentDetail(item.payment_id!, signal),
+    enabled: item.kind === 'receipt_pdf' && !!item.payment_id,
+    staleTime: 60000,
+    retry: false,
+  })
+  const purpose =
+    payment.data?.payment_id === item.payment_id &&
+    payment.data?.tenant_id === item.tenant_id
+      ? payment.data.purpose
+      : undefined
+  const name =
+    item.kind === 'receipt_pdf' && purpose === 'consultation'
+      ? 'Consultation receipt'
+      : item.kind === 'receipt_pdf' && purpose === 'medication_delivery'
+        ? 'Medicines & delivery receipt'
+        : documentNames[item.kind]
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [requested, setRequested] = useState(false)
@@ -44,7 +66,7 @@ export function DocumentRow({
     <article className="space-y-3 py-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h3 className="font-medium">{documentNames[item.kind]}</h3>
+          <h3 className="font-medium">{name}</h3>
           <p className="text-sm text-slate-600">
             <time dateTime={item.created_at}>
               {documentDate(item.created_at)} SGT
@@ -60,7 +82,7 @@ export function DocumentRow({
         {item.status === 'ready' && (
           <button
             type="button"
-            aria-label={`Download ${documentNames[item.kind]} PDF`}
+            aria-label={`Download ${name} PDF`}
             className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
             disabled={busy}
             onClick={() => void download()}

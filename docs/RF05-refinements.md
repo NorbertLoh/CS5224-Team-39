@@ -181,3 +181,14 @@ Lint/build and real local browser checks passed for both patient sign-in paths,
 doctor destination, public directory access, the five links and active states,
 returning from directory to care pages and mobile wrapping. No new dependencies
 or configuration are required.
+
+## Receipt names
+
+Document rows distinguish Consultation receipt from Medicines & delivery receipt
+using the linked billing payment's purpose. The payment ID and tenant must match
+the document. Requests use the existing authenticated billing endpoint and a
+session-scoped query cache; unavailable or unsupported payment details retain the
+generic Receipt label. Download button accessibility labels use the same name.
+
+Build/typecheck and lint passed. Live browser checks verified both stored receipt
+names and their download controls, plus generic fallback on a failed payment lookup.
