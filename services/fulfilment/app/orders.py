@@ -235,7 +235,7 @@ def list_orders(
     status: OrderStatus | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     cursor: Annotated[str | None, Query(max_length=4096)] = None,
-    sort: Literal["oldest", "newest"] = "oldest",
+    sort: Literal["oldest", "newest"] = "newest",
 ):
     query = select(Order).where(order_scope(identity))
     if tenant_id is not None:

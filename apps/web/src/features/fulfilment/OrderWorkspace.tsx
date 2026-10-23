@@ -43,7 +43,7 @@ export function OrderWorkspace({
       'orders',
       token,
       context,
-      patient ? 'newest' : 'oldest',
+      'newest',
     ],
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) =>
@@ -51,7 +51,7 @@ export function OrderWorkspace({
         context.role === 'clinic_admin' ? context.tenantId : undefined,
         pageParam,
         signal,
-        patient ? 'newest' : 'oldest',
+        'newest',
       ),
     getNextPageParam: (page) => page.next_cursor ?? undefined,
     retry: false,

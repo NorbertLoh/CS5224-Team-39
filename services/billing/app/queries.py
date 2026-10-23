@@ -46,7 +46,7 @@ def access_scope(identity, *, admin_only=False, conceal=False):
         "platform": platform,
         "patient": patient,
         "tenants": tenants,
-        "order": "created_at,payment_id:asc",
+        "order": "created_at,payment_id:desc",
     }
     return predicate, scope
 
@@ -77,10 +77,10 @@ def list_payments(
     if cursor is not None:
         created_at, payment_id = decode_cursor(settings, scope, cursor)
         query = query.where(
-            tuple_(Payment.created_at, Payment.payment_id) > (created_at, payment_id)
+            tuple_(Payment.created_at, Payment.payment_id) < (created_at, payment_id)
         )
     rows = session.scalars(
-        query.order_by(Payment.created_at, Payment.payment_id).limit(limit + 1)
+        query.order_by(Payment.created_at.desc(), Payment.payment_id.desc()).limit(limit + 1)
     ).all()
     return PaymentPage(
         items=[payment_public(row) for row in rows[:limit]],
