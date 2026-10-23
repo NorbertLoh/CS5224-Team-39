@@ -11,7 +11,7 @@ export function ClinicContext({ tenantId }: { tenantId: string }) {
 
   return <div className="mt-3">
     <p role="status" className="break-words text-lg font-medium text-slate-600">
-      {clinic.data ? `Clinic: ${clinic.data.name}` : clinic.isPending ? 'Loading clinic name...' : `Clinic: ${tenantId}`}
+      {clinic.data ? `Clinic: ${clinic.data.name}` : clinic.isPending ? 'Loading clinic name...' : 'Clinic name unavailable'}
     </p>
     {clinic.isError && <ErrorState message="Could not load the clinic name." onRetry={() => void clinic.refetch()} />}
   </div>

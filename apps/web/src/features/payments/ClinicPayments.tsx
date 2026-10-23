@@ -43,7 +43,8 @@ export function ClinicPayments({ tenantId }: { tenantId: string }) {
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
       <p className="text-sm text-slate-600">
-        {clinic.data?.name ?? `Clinic ${tenantId}`}
+        {clinic.data?.name ??
+          (clinic.isPending ? 'Loading clinic name...' : 'Clinic name unavailable')}
       </p>
       <h1 className="text-3xl font-semibold">Payments and commission</h1>
       <button className="rounded border px-4 py-2" onClick={refresh}>

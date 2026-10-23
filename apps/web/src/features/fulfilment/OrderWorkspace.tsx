@@ -141,11 +141,6 @@ export function OrderWorkspace({
         }
         aria-labelledby="orders-page-heading"
       >
-        {!patient && (
-          <a className="text-sm underline" href="/clinic-admin">
-            Back to your clinics
-          </a>
-        )}
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 id="orders-page-heading" className="text-3xl font-semibold">
@@ -163,11 +158,6 @@ export function OrderWorkspace({
           </div>
           {refreshButton}
         </div>
-        {!patient && (
-          <p className="break-all text-sm text-slate-600">
-            Clinic {context.tenantId}
-          </p>
-        )}
         {patient &&
           prescriptionId &&
           (uuid.test(prescriptionId) ? (

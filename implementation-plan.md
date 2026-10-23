@@ -314,6 +314,10 @@ active clinic administration; the overall Appointments entry remains available.
 Scoped appointments passed lint/typecheck/build, route/membership access checks
 and a Tailscale browser check of the active clinic tab with no clinic selector.
 The real scheduling API returned four appointments, all for the selected clinic.
+User refinement: remove the redundant Medicine & delivery back link and clinic
+UUID line, using the selected clinic name in the shared navbar. Staff and payments
+use readable loading/unavailable clinic labels rather than UUID fallbacks.
+This label/link cleanup passed frontend lint and typecheck/production build.
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
