@@ -9,11 +9,9 @@ import { Button } from '@/components/ui/button'
 export function ClinicLinks({
   clinics,
   edit = false,
-  showOrders = false,
 }: {
   clinics: Clinic[]
   edit?: boolean
-  showOrders?: boolean
 }) {
   return (
     <div className="mt-5 grid gap-5 sm:grid-cols-2">
@@ -23,7 +21,18 @@ export function ClinicLinks({
           className="rounded-xl border border-t-4 p-6"
           style={{ borderTopColor: clinic.branding.primary_color }}
         >
-          <h3 className="text-lg font-semibold">{clinic.name}</h3>
+          <h3 className="text-lg font-semibold">
+            {edit ? (
+              <a
+                href={`/clinic-admin/clinics/${clinic.tenant_id}/profile`}
+                className="hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                {clinic.name}
+              </a>
+            ) : (
+              clinic.name
+            )}
+          </h3>
           <p className="mt-2 text-sm text-muted-foreground">
             Consultation -{' '}
             {consultationPrice(
@@ -40,23 +49,8 @@ export function ClinicLinks({
                   : `/clinics/${clinic.slug}`
               }
             >
-              {edit ? 'Edit profile' : 'View clinic'}
+              {edit ? 'Manage clinic' : 'View clinic'}
             </a>
-            {edit && (
-              <a href={`/clinic-admin/clinics/${clinic.tenant_id}/staff`}>
-                Manage staff
-              </a>
-            )}
-            {edit && (
-              <a href={`/clinic-admin/clinics/${clinic.tenant_id}/payments`}>
-                Payments
-              </a>
-            )}
-            {edit && showOrders && (
-              <a href={`/clinic-admin/clinics/${clinic.tenant_id}/orders`}>
-                Medicine readiness and delivery
-              </a>
-            )}
           </div>
         </article>
       ))}

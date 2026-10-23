@@ -295,11 +295,19 @@ Issue #265; assignee NorbertLoh; status In progress. Dependencies: F06-F08, U05,
 S07 and RF05 (complete). Effort: S. Completion requires separated pages, correct
 active navigation, narrow-screen wrapping, lint/typecheck/build and real local
 clinic admin navigation checks. No configuration or migrations required.
+User refinement: selecting one clinic opens its profile as the management landing
+page, with persistent Profile, Staff, Payments and Medicine & delivery navigation
+for that clinic and a Change clinic link. Replace the repeated per-card action
+links with one clinic entry; preserve existing URL and membership checks.
 Draft PR #266 implements the split. Frontend lint and typecheck/production build
 passed. Live local browser checks verified separate management/schedule content,
 active navigation, existing profile links and clinic selection; a 390px viewport
 kept both navigation links within the page. The Tailscale appointments direct link
 redirected a signed-out browser to sign-in. Awaiting user review/merge.
+The clinic-specific refinement also passed lint/typecheck/build and real clinic
+admin sign-in through Tailscale. Profile, Staff, Payments and Medicine & delivery
+kept the selected clinic and correct active tab; Change clinic returned to the
+list. The management navbar wrapped within a 390px viewport. PR remains a draft.
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |

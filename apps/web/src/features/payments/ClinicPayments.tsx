@@ -7,7 +7,6 @@ import { purposeLabels, statusLabels } from './model'
 import { CommissionSummary } from './CommissionSummary'
 import { PaymentHistory } from './PaymentHistory'
 import { PaymentFilter } from './PaymentFilter'
-import { ClinicPaymentNavigation } from './ClinicPaymentNavigation'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { billingError } from '../checkout/live'
@@ -43,7 +42,6 @@ export function ClinicPayments({ tenantId }: { tenantId: string }) {
   const rows = history.data?.pages.flatMap((page) => page.items) ?? []
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
-      <ClinicPaymentNavigation tenantId={tenantId} />
       <p className="text-sm text-slate-600">
         {clinic.data?.name ?? `Clinic ${tenantId}`}
       </p>

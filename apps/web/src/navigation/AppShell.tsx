@@ -82,7 +82,7 @@ export function AppShell({
           'role' in route &&
           route.role === 'clinic_admin' &&
           canAccess(identity.data, route) && (
-            <ClinicAdminNavigation route={route} />
+            <ClinicAdminNavigation route={route} identity={identity.data} />
           )}
         {session && !('role' in route) && identity.isError && (
           <ErrorState

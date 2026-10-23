@@ -73,7 +73,6 @@ function StaffPage({ tenantId }: { tenantId: string }) {
 
   return <div className="min-h-screen bg-slate-50 text-slate-900">
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <a href={`/clinic-admin/clinics/${tenantId}/profile`} className="mb-5 inline-block text-sm underline">Clinic profile</a>
       <h1 className="text-3xl font-semibold">Staff management</h1>
       <ClinicContext tenantId={tenantId} />
       <p className="mt-3 text-sm text-slate-600">Assign an existing account to this clinic by email. Revoking access keeps the membership record; saving roles reactivates it.</p>

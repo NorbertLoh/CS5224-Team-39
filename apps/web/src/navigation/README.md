@@ -34,11 +34,19 @@ APIs' explicit clinic administration access without a membership.
 
 Clinic administration has a shared workspace navigation matching the patient
 navigation: Manage clinic (`/clinic-admin`) contains the existing management
-cards/actions, while Appointments (`/clinic-admin/appointments`) contains the real
+clinic cards, while Appointments (`/clinic-admin/appointments`) contains the real
 schedule and its membership-scoped clinic selector. Profile, staff, payments and
 orders retain their existing direct links and highlight Manage clinic. Both entry
 pages use the existing sign-in and identity gates; backend permissions remain the
 source of access to appointments and clinic data. No configuration or migrations.
+
+Selecting a clinic opens its profile as the management landing page. A persistent
+Clinic management navbar shows the selected clinic's name and Profile, Staff,
+Payments and Medicine & delivery links, preserving that clinic in every URL.
+Medicine & delivery is shown only for active administrators of that clinic, in
+line with the existing orders access rule. Change clinic returns to the list;
+Manage clinic stays within the selected clinic. The clinic choice is never stored
+in browser storage, and the shared identity gate blocks revoked/other-clinic links.
 
 Routes: `/patient`, `/doctor`, `/doctor/clinics/<UUID>`, `/clinic-admin`, existing
 clinic profile/staff routes, and existing platform clinic routes. Unknown paths
