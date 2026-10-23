@@ -318,6 +318,9 @@ User refinement: remove the redundant Medicine & delivery back link and clinic
 UUID line, using the selected clinic name in the shared navbar. Staff and payments
 use readable loading/unavailable clinic labels rather than UUID fallbacks.
 This label/link cleanup passed frontend lint and typecheck/production build.
+User refinement: Staff and Payments also remove repeated clinic details from
+their page bodies, relying on the clinic name in the shared management navbar.
+Staff/Payments cleanup passed frontend lint and typecheck/production build.
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
