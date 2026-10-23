@@ -375,3 +375,5 @@ RF11 payment-card refinement: Ready for payment has only Continue to secure chec
 RF11 appointment refinement: show eligible actions in the requested order: consultation payment, cancellation (with its result/error), open video consultation, then documents. Existing role/status eligibility is preserved. Frontend lint/typecheck/build passed; no configuration changes.
 
 RF11 payment-pending correction: both Ready for payment and Payment pending show only Continue to secure checkout inside the card. Pending resumes the existing checkout via the existing idempotency flow. Remove the separate page-level checkout button and update pending guidance. Other terminal/error/recovery states retain their actions. Frontend lint/typecheck/build and focused ready/pending/failed rendering checks passed.
+
+RF11 expired-hold refinement: Booking hold expired shows only Browse clinics, removing Check payment status and Appointments for that state and matching the guidance. Frontend lint/typecheck/build and focused single-link rendering check passed.

@@ -35,7 +35,7 @@ const messages: Record<
   ],
   expired: [
     'Booking hold expired',
-    'This time is no longer reserved. Check the latest payment status before choosing another time.',
+    'This time is no longer reserved. Browse clinics to choose another appointment.',
   ],
   cancelled: [
     'Booking cancelled',
@@ -166,16 +166,19 @@ export function CheckoutStatus({
             Continue to secure checkout
           </button>
         )}
-        {state !== 'missing' && state !== 'ready' && state !== 'pending' && (
-          <button
-            type="button"
-            className="rounded-lg bg-slate-900 px-4 py-3 text-white"
-            disabled={busy}
-            onClick={onCheck}
-          >
-            Check payment status
-          </button>
-        )}
+        {state !== 'missing' &&
+          state !== 'ready' &&
+          state !== 'pending' &&
+          state !== 'expired' && (
+            <button
+              type="button"
+              className="rounded-lg bg-slate-900 px-4 py-3 text-white"
+              disabled={busy}
+              onClick={onCheck}
+            >
+              Check payment status
+            </button>
+          )}
         {state === 'failed' && (
           <button
             type="button"
@@ -186,7 +189,7 @@ export function CheckoutStatus({
             Retry payment
           </button>
         )}
-        {state !== 'ready' && state !== 'pending' && (
+        {state !== 'ready' && state !== 'pending' && state !== 'expired' && (
           <a className="rounded-lg border px-4 py-3" href="/patient">
             Appointments
           </a>
