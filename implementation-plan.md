@@ -253,6 +253,9 @@ Only payable unpaid patient bookings show Pay consultation fee; details show
 readable payment status, including Paid, and expired holds lose the payment action.
 Patient appointments have Upcoming/Past tabs with counts and keyboard navigation;
 ongoing/future active bookings appear nearest first, past/closed bookings newest first.
+Patient prescriptions/medicines and documents move to dedicated protected pages,
+with shared patient navigation linking appointments, prescriptions, medication
+orders/delivery and documents. Appointments remain the default patient page.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused

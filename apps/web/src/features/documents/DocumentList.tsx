@@ -11,6 +11,7 @@ type Props = {
   role: 'patient' | 'doctor'
   appointmentId?: string
   tenantId?: string
+  headingLevel?: 1 | 2
 }
 
 export function DocumentList(props: Props) {
@@ -45,8 +46,10 @@ export function DocumentResults({
   tenantId,
   token,
   scope,
+  headingLevel = 2,
 }: Props & { token: string; scope: string }) {
   const headingId = useId()
+  const Heading = headingLevel === 1 ? 'h1' : 'h2'
   const query = useInfiniteQuery({
     queryKey: [
       'documents',
@@ -77,9 +80,9 @@ export function DocumentResults({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 id={headingId} className="text-xl font-semibold">
+          <Heading id={headingId} className={headingLevel === 1 ? 'text-3xl font-semibold' : 'text-xl font-semibold'}>
             Documents
-          </h2>
+          </Heading>
           <p className="mt-1 text-sm text-slate-600">
             {appointmentId
               ? 'PDFs for this appointment.'

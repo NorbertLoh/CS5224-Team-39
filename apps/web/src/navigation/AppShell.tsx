@@ -6,6 +6,7 @@ import { currentIdentity } from '../features/clinics/api'
 import { ErrorState } from '../components/ErrorState'
 import { LoadingState } from '../components/LoadingState'
 import { RoleNavigation } from './RoleNavigation'
+import { PatientNavigation } from '../features/patient/PatientNavigation'
 import { canAccess } from './access'
 import type { Route } from './access'
 import type { ReactNode } from 'react'
@@ -34,6 +35,7 @@ export function AppShell({ route, children }: { route: Route; children: (session
     <header className="border-b bg-white">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5"><a href="/" className="text-xl font-semibold">TeleLink Health</a><AuthControls onSessionChange={setSession} /></div>
       {session && identity.isSuccess && <RoleNavigation identity={identity.data} route={route} />}
+      {session && identity.isSuccess && 'role' in route && route.role === 'patient' && canAccess(identity.data, route) && <PatientNavigation route={route} />}
       {session && !('role' in route) && identity.isPending && <LoadingState message="Loading your roles..." />}
       {session && !('role' in route) && identity.isError && <ErrorState message="Could not load your roles. Check your session and connection." onRetry={() => void identity.refetch()} />}
     </header>

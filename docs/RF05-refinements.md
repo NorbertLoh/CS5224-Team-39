@@ -82,3 +82,19 @@ preserved. Controlled-clock UI checks additionally covered an empty Upcoming tab
 a future cancelled booking in Past, loading an upcoming booking from another page,
 selection reset and automatic movement at the end time. Intercepted-response checks
 did not change persisted bookings. The build passes with a bundle-size advisory.
+
+## Dedicated patient pages
+
+The patient navigation now links Appointments (`/patient`, default), Prescriptions
+& medicines (`/patient/prescriptions`), Medication orders & delivery (existing
+`/patient/medication-orders`) and Documents (`/patient/documents`). Each page uses
+the existing live feature components. The default page no longer mounts the full
+prescription/document lists. Appointment-specific documents remain available in
+appointment details. Checkout, video, prescription-order and order-review links
+retain their existing routes and query handling.
+
+No new dependencies, configuration or migrations. Lint/build and live browser
+checks passed for page links, active navigation, direct reloads and successful
+backend reads (16 appointments, two prescriptions, two orders and three documents).
+Signed-out visits to all four pages redirect to sign-in; a real doctor account
+was denied the new patient records routes. Navigation wraps at a 390-pixel viewport.

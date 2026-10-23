@@ -11,10 +11,13 @@ import { LoadingState } from '../../components/LoadingState'
 export function PatientPrescriptionList({
   token,
   subjectId,
+  headingLevel = 2,
 }: {
   token: string
   subjectId: string
+  headingLevel?: 1 | 2
 }) {
+  const Heading = headingLevel === 1 ? 'h1' : 'h2'
   const [selected, setSelected] = useState<string | null>(null)
   const query = useInfiniteQuery({
     queryKey: ['records', 'patient', token],
@@ -54,9 +57,9 @@ export function PatientPrescriptionList({
       className="mt-8 space-y-4 rounded-xl border p-6"
       aria-labelledby="prescription-heading"
     >
-      <h2 id="prescription-heading" className="text-xl font-semibold">
+      <Heading id="prescription-heading" className={headingLevel === 1 ? 'text-3xl font-semibold' : 'text-xl font-semibold'}>
         Prescriptions & medicines
-      </h2>
+      </Heading>
       <button
         className="rounded border px-4 py-2"
         disabled={query.isFetching}

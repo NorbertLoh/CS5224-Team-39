@@ -79,7 +79,7 @@ export function OrderWorkspace({
         className="text-sm underline"
         href={patient ? '/patient' : '/clinic-admin'}
       >
-        {patient ? 'Back to patient dashboard' : 'Back to your clinics'}
+        {patient ? 'Back to appointments' : 'Back to your clinics'}
       </a>
       <h1 className="text-3xl font-semibold">
         {patient

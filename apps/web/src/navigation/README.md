@@ -5,6 +5,13 @@
 - `RoleNavigation.tsx`: granted role links.
 - `AppRoutes.tsx`: route-to-feature mapping; forms and API calls stay in their features.
 
+Patient navigation links four protected pages: `/patient` (appointments, default),
+`/patient/prescriptions` (prescriptions and medicines), the existing
+`/patient/medication-orders` (orders and delivery), and `/patient/documents`.
+The patient feature owns the shared page navigation and records-page composition.
+Direct links retain the normal authentication/identity gates. Checkout and video
+remain appointment actions, and medication order query links keep their existing URLs.
+
 Roles come from `/identity/me`, never Cognito groups or browser role storage.
 Identity is refreshed on page load, window focus and every 30 seconds. Protected
 features wait for a successful identity lookup; a failed refresh or revoked
