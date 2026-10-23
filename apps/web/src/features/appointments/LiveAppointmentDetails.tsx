@@ -63,22 +63,6 @@ export function LiveAppointmentDetails({
   return (
     <div className="space-y-4">
       <AppointmentDetails appointment={appointment} onClose={onClose} />
-      {(role === 'patient' || role === 'doctor') && (
-        <AppointmentJoinButton
-          appointment={appointment}
-          role={role}
-          subjectId={subjectId}
-        />
-      )}
-      {((role === 'patient' && appointment.patient_id === subjectId) ||
-        (role === 'doctor' && appointment.doctor_id === subjectId)) && (
-        <DocumentList
-          key={appointment.appointment_id}
-          role={role as 'patient' | 'doctor'}
-          appointmentId={appointment.appointment_id}
-          tenantId={appointment.tenant_id}
-        />
-      )}
       {role === 'patient' && appointment.patient_id === subjectId && (
         <AppointmentPaymentAction appointment={appointment} />
       )}
@@ -116,6 +100,22 @@ export function LiveAppointmentDetails({
       )}
       {cancel.isError && <ErrorState message={schedulingError(cancel.error)} />}
       {cancel.isSuccess && <p role="status">Appointment cancelled.</p>}
+      {(role === 'patient' || role === 'doctor') && (
+        <AppointmentJoinButton
+          appointment={appointment}
+          role={role}
+          subjectId={subjectId}
+        />
+      )}
+      {((role === 'patient' && appointment.patient_id === subjectId) ||
+        (role === 'doctor' && appointment.doctor_id === subjectId)) && (
+        <DocumentList
+          key={appointment.appointment_id}
+          role={role as 'patient' | 'doctor'}
+          appointmentId={appointment.appointment_id}
+          tenantId={appointment.tenant_id}
+        />
+      )}
     </div>
   )
 }
