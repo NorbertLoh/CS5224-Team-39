@@ -231,7 +231,7 @@ Week 4: finish essential checks in the first half; freeze features, rehearse and
 Deferred verification is tracked separately from accepted local deliverables.
 These tasks do not establish AWS integration until their evidence is recorded.
 
-- [ ] RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
+- [x] RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
 access message while preserving public routes and signed-in access checks. Remove
 the redundant Explore clinics section from the patient workspace, retaining clinic
 discovery on the public home page, as additionally requested by the user. Remove
@@ -273,7 +273,7 @@ Appointment-scoped and staff document lists retain their flat presentation.
 Patient navigation starts with Find a clinic (existing home directory), then
 Appointments, Prescriptions, Orders & delivery and Documents. Successful patient
 sign-in defaults to Appointments using the backend identity's patient role.
-Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
+Issue #261; Assignee: NorbertLoh; status: complete in merged PR #262. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused
 local navigation checks. Draft PR #262 implements the redirect; lint and production
@@ -282,7 +282,10 @@ public routes, browser Back, real patient sign-in/access and wrong-role denial.
 The patient workspace cleanup also passed lint/build and a real signed-in browser
 check: clinic discovery is absent, prescriptions/documents/appointments and the
 medication-order link remain, and public home-page clinic discovery is present.
-No new configuration or migrations. Keep in progress until merge.
+No new configuration or migrations. PR #262 merged on 23 October 2026; issue #261
+is closed. Shared components and focused document hooks are retained; changed
+frontend files pass Prettier, lint, typecheck/build and live receipt download checks.
+All final frontend, backend Ruff and fulfilment PostgreSQL/API CI checks passed.
 Further refinements require explicit user scope.
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
