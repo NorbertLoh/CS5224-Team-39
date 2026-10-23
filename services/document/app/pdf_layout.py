@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import reportlab
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
@@ -19,16 +19,17 @@ BOLD = "TelelinkVeraBold"
 _FONTS = Path(reportlab.__file__).parent / "fonts"
 pdfmetrics.registerFont(TTFont(FONT, str(_FONTS / "Vera.ttf")))
 pdfmetrics.registerFont(TTFont(BOLD, str(_FONTS / "VeraBd.ttf")))
-INK = colors.HexColor("#183D3B")
-MUTED = colors.HexColor("#53615F")
-LINE = colors.HexColor("#D5DDDB")
-PALE = colors.HexColor("#F3F6F5")
+INK = colors.black
+MUTED = colors.black
+LINE = colors.black
+PALE = colors.white
 MARGIN = 46
-WIDTH = A4[0] - 2 * MARGIN
+# Platypus frames reserve six points of inner padding on each side.
+WIDTH = A4[0] - 2 * MARGIN - 12
 SG = ZoneInfo("Asia/Singapore")
 
 
-def paragraph(value, *, bold=False, size=10, color=INK, after=6, right=False):
+def paragraph(value, *, bold=False, size=10, color=INK, after=6, right=False, center=False):
     font = BOLD if bold else FONT
     glyphs = pdfmetrics.getFont(font).face.charToGlyph
     if any(ord(char) not in glyphs for char in value if char not in "\n\t"):
@@ -43,7 +44,7 @@ def paragraph(value, *, bold=False, size=10, color=INK, after=6, right=False):
             leading=size * 1.5,
             spaceAfter=after,
             textColor=color,
-            alignment=TA_RIGHT if right else TA_LEFT,
+            alignment=TA_CENTER if center else TA_RIGHT if right else TA_LEFT,
             splitLongWords=True,
         ),
     )
@@ -57,7 +58,7 @@ def date_time(value):
     return f"{value.astimezone(SG):%d %b %Y, %H:%M} SGT"
 
 
-def info_grid(fields):
+def info_grid(fields, *, width=WIDTH):
     cells = [
         [
             paragraph(label.upper(), bold=True, size=7.5, color=MUTED, after=3),
@@ -69,18 +70,18 @@ def info_grid(fields):
         cells.append("")
     table = Table(
         [cells[index : index + 2] for index in range(0, len(cells), 2)],
-        colWidths=[WIDTH / 2] * 2,
+        colWidths=[width / 2] * 2,
         hAlign="LEFT",
     )
     table.setStyle(
         [
             ("BACKGROUND", (0, 0), (-1, -1), PALE),
-            ("BOX", (0, 0), (-1, -1), 0.5, LINE),
+            ("GRID", (0, 0), (-1, -1), 0.5, LINE),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ("LEFTPADDING", (0, 0), (-1, -1), 12),
             ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-            ("TOPPADDING", (0, 0), (-1, -1), 9),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 11),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
         ]
     )
     return table
@@ -104,8 +105,8 @@ def line_table(headers, rows, widths):
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ("LEFTPADDING", (0, 0), (-1, -1), 9),
             ("RIGHTPADDING", (0, 0), (-1, -1), 9),
-            ("TOPPADDING", (0, 0), (-1, -1), 10),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+            ("TOPPADDING", (0, 0), (-1, -1), 7),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
         ]
     )
     return table
@@ -113,13 +114,13 @@ def line_table(headers, rows, widths):
 
 def render(title, snapshot, body, *, fields=()):
     output = BytesIO()
-    story = [paragraph(snapshot.clinic_name, bold=True, size=19, after=4)]
+    story = [paragraph(snapshot.clinic_name, bold=True, size=16, after=4, center=True)]
     if snapshot.clinic_address:
-        story.append(paragraph(snapshot.clinic_address, size=9, color=MUTED, after=10))
+        story.append(paragraph(snapshot.clinic_address, size=9, after=10, center=True))
     story.extend(
         [
-            HRFlowable(width="100%", thickness=1.3, color=INK, spaceBefore=6, spaceAfter=16),
-            paragraph(title, bold=True, size=23, after=15),
+            HRFlowable(width="100%", thickness=0.7, color=INK, spaceBefore=6, spaceAfter=18),
+            paragraph(title.upper(), bold=True, size=15, after=20, center=True),
             info_grid(
                 [
                     ("Patient", snapshot.patient_name),
@@ -128,7 +129,7 @@ def render(title, snapshot, body, *, fields=()):
                     *fields,
                 ]
             ),
-            Spacer(1, 22),
+            Spacer(1, 18),
             *body,
         ]
     )

@@ -1,6 +1,6 @@
 """Formal clinic documents from validated snapshots; no generation side effects."""
 
-from reportlab.platypus import KeepTogether, Spacer, Table
+from reportlab.platypus import KeepTogether, LongTable, Spacer, Table
 
 from app.pdf_layout import INK, PALE, WIDTH, date_time, info_grid, line_table, paragraph, section
 from app.pdf_layout import render as _render
@@ -17,10 +17,8 @@ def render_prescription(data: Prescription) -> bytes:
     rows = [
         [
             paragraph(str(number), size=9),
-            [
-                paragraph(item.display_name, bold=True),
-                paragraph(f"Directions: {item.instructions}"),
-            ],
+            paragraph(item.display_name, bold=True),
+            paragraph(item.instructions),
             paragraph(f"Quantity: {item.quantity}", size=9),
         ]
         for number, item in enumerate(data.items, 1)
@@ -30,7 +28,11 @@ def render_prescription(data: Prescription) -> bytes:
         data,
         [
             section("Prescribed medicines"),
-            line_table(["No.", "Medicine and directions", "Quantity"], rows, [40, WIDTH - 128, 88]),
+            line_table(
+                ["No.", "Medicine", "Directions", "Quantity"],
+                rows,
+                [36, 150, WIDTH - 274, 88],
+            ),
         ],
         fields=[("Prescribing clinician", _doctor(data))],
     )
@@ -48,8 +50,8 @@ def render_receipt(data: Receipt) -> bytes:
     total = Table(
         [
             [
-                paragraph("Total paid", bold=True, size=12, after=0),
-                paragraph(_money(data.total_minor), bold=True, size=15, after=0, right=True),
+                paragraph("Total paid", bold=True, size=11, after=0),
+                paragraph(_money(data.total_minor), bold=True, size=12, after=0, right=True),
             ]
         ],
         colWidths=[WIDTH - 160, 160],
@@ -83,28 +85,49 @@ def render_receipt(data: Receipt) -> bytes:
 def render_medical_certificate(data: MedicalCertificate) -> bytes:
     days = (data.unfit_through - data.unfit_from).days + 1
     body = [
-        section("Certification"),
         paragraph(
-            f"This certifies that {data.patient_name} is medically unfit for duty "
+            "This is to certify that the above-named patient is medically unfit for duty "
             f"from {data.unfit_from:%d %b %Y} to {data.unfit_through:%d %b %Y} "
             f"(inclusive, {days} day(s)).",
-            size=11.5,
+            size=11,
             after=18,
         ),
         info_grid(
             [
                 ("Unfit from", f"{data.unfit_from:%d %b %Y}"),
                 ("Unfit through (inclusive)", f"{data.unfit_through:%d %b %Y}"),
-            ]
+            ],
+            width=WIDTH - 32,
         ),
         Spacer(1, 22),
     ]
     if data.additional_notes:
         body.extend([section("Additional notes"), paragraph(data.additional_notes), Spacer(1, 16)])
-    body.append(KeepTogether([section("Issued by"), paragraph(_doctor(data))]))
+    certificate = LongTable(
+        [[item] for item in body],
+        colWidths=[WIDTH],
+        splitByRow=1,
+        splitInRow=1,
+        hAlign="LEFT",
+    )
+    certificate.setStyle(
+        [
+            ("BOX", (0, 0), (-1, -1), 0.5, INK),
+            ("LEFTPADDING", (0, 0), (-1, -1), 16),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 16),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ]
+    )
     return _render(
         "Medical Certificate",
         data,
-        body,
+        [
+            certificate,
+            Spacer(1, 14),
+            KeepTogether(
+                [info_grid([("Hospital / clinic", data.clinic_name), ("Issued by", _doctor(data))])]
+            ),
+        ],
         fields=[("Consultation date", f"{data.consultation_date:%d %b %Y}")],
     )

@@ -62,9 +62,9 @@ def mc(**overrides):
 @pytest.mark.parametrize(
     "render,data,expected",
     [
-        (render_prescription, prescription(), ["Prescription", "Quantity: 2", "Demo only"]),
-        (render_receipt, receipt(), ["Receipt", "SGD 25.05", "DEMO-PAYMENT-001"]),
-        (render_medical_certificate, mc(), ["Medical Certificate", "16 Oct 2026", "2 day(s)"]),
+        (render_prescription, prescription(), ["PRESCRIPTION", "Quantity: 2", "Demo only"]),
+        (render_receipt, receipt(), ["RECEIPT", "SGD 25.05", "DEMO-PAYMENT-001"]),
+        (render_medical_certificate, mc(), ["MEDICAL CERTIFICATE", "16 Oct 2026", "2 day(s)"]),
     ],
 )
 def test_rendered_pdf_content(render, data, expected):
@@ -104,7 +104,8 @@ def test_long_instructions_paginate_without_losing_last_item():
     )
     reader = PdfReader(BytesIO(render_prescription(prescription(items=items))))
     assert len(reader.pages) > 1
-    assert "Synthetic medication 19" in "\n".join(page.extract_text() for page in reader.pages)
+    text = " ".join(" ".join(page.extract_text() for page in reader.pages).split())
+    assert "Synthetic medication 19" in text
     for number, page in enumerate(reader.pages, 1):
         assert f"Page {number}" in page.extract_text()
 
@@ -142,7 +143,7 @@ def test_single_very_long_instruction_splits_across_pages():
     assert len(reader.pages) > 1
     assert "FINAL DIRECTIONS" in "\n".join(page.extract_text() for page in reader.pages)
     for page in reader.pages:
-        assert "Medicine and directions" in page.extract_text()
+        assert "Medicine" in page.extract_text() and "Directions" in page.extract_text()
 
 
 def test_long_receipt_and_mc_content_is_preserved():

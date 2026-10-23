@@ -4,9 +4,13 @@ Issue #244; draft PR #263. Owner: NorbertLoh. Status: in progress until merge.
 
 Prescription, receipt and medical certificate rendering now share an A4 clinic
 letterhead, patient/reference/issue details, privacy footer and numbered pages.
-Prescriptions use a medicine/directions/quantity table; receipts use itemised SGD
-amounts and a distinct total-paid band; MCs separate the certification statement,
-inclusive absence dates, optional notes and issuing clinician.
+The design follows the supplied form-style examples in black and white: centred
+clinic letterhead and uppercase titles, thin rules, white backgrounds and boxed
+patient details. Prescriptions use separate medicine, directions and quantity
+columns; receipts use itemised SGD amounts and a ruled total-paid section; MCs
+have a bordered certification area, inclusive absence dates, optional notes and
+a boxed clinic/issuing-clinician section. Only available source fields are used;
+the examples' logos, government links, QR codes and credentials are not copied.
 
 ## Review samples
 
@@ -29,9 +33,11 @@ are unchanged. Missing clinic addresses or registration numbers are omitted;
 signatures and credentials are never invented. Receipt generation wiring remains
 outside RF02.
 
-The design applies to newly rendered PDFs. Already-ready documents retain their
-stored bytes; this change does not rewrite issued documents or bypass generation
-idempotency.
+The design applies to newly rendered PDFs. Normal worker generation retains
+already-ready documents and its idempotency rules. At the user's explicit request,
+the three known local demo PDFs were backed up and refreshed separately, retaining
+their source details and warning/no-charge text. Patient download links were
+verified after the refresh. This is not an automatic rewrite of issued documents.
 
 ## Verification
 
