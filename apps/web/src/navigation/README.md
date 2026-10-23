@@ -9,6 +9,9 @@ Roles come from `/identity/me`, never Cognito groups or browser role storage.
 Identity is refreshed on page load, window focus and every 30 seconds. Protected
 features wait for a successful identity lookup; a failed refresh or revoked
 membership blocks them. Backend checks still enforce every protected API operation.
+Signed-out protected-page visits replace the current browser history entry with
+`/sign-in` before rendering feature content. Public pages remain accessible, and
+sign-in continues to use the existing home-page destination after authentication.
 
 The clinic choice is the URL, checked against current active memberships for the
 route's role. Clinic administrators choose a named clinic from the Manage clinics

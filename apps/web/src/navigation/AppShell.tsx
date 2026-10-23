@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AuthControls } from '../auth/AuthControls'
 import { readSession } from '../auth/session'
@@ -17,11 +17,16 @@ export function AppShell({ route, children }: { route: Route; children: (session
     queryKey: ['identity', session?.accessToken], queryFn: currentIdentity,
     enabled: Boolean(session), staleTime: 0, refetchOnWindowFocus: true, refetchInterval: 30000,
   })
+  const requiresSignIn = 'role' in route && !session
+  useEffect(() => {
+    if (requiresSignIn) window.location.replace('/sign-in')
+  }, [requiresSignIn])
+
+  if (requiresSignIn) return <LoadingState message="Redirecting to sign in..." />
   if (route.kind === 'sign-in') return <AuthControls presentation="page" onSessionChange={setSession} />
   let content = children(session)
   if ('role' in route) {
-    if (!session) content = <p role="status" className="p-6">Sign in to access this page.</p>
-    else if (identity.isPending) content = <LoadingState message="Checking your access..." />
+    if (identity.isPending) content = <LoadingState message="Checking your access..." />
     else if (identity.isError) content = <ErrorState message="Could not verify your access. Check your session and connection." onRetry={() => void identity.refetch()} />
     else if (!canAccess(identity.data, route)) content = <ErrorState message="You do not have access to this role or clinic. Choose an available role above to return to its workspace." />
   }

@@ -231,12 +231,16 @@ Week 4: finish essential checks in the first half; freeze features, rehearse and
 Deferred verification is tracked separately from accepted local deliverables.
 These tasks do not establish AWS integration until their evidence is recorded.
 
-RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
+- [ ] RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
 access message while preserving public routes and signed-in access checks.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused
-local navigation checks. Further refinements require explicit user scope.
+local navigation checks. Draft PR #262 implements the redirect; lint and production
+build passed, along with local browser checks for eight protected routes, four
+public routes, browser Back, real patient sign-in/access and wrong-role denial.
+No new configuration or migrations. Keep in progress until merge.
+Further refinements require explicit user scope.
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
