@@ -379,3 +379,5 @@ RF11 payment-pending correction: both Ready for payment and Payment pending show
 RF11 expired-hold refinement: Booking hold expired shows only Browse clinics, removing Check payment status and Appointments for that state and matching the guidance. Frontend lint/typecheck/build and focused single-link rendering check passed.
 
 RF11 booking-hold refinement: remove the redundant Appointments link beneath Continue to payment and Release booking and change time. Frontend lint/typecheck/build passed.
+
+RF11 confirmation-card refinement: hide Check payment status and Appointments for both confirming and confirmed appointments; automatic status polling remains. Frontend lint/typecheck/build and focused no-action rendering checks passed.

@@ -169,6 +169,8 @@ export function CheckoutStatus({
         {state !== 'missing' &&
           state !== 'ready' &&
           state !== 'pending' &&
+          state !== 'confirming' &&
+          state !== 'success' &&
           state !== 'expired' && (
             <button
               type="button"
@@ -189,7 +191,7 @@ export function CheckoutStatus({
             Retry payment
           </button>
         )}
-        {state !== 'ready' && state !== 'pending' && state !== 'expired' && (
+        {!['ready', 'pending', 'expired', 'confirming', 'success'].includes(state) && (
           <a className="rounded-lg border px-4 py-3" href="/patient">
             Appointments
           </a>
