@@ -258,6 +258,22 @@ def test_grant_consumption_release_and_fresh_rejoin(api):
     assert internal(api, "consume", rejoin).status_code == 200
 
 
+def test_local_extended_window_covers_issue_consume_and_check(api):
+    start = api.state["clock"] + timedelta(hours=2)
+    api.state["appointment"].update(
+        starts_at=start.isoformat(), ends_at=(start + timedelta(minutes=30)).isoformat()
+    )
+    assert issue(api).status_code == 403
+    api.settings.test_join_early_minutes = 180
+    response = issue(api)
+    assert response.status_code == 201, response.text
+    grant = response.json()
+    assert internal(api, "consume", grant).status_code == 200
+    assert internal(api, "check", grant).status_code == 200
+    api.settings.test_join_early_minutes = 10
+    assert internal(api, "check", grant).status_code == 403
+
+
 def test_pending_rotation_and_durable_hash_only_storage(api):
     first, second = issue(api).json(), issue(api).json()
     assert internal(api, "consume", first).status_code == 403

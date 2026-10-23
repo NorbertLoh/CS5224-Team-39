@@ -49,7 +49,7 @@ def issue(db, sources, settings, appointment_id, identity, request_id):
         denied()
     sources.validate(current, identity.subject_id, request_id)
     instant = now()
-    if not can_join(record, now=instant):
+    if not can_join(record, now=instant, early_minutes=settings.test_join_early_minutes):
         denied()
     lease = db.get(Admission, (record.session_id, identity.subject_id), populate_existing=True)
     if (
@@ -110,7 +110,7 @@ def validate_live(db, sources, record, lease, request_id):
     if (
         lease.released_at is not None
         or not lease.issued_at <= instant < lease.expires_at
-        or not can_join(record, now=instant)
+        or not can_join(record, now=instant, early_minutes=sources.settings.test_join_early_minutes)
     ):
         denied()
     return instant

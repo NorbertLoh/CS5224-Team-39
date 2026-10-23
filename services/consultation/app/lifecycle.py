@@ -13,8 +13,6 @@ from telelink_common.errors import DomainError
 
 from app.models import ConsultationSession
 
-JOIN_EARLY = timedelta(minutes=10)
-
 
 def utc(value: datetime) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
@@ -83,10 +81,12 @@ def locked_session(db, *, session_id: UUID, tenant_id: UUID):
     return record
 
 
-def can_join(record: ConsultationSession, *, now: datetime | None = None) -> bool:
+def can_join(
+    record: ConsultationSession, *, now: datetime | None = None, early_minutes: int = 10
+) -> bool:
     """Window eligibility only, never an admission/authorization decision."""
     instant = server_time(now)
-    opens_at = utc(record.starts_at) - JOIN_EARLY
+    opens_at = utc(record.starts_at) - timedelta(minutes=early_minutes)
     return record.status in {"scheduled", "in_progress"} and opens_at <= instant < utc(
         record.ends_at
     )
