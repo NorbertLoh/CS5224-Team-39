@@ -241,6 +241,10 @@ Patient appointments also display once per booking with their full time range,
 preventing duplicate selection when a booking spans multiple half-hour cells.
 Resolve missing legacy clinic/doctor names for appointment cards and details using
 the existing public directories, with readable unavailable labels instead of IDs.
+The local legacy name snapshots also required repair: 13 appointments had no saved
+patient/doctor/clinic names, including suspended test clinics absent from public
+directories. Missing snapshots were filled from existing local profiles, preserving
+saved names; patient-name fallbacks now use a readable label rather than UUIDs.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused

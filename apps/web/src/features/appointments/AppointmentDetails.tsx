@@ -25,7 +25,7 @@ export function AppointmentDetails({
   // Only enum labels are title-cased; names and identifiers keep their spelling.
   const capitalized = new Set(['Status', 'Payment resolution'])
   const fields = [
-    ['Patient', nameOrId(appointment.patient_name, appointment.patient_id)],
+    ['Patient', appointment.patient_name || 'Patient name unavailable'],
     ['Doctor', nameOrId(appointment.doctor_name, appointment.doctor_id)],
     ['Clinic', nameOrId(appointment.clinic_name, appointment.tenant_id)],
     ['Date', formatDate(dateInSingapore(appointment.starts_at))],

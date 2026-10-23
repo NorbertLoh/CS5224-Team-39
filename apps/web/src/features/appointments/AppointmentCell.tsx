@@ -31,7 +31,7 @@ export function AppointmentCell({
               <span className="block font-medium">
                 {role === 'patient'
                   ? nameOrId(appointment.doctor_name, appointment.doctor_id)
-                  : nameOrId(appointment.patient_name, appointment.patient_id)}
+                  : appointment.patient_name || 'Patient name unavailable'}
               </span>
               <span className="block text-slate-600">
                 {nameOrId(appointment.clinic_name, appointment.tenant_id)}
