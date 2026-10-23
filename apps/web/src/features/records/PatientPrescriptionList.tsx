@@ -70,7 +70,8 @@ export function PatientPrescriptionList({
             Prescriptions & medicines
           </Heading>
           <p className="mt-1 text-sm text-slate-600">
-            Expand a prescription to view your medicines and order options.
+            Your medicines and instructions. Medication and delivery are paid
+            separately from consultations.
           </p>
         </div>
         <button

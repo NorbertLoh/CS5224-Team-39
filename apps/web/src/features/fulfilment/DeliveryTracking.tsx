@@ -1,10 +1,20 @@
 import { deliveryLabels, trackingGuidance, trackingTime } from './model'
 import type { TrackingOrder } from './model'
 
-export function DeliveryTracking({ order }: { order: TrackingOrder }) {
+export function DeliveryTracking({
+  order,
+  compact = false,
+}: {
+  order: TrackingOrder
+  compact?: boolean
+}) {
   return (
     <section
-      className="space-y-3 rounded-xl bg-slate-50 p-4"
+      className={
+        compact
+          ? 'space-y-2 border-t pt-4'
+          : 'space-y-3 rounded-xl bg-slate-50 p-4'
+      }
       aria-labelledby="delivery-tracking-heading"
     >
       <h3 id="delivery-tracking-heading" className="font-semibold">
@@ -18,7 +28,7 @@ export function DeliveryTracking({ order }: { order: TrackingOrder }) {
         </p>
         <p className="text-sm">{trackingGuidance(order)}</p>
       </div>
-      {order.delivery && (
+      {!compact && order.delivery && (
         <dl className="space-y-2 text-sm">
           <div>
             <dt className="font-medium">Delivery reference</dt>

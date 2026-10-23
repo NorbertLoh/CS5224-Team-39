@@ -1,10 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Prescription } from './types'
 import type { Order } from '../fulfilment/api'
-import {
-  canReviewMedicinePayment,
-  medicineProgress,
-} from '../fulfilment/patientMedicines'
 import { MedicationOrderStatus } from './MedicationOrderStatus'
 import { MedicationOrderAction } from './MedicationOrderAction'
 
@@ -23,22 +19,8 @@ export function PatientMedicationCard({
 }) {
   if (prescription.status !== 'issued' || prescription.items.length === 0)
     return children
-  const review = canReviewMedicinePayment(order)
-  const progress = medicineProgress(order)
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="font-semibold">
-          {checking || unavailable
-            ? 'Your prescribed medicines'
-            : review
-              ? 'Your prescribed medicines are ready to order'
-              : progress}
-        </h3>
-        <p className="mt-1 text-sm text-slate-600">
-          Medication and delivery are paid separately from your consultation.
-        </p>
-      </div>
       {children}
       {checking ? (
         <p role="status">Checking your medication order...</p>

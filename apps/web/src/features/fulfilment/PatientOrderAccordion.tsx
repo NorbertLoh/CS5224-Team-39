@@ -45,8 +45,9 @@ export function PatientOrderAccordion({
               summary={
                 <>
                   <span className="block">
-                    {trackingTime(order.created_at)} ·{' '}
-                    {orderLabels[order.status]}
+                    {trackingTime(order.created_at)}
+                    {appearance.label !== orderLabels[order.status] &&
+                      ` · ${orderLabels[order.status]}`}
                   </span>
                   <span className="block">
                     {order.items.map((item) => item.display_name).join(', ') ||

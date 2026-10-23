@@ -118,3 +118,22 @@ single expansion, collapse, Enter/Space controls, 390-pixel layouts and clinic-a
 order selection. A deep-link check omitted the requested real order from the list
 response and confirmed it still opened through its authorised detail endpoint.
 No order, quote, payment or delivery was created during these checks.
+
+## Expanded-content cleanup
+
+Patient prescription content now starts with medicine quantities and instructions,
+then one progress/price summary and the relevant order action. Technical metadata
+is inside Prescription information. The patient order panel shows medicines once,
+one payment/readiness summary and delivery guidance; references move into Order
+information, and settled-order pricing is inside Cost breakdown. Nested duplicate
+cards, repeated delivery steps and repeated status text are removed.
+
+Pre-payment subtotal/delivery/total and the quote deadline remain expanded. Pending
+payment, inconsistent success and refund-review/refunded guidance remain visible.
+Existing quote/payment actions and staff layouts are preserved.
+
+Lint/build and live accordion/deep-link/staff checks passed, including collapsed
+references, one medicine list, keyboard controls and mobile screenshots. Additional
+intercepted-response UI checks verified full pricing/address/payment controls for
+an unpaid order, pending-payment guidance and upstream refund-review/refunded
+messages. No quote or payment was requested during verification.
