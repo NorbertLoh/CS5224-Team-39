@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
 import { appointmentDetail } from '../scheduling/api'
+import { useAppointmentNames } from '../appointments/useAppointmentNames'
 import { paymentDetail } from '../payments/api'
 import { CheckoutStatus } from './CheckoutStatus'
 import {
@@ -85,6 +86,7 @@ function PaymentReturn({
     retry: false,
   })
   const data = query.isError ? undefined : query.data
+  const [namedAppointment] = useAppointmentNames(data ? [data.appointment] : [])
   const state = !valid
     ? 'missing'
     : query.isError
@@ -105,23 +107,18 @@ function PaymentReturn({
                 appointmentId: data.appointment.appointment_id,
                 paymentId: data.payment?.payment_id ?? null,
                 startsAt: data.appointment.starts_at,
+                clinicName: namedAppointment.clinic_name,
+                doctorName: namedAppointment.doctor_name,
+                expiresAt: data.appointment.hold_expires_at,
                 amount:
                   data.payment?.amount ?? data.appointment.consultation_price,
               }
             : undefined
         }
       />
-      {data?.appointment.hold_expires_at && (
-        <p className="text-sm text-slate-600">
-          Original booking deadline:{' '}
-          {new Date(data.appointment.hold_expires_at).toLocaleString('en-SG', {
-            timeZone: 'Asia/Singapore',
-          })}{' '}
-          SGT
-        </p>
-      )}
       {data &&
         canCheckout(data.appointment, data.payment) &&
+        state !== 'ready' &&
         state !== 'failed' && (
           <button
             className="rounded border px-4 py-3"

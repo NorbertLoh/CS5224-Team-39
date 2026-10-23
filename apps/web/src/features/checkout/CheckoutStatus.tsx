@@ -75,6 +75,9 @@ export function CheckoutStatus({
     appointmentId: string
     paymentId: string | null
     startsAt: string
+    clinicName: string
+    doctorName: string
+    expiresAt?: string | null
     amount: { amount_minor: number; currency: string }
   }
   busy?: boolean
@@ -104,6 +107,14 @@ export function CheckoutStatus({
       {summary && (
         <dl className="my-6 space-y-3 rounded-xl bg-slate-50 p-4 text-sm">
           <div>
+            <dt className="text-slate-500">Clinic</dt>
+            <dd>{summary.clinicName}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Doctor</dt>
+            <dd>{summary.doctorName}</dd>
+          </div>
+          <div>
             <dt className="text-slate-500">Consultation</dt>
             <dd>
               {new Date(summary.startsAt).toLocaleString('en-SG', {
@@ -121,6 +132,17 @@ export function CheckoutStatus({
               )}
             </dd>
           </div>
+          {summary.expiresAt && (
+            <div>
+              <dt className="text-slate-500">Booking hold expires</dt>
+              <dd>
+                {new Date(summary.expiresAt).toLocaleString('en-SG', {
+                  timeZone: 'Asia/Singapore',
+                })}{' '}
+                SGT
+              </dd>
+            </div>
+          )}
           <div>
             <dt className="text-slate-500">Appointment reference</dt>
             <dd className="break-all">{summary.appointmentId}</dd>
@@ -134,7 +156,17 @@ export function CheckoutStatus({
         </dl>
       )}
       <div className="mt-6 flex flex-wrap gap-3">
-        {state !== 'missing' && (
+        {state === 'ready' && (
+          <button
+            type="button"
+            className="rounded-lg bg-slate-900 px-4 py-3 text-white"
+            disabled={busy}
+            onClick={onRetry}
+          >
+            Continue to secure checkout
+          </button>
+        )}
+        {state !== 'missing' && state !== 'ready' && (
           <button
             type="button"
             className="rounded-lg bg-slate-900 px-4 py-3 text-white"
@@ -154,9 +186,11 @@ export function CheckoutStatus({
             Retry payment
           </button>
         )}
-        <a className="rounded-lg border px-4 py-3" href="/patient">
-          Appointments
-        </a>
+        {state !== 'ready' && (
+          <a className="rounded-lg border px-4 py-3" href="/patient">
+            Appointments
+          </a>
+        )}
         {(state === 'expired' || state === 'refunded') && (
           <a className="rounded-lg border px-4 py-3" href="/">
             Browse clinics
