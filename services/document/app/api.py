@@ -77,9 +77,9 @@ def list_documents(
         appointments[appointment_id] = context(request, identity, appointment_id)
         query = query.where(Document.appointment_id == appointment_id)
     if position:
-        query = query.where(tuple_(Document.created_at, Document.document_id) > tuple_(*position))
+        query = query.where(tuple_(Document.created_at, Document.document_id) < tuple_(*position))
     rows = session.scalars(
-        query.order_by(Document.created_at, Document.document_id).limit(limit + 1)
+        query.order_by(Document.created_at.desc(), Document.document_id.desc()).limit(limit + 1)
     ).all()
     for row in rows:
         if row.appointment_id not in appointments:

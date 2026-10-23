@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.refund_policy import RefundAvailability, refund_availability
+
 
 class Money(BaseModel):
     amount_minor: int = Field(strict=True, ge=0, le=9007199254740991)
@@ -26,7 +28,14 @@ class MedicationResolution(BaseModel):
     resolution: Literal["refund_required"]
     resource_id: UUID
     reason: Literal[
-        "quote_expired", "order_cancelled", "delivery_price_changed", "duplicate_charge"
+        "quote_expired",
+        "order_cancelled",
+        "delivery_price_changed",
+        "duplicate_charge",
+        "late_payment",
+        "slot_reallocated",
+        "appointment_cancelled",
+        "appointment_unavailable",
     ]
 
 
@@ -116,6 +125,7 @@ class PaymentPublic(BaseModel):
     commission_amount: Money
     clinic_amount: Money
     resolution: str
+    refund_availability: RefundAvailability = "unsupported_payment"
     created_at: datetime
     updated_at: datetime
 
@@ -143,7 +153,7 @@ def payment_public(payment):
         **{
             field: getattr(payment, field)
             for field in PaymentPublic.model_fields
-            if field not in {"amount", "commission_amount", "clinic_amount"}
+            if field not in {"amount", "commission_amount", "clinic_amount", "refund_availability"}
         },
         **{
             field: Money(amount_minor=getattr(payment, column), currency=payment.currency)
@@ -153,4 +163,5 @@ def payment_public(payment):
                 ("clinic_amount", "clinic_amount_minor"),
             )
         },
+        refund_availability=refund_availability(payment),
     )

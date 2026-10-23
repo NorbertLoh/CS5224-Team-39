@@ -26,11 +26,30 @@ workspace navigation on the public directory and clinic storefronts.
 
 The clinic choice is the URL, checked against current active memberships for the
 route's role. Clinic administrators choose a named clinic from the Manage clinics
-cards in their workspace. The navigation contains role links only, without a
-duplicate clinic dropdown. There is no persisted clinic choice to carry between
+cards in their workspace. The role navigation has no duplicate clinic dropdown.
+There is no persisted clinic choice to carry between
 users. Platform administrators
 select clinics from the existing paginated platform list and retain the tenant
 APIs' explicit clinic administration access without a membership.
+
+Clinic administration has a shared workspace navigation matching the patient
+navigation: Manage clinic (`/clinic-admin`) contains the existing management
+clinic cards, while Appointments (`/clinic-admin/appointments`) contains the real
+schedule and its membership-scoped clinic selector. Profile, staff, payments and
+orders retain their existing direct links and highlight Manage clinic. Both entry
+pages use the existing sign-in and identity gates; backend permissions remain the
+source of access to appointments and clinic data. No configuration or migrations.
+
+Selecting a clinic opens its profile as the management landing page. A persistent
+Clinic management navbar shows the selected clinic's name and Profile, Staff,
+Appointments, Payments and Medicine & delivery links, preserving that clinic in
+every URL. Appointments opens `/clinic-admin/clinics/<UUID>/appointments` with the
+schedule fixed to that clinic and no clinic selector. Both the scoped schedule
+and Medicine & delivery require active administration of the selected clinic;
+platform access to profile/staff/payments does not grant those clinical views.
+Change clinic returns to the list;
+Manage clinic stays within the selected clinic. The clinic choice is never stored
+in browser storage, and the shared identity gate blocks revoked/other-clinic links.
 
 Routes: `/patient`, `/doctor`, `/doctor/clinics/<UUID>`, `/clinic-admin`, existing
 clinic profile/staff routes, and existing platform clinic routes. Unknown paths

@@ -9,7 +9,8 @@ Consultation checkout is implemented in B02. B03 adds the verified webhook inbox
 B04 processes validated payments and publishes transactional success events.
 B05 adds authorised status/list APIs and basic commission totals. B06 adds
 medication/delivery checkout against a trusted C04 reservation boundary and
-medication payment/outbox processing. Actual refunds remain separate work.
+medication payment/outbox processing. RF08 adds clinic-admin full consultation
+refunds; see [REFUNDS.md](REFUNDS.md) for permissions, setup and verification limits.
 
 The isolated [X03 Stripe spike](../../docs/stripe-spike.md) provides test-mode
 Checkout/Connect verification commands and an explicitly labelled offline demo.

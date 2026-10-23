@@ -51,6 +51,25 @@ Fulfilment = Annotated[
 ]
 
 
+def resolution_caller(
+    request: Request, credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]
+):
+    for caller in ("scheduling", "fulfilment"):
+        if getattr(request.app.state.settings, caller + "_secret") is None:
+            continue
+        try:
+            return require_service(caller, "telelink-billing-" + caller, caller + "_secret")(
+                request, credentials
+            )
+        except HTTPException as error:
+            if error.status_code != 401:
+                raise
+    raise HTTPException(401, "Service credential required")
+
+
+ResolutionCaller = Annotated[str, Depends(resolution_caller)]
+
+
 @router.get("/internal/medication-checkouts/{payment_id}", tags=["internal"])
 def medication_attempt_status(
     payment_id: UUID, caller: Fulfilment, session: Annotated[Session, Depends(get_session)]
@@ -156,7 +175,7 @@ def medication_checkout(
 def medication_resolution(
     payment_id: UUID,
     body: MedicationResolution,
-    caller: Fulfilment,
+    caller: ResolutionCaller,
     session: Annotated[Session, Depends(get_session)],
 ):
     payment = session.scalar(
@@ -164,23 +183,26 @@ def medication_resolution(
     )
     if (
         payment is None
-        or payment.purpose != "medication_delivery"
-        or payment.order_id != body.resource_id
+        or payment.purpose != ("consultation" if caller == "scheduling" else "medication_delivery")
+        or (payment.appointment_id if caller == "scheduling" else payment.order_id)
+        != body.resource_id
     ):
         raise DomainError(404, "not_found", "Resource not found.")
-    attempt = session.get(MedicationCheckoutAttempt, payment_id)
-    if (
+    attempt = session.get(MedicationCheckoutAttempt, payment_id) if caller == "fulfilment" else None
+    if caller == "fulfilment" and (
         attempt is None
         or not attempt.reservation
         or attempt.reservation.get("tenant_id") != str(payment.tenant_id)
     ):
         raise DomainError(409, "payment_context_mismatch", "Payment context cannot be verified.")
+    if payment.status == "refunded":
+        return payment_public(payment)
     if payment.status not in {"succeeded", "refund_pending", "refund_failed"}:
         raise DomainError(
             409, "invalid_payment_transition", "A committed successful charge is required."
         )
     payment.resolution = "refund_required"
-    if attempt.resolution_reason is None:
+    if attempt is not None and attempt.resolution_reason is None:
         attempt.resolution_reason = body.reason
         attempt.resolution_requested_at = now()
     session.commit()

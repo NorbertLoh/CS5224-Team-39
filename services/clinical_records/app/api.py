@@ -260,10 +260,12 @@ def list_prescriptions(
         query = query.where(Prescription.appointment_id == appointment_id)
     if position:
         query = query.where(
-            tuple_(Prescription.created_at, Prescription.prescription_id) > tuple_(*position)
+            tuple_(Prescription.created_at, Prescription.prescription_id) < tuple_(*position)
         )
     rows = session.scalars(
-        query.order_by(Prescription.created_at, Prescription.prescription_id).limit(limit + 1)
+        query.order_by(Prescription.created_at.desc(), Prescription.prescription_id.desc()).limit(
+            limit + 1
+        )
     ).all()
     # Revalidate current appointment ownership before revealing any record or cursor.
     for row in rows:

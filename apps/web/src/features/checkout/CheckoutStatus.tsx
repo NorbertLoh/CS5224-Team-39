@@ -43,7 +43,7 @@ const messages: Record<
   ],
   refund_required: [
     'Payment received, booking not confirmed',
-    'Your booking could not be confirmed. Contact the clinic with the references below so support can arrange a manual refund. No automatic refund is promised. Do not pay again for this booking.',
+    'Your payment requires refund review. Contact the clinic with the references below. The clinic admin can review and issue a refund. Do not pay again for this booking.',
   ],
   refund_pending: [
     'Refund processing',

@@ -340,9 +340,11 @@ def test_pagination_scoped_and_audited(api):
     page = client.get(PREFIX + "/prescriptions", params={"limit": 1})
     assert page.status_code == 200, page.text
     assert len(page.json()["items"]) == 1 and page.json()["next_cursor"]
+    assert page.json()["items"][0]["prescription_id"] == second["prescription_id"]
     cursor = page.json()["next_cursor"]
     next_page = client.get(PREFIX + "/prescriptions", params={"limit": 1, "cursor": cursor})
     assert next_page.status_code == 200
+    assert next_page.json()["items"][0]["prescription_id"] == first["prescription_id"]
     assert {
         page.json()["items"][0]["prescription_id"],
         next_page.json()["items"][0]["prescription_id"],
