@@ -39,3 +39,18 @@ Lint and production build passed. Authenticated browser checks verified all 16
 local patient appointments across dates, each date/time label, no patient dropdown,
 one selected card after each of 16 clicks, names and details. Doctor and clinic-admin
 appointment card/detail checks also passed.
+
+## Consultation join control
+
+Patient and doctor appointment details keep Open video consultation visible.
+Unavailable access renders a native disabled button with the opening date/time
+or a status/payment explanation. Existing eligibility still requires the booked
+participant, confirmed payment, an active appointment and the join window from
+10 minutes before the start until the end. A local timer updates the control as
+time passes; backend admission checks remain authoritative.
+
+Lint/build and real local appointment-view checks passed. Browser UI checks with
+intercepted appointment responses and a controlled clock verified disabled access
+before opening, automatic enabling in the join window, automatic disabling at the
+end, and disabled cancelled/completed/expired/no-show/unpaid states. These UI checks
+did not modify bookings, start calls or establish new admission integration evidence.

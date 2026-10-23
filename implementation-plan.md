@@ -247,6 +247,8 @@ directories. Missing snapshots were filled from existing local profiles, preserv
 saved names; patient-name fallbacks now use a readable label rather than UUIDs.
 The patient date dropdown is replaced by a chronological list across dates with
 the Singapore date and time on every appointment card; pagination is retained.
+Keep the consultation join control visible in appointment details, disabled with
+an explanation when unavailable, and update eligibility as time passes.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused
