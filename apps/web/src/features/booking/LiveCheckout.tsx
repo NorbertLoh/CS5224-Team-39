@@ -117,9 +117,6 @@ export function LiveCheckout({
             ? 'Release booking and change time'
             : 'Back to available times'}
       </button>
-      <a href="/patient" className="ml-4 underline">
-        Appointments
-      </a>
     </section>
   )
 }

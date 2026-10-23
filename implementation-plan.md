@@ -377,3 +377,5 @@ RF11 appointment refinement: show eligible actions in the requested order: consu
 RF11 payment-pending correction: both Ready for payment and Payment pending show only Continue to secure checkout inside the card. Pending resumes the existing checkout via the existing idempotency flow. Remove the separate page-level checkout button and update pending guidance. Other terminal/error/recovery states retain their actions. Frontend lint/typecheck/build and focused ready/pending/failed rendering checks passed.
 
 RF11 expired-hold refinement: Booking hold expired shows only Browse clinics, removing Check payment status and Appointments for that state and matching the guidance. Frontend lint/typecheck/build and focused single-link rendering check passed.
+
+RF11 booking-hold refinement: remove the redundant Appointments link beneath Continue to payment and Release booking and change time. Frontend lint/typecheck/build passed.
