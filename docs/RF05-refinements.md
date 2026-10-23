@@ -167,3 +167,17 @@ visit, names/counts, one-open/keyboard collapse, mobile layout and a signed down
 validated as a PDF. Intercepted metadata checks verified same-visit merging across
 cursor pages, separation of distinct visits, and no download controls for pending
 or failed PDFs. No new documents were generated and no service access rules changed.
+
+## Clinic-first patient navigation
+
+Patient navigation is now Find a clinic, Appointments, Prescriptions, Orders &
+delivery and Documents. Find a clinic links to `/#clinics`, the existing home-page
+directory; signed-in patients retain navigation there and on clinic storefronts.
+Patient password and hosted-PKCE sign-in default to Appointments after resolving
+the backend identity's patient role. Other roles retain the existing destination;
+failed destination lookup falls back to the home page with normal access checks.
+
+Lint/build and real local browser checks passed for both patient sign-in paths,
+doctor destination, public directory access, the five links and active states,
+returning from directory to care pages and mobile wrapping. No new dependencies
+or configuration are required.

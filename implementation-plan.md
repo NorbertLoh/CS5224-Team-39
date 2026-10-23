@@ -270,6 +270,9 @@ pinned at the top. Default staff/API order remains oldest first.
 The standalone patient Documents page groups available PDFs by visit in shared
 accordion rows, with visit names/date/time, document counts and existing downloads.
 Appointment-scoped and staff document lists retain their flat presentation.
+Patient navigation starts with Find a clinic (existing home directory), then
+Appointments, Prescriptions, Orders & delivery and Documents. Successful patient
+sign-in defaults to Appointments using the backend identity's patient role.
 Issue #261; Assignee: NorbertLoh; status: in progress. Depends on F06-F08, U05
 and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
 feature mounting while signed out, and passing frontend lint/build and focused

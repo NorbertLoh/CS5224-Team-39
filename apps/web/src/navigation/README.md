@@ -5,7 +5,9 @@
 - `RoleNavigation.tsx`: granted role links.
 - `AppRoutes.tsx`: route-to-feature mapping; forms and API calls stay in their features.
 
-Patient navigation links four protected pages: `/patient` (appointments, default),
+Patient navigation starts with Find a clinic (`/#clinics`, the existing public
+directory), followed by Appointments, Prescriptions, Orders & delivery and Documents.
+The four protected pages are `/patient` (appointments, default),
 `/patient/prescriptions` (prescriptions and medicines), the existing
 `/patient/medication-orders` (orders and delivery), and `/patient/documents`.
 The patient feature owns the shared page navigation and records-page composition.
@@ -18,7 +20,9 @@ features wait for a successful identity lookup; a failed refresh or revoked
 membership blocks them. Backend checks still enforce every protected API operation.
 Signed-out protected-page visits replace the current browser history entry with
 `/sign-in` before rendering feature content. Public pages remain accessible, and
-sign-in continues to use the existing home-page destination after authentication.
+successful patient sign-in opens `/patient` after checking the backend identity.
+Other roles retain the home-page destination. Signed-in patients also keep their
+workspace navigation on the public directory and clinic storefronts.
 
 The clinic choice is the URL, checked against current active memberships for the
 route's role. Clinic administrators choose a named clinic from the Manage clinics
