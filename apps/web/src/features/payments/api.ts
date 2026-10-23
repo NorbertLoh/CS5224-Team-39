@@ -13,6 +13,12 @@ export type Payment = {
   quote_id: string | null
   status: string
   resolution: string
+  refund_availability:
+    | 'available'
+    | 'demo_payment'
+    | 'unsupported_purpose'
+    | 'not_paid'
+    | 'unsupported_payment'
   amount: Money
   commission_bps: number
   commission_amount: Money

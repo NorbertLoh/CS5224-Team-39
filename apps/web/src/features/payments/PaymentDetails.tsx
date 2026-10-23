@@ -58,9 +58,11 @@ export function PaymentDetails({ payment }: { payment: Payment }) {
       </dl>
       {payment.resolution === 'refund_required' && (
         <p className="mt-3 text-sm text-amber-800">
-          {payment.purpose === 'consultation'
-            ? 'Refund review required. Review the consultation and issue a full refund below.'
-            : 'Delivery exception requires review. Contact platform support with this payment reference.'}
+          {payment.refund_availability === 'demo_payment'
+            ? 'Demo refund-review example. No money was charged.'
+            : payment.purpose === 'consultation'
+              ? 'Refund review required. Review the consultation and issue a full refund below.'
+              : 'Delivery exception requires review. Contact platform support with this payment reference.'}
         </p>
       )}
       {open && payment.purpose === 'consultation' && (

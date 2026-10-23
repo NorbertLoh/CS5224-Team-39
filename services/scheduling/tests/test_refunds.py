@@ -43,6 +43,8 @@ def test_only_terminal_booking_can_be_refunded(api, status, expected):
     appointment = record(api, status=status)
     response = action(api, appointment)
     assert response.status_code == expected, response.text
+    if expected == 409:
+        assert response.json()["error"]["code"] == "refund_appointment_active"
     if expected == 200:
         assert response.json()["payment_resolution"] == "refund_required"
 
