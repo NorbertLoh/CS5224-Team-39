@@ -231,6 +231,13 @@ Week 4: finish essential checks in the first half; freeze features, rehearse and
 Deferred verification is tracked separately from accepted local deliverables.
 These tasks do not establish AWS integration until their evidence is recorded.
 
+- [ ] RF02: Give prescription, receipt and medical certificate PDFs a shared formal
+clinic layout with readable tables, patient/issuer sections, wrapping and pagination.
+Issue #244; Assignee: NorbertLoh; status: in progress. Dependencies: P01 and U17
+(complete). Effort: M. Preserve existing template-data contracts, glyph rejection,
+private metadata and offline fonts. Verify document tests and attach synthetic
+sample PDFs to the draft PR. Receipt generation wiring and signatures are out of scope.
+
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
 | [ ] | RF01 | Verify AWS self-hosted PeerJS/TURN across two independently routed networks; record normal and forced-relay two-way human audio/video, selected relay/RTP evidence from both ends, transport/TLS and invalid/expired-credential observations, and leave/rejoin behaviour. Issue #155; planned, unassigned. Deferred from X01 by user decision on 16 October 2026. This is W11's verification portion; share evidence with W11/Q04 rather than duplicate deployment/testing. | X01, W11 deployment ready (not W11 verification complete) | M |
