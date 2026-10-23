@@ -353,9 +353,15 @@ def test_newest_order_pagination_and_sort_scope(api, equal_times):
         ).json()
         seen.extend(row["order_id"] for row in page["items"])
     assert seen == expected
-    assert client.get("/orders").json()["items"][0]["order_id"] == expected[-1]
-    assert client.get("/orders", params={"limit": 1, "cursor": cursor}).status_code == 422
-    oldest_cursor = client.get("/orders", params={"limit": 1}).json()["next_cursor"]
+    assert client.get("/orders").json()["items"][0]["order_id"] == expected[0]
+    assert client.get("/orders", params={"limit": 1, "cursor": cursor}).status_code == 200
+    assert (
+        client.get("/orders", params={"sort": "oldest"}).json()["items"][0]["order_id"]
+        == expected[-1]
+    )
+    oldest_cursor = client.get("/orders", params={"sort": "oldest", "limit": 1}).json()[
+        "next_cursor"
+    ]
     assert (
         client.get(
             "/orders",

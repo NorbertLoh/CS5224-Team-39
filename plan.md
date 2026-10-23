@@ -34,6 +34,12 @@ audit history and provider polling. Preserve existing delivery exception review;
 payment alone does not guarantee dispatch. Broader automatic/partial/out-of-band
 refund reconciliation remains deferred. Track implementation in issue #269 / PR #270.
 
+RF09 history refinement (23 October 2026): payment, medicine/delivery order,
+prescription and document API histories default to descending creation time with
+descending ID tie-breakers. Cursor scopes include the ordering so previously issued
+ascending cursors cannot be used to page descending results. Patient visit grouping
+and upcoming appointment chronology remain as designed. Track issue #271 / PR #272.
+
 ## 2. Frontend design
 
 Use one React application initially, with role-specific route groups and shared components. Clinics get branded storefronts through configuration, not separate code deployments.

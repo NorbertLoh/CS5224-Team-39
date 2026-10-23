@@ -131,7 +131,7 @@ implementation decisions, not inferred from this split. Totals must be safe inte
 | --- | --- | --- |
 | POST `/consultation-checkouts` | `appointment_id`; `{payment, checkout_url, expires_at}`, 201; 200 on replay | Owning patient; checkout URL is provider-generated HTTPS, expiry <= hold deadline |
 | GET `/payments/{payment_id}` | Payment, 200 | Owning patient, active tenant clinic admin, platform admin; no unrelated doctors |
-| GET `/payments` | Optional `tenant_id`, `purpose`, `status`; C01 pagination ordered created_at, payment_id ascending | Same scoped policy; patient sees own charges only |
+| GET `/payments` | Optional `tenant_id`, `purpose`, `status`; C01 pagination ordered created_at, payment_id descending (newest first) | Same scoped policy; patient sees own charges only |
 | POST `/payments/{payment_id}/refund` | `reason`; payment, 200 | Platform-admin operational action, full successful charge only; audit required |
 
 Checkout requires `Idempotency-Key` (1-64 ASCII letters/digits/._-). Scope it to

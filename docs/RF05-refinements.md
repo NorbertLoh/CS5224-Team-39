@@ -147,6 +147,9 @@ creation time and order ID with a direction-bound cursor; the default API/staff
 order remains oldest first. Direct-linked orders are positioned by date rather
 than prepended above newer orders.
 
+RF09 supersedes the default described above: both patient and clinic-admin order
+histories now default to newest first. Explicit `sort=oldest` remains available.
+
 Frontend lint/build and Python Ruff passed. All 42 fulfilment API tests passed in
 a separate disposable database, including newest-first pages, timestamp ties and
 cross-direction cursor rejection; the disposable database was removed afterward.

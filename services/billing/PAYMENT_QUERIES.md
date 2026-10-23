@@ -14,7 +14,7 @@ browser or pagination cursor grants access.
 | `/payments` | C01 `{items, next_cursor}`; optional `tenant_id`, `purpose`, `status`; `limit` defaults to 25 (1–100), optional `cursor` |
 | `/commission-totals` | Admin-only `{payment_count, amount, commission_amount, clinic_amount}`; optional `tenant_id`, `purpose` |
 
-List order is `created_at, payment_id` ascending, with keyset pagination. Cursors
+List order is `created_at, payment_id` descending (newest first), with keyset pagination. Cursors
 expire after 15 minutes and bind the caller, current access scope, ordering and
 all filters. Changed filters, caller or permissions require restarting pagination;
 invalid, expired or tampered cursors return 422 with `query.cursor` detail. Access

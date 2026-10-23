@@ -3,6 +3,8 @@
 Open **Payments** from a managed clinic card. The protected route is
 `/clinic-admin/clinics/<tenant UUID>/payments`. B07 uses authenticated billing
 history, payment snapshots, cursor pagination and independent commission totals.
+History loads newest payments first across all pages, with payment ID as a stable
+tie-breaker for equal creation times.
 See [B07 setup and verification](../../../../../docs/B07-live-billing.md).
 
 Purpose changes both history and totals; status changes only history. The server

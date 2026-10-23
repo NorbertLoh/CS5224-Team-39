@@ -16,6 +16,7 @@ def scope_for(identity, appointment_id):
             if m.status == "active"
         ),
         str(appointment_id) if appointment_id else None,
+        "created_at,prescription_id:desc",
     ]
 
 
