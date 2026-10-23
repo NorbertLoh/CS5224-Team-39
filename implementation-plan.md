@@ -295,6 +295,15 @@ Further refinements require explicit user scope.
 
 ## Completion checklist
 
+- [ ] RF07: Save the clean local demo seed under `dev/` with a documented reset
+command, mandatory backup, local-target guards, relative paths and configurable
+app origin. Keep credentials, manifests, PDFs and backups ignored. Issue #267;
+assignee NorbertLoh; In progress. Depends on F17 and existing migrated local
+schemas (complete). Effort: M. Completion requires non-destructive preflight,
+unsafe-target rejection, representative field/link coverage and focused checks
+of repeatability. No seed payment/courier calls; no reset of the current demo is
+required to package the tool. Merge only on explicit user instruction.
+
 - [ ] Actual AWS patient journey works with two separate payment purposes and paid+ready delivery gating.
 - [ ] All four role views support the journey; two clinics demonstrate tenant separation.
 - [ ] Independent service deployments, service-owned migrations and Floci setup are documented.
