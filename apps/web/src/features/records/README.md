@@ -60,3 +60,13 @@ The final per-prescription pricing check separately issued a labelled synthetic
 prescription and opened an unpaid medicine order to verify its specific prices
 and lock. It made no payment, delivery quote or courier request. See pricing setup
 for the final workflow; the earlier autosave-only checks did not issue documents.
+
+Autosave focus regression: draft saves keep note/MC/prescription fields enabled
+and mounted, preserve raw text/caret and keep prescription rows in their current
+order. Save acknowledgements update only saved snapshots and medication IDs;
+newer edits remain queued for a subsequent serial save. Background records reads
+do not replace loaded forms with a loading screen. Explicit issuance/read-only
+locks still apply. An isolated browser check using the production components and
+800 ms delayed responses verified retained focus, caret 2 -> 3, pending-request
+edits and two prescription rows staying in order across saves for all three forms.
+The temporary check did not call real clinical APIs and is not a production route.

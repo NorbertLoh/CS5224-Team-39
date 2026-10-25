@@ -27,10 +27,7 @@ export function ConsultationNoteForm({
   const [savedText, setSavedText] = useState(note?.text ?? '')
   const save = useMutation({
     mutationFn: (submitted: string) => saveNote(appointmentId, submitted),
-    onSuccess: (result, submitted) => {
-      setText((current) =>
-        current.trim() === submitted.trim() ? result.text : current,
-      )
+    onSuccess: (result) => {
       setSavedText(result.text)
     },
     onError: onFailure,

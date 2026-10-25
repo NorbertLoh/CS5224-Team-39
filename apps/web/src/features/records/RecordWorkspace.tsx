@@ -173,7 +173,7 @@ function Records({
         onRetry={() => void records.refetch()}
       />
     )
-  if (!records.data || records.isFetching)
+  if (!records.data)
     return <LoadingState message="Loading clinical records..." />
   return (
     <div className="space-y-5">

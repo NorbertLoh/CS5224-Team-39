@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { PrescriptionItemFields } from './PrescriptionItemFields'
 import { PrescriptionDetails } from './PrescriptionDetails'
@@ -13,6 +13,19 @@ import {
   useRecordFormState,
   type RecordFormStateChange,
 } from './useRecordFormState'
+
+function draftKey(items: PrescriptionInput[]) {
+  return JSON.stringify(
+    prescriptionItems(items)
+      .map((item) => ({
+        name:
+          item.medication_id || item.display_name?.trim().toLowerCase() || '',
+        quantity: item.quantity,
+        instructions: item.instructions,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  )
+}
 
 export function PrescriptionEditor({
   appointmentId,
@@ -40,9 +53,29 @@ export function PrescriptionEditor({
     setItems(prescriptionItems(result.items))
   }
   const save = useMutation({
-    mutationFn: () =>
-      savePrescription(appointmentId, saved?.prescription_id, items, tenantId),
-    onSuccess: accept,
+    mutationFn: (submitted: PrescriptionInput[]) =>
+      savePrescription(
+        appointmentId,
+        saved?.prescription_id,
+        submitted,
+        tenantId,
+      ),
+    onSuccess: (result) => {
+      setSaved(result)
+      // Merge identifiers without reordering rows or replacing visible input text.
+      setItems((current) =>
+        current.map((item) => {
+          const matched = result.items.find(
+            (line) =>
+              line.display_name.trim().toLowerCase() ===
+              item.display_name?.trim().toLowerCase(),
+          )
+          return matched
+            ? { ...item, medication_id: matched.medication_id }
+            : item
+        }),
+      )
+    },
     onError: onFailure,
     retry: false,
     gcTime: 0,
@@ -55,20 +88,26 @@ export function PrescriptionEditor({
     gcTime: 0,
   })
   const busy = save.isPending || issue.isPending
-  const dirty =
-    JSON.stringify(prescriptionItems(items)) !==
-    JSON.stringify(prescriptionItems(saved?.items ?? []))
+  const dirty = draftKey(items) !== draftKey(saved?.items ?? [])
   const valid = validItems(items)
   useRecordFormState(dirty, busy, onStateChange)
-  const writable = editable && !locked && !busy
+  const writable = editable && !locked && !issue.isPending
+  const queueSave = useCallback(
+    () => save.mutate(prescriptionItems(items)),
+    [save.mutate, items],
+  )
   useDraftAutosave(
-    writable && valid && dirty && !save.isError && !issue.isError,
+    writable &&
+      !save.isPending &&
+      valid &&
+      dirty &&
+      !save.isError &&
+      !issue.isError,
     JSON.stringify(items),
-    save.mutate,
+    queueSave,
   )
   const changeItems = (next: PrescriptionInput[]) => {
     setItems(next)
-    save.reset()
     issue.reset()
   }
   return (
@@ -149,9 +188,10 @@ export function PrescriptionEditor({
               <Button
                 className="h-10 px-4"
                 type="button"
-                disabled={!saved || dirty || !valid}
+                disabled={!saved || dirty || !valid || busy}
                 onClick={() => {
-                  if (writable && saved && !dirty && valid) issue.mutate()
+                  if (writable && !busy && saved && !dirty && valid)
+                    issue.mutate()
                 }}
               >
                 {issue.isPending ? 'Issuing...' : 'Issue prescription'}

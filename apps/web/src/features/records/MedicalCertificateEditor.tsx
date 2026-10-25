@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { saveMedicalCertificate, recordsError } from './api'
 import { mcEndDate, type MedicalCertificate } from './medicalCertificate'
@@ -27,43 +27,56 @@ export function MedicalCertificateEditor({
   const [start, setStart] = useState(draft?.start_date ?? '')
   const [days, setDays] = useState(String(draft?.duration_days ?? ''))
   const [notes, setNotes] = useState(draft?.additional_notes ?? '')
-  const [saved, setSaved] = useState(
-    JSON.stringify([selected, start, days, notes]),
-  )
+  const fingerprint = (
+    chosen: boolean,
+    date: string,
+    duration: string,
+    text: string,
+  ) =>
+    JSON.stringify([
+      chosen,
+      chosen ? date : '',
+      chosen ? String(Number(duration)) : '',
+      text.trim(),
+    ])
+  const [saved, setSaved] = useState(fingerprint(selected, start, days, notes))
   const end = mcEndDate(start, days)
-  const current = JSON.stringify([selected, start, days, notes])
+  const current = fingerprint(selected, start, days, notes)
   const mutation = useMutation({
-    mutationFn: () =>
-      saveMedicalCertificate(appointmentId, {
+    mutationFn: (submitted: Parameters<typeof saveMedicalCertificate>[1]) =>
+      saveMedicalCertificate(appointmentId, submitted),
+    onSuccess: (result) => {
+      setSaved(
+        fingerprint(
+          result.selected,
+          result.start_date ?? '',
+          String(result.duration_days ?? ''),
+          result.additional_notes,
+        ),
+      )
+    },
+    retry: false,
+    gcTime: 0,
+  })
+  const locked = !editable || Boolean(draft?.finalized_at)
+  const queueSave = useCallback(
+    () =>
+      mutation.mutate({
         selected,
         start_date: selected ? start || null : null,
         duration_days: selected && days ? Number(days) : null,
         additional_notes: notes,
       }),
-    onSuccess: (result) => {
-      const values = [
-        result.selected,
-        result.start_date ?? '',
-        String(result.duration_days ?? ''),
-        result.additional_notes,
-      ]
-      setSelected(result.selected)
-      setStart(result.start_date ?? '')
-      setDays(String(result.duration_days ?? ''))
-      setNotes(result.additional_notes)
-      setSaved(JSON.stringify(values))
-    },
-    retry: false,
-    gcTime: 0,
-  })
-  const locked = !editable || Boolean(draft?.finalized_at) || mutation.isPending
+    [mutation.mutate, selected, start, days, notes],
+  )
   useDraftAutosave(
     !locked &&
+      !mutation.isPending &&
       current !== saved &&
       (!selected || Boolean(end)) &&
       !mutation.isError,
     current,
-    mutation.mutate,
+    queueSave,
   )
   useRecordFormState(current !== saved, mutation.isPending, onStateChange)
   return (
