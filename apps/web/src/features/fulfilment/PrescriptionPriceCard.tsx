@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { ApiError } from '../../lib/api'
 import { appointmentDetail } from '../scheduling/api'
@@ -49,64 +50,76 @@ export function PrescriptionPriceCard({
     gcTime: 0,
   })
   return (
-    <article
-      className="space-y-4 rounded-2xl border-2 border-amber-500 bg-white p-5"
+    <details
+      className="group rounded-2xl border-2 border-amber-500 bg-white p-5"
       aria-label={`Prescription ${prescription.prescription_id.slice(-8)}`}
     >
-      <div>
-        <h2 className="font-semibold">
-          Prescription {prescription.prescription_id.slice(-8)}
-        </h2>
-        <p className="mt-2 text-sm font-medium">
-          {appointment.data?.patient_name ||
-            `Patient ${prescription.patient_id.slice(-8)}`}
-        </p>
-        <p className="mt-1 text-xs text-slate-600">
-          Prescription {prescription.prescription_id.slice(-8)} ·{' '}
-          {new Intl.DateTimeFormat('en-SG', {
-            timeZone: 'Asia/Singapore',
-            dateStyle: 'medium',
-          }).format(new Date(prescription.created_at))}
-        </p>
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-4 rounded focus-visible:outline-2 focus-visible:outline-offset-4 [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0">
+          <h2 className="font-semibold">
+            Prescription {prescription.prescription_id.slice(-8)}
+          </h2>
+          <p className="mt-2 text-sm font-medium">
+            {appointment.data?.patient_name ||
+              `Patient ${prescription.patient_id.slice(-8)}`}
+          </p>
+          <p className="mt-1 text-xs text-slate-600">
+            Prescription {prescription.prescription_id.slice(-8)} ·{' '}
+            {new Intl.DateTimeFormat('en-SG', {
+              timeZone: 'Asia/Singapore',
+              dateStyle: 'medium',
+            }).format(new Date(prescription.created_at))}
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            {prescription.items.map((item) => item.display_name).join(', ')}
+          </p>
+        </div>
+        <ChevronDown
+          aria-hidden="true"
+          size={20}
+          className="mt-1 shrink-0 text-slate-500 transition-transform group-open:rotate-180"
+        />
+      </summary>
+      <div className="mt-4 space-y-4">
+        <MedicationCorrectionEditor
+          tenantId={tenantId}
+          prescriptionId={prescription.prescription_id}
+          token={token}
+        />
+        <section
+          className="space-y-4 rounded-xl border p-4"
+          aria-label="Medication pricing"
+        >
+          <h3 className="font-semibold">1. Medication pricing</h3>
+          {query.isPending ? (
+            <LoadingState message="Loading prescription prices..." />
+          ) : query.isError ? (
+            <ErrorState
+              message="Could not load prices."
+              onRetry={() => void query.refetch()}
+            />
+          ) : (
+            <PriceEditor
+              prescription={prescription}
+              tenantId={tenantId}
+              initial={query.data}
+            />
+          )}
+        </section>
+        <section
+          className="space-y-3 rounded-xl border p-4"
+          aria-label="Medicine preparation"
+        >
+          <h3 className="font-semibold">2. Medicine preparation</h3>
+          <p className="text-sm text-slate-600">
+            {query.data?.locked
+              ? 'This prescription already has an order. Load more orders to open its preparation controls.'
+              : 'Save the medication prices first. Preparation becomes available here once the patient opens a medicine order.'}
+          </p>
+          <Button disabled>Mark medicine ready</Button>
+        </section>
       </div>
-      <MedicationCorrectionEditor
-        tenantId={tenantId}
-        prescriptionId={prescription.prescription_id}
-        token={token}
-      />
-      <section
-        className="space-y-4 rounded-xl border p-4"
-        aria-label="Medication pricing"
-      >
-        <h3 className="font-semibold">1. Medication pricing</h3>
-        {query.isPending ? (
-          <LoadingState message="Loading prescription prices..." />
-        ) : query.isError ? (
-          <ErrorState
-            message="Could not load prices."
-            onRetry={() => void query.refetch()}
-          />
-        ) : (
-          <PriceEditor
-            prescription={prescription}
-            tenantId={tenantId}
-            initial={query.data}
-          />
-        )}
-      </section>
-      <section
-        className="space-y-3 rounded-xl border p-4"
-        aria-label="Medicine preparation"
-      >
-        <h3 className="font-semibold">2. Medicine preparation</h3>
-        <p className="text-sm text-slate-600">
-          {query.data?.locked
-            ? 'This prescription already has an order. Load more orders to open its preparation controls.'
-            : 'Save the medication prices first. Preparation becomes available here once the patient opens a medicine order.'}
-        </p>
-        <Button disabled>Mark medicine ready</Button>
-      </section>
-    </article>
+    </details>
   )
 }
 

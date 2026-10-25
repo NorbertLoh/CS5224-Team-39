@@ -31,6 +31,9 @@ side details panel. No new routes or setup are required.
 
 Order borders and text labels show payment/preparation waits, delivery progress,
 completion and problems requiring review. Selection preserves the status border.
+Every clinic medicine/order card starts collapsed, including order links. Open
+or close a card with its header; prescription headers also support keyboard
+activation and preserve unsaved prices while collapsed.
 
 Run `npm run lint` and `npm run build` from `apps/web`. To verify integration,
 follow [the actual medication payment and delivery journey](../../../../../docs/I03-local-journey.md).

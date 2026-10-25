@@ -21,14 +21,15 @@ export function OrderWorkspace({
   const params = new URLSearchParams(window.location.search)
   const supplied = params.get('order_id')
   const prescriptionId = params.get('prescription_id')
-  const [selectedId, setSelectedId] = useState<string | null>(
-    () =>
-      supplied ??
-      (patient && !prescriptionId
-        ? sessionStorage.getItem(
-            `telelink.medication-return.${context.patientId}`,
-          )
-        : null),
+  const [selectedId, setSelectedId] = useState<string | null>(() =>
+    !patient
+      ? null
+      : (supplied ??
+        (patient && !prescriptionId
+          ? sessionStorage.getItem(
+              `telelink.medication-return.${context.patientId}`,
+            )
+          : null)),
   )
   const validId = selectedId !== null && uuid.test(selectedId)
   const list = useInfiniteQuery({
