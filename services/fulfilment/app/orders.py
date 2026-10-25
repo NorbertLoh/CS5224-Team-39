@@ -12,6 +12,7 @@ from app.access import can_read_items, order_scope, permission_fingerprint, requ
 from app.catalogue import DB, Identity
 from app.models import CatalogueItem, Order, OrderItem, OrderRequest
 from app.pagination import decode, encode
+from app.prescription_prices import saved_prices
 from app.schemas import (
     MAX_MONEY,
     MedicineReady,
@@ -125,6 +126,11 @@ def create_order(
             raise DomainError(404, "not_found", "Resource not found.")
         if context.status != "issued":
             raise DomainError(409, "prescription_not_issued", "Prescription must be issued.")
+        prescription_prices = {
+            row.prescription_item_id: row
+            for row in saved_prices(session, context.tenant_id, context.prescription_id)
+        }
+        per_prescription = context.pricing_mode == "prescription" or bool(prescription_prices)
         rows = session.scalars(
             select(CatalogueItem)
             .where(
@@ -138,8 +144,20 @@ def create_order(
         items = []
         subtotal = 0
         for position, source in enumerate(context.items):
-            item = catalogue.get(source.medication_id)
-            if item is None or not item.active:
+            item = (
+                prescription_prices.get(source.prescription_item_id)
+                if per_prescription
+                else catalogue.get(source.medication_id)
+            )
+            if per_prescription and (
+                item is None
+                or item.medication_id != source.medication_id
+                or item.quantity != source.quantity
+            ):
+                raise DomainError(
+                    409, "medication_unpriced", "Clinic admin must price this prescription first."
+                )
+            if item is None or (not per_prescription and not item.active):
                 raise DomainError(409, "medication_unavailable", "Medication is unavailable.")
             if item.unit_price_minor is None:
                 raise DomainError(
@@ -163,6 +181,7 @@ def create_order(
                 )
             )
         order = Order(
+            pricing_mode="prescription" if per_prescription else "catalogue",
             tenant_id=context.tenant_id,
             patient_id=context.patient_id,
             appointment_id=context.appointment_id,

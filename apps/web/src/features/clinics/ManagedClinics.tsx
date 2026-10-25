@@ -5,7 +5,7 @@ import { ClinicDirectory, ClinicLinks } from './ClinicDirectory'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingState } from '@/components/LoadingState'
 import type { Session } from '@/auth/session'
-import { ClinicMedicationCatalogue } from './ClinicMedicationCatalogue'
+import { PrescriptionPricing } from './PrescriptionPricing'
 
 export function ManagedClinics({ session }: { session: Session }) {
   const identity = useQuery({
@@ -65,7 +65,7 @@ export function ManagedClinics({ session }: { session: Session }) {
       <h2 className="text-2xl font-semibold">Manage clinics</h2>
       {content}
       {!platform && clinics.data && (
-        <ClinicMedicationCatalogue
+        <PrescriptionPricing
           clinics={clinics.data}
           token={session.accessToken}
         />

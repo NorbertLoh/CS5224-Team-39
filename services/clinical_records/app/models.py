@@ -126,6 +126,7 @@ class Prescription(AppointmentContext, Base):
     __mapper_args__ = {"eager_defaults": True}
 
     prescription_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    pricing_mode: Mapped[str] = mapped_column(Text, server_default=text("'prescription'"))
     status: Mapped[str] = mapped_column(Text, default="draft", server_default=text("'draft'"))
     issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

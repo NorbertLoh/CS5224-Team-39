@@ -89,7 +89,8 @@ export function PrescriptionEditor({
       </div>
       <p className="text-sm text-slate-600">
         Complete each medication to autosave the draft. Issue the prescription
-        when ready. The clinic admin sets prices before checkout.
+        when ready. The clinic admin prices each medication for this
+        prescription before checkout.
       </p>
       {locked || !editable ? (
         <>

@@ -37,7 +37,7 @@ Missing notes and failed requests have explicit empty/retry states.
 
 ## Setup and verification
 
-Fulfilment migration 0006 is required for typed medication pricing; no new environment variables. See [records setup](../../../../../docs/records-frontend.md),
+Clinical-records 0006 and fulfilment 0007 are required for prescription pricing; no new environment variables. See [records setup](../../../../../docs/records-frontend.md),
 [MC setup](../../../../../docs/medical-certificates.md) and [documents](../documents/README.md).
 The patient `/patient` view continues to use real authorised prescription/document APIs.
 
@@ -49,9 +49,14 @@ and incomplete MC/prescription inputs, and all three valid autosaved drafts surv
 a full browser reload. No MC/prescription was issued, visit completed, payment made
 or delivery sent. Labelled synthetic visit/note/catalogue examples remain local.
 
-Medication entry is now an unrestricted name textbox. Valid autosaves reuse or
-register a clinic-owned unpriced medication reference. Clinic admins price these
-under Medications & prices on their existing dashboard. Prescriptions may be
-issued before pricing, but order/quote creation waits for every medicine to be
-priced. Setup: [medication pricing](../../../../../docs/medication-pricing.md),
-including fulfilment migration 0006. Prescription/event/document IDs are unchanged.
+Medication names remain unrestricted text. Once the doctor issues a prescription,
+the clinic admin enters each medication's price for that prescription under
+Prescription pricing. No catalogue maintenance is required. See
+[pricing setup](../../../../../docs/medication-pricing.md): clinical-records 0006
+and fulfilment 0007 preserve legacy issued/paid behavior and require explicit
+prices for new/draft prescriptions.
+
+The final per-prescription pricing check separately issued a labelled synthetic
+prescription and opened an unpaid medicine order to verify its specific prices
+and lock. It made no payment, delivery quote or courier request. See pricing setup
+for the final workflow; the earlier autosave-only checks did not issue documents.

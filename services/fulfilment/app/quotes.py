@@ -11,6 +11,7 @@ from app.access import can_read_items
 from app.catalogue import DB, Identity
 from app.models import MAX_MONEY, CatalogueItem, Order, Quote, QuoteRequest
 from app.orders import IdempotencyKey, Patient, lock, own_order
+from app.prescription_prices import saved_prices
 from app.schemas import Money, QuoteCreate, QuotePublic
 
 router = APIRouter(
@@ -38,6 +39,28 @@ def public_quote(quote, now):
 
 
 def refresh_items(session, order):
+    if order.pricing_mode == "prescription":
+        prices = {
+            row.prescription_item_id: row
+            for row in saved_prices(session, order.tenant_id, order.prescription_id)
+        }
+        subtotal = 0
+        for item in order.items:
+            current = prices.get(item.prescription_item_id)
+            if (
+                current is None
+                or current.medication_id != item.medication_id
+                or current.quantity != item.quantity
+            ):
+                raise DomainError(
+                    409, "medication_unpriced", "Clinic admin must price this prescription first."
+                )
+            item.unit_price_minor = current.unit_price_minor
+            item.line_total_minor = item.quantity * current.unit_price_minor
+            subtotal += item.line_total_minor
+        if subtotal > MAX_MONEY:
+            raise DomainError(409, "amount_out_of_range", "Order amount exceeds supported range.")
+        return subtotal
     rows = session.scalars(
         select(CatalogueItem)
         .where(

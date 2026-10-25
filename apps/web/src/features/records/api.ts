@@ -199,24 +199,6 @@ export async function registerMedication(
     )
   ).json()
 }
-export async function priceMedication(
-  tenantId: string,
-  medication: Medication,
-  amountMinor: number,
-  unitLabel: string,
-): Promise<Medication> {
-  return (
-    await request(
-      `/fulfilment/clinics/${id(tenantId)}/catalogue/${id(medication.medication_id)}`,
-      json('PUT', {
-        display_name: medication.display_name,
-        unit_label: unitLabel.trim(),
-        unit_price: { amount_minor: amountMinor, currency: 'SGD' },
-        active: true,
-      }),
-    )
-  ).json()
-}
 export async function issuePrescription(
   prescriptionId: string,
 ): Promise<Prescription> {
@@ -226,31 +208,6 @@ export async function issuePrescription(
       json('POST', {}),
     )
   ).json()
-}
-export async function catalogue(
-  tenantId: string,
-  signal?: AbortSignal,
-): Promise<Medication[]> {
-  const items: Medication[] = []
-  const seen = new Set<string>()
-  let cursor: string | null = null
-  for (let pageNumber = 0; pageNumber < 100; pageNumber++) {
-    const params = new URLSearchParams({ limit: '100' })
-    if (cursor) params.set('cursor', cursor)
-    const page: CursorPage<Medication> = await (
-      await request(`/fulfilment/clinics/${id(tenantId)}/catalogue?${params}`, {
-        signal,
-      })
-    ).json()
-    if (page.items.some((item) => item.tenant_id !== tenantId))
-      throw new Error('Invalid catalogue context')
-    items.push(...page.items.filter((item) => item.active))
-    cursor = page.next_cursor
-    if (!cursor) return items
-    if (seen.has(cursor)) break
-    seen.add(cursor)
-  }
-  throw new Error('Invalid catalogue pagination')
 }
 export function recordsError(error: unknown) {
   if (error instanceof ApiError) {

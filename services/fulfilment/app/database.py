@@ -8,7 +8,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from telelink_common.database import create_postgres_engine
 
-from app.models import Delivery, Order, Quote, event_inbox, event_outbox
+from app.models import Delivery, Order, PrescriptionPrice, Quote, event_inbox, event_outbox
 from app.settings import Settings
 
 
@@ -29,6 +29,7 @@ class Database:
         # A connection alone is insufficient: verify the migration-created table exists.
         with self.engine.connect() as connection:
             connection.execute(select(Order.order_id).limit(1))
+            connection.execute(select(PrescriptionPrice.prescription_id).limit(1))
             connection.execute(select(Quote.quote_id).limit(1))
             connection.execute(select(event_inbox.c.event_id).limit(1))
             connection.execute(select(Delivery.next_poll_at).limit(1))

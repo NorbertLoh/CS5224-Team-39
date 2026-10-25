@@ -15,6 +15,7 @@ from app.dispensing import router as dispensing_router
 from app.documents import router as documents_router
 from app.mc_documents import router as mc_documents_router
 from app.medical_certificates import router as mc_router
+from app.prescription_pricing import router as pricing_router
 from app.settings import Settings
 from app.upstream import RecordsUpstream
 
@@ -69,6 +70,7 @@ def create_app(settings: Settings | None = None):
     app.include_router(dispensing_router)
     app.include_router(mc_router)
     app.include_router(mc_documents_router)
+    app.include_router(pricing_router)
 
     @app.get("/health/live")
     def live():
@@ -94,7 +96,7 @@ def create_app(settings: Settings | None = None):
                         connection.scalar(
                             text("SELECT version_num FROM clinical_records.alembic_version")
                         )
-                        == "0005"
+                        == "0006"
                     )
             except SQLAlchemyError:
                 available = False

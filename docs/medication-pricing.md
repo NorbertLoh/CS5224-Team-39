@@ -1,38 +1,52 @@
-# Typed medications and clinic-admin pricing (RF12)
+# Prescription-specific medication pricing (RF12)
 
-Doctors enter any medication name in the prescription textbox. A valid autosave
-reuses a matching active clinic medication or registers an unpriced reference.
-Registration is case-insensitive and serialized for concurrent/retried requests.
-The prescription retains the normal medication UUID and trusted name, so issuance,
-document generation and dispensing projection contracts remain unchanged.
+Clinic admins do not maintain a medication catalogue. Doctors type medication
+names freely and issue prescriptions. Under **Clinic administration -> Prescription
+pricing**, choose a clinic and enter an SGD unit price for each medication on each
+issued prescription. Quantity and line totals are shown; all items must be priced.
+Use the clinic's existing system as a reference; this is manual price entry, not
+an integration or synchronisation with that system.
 
-Clinic admins open **Clinic administration -> Medications & prices**, choose their
-clinic, and set each medicine's dispensing unit and SGD unit price. Only active
-owning-clinic admins may change prices. New medicines start at **Price needed**,
-with `unit_price: null`; no price or free item is invented. An explicit admin price
-of 0.00 is permitted by the existing nonnegative-price policy.
+The queue exposes patient/visit metadata, medication names and quantities only.
+It excludes consultation notes, MC details and prescribing instructions. Reads are
+restricted to active owning-clinic administrators and are audited. No doctor,
+patient, unrelated clinic or platform-only account can read the pricing queue.
 
-Prescribing/issuing does not require a price. Opening an order or making a new
-quote fails with `409 medication_unpriced` until every medicine is priced. The
-patient gets a specific waiting-for-clinic-pricing message. Existing checkout
-snapshots, paid orders, commission, delivery and provider flows stay unchanged.
+Prices belong to one prescription and are never reused for a different patient's
+prescription. Ordering/payment waits until every item has a clinic-entered price.
+Prices lock when the patient opens a medicine order, preserving quote/payment
+snapshots. Repeating an identical price save is safe; changing locked prices is
+rejected. No default zero price is invented; an admin may explicitly enter 0.00.
 
-Setup: apply fulfilment migration 0006 explicitly, then rebuild/restart the
-fulfilment API and web. The migration only makes catalogue `unit_price_minor`
-nullable; it preserves existing prices. Its downgrade refuses while unpriced rows
-exist rather than inventing prices. Back up live service data before migration.
-No new environment variables. The admin panel is on the existing dashboard;
-shared frontend routing and RF11 navigation/lifecycle files are unchanged.
+Free-text names retain internal medication references for prescription/document
+compatibility. These references require no clinic catalogue maintenance. Old issued
+prescriptions/orders retain their legacy pricing behavior; new prescriptions and
+existing drafts use prescription-specific pricing. The old catalogue APIs remain
+compatible for legacy data but are not part of the clinic dashboard workflow.
 
-Checks: 99 focused fulfilment API/order/quote/persistence checks passed in a
-separate disposable database, including concurrent name replay, tenant/role
-isolation, admin-only pricing and unpriced-order/quote gates. Ruff and frontend
-lint, TypeScript and production build passed. Local browser/API evidence follows
-in the linked RF12 PR; sandbox payment and courier calls are not required.
+## Setup
 
-Live Tailscale browser checks verified an arbitrary typed medication autosaves and
-survives reload, appears as Price needed for the owning admin, accepts an explicit
-SGD 1.25/test-unit price and preserves that price when the doctor re-enters the name
-with different casing. Fractional cents were rejected. Twenty clinical upstream
-checks passed, including unpriced-reference lookup. The live prescription remains
-a draft; no issuance, checkout payment or courier call was made for this check.
+Back up clinical-records and fulfilment schemas before migration. Apply
+**clinical-records 0006** and **fulfilment 0007** explicitly, then rebuild/restart
+clinical-records, fulfilment and web. No environment variables or shared routing
+changes. Clinical-records readiness requires its current migration head. Fulfilment
+readiness also checks the new pricing table. Downgrades refuse to discard existing
+prescription pricing policies or financial data. The local schemas were backed up
+under ignored `.local/compose/` before these updates.
+
+## Verification
+
+136 focused fulfilment checks and 51 clinical checks passed against a separate
+disposable database, with Ruff and frontend lint/TypeScript/production build.
+Coverage includes per-prescription price gating, no cross-prescription reuse,
+admin/tenant boundaries, exact line matching, unsafe totals, locks/replays,
+legacy order compatibility and audited projection without private content.
+Live Tailscale verification is recorded in the linked RF12 PR. No provider payment
+or delivery is required to test pricing.
+
+Live verification used a separate labelled synthetic issued prescription. Its order
+was rejected while unpriced despite an existing legacy reference rate. The admin
+entered SGD 0.75 for quantity 3 in the browser; the patient's unpaid order used
+SGD 2.25 and subsequent price edits were rejected as locked. The admin response
+contained no private prescribing instructions. No delivery quote, payment or
+courier order was requested. The local catalogue-management screen is removed.

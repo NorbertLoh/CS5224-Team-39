@@ -264,3 +264,29 @@ def test_unpriced_catalogue_blocks_quote_without_provider_call(quotes):
     assert state.provider.calls == 0
     with state.sessions() as db:
         assert db.scalar(select(func.count()).select_from(Quote)) == 0
+
+
+def test_prescription_prices_ignore_catalogue_repricing(quotes):
+    from app.models import PrescriptionPrice
+    from tests.test_api import ITEM, PATIENT, RX
+
+    client, state = quotes
+    with state.sessions.begin() as db:
+        order = db.get(Order, UUID(state.order_id))
+        order.pricing_mode = "prescription"
+        db.add(
+            PrescriptionPrice(
+                tenant_id=TENANT,
+                prescription_id=RX,
+                prescription_item_id=ITEM,
+                medication_id=MEDICATION,
+                display_name="Typed medicine",
+                quantity=2,
+                unit_price_minor=250,
+                priced_by=PATIENT,
+            )
+        )
+        db.get(CatalogueItem, (TENANT, MEDICATION)).unit_price_minor = 9999
+    response = quote(client, state)
+    assert response.status_code == 201, response.text
+    assert response.json()["medication_subtotal"]["amount_minor"] == 500

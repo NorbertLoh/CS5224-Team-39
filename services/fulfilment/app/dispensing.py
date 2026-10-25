@@ -13,12 +13,14 @@ from app.schemas import StrictModel
 
 
 class DispensingItem(StrictModel):
+    display_name: str | None = None
     prescription_item_id: UUID
     medication_id: UUID
     quantity: int = Field(strict=True, gt=0, le=9007199254740991)
 
 
 class DispensingContext(StrictModel):
+    pricing_mode: Literal["catalogue", "prescription"] = "catalogue"
     prescription_id: UUID
     appointment_id: UUID
     tenant_id: UUID
