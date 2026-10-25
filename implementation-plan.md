@@ -215,7 +215,7 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 | [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
 | [ ] | Q01 | Reject clinic A access to clinic B appointment, record and file; reject wrong roles/tokens. | I05 | M |
 | [x] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Completed in merged PR #242; issue #240 closed. All ten real local contention/deadline/natural-expiry checks and API cleanup passed. Final combined S08/Q02 CI passed 242 scheduling tests with two optional Floci checks skipped, including cleanup regressions and existing confirmation races using explicit billing-response fixtures. Setup/evidence and provider limits: `docs/Q02-booking-verification.md`; use the I01 local services and allow about ten minutes. No new application configuration. | S06 | S |
-| [ ] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. | I03, M04 | S |
+| [ ] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. Assignee: cyhni; status: in progress. Issue #278. | I03, M04 | S |
 | [ ] | Q04 | Verify AWS video across networks and reject unrelated participant/file access. | I05 | S |
 | [ ] | Q05 | Walk through all four roles; record blockers and create small fix tasks. | I05 | M |
 | [ ] | Q06 | Have a different teammate follow fresh local setup/seed/reset instructions. | F14, F16, W21 | M |
