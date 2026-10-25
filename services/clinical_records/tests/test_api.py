@@ -107,6 +107,17 @@ def api(database):
             # Extra generated appointments in the pagination test share trusted context.
             data["appointment_id"] = request.url.path.rsplit("/", 1)[1]
             return httpx.Response(state.get("scheduling_status", 200), json=data)
+        if request.url.path.endswith("/prepare-correction"):
+            if state.get("correction_failure"):
+                return httpx.Response(state["correction_failure"])
+            return httpx.Response(
+                200,
+                json={
+                    "tenant_id": str(tenant),
+                    "prescription_id": request.url.path.split("/")[-2],
+                    "patient_id": str(patient),
+                },
+            )
         return httpx.Response(
             state["catalogue_status"],
             json={
@@ -117,7 +128,8 @@ def api(database):
                         "display_name": "Synthetic medicine",
                         "active": state.get("active", True),
                     }
-                ],
+                ]
+                + state.get("extra_medications", []),
                 "next_cursor": None,
             },
         )

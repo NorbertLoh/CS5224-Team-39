@@ -119,6 +119,15 @@ class PrescriptionPrice(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class PrescriptionCorrectionHold(Base):
+    __tablename__ = "prescription_correction_holds"
+    prescription_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    tenant_id: Mapped[UUID] = mapped_column(Uuid)
+    patient_id: Mapped[UUID] = mapped_column(Uuid)
+    corrected_by: Mapped[UUID] = mapped_column(Uuid)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class OrderItem(Base):
     __tablename__ = "order_items"
     __table_args__ = (

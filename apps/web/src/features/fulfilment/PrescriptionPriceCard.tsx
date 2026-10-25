@@ -5,8 +5,14 @@ import { appointmentDetail } from '../scheduling/api'
 import { Button } from '../../components/ui/button'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
-import { request, pricePath, minorUnits, decimal } from './prescriptionPricingApi'
+import {
+  request,
+  pricePath,
+  minorUnits,
+  decimal,
+} from './prescriptionPricingApi'
 import type { Prescription, Prices } from './prescriptionPricingApi'
+import { MedicationCorrectionEditor } from './MedicationCorrectionEditor'
 
 export function PrescriptionPriceCard({
   prescription,
@@ -44,7 +50,7 @@ export function PrescriptionPriceCard({
   })
   return (
     <article
-      className="space-y-4 rounded-2xl border bg-white p-5"
+      className="space-y-4 rounded-2xl border-2 border-amber-500 bg-white p-5"
       aria-label={`Prescription ${prescription.prescription_id.slice(-8)}`}
     >
       <div>
@@ -63,6 +69,11 @@ export function PrescriptionPriceCard({
           }).format(new Date(prescription.created_at))}
         </p>
       </div>
+      <MedicationCorrectionEditor
+        tenantId={tenantId}
+        prescriptionId={prescription.prescription_id}
+        token={token}
+      />
       <section
         className="space-y-4 rounded-xl border p-4"
         aria-label="Medication pricing"

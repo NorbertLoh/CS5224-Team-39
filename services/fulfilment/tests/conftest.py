@@ -41,7 +41,8 @@ def sessions(database):
                 "TRUNCATE fulfilment.deliveries, fulfilment.event_outbox, "
                 "fulfilment.event_inbox, fulfilment.quote_requests, fulfilment.quotes, "
                 "fulfilment.order_requests, fulfilment.order_items, "
-                "fulfilment.orders, fulfilment.catalogue_items, fulfilment.prescription_prices"
+                "fulfilment.orders, fulfilment.catalogue_items, fulfilment.prescription_prices, "
+                "fulfilment.prescription_correction_holds"
             )
         )
     return sessionmaker(database, expire_on_commit=False)

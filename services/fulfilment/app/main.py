@@ -15,6 +15,7 @@ from app.dispensing import FixtureDispensing, HttpDispensing, UnavailableDispens
 from app.health import router as health_router
 from app.notification_context import router as notification_router
 from app.orders import router as orders_router
+from app.prescription_corrections import router as prescription_corrections_router
 from app.prescription_prices import router as prescription_prices_router
 from app.quotes import router as quotes_router
 from app.settings import Settings
@@ -64,6 +65,7 @@ def create_app(settings: Settings | None = None):
     app.include_router(health_router)
     app.include_router(catalogue_router)
     app.include_router(prescription_prices_router)
+    app.include_router(prescription_corrections_router)
     app.include_router(orders_router)
     app.include_router(quotes_router)
     app.include_router(checkout_router)

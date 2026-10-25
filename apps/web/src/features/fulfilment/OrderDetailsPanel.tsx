@@ -10,10 +10,12 @@ export function OrderDetailsPanel({
   snapshot,
   context,
   refresh,
+  token,
 }: {
   snapshot: OrderSnapshot
   context: OrderContext
   refresh: () => Promise<OrderSnapshot>
+  token: string
 }) {
   if (context.role === 'patient')
     return (
@@ -27,7 +29,7 @@ export function OrderDetailsPanel({
     <TrackingOrderDetails
       key={snapshot.order.order_id}
       order={trackingOrder(snapshot.order, snapshot.delivery)}
-      pricing={<OrderMedicationPricing order={snapshot.order} />}
+      pricing={<OrderMedicationPricing order={snapshot.order} token={token} />}
       readiness={
         <LiveMedicineReadiness
           order={snapshot.order}

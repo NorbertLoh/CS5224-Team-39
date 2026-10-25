@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import {
-  fulfilmentError,
-  listOrders,
-  orderSnapshot,
-  ownsOrder,
-} from './api'
+import { fulfilmentError, listOrders, orderSnapshot, ownsOrder } from './api'
 import type { OrderSnapshot } from './api'
 import type { OrderContext } from './model'
 import { CreateMedicationOrder } from './CreateMedicationOrder'
@@ -37,13 +32,7 @@ export function OrderWorkspace({
   )
   const validId = selectedId !== null && uuid.test(selectedId)
   const list = useInfiniteQuery({
-    queryKey: [
-      'fulfilment',
-      'orders',
-      token,
-      context,
-      'newest',
-    ],
+    queryKey: ['fulfilment', 'orders', token, context, 'newest'],
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) =>
       listOrders(
@@ -104,6 +93,7 @@ export function OrderWorkspace({
       ) : (
         snapshot && (
           <OrderDetailsPanel
+            token={token}
             snapshot={snapshot}
             context={context}
             refresh={refresh}
@@ -154,7 +144,8 @@ export function OrderWorkspace({
               </p>
             ) : (
               <p className="mt-1 text-sm text-slate-600">
-                Price the medicines, then mark preparation ready within each card.
+                Price the medicines, then mark preparation ready within each
+                card.
               </p>
             )}
           </div>

@@ -10,7 +10,7 @@ from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.access import can_read_items, order_scope, permission_fingerprint, require_clinic
 from app.catalogue import DB, Identity
-from app.models import CatalogueItem, Order, OrderItem, OrderRequest
+from app.models import CatalogueItem, Order, OrderItem, OrderRequest, PrescriptionCorrectionHold
 from app.pagination import decode, encode
 from app.prescription_prices import saved_prices
 from app.schemas import (
@@ -103,12 +103,16 @@ def create_order(
     lock(session, f"orders:key:{identity.subject_id}:{idempotency_key}")
     previous = session.get(OrderRequest, (identity.subject_id, idempotency_key))
     if previous is not None:
+        if session.get(PrescriptionCorrectionHold, body.prescription_id):
+            raise DomainError(409, "prescription_corrected", "Use the corrected prescription.")
         if previous.prescription_id != body.prescription_id:
             raise DomainError(409, "idempotency_conflict", "Key was used for a different request.")
         own_order(session.get(Order, previous.order_id), identity)
         response.status_code = 200
         return OrderPublic.model_validate(previous.response_payload)
     lock(session, f"orders:prescription:{body.prescription_id}")
+    if session.get(PrescriptionCorrectionHold, body.prescription_id):
+        raise DomainError(409, "prescription_corrected", "Use the corrected prescription.")
     order = session.scalar(select(Order).where(Order.prescription_id == body.prescription_id))
     if order is not None:
         own_order(order, identity)

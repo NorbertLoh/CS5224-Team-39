@@ -4,6 +4,8 @@ import { Button } from '../../components/ui/button'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import type { Order } from './api'
+import { trackingOrder } from './api'
+import { orderAppearance } from './orderAppearance'
 import { orderLabels, trackingTime } from './model'
 import { PatientAccordionItem } from '../patient/PatientAccordionItem'
 import { PrescriptionPriceCard } from './PrescriptionPriceCard'
@@ -44,7 +46,9 @@ export function ClinicMedicineCards({
     refetchOnWindowFocus: false,
   })
   const rows = query.data?.pages.flatMap((page) => page.items) ?? []
-  const orderPrescriptions = new Set(orders.map((order) => order.prescription_id))
+  const orderPrescriptions = new Set(
+    orders.map((order) => order.prescription_id),
+  )
   const cards = [
     ...orders.map((order) => ({
       id: order.prescription_id,
@@ -61,26 +65,41 @@ export function ClinicMedicineCards({
         prescription,
       })),
   ].sort(
-    (a, b) => Date.parse(b.created) - Date.parse(a.created) || b.id.localeCompare(a.id),
+    (a, b) =>
+      Date.parse(b.created) - Date.parse(a.created) || b.id.localeCompare(a.id),
   )
   return (
     <div className="space-y-4">
       {query.isPending && (
         <LoadingState message="Loading medicine prescriptions..." />
       )}
-      {cards.map(({ id, order, prescription }) =>
-        order ? (
-          <div key={id} className="rounded-2xl border bg-white px-5">
+      {cards.map(({ id, order, prescription }) => {
+        const appearance = order ? orderAppearance(trackingOrder(order)) : null
+        return order ? (
+          <div
+            key={id}
+            className={`rounded-2xl border-2 bg-white px-5 ${appearance?.border}`}
+          >
             <PatientAccordionItem
-              title={`Order ${order.order_id.slice(-8)}`}
+              title={
+                <span className="flex flex-wrap items-center gap-2">
+                  <span>Order {order.order_id.slice(-8)}</span>
+                  <span className={`text-xs ${appearance?.text}`}>
+                    {appearance?.label}
+                  </span>
+                </span>
+              }
               summary={
                 <>
                   <span className="block">
                     {order.items.map((item) => item.display_name).join(', ')}
                   </span>
                   <span className="block">
-                    {trackingTime(order.created_at)} · {orderLabels[order.status]} ·{' '}
-                    {order.medicine_status === 'ready' ? 'Medicine ready' : 'Medicine not ready'}
+                    {trackingTime(order.created_at)} ·{' '}
+                    {orderLabels[order.status]} ·{' '}
+                    {order.medicine_status === 'ready'
+                      ? 'Medicine ready'
+                      : 'Medicine not ready'}
                   </span>
                 </>
               }
@@ -92,15 +111,17 @@ export function ClinicMedicineCards({
               {selectedId === order.order_id && orderDetails}
             </PatientAccordionItem>
           </div>
-        ) : prescription && (
-          <PrescriptionPriceCard
-            key={id}
-            prescription={prescription}
-            tenantId={tenantId}
-            token={token}
-          />
-        ),
-      )}
+        ) : (
+          prescription && (
+            <PrescriptionPriceCard
+              key={id}
+              prescription={prescription}
+              tenantId={tenantId}
+              token={token}
+            />
+          )
+        )
+      })}
       {!cards.length && !query.isPending && !query.isError && (
         <p className="text-sm text-slate-600">
           Issued prescriptions and medicine orders will appear here.
@@ -135,4 +156,3 @@ export function ClinicMedicineCards({
     </div>
   )
 }
-

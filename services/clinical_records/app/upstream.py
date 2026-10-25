@@ -37,6 +37,12 @@ class CataloguePage(BaseModel):
     next_cursor: str | None
 
 
+class CorrectionHold(BaseModel):
+    tenant_id: UUID
+    prescription_id: UUID
+    patient_id: UUID
+
+
 def not_found():
     raise DomainError(404, "not_found", "Resource not found.")
 
@@ -89,6 +95,41 @@ class RecordsUpstream:
         if row.appointment_id != appointment_id:
             raise DomainError(502, "upstream_error", "Invalid upstream response.")
         return row
+
+    def prepare_correction(self, tenant_id, prescription_id, patient_id, token, request_id):
+        base = self.settings.fulfilment_url
+        if base is None:
+            raise DomainError(503, "unavailable", "Fulfilment is not configured.")
+        try:
+            response = self.client.post(
+                f"{base}/clinics/{tenant_id}/prescriptions/{prescription_id}/prepare-correction",
+                json={"patient_id": str(patient_id)},
+                headers={"Authorization": "Bearer " + token, "X-Request-ID": request_id},
+            )
+        except httpx.RequestError:
+            raise DomainError(
+                503, "unavailable", "Fulfilment is unavailable; retry the correction."
+            ) from None
+        if response.status_code in {403, 404}:
+            not_found()
+        if response.status_code == 409:
+            raise DomainError(
+                409, "prescription_correction_locked", "Checkout, payment or preparation has begun."
+            )
+        try:
+            if response.status_code != 200:
+                raise ValueError()
+            hold = CorrectionHold.model_validate(response.json())
+            if (hold.tenant_id, hold.prescription_id, hold.patient_id) != (
+                tenant_id,
+                prescription_id,
+                patient_id,
+            ):
+                raise ValueError()
+        except (ValueError, TypeError):
+            raise DomainError(
+                503, "unavailable", "Could not reserve the prescription correction; retry."
+            ) from None
 
     def medications(self, tenant_id, ids, token, request_id):
         found, seen, cursor = {}, set(), None

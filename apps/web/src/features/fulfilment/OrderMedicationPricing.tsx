@@ -1,13 +1,31 @@
 import { consultationPrice } from '../../lib/money'
 import type { Order } from './api'
+import { MedicationCorrectionEditor } from './MedicationCorrectionEditor'
 
-export function OrderMedicationPricing({ order }: { order: Order }) {
+export function OrderMedicationPricing({
+  order,
+  token,
+}: {
+  order: Order
+  token: string
+}) {
   return (
     <section
       className="space-y-4 rounded-xl border bg-white p-5"
       aria-label="Medication pricing"
     >
       <h3 className="font-semibold">1. Medication pricing</h3>
+      <MedicationCorrectionEditor
+        tenantId={order.tenant_id}
+        prescriptionId={order.prescription_id}
+        token={token}
+        disabled={
+          order.status !== 'awaiting_payment' ||
+          order.payment_status !== 'unpaid' ||
+          Boolean(order.quote_id || order.payment_id || order.delivery_id) ||
+          order.medicine_status !== 'not_ready'
+        }
+      />
       <p className="text-sm text-slate-600">
         Pricing is complete. These prices were saved when the patient opened
         this order and are locked.

@@ -1,5 +1,10 @@
 # Fulfilment
 
+Clinic admins can use Add / edit medications on a card to correct the actual
+issued prescription with an audited replacement. Status-coloured card borders
+remain visible while expanded. See [prescription corrections](../../../../../docs/prescription-corrections.md)
+for the revision/history, unpaid-order replacement and financial/preparation locks.
+
 Patient orders are at `/patient/medication-orders`; owning-clinic orders are at
 `/clinic-admin/clinics/<tenant UUID>/orders`. Setup, service credentials, worker
 commands, recovery and sandbox evidence are in

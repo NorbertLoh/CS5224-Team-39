@@ -1,5 +1,10 @@
 # Prescription-specific medication pricing (RF12)
 
+Clinic admins can also correct medication details from each card using
+**Add / edit medications**. This records a revised clinical prescription rather
+than changing a paid order snapshot. See [prescription corrections](prescription-corrections.md)
+for the correction workflow, history and checkout/preparation locks.
+
 Clinic admins do not maintain a medication catalogue. Doctors type medication
 names freely and issue prescriptions. Open the clinic's **Medicine & delivery**
 page, then open the relevant medicine card to enter an SGD unit price for each medication on each
@@ -39,7 +44,8 @@ compatible for legacy data but are not part of the clinic dashboard workflow.
 ## Setup
 
 Back up clinical-records and fulfilment schemas before migration. Apply
-**clinical-records 0006** and **fulfilment 0007** explicitly, then rebuild/restart
+**clinical-records 0007** and **fulfilment 0008** explicitly (including the earlier
+0006/0007 pricing migrations), then rebuild/restart
 clinical-records, fulfilment and web. No environment variables or shared routing
 changes. Clinical-records readiness requires its current migration head. Fulfilment
 readiness also checks the new pricing table. Downgrades refuse to discard existing

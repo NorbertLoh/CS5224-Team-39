@@ -9,6 +9,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     FetchedValue,
+    ForeignKey,
     ForeignKeyConstraint,
     Index,
     Integer,
@@ -129,6 +130,21 @@ class Prescription(AppointmentContext, Base):
     pricing_mode: Mapped[str] = mapped_column(Text, server_default=text("'prescription'"))
     status: Mapped[str] = mapped_column(Text, default="draft", server_default=text("'draft'"))
     issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PrescriptionCorrection(Base):
+    __tablename__ = "prescription_corrections"
+    original_prescription_id: Mapped[UUID] = mapped_column(
+        ForeignKey("clinical_records.prescriptions.prescription_id"), primary_key=True
+    )
+    replacement_prescription_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("clinical_records.prescriptions.prescription_id"), unique=True
+    )
+    tenant_id: Mapped[UUID] = mapped_column(Uuid)
+    corrected_by: Mapped[UUID] = mapped_column(Uuid)
+    reason: Mapped[str] = mapped_column(Text)
+    fingerprint: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class PrescriptionItem(Base):
