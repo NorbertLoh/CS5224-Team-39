@@ -35,5 +35,9 @@ Every clinic medicine/order card starts collapsed, including order links. Open
 or close a card with its header; prescription headers also support keyboard
 activation and preserve unsaved prices while collapsed.
 
+Patient Orders & delivery shows a Review medicines & pay button directly in
+each collapsed unpaid order card that can start checkout. It expands that
+order's existing medicines, address, quote and payment controls.
+
 Run `npm run lint` and `npm run build` from `apps/web`. To verify integration,
 follow [the actual medication payment and delivery journey](../../../../../docs/I03-local-journey.md).

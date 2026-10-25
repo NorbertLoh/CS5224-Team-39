@@ -4,6 +4,7 @@ import { trackingOrder } from './api'
 import { orderLabels, trackingTime } from './model'
 import { orderAppearance } from './orderAppearance'
 import { PatientAccordionItem } from '../patient/PatientAccordionItem'
+import { canReviewMedicinePayment } from './patientMedicines'
 
 export function PatientOrderAccordion({
   orders,
@@ -60,6 +61,15 @@ export function PatientOrderAccordion({
             >
               {children}
             </PatientAccordionItem>
+            {!open && canReviewMedicinePayment(order) && (
+              <button
+                type="button"
+                className="mb-5 rounded-lg bg-teal-800 px-5 py-3 font-medium text-white"
+                onClick={() => onSelect(order.order_id)}
+              >
+                Review medicines &amp; pay
+              </button>
+            )}
           </li>
         )
       })}
