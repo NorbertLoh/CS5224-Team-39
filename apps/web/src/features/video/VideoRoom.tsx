@@ -132,86 +132,90 @@ export function VideoRoom({
         }
         className={`grid grid-cols-1 gap-6 ${expanded ? 'min-h-full lg:h-full lg:min-h-0' : 'mt-6 items-start'} ${doctor ? 'lg:grid-cols-[minmax(0,var(--camera-size))_24px_minmax(0,var(--notes-size))] lg:gap-0' : expanded ? 'h-full' : ''}`}
       >
-        <section
-          aria-label="Video call"
-          className={`flex min-w-0 flex-col overflow-hidden rounded-2xl bg-slate-950 text-white shadow-lg ${expanded ? 'min-h-[calc(100dvh-1.5rem)] sm:min-h-[calc(100dvh-2.5rem)] lg:h-full lg:min-h-0' : ''}`}
+        <div
+          className={`relative min-w-0 ${expanded ? 'min-h-0 lg:h-full' : ''}`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
-            <span className="text-sm font-medium">
-              Consultation · {doctor ? 'Doctor' : 'Patient'} view
-            </span>
-            <span role="status" className="text-sm text-slate-300">
-              {state === 'connected'
-                ? 'Connected'
-                : state === 'joining' || state === 'connecting'
-                  ? 'Connecting'
-                  : state === 'waiting'
-                    ? 'Waiting room'
-                    : state === 'left'
-                      ? 'You left the room'
-                      : 'Disconnected'}
-            </span>
-          </div>
-          <CallStage
-            peer={peer}
-            state={state}
-            expanded={expanded}
-            media={media}
-            joinButton={joinButton}
-            join={join}
-            remote={call.remote}
-            live={Boolean(connection)}
-          />
-          <CallControls
-            state={state}
-            media={media}
-            leaveButton={leaveButton}
-            leave={leave}
-            live={Boolean(connection)}
-            error={call.error}
-          />
-        </section>
-        {doctor && (
-          <div
-            role="separator"
-            aria-label="Resize video and notes panels"
-            aria-orientation="vertical"
-            aria-valuemin={35}
-            aria-valuemax={70}
-            aria-valuenow={Math.round(cameraPaneSize)}
-            aria-valuetext={`Video ${Math.round(cameraPaneSize)}%, notes ${Math.round(100 - cameraPaneSize)}%`}
-            tabIndex={0}
-            className="hidden touch-none cursor-col-resize items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 lg:flex"
-            onPointerDown={(event) => {
-              event.currentTarget.setPointerCapture(event.pointerId)
-              resizeCameraPane(event.clientX)
-            }}
-            onPointerMove={(event) => {
-              if (event.currentTarget.hasPointerCapture(event.pointerId))
-                resizeCameraPane(event.clientX)
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-                event.preventDefault()
-                const { min, max } = cameraPaneLimits()
-                setCameraPaneSize((size) =>
-                  Math.min(
-                    max,
-                    Math.max(min, size + (event.key === 'ArrowRight' ? 5 : -5)),
-                  ),
-                )
-              }
-              if (event.key === 'Home') setCameraPaneSize(cameraPaneLimits().min)
-              if (event.key === 'End') setCameraPaneSize(cameraPaneLimits().max)
-            }}
+          <section
+            aria-label="Video call"
+            className={`flex min-w-0 flex-col overflow-hidden rounded-2xl bg-slate-950 text-white shadow-lg ${expanded ? 'min-h-[calc(100dvh-1.5rem)] sm:min-h-[calc(100dvh-2.5rem)] lg:h-full lg:min-h-0' : ''}`}
           >
-            <span className="h-12 w-1 rounded-full bg-slate-300 transition-colors hover:bg-teal-500" />
-          </div>
-        )}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
+              <span className="text-sm font-medium">
+                Consultation · {doctor ? 'Doctor' : 'Patient'} view
+              </span>
+              <span role="status" className="text-sm text-slate-300">
+                {state === 'connected'
+                  ? 'Connected'
+                  : state === 'joining' || state === 'connecting'
+                    ? 'Connecting'
+                    : state === 'waiting'
+                      ? 'Waiting room'
+                      : state === 'left'
+                        ? 'You left the room'
+                        : 'Disconnected'}
+              </span>
+            </div>
+            <CallStage
+              peer={peer}
+              state={state}
+              expanded={expanded}
+              media={media}
+              joinButton={joinButton}
+              join={join}
+              remote={call.remote}
+              live={Boolean(connection)}
+            />
+            <CallControls
+              state={state}
+              media={media}
+              leaveButton={leaveButton}
+              leave={leave}
+              live={Boolean(connection)}
+              error={call.error}
+            />
+          </section>
+          {doctor && (
+            <div
+              role="separator"
+              aria-label="Resize video and notes panels"
+              aria-orientation="vertical"
+              aria-valuemin={35}
+              aria-valuemax={70}
+              aria-valuenow={Math.round(cameraPaneSize)}
+              aria-valuetext={`Video ${Math.round(cameraPaneSize)}%, notes ${Math.round(100 - cameraPaneSize)}%`}
+              tabIndex={0}
+              className="group absolute inset-y-0 left-full hidden w-6 touch-none cursor-col-resize items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 lg:flex"
+              onPointerDown={(event) => {
+                event.currentTarget.setPointerCapture(event.pointerId)
+                resizeCameraPane(event.clientX)
+              }}
+              onPointerMove={(event) => {
+                if (event.currentTarget.hasPointerCapture(event.pointerId))
+                  resizeCameraPane(event.clientX)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                  event.preventDefault()
+                  const { min, max } = cameraPaneLimits()
+                  setCameraPaneSize((size) =>
+                    Math.min(
+                      max,
+                      Math.max(min, size + (event.key === 'ArrowRight' ? 5 : -5)),
+                    ),
+                  )
+                }
+                if (event.key === 'Home') setCameraPaneSize(cameraPaneLimits().min)
+                if (event.key === 'End') setCameraPaneSize(cameraPaneLimits().max)
+              }}
+            >
+              <span className="h-full w-1 rounded-full bg-slate-300 transition-colors group-hover:bg-teal-500" />
+            </div>
+          )}
+        </div>
         {doctor && (
           <aside
             aria-label="Doctor workspace"
-            className={`min-w-0 [&_select]:w-full [&_select]:min-w-0 ${expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}`}
+            className={`min-w-0 lg:col-start-3 [&_select]:w-full [&_select]:min-w-0 ${expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}`}
           >
             {actions && <div className="mb-5">{actions}</div>}
             {appointmentId && token && subjectId ? (
