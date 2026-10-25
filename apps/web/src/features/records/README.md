@@ -79,3 +79,9 @@ video Leave behavior are preserved. Browser verification on a separate synthetic
 visit covered confirmed/start visibility, start -> in-progress transition, bottom
 End after Documents, disabled End for unsaved text and re-enabled End after saving.
 The visit was not ended. Frontend lint, TypeScript and production build passed.
+
+Visit documents is a native keyboard-accessible disclosure, closed by default in
+the doctor records workspace. Expand it for the existing document status, refresh
+and PDF download actions. End consultation remains below it. Verified default
+collapse, Enter expansion/collapse and refresh availability on the live local
+consultation; lint, TypeScript and production build passed. No API changes.
