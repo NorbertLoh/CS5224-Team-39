@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { appointmentDetail } from '../scheduling/api'
 import { nameOrId, readableStatus } from '../appointments/display'
@@ -137,6 +137,15 @@ function Records({
   })
   const dirty = noteState.dirty || mcState.dirty || prescriptionState.dirty
   const busy = noteState.busy || mcState.busy || prescriptionState.busy
+  useEffect(() => {
+    if (!dirty && !busy) return
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', warnBeforeLeaving)
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving)
+  }, [dirty, busy])
   const records = useQuery({
     queryKey: ['records', 'workspace', token, appointmentId],
     queryFn: async ({ signal }) => {
@@ -176,7 +185,7 @@ function Records({
               ? 'Saving changes…'
               : dirty
                 ? 'You have unsaved changes.'
-                : 'Changes are saved with each section’s save button.'}
+                : 'Drafts autosave after a short pause. Wait for Saved before completing the visit.'}
           </p>
         </div>
         <ReloadRecordsButton dirty={dirty} busy={busy} onReload={onReload} />

@@ -1,10 +1,10 @@
-﻿import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { saveNote, recordsError } from './api'
 import type { Note } from './types'
 import { ErrorState } from '../../components/ErrorState'
 import { FilePenLine } from 'lucide-react'
-import { Button } from '../../components/ui/button'
+import { useDraftAutosave } from './useDraftAutosave'
 import {
   useRecordFormState,
   type RecordFormStateChange,
@@ -26,9 +26,11 @@ export function ConsultationNoteForm({
   const [text, setText] = useState(note?.text ?? '')
   const [savedText, setSavedText] = useState(note?.text ?? '')
   const save = useMutation({
-    mutationFn: () => saveNote(appointmentId, text),
-    onSuccess: (result) => {
-      setText(result.text)
+    mutationFn: (submitted: string) => saveNote(appointmentId, submitted),
+    onSuccess: (result, submitted) => {
+      setText((current) =>
+        current.trim() === submitted.trim() ? result.text : current,
+      )
       setSavedText(result.text)
     },
     onError: onFailure,
@@ -36,13 +38,22 @@ export function ConsultationNoteForm({
     gcTime: 0,
   })
   const dirty = text.trim() !== savedText
+  const queueSave = useCallback(() => save.mutate(text), [save.mutate, text])
+  useDraftAutosave(
+    editable &&
+      dirty &&
+      Boolean(text.trim()) &&
+      !save.isPending &&
+      !save.isError,
+    text,
+    queueSave,
+  )
   useRecordFormState(dirty, save.isPending, onStateChange)
   return (
     <form
       className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       onSubmit={(event) => {
         event.preventDefault()
-        if (editable && !save.isPending && text.trim()) save.mutate()
       }}
     >
       <div className="flex items-center gap-3">
@@ -61,35 +72,29 @@ export function ConsultationNoteForm({
           value={text}
           onChange={(event) => {
             setText(event.target.value)
-            save.reset()
           }}
           required
           maxLength={20000}
           rows={5}
-          disabled={!editable || save.isPending}
+          disabled={!editable}
         />
       </label>
-      <Button
-        className="h-10 px-4"
-        disabled={
-          !editable ||
-          save.isPending ||
-          !text.trim() ||
-          text.trim() === savedText
-        }
+      <p
+        role="status"
+        className={`text-xs ${dirty ? 'text-amber-800' : 'text-teal-800'}`}
       >
-        {save.isPending ? 'Saving note...' : 'Save note'}
-      </Button>
-      {dirty && (
-        <p className="text-xs text-amber-800" role="status">
-          Note has unsaved changes.
-        </p>
-      )}
-      {save.isSuccess && (
-        <p role="status" className="text-sm text-teal-800">
-          Note saved.
-        </p>
-      )}
+        {save.isError
+          ? 'Not saved. Your text is preserved.'
+          : save.isPending
+            ? 'Saving note…'
+            : dirty
+              ? text.trim()
+                ? 'Waiting to autosave…'
+                : 'A saved note cannot be empty. Add text to save your changes.'
+              : savedText
+                ? 'Note saved.'
+                : 'Your note saves automatically after you pause typing.'}
+      </p>
       {save.isError && <ErrorState message={recordsError(save.error)} />}
     </form>
   )

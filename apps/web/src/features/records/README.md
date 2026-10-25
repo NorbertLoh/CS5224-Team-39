@@ -1,45 +1,50 @@
-﻿# Clinical records UI (R04)
+# Clinical records UI (R04 / RF12)
 
-Doctor: `/doctor/consultation`. Select a real appointment, save its note, choose
-medications from its clinic's catalogue, save the draft, then issue it. Patient:
-`/patient` lists the authenticated patient's prescriptions and loads audited
-details on expansion. Pagination, empty/loading states and retry feedback use
-real services; no synthetic prescriptions are imported by the production UI.
+The doctor records workspace is pinned to the booked consultation at
+`/doctor/consultation?appointment_id=<id>`. It groups the patient/session context,
+consultation note, optional MC, prescription, previous visits and documents.
+Writes require the assigned doctor's current access and an in-progress visit.
 
-Saved records survive reload. Draft edits must be saved before issuance; issued
-and voided content is locked. Writing requires an in-progress appointment and
-server authorization. After any failed write, reload records to check the
-server outcome before continuing. Switching appointments discards unsaved edits.
+## Draft autosave
 
-V04 pins this workspace to the booked video appointment and supplies explicit
-authoritative start/completion actions. U17 adds an optional **Issue MC** draft,
-inclusive date preview and private PDF generation after successful completion.
-Save the MC draft before completing; an unconfirmed handoff can be retried from
-the completed doctor page. See [MC setup and verification](../../../../../docs/medical-certificates.md).
-U14 adds appointment document lists and downloads beside this workspace; see
-[documents](../documents/README.md). Order UI remains separate work.
+Notes, MC selections and prescription drafts autosave after a one-second pause.
+There are no manual Save buttons. Each section shows waiting, saving, saved,
+incomplete or error feedback. Wait for Saved before completing the consultation.
+Prescription issuance and consultation completion remain explicit actions.
 
-Configuration, service startup, integration checks and observed limitations:
-[docs/records-frontend.md](../../../../../docs/records-frontend.md).
+Only nonblank notes, valid MC selections and complete catalogue-linked prescription
+items are saved. The API requires at least one prescription item; removing all
+items does not overwrite an existing draft. Clearing a saved note likewise does
+not erase it. Issued/voided prescriptions and finalized MCs remain locked.
 
-RF12 adds **Previous visit notes** below the current editing forms. Completed
-visits are scoped to the selected patient, clinic and assigned doctor, ordered
-newest first with older-page loading. Each keyboard-accessible disclosure loads
-its saved note only when opened, through the existing audited note API. Missing
-notes and request failures have explicit empty/retry states. Expanding history
-never resets the current note, prescription or MC draft. No migrations or new
-configuration are needed.
+Saves run serially per form. Queued saves cancel on edits/unmount; newer note text
+survives an earlier response. Failed writes do not silently retry. Note/prescription
+errors require reloading saved records to check the outcome. MC fields remain
+available with an explicit Retry autosave action. Navigation warns while changes
+are unsaved; autosave does not guarantee a write before closing the browser.
 
-The clinical workspace now uses consistent cards, patient/session context and
-clear save states. **Reload saved records** reloads the note, prescription and MC
-from fresh server reads. It asks for confirmation only when any of those forms
-has unsaved edits; **Keep editing** preserves them, while **Discard and reload**
-restores the saved state. Reload is disabled during note/MC saves and prescription
-save/issuance. Each form still saves independently. No API/configuration changes.
+## Reload and history
 
-Local verification: lint, TypeScript and production build; live Tailscale checks
-of clean reload without a prompt, dirty detection in all three forms, cancellation
-and focus restoration, combined discard/reset, and the previous-note accordion.
-Only unsaved test fields were changed; no note, MC or prescription was saved or
-issued during the UI checks. One labelled demo catalogue item was added locally
-so the prescription editor can be tested.
+Reload saved records fetches fresh note, prescription and MC snapshots. It asks
+before discarding unsaved edits, and is disabled during saves/issuance. Keep editing
+preserves the draft and restores focus to Reload. Each form still saves separately.
+
+Previous visit notes lists earlier completed visits for the same patient, clinic
+and assigned doctor, newest first with older-page loading. Expand a visit with
+mouse or keyboard to fetch its saved note through the existing audited API.
+History does not reset current edits or broaden access to other doctors' notes.
+Missing notes and failed requests have explicit empty/retry states.
+
+## Setup and verification
+
+No new configuration or migrations. See [records setup](../../../../../docs/records-frontend.md),
+[MC setup](../../../../../docs/medical-certificates.md) and [documents](../documents/README.md).
+The patient `/patient` view continues to use real authorised prescription/document APIs.
+
+RF12 verification: frontend lint, TypeScript and production build passed. Live
+Tailscale checks covered note debounce/latest text, clean reload, all three dirty
+states, discard/cancel/focus restoration, history expansion and keyboard interaction.
+A separate synthetic consultation verified database preservation for blank notes
+and incomplete MC/prescription inputs, and all three valid autosaved drafts survived
+a full browser reload. No MC/prescription was issued, visit completed, payment made
+or delivery sent. Labelled synthetic visit/note/catalogue examples remain local.

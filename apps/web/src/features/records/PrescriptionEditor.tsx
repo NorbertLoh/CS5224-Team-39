@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { PrescriptionItemFields } from './PrescriptionItemFields'
 import { PrescriptionDetails } from './PrescriptionDetails'
@@ -14,6 +14,7 @@ import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { Pill, Plus } from 'lucide-react'
 import { Button } from '../../components/ui/button'
+import { useDraftAutosave } from './useDraftAutosave'
 import {
   useRecordFormState,
   type RecordFormStateChange,
@@ -80,6 +81,11 @@ export function PrescriptionEditor({
     )
   useRecordFormState(dirty, busy, onStateChange)
   const writable = editable && !locked && medications.isSuccess && !busy
+  useDraftAutosave(
+    writable && valid && dirty && !save.isError && !issue.isError,
+    JSON.stringify(items),
+    save.mutate,
+  )
   const changeItems = (next: PrescriptionInput[]) => {
     setItems(next)
     save.reset()
@@ -90,7 +96,6 @@ export function PrescriptionEditor({
       className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       onSubmit={(event) => {
         event.preventDefault()
-        if (writable && valid && dirty) save.mutate()
       }}
     >
       <div className="flex items-center gap-3">
@@ -103,7 +108,8 @@ export function PrescriptionEditor({
         </span>
       </div>
       <p className="text-sm text-slate-600">
-        Add medications, save a draft, then issue the prescription when ready.
+        Complete each medication to autosave the draft. Issue the prescription
+        when ready.
       </p>
       {locked || !editable ? (
         <>
@@ -175,13 +181,6 @@ export function PrescriptionEditor({
             <div className="flex flex-wrap gap-3">
               <Button
                 className="h-10 px-4"
-                variant="outline"
-                disabled={!valid || !dirty}
-              >
-                {save.isPending ? 'Saving draft...' : 'Save draft'}
-              </Button>
-              <Button
-                className="h-10 px-4"
                 type="button"
                 disabled={!saved || dirty || !valid}
                 onClick={() => {
@@ -192,12 +191,21 @@ export function PrescriptionEditor({
               </Button>
             </div>
           </fieldset>
-          {dirty && (
-            <p className="text-sm">Save draft changes before issuing.</p>
-          )}
+          <p role="status" className="text-xs text-slate-600">
+            {save.isError
+              ? 'Draft not saved. Reload saved records to check the last outcome.'
+              : save.isPending
+                ? 'Saving prescription draft…'
+                : dirty
+                  ? valid
+                    ? 'Waiting to autosave…'
+                    : 'Complete medication, quantity and instructions for every item to autosave. Drafts require at least one item.'
+                  : saved
+                    ? 'Prescription draft saved.'
+                    : 'Valid prescription drafts save automatically.'}
+          </p>
         </>
       )}
-      {save.isSuccess && <p role="status">Prescription draft saved.</p>}
       {issue.isSuccess && (
         <p role="status">Prescription issued. Its content is now locked.</p>
       )}
