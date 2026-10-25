@@ -413,7 +413,13 @@ def test_duplicate_issue_is_bounded_under_concurrency(api):
         )
 
 
-def test_expiry_and_appointment_boundary(api):
+@pytest.mark.parametrize("started", [False, True])
+def test_expiry_and_appointment_boundary(api, started):
+    if started:
+        response = api.client.post(
+            f"/appointments/{api.appointment_id}/start", headers=api.headers(api.doctor)
+        )
+        assert response.status_code == 200
     grant = issue(api).json()
     api.state["clock"] += timedelta(seconds=60)
     assert internal(api, "consume", grant).status_code == 403
@@ -425,14 +431,34 @@ def test_expiry_and_appointment_boundary(api):
         seconds=1
     )
     final = issue(api).json()
-    assert final["expires_at"] == api.state["appointment"]["ends_at"][:23] + "Z"
+    if not started:
+        assert final["expires_at"] == api.state["appointment"]["ends_at"][:23] + "Z"
     api.state["clock"] += timedelta(seconds=1)
-    assert internal(api, "consume", final).status_code == 403
-    assert issue(api).status_code == 403
+    assert internal(api, "consume", final).status_code == (200 if started else 403)
+    assert issue(api, api.doctor).status_code == (201 if started else 403)
+    if started:
+        api.state["clock"] += timedelta(days=1)
+        for subject in (api.patient, api.doctor):
+            grant = issue(api, subject)
+            assert grant.status_code == 201
+            expiry = datetime.fromisoformat(grant.json()["expires_at"].replace("Z", "+00:00"))
+            assert 0 < (expiry - api.state["clock"]).total_seconds() <= 300
+            assert internal(api, "consume", grant.json()).status_code == 200
+            api.state["clock"] += timedelta(seconds=api.settings.admission_ttl_seconds)
+            assert internal(api, "check", grant.json()).status_code == 403
+        api.state["appointment"]["status"] = "completed"
+        assert issue(api).status_code == 409
 
 
 @pytest.mark.parametrize("target", ["membership", "payment", "appointment", "context"])
-def test_current_context_rechecked_before_connection_and_on_check(api, target):
+@pytest.mark.parametrize("started", [False, True])
+def test_current_context_rechecked_before_connection_and_on_check(api, target, started):
+    if started:
+        response = api.client.post(
+            f"/appointments/{api.appointment_id}/start", headers=api.headers(api.doctor)
+        )
+        assert response.status_code == 200
+        api.state["clock"] += timedelta(days=1)
     grant = issue(api, api.doctor).json()
     assert internal(api, "consume", grant).status_code == 200
     if target == "membership":

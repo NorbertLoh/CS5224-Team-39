@@ -11,13 +11,21 @@ END = START + timedelta(minutes=30)
 
 @pytest.mark.parametrize(
     "offset,allowed",
-    [(-601, False), (-600, True), (-1, True), (0, True), (1799, True), (1800, False)],
+    [
+        (-601, False),
+        (-600, True),
+        (-1, True),
+        (0, True),
+        (1799, True),
+        (1800, False),
+        (86400, False),
+    ],
 )
 @pytest.mark.parametrize("status", ["scheduled", "in_progress", "completed"])
 def test_exact_join_boundaries(offset, allowed, status):
     record = SimpleNamespace(starts_at=START, ends_at=END, status=status)
     assert can_join(record, now=START + timedelta(seconds=offset)) == (
-        allowed and status != "completed"
+        status != "completed" and (allowed or (status == "in_progress" and offset >= 0))
     )
 
 

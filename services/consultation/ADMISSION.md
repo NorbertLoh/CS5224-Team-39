@@ -37,8 +37,9 @@ payment resolution `confirmed`, and a linked payment must be consultation-purpos
 exact trusted SGD amount. Missing, denied, malformed or unavailable context fails
 closed; no fixture path or authorization bypass exists in the running API.
 
-The V01 join interval is `[starts_at - 10 minutes, ends_at)` for non-completed
-sessions. Admission does not start/end a session or mutate scheduling. Issuance
+Scheduled sessions use the join interval `[starts_at - 10 minutes, ends_at)`.
+In-progress sessions remain joinable after `ends_at` until doctor completion.
+Admission does not start/end a session or mutate scheduling. Issuance
 checks current context again after acquiring its parent session lock. Consume
 and check re-read current scheduling/identity/billing data under that lock, then
 recheck server time after the upstream calls. Cross-service reads are not an
@@ -56,7 +57,8 @@ across API processes/restarts. Expired or released leases cannot be consumed or
 checked. Rejoin requires a new token and a new peer ID. Releasing a stale rotated
 token cannot release the replacement connection. A crash can leave a slot claimed
 only until the original lease expires; default TTL 60 seconds, configurable 1-300,
-capped at appointment end. It is never extended by consume/check.
+capped at appointment end while scheduled. In-progress sessions receive the full
+configured TTL, including after the scheduled end. Consume/check never extends it.
 
 V03 must replace X02's fixture issuer/store with this HTTP boundary, await consume
 **before** websocket upgrade/PeerServer registration, and close the socket if

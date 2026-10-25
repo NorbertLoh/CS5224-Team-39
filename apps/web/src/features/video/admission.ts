@@ -32,7 +32,8 @@ export function roomEligibility(
     appointment.payment_resolution === 'confirmed' &&
     Boolean(appointment.payment_id) &&
     Date.parse(appointment.starts_at) - 600000 <= now &&
-    now < Date.parse(appointment.ends_at)
+    (appointment.status === 'in_progress' ||
+      now < Date.parse(appointment.ends_at))
   )
 }
 

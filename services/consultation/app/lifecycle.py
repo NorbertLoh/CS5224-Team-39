@@ -87,8 +87,9 @@ def can_join(record: ConsultationSession, *, now: datetime | None = None) -> boo
     """Window eligibility only, never an admission/authorization decision."""
     instant = server_time(now)
     opens_at = utc(record.starts_at) - JOIN_EARLY
-    return record.status in {"scheduled", "in_progress"} and opens_at <= instant < utc(
-        record.ends_at
+    return opens_at <= instant and (
+        record.status == "in_progress"
+        or (record.status == "scheduled" and instant < utc(record.ends_at))
     )
 
 
