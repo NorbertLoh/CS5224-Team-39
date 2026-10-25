@@ -41,6 +41,16 @@ Use the service role, not a database superuser. No row-level security is claimed
 
 ## Integration boundary
 
+End consultation first finalizes any saved prescription through clinical records
+using the assigned doctor's access token. It verifies the returned appointment
+context before persisting the local end and synchronizing scheduling completion.
+It then finalizes the saved MC decision. A prescription failure leaves the
+consultation in progress; a lost response can be retried without duplicate
+issuance. Completed visits can retry the same workflow to recover an existing
+unissued draft and finish the MC handoff. This is a sequence of idempotent service
+operations, not a transaction spanning services. Deploy updated clinical records
+before consultation. No migrations or new settings are required.
+
 The lifecycle functions are internal Python operations. V02 exposes admission
 HTTP endpoints, described separately in ADMISSION.md. The tenant/doctor parameters must come from validated
 server context. `can_join` evaluates time/state only; it is **not authorization**.

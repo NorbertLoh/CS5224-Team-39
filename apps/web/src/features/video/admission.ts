@@ -39,6 +39,8 @@ export function roomEligibility(
 
 export function consultationError(error: unknown) {
   if (error instanceof ApiError) {
+    if (error.code === 'prescription_not_finalized')
+      return 'The prescription could not be issued. Check its medications and saved draft before ending the consultation.'
     if (error.status === 401) return 'Your session expired. Sign in again.'
     if (error.status === 409)
       return 'The appointment is not ready or you already have an active call. Leave the other room or wait for its access to expire, then try again.'

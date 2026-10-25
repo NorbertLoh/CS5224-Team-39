@@ -25,11 +25,12 @@ export function VideoRoom({
   token?: string
   subjectId?: string
   actions?: ReactNode
-  endActions?: (blocked: boolean) => ReactNode
+  endActions?: (blocked: boolean, onPendingChange: (pending: boolean) => void) => ReactNode
 }) {
   const media = useLocalMedia()
   const call = useRemoteCall(connection, role, media)
   const [expanded, setExpanded] = useState(false)
+  const [finishing, setFinishing] = useState(false)
   const [cameraPaneSize, setCameraPaneSize] = useState(58)
   const doctorLayout = useRef<HTMLDivElement>(null)
   const [formState, setFormState] = useState<RecordFormState>({
@@ -218,19 +219,21 @@ export function VideoRoom({
             className={`min-w-0 lg:col-start-3 [&_select]:w-full [&_select]:min-w-0 ${expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}`}
           >
             {actions && <div className="mb-5">{actions}</div>}
-            {appointmentId && token && subjectId ? (
-              <RecordWorkspace
-                appointmentId={appointmentId}
-                token={token}
-                subjectId={subjectId}
-                onStateChange={setFormState}
-              />
-            ) : (
-              <DoctorRecordForm />
-            )}
+            <fieldset disabled={finishing} className="min-w-0">
+              {appointmentId && token && subjectId ? (
+                <RecordWorkspace
+                  appointmentId={appointmentId}
+                  token={token}
+                  subjectId={subjectId}
+                  onStateChange={setFormState}
+                />
+              ) : (
+                <DoctorRecordForm />
+              )}
+            </fieldset>
             {endActions && (
               <div className="mt-6">
-                {endActions(formState.dirty || formState.busy)}
+                {endActions(formState.dirty || formState.busy, setFinishing)}
               </div>
             )}
           </aside>

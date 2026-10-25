@@ -26,7 +26,7 @@ from app import admissions
 from app.database import create_database_engine
 from app.lifecycle import transition
 from app.main import create_app
-from app.models import Admission
+from app.models import Admission, ConsultationSession
 from app.settings import Settings
 from app.upstream import AdmissionSources
 
@@ -153,6 +153,36 @@ def api(database, monkeypatch):
                 ),
             )
         service = request.url.host.split(".")[0]
+        if service == "records" and request.url.path.endswith("/finalize-prescription"):
+            # This owning-service endpoint authenticates the assigned doctor's
+            # actual JWT, rather than accepting a browser-supplied identity.
+            claims = jwt.decode(
+                request.headers["authorization"].split()[1],
+                key.public_key(),
+                algorithms=["RS256"],
+            )
+            assert claims["sub"] == str(doctor)
+            assert state["appointment"]["status"] in {"in_progress", "completed"}
+            state["prescription_calls"] = state.get("prescription_calls", 0) + 1
+            if state.get("prescription_failure"):
+                return httpx.Response(state["prescription_failure"])
+            if state.pop("lost_prescription_response", False):
+                state["issued_prescription"] = str(uuid4())
+                return httpx.Response(503)
+            links = {
+                name: state["appointment"][name]
+                for name in ("appointment_id", "tenant_id", "patient_id", "doctor_id")
+            }
+            if state.get("wrong_prescription_context"):
+                links["tenant_id"] = str(uuid4())
+            return httpx.Response(
+                200,
+                json={
+                    **links,
+                    "prescription_id": state.get("issued_prescription"),
+                    "status": "issued" if state.get("issued_prescription") else "none",
+                },
+            )
         claims = jwt.decode(
             request.headers["authorization"].split()[1],
             getattr(settings, service + "_secret").get_secret_value(),
@@ -167,6 +197,8 @@ def api(database, monkeypatch):
             if request.method == "POST":
                 action = request.url.path.rsplit("/", 1)[-1]
                 assert action in {"start", "complete"}
+                if action == "complete":
+                    assert state.get("prescription_calls", 0) > 0
                 state["appointment"]["status"] = "in_progress" if action == "start" else "completed"
                 if state.pop("lost_scheduling_response", False):
                     return httpx.Response(503)
@@ -559,3 +591,32 @@ def test_completion_handoff_can_retry_after_scheduling_finished(api):
     assert api.state["appointment"]["status"] == "completed"
     assert api.client.post(path + "/complete", headers=api.headers(api.doctor)).status_code == 200
     assert api.state["mc_calls"] == 2
+
+
+@pytest.mark.parametrize("failure", [409, 503, "context", "lost_response"])
+def test_prescription_must_finalize_before_completion_and_can_retry(api, failure):
+    path = f"/appointments/{api.appointment_id}"
+    assert api.client.post(path + "/start", headers=api.headers(api.doctor)).status_code == 200
+    if failure == "context":
+        api.state["wrong_prescription_context"] = True
+    elif failure == "lost_response":
+        api.state["lost_prescription_response"] = True
+    else:
+        api.state["prescription_failure"] = failure
+    response = api.client.post(path + "/complete", headers=api.headers(api.doctor))
+    assert response.status_code == (
+        502 if failure == "context" else 503 if failure == "lost_response" else failure
+    )
+    assert api.state["appointment"]["status"] == "in_progress"
+    with Session(api.database) as db:
+        record = db.scalar(
+            select(ConsultationSession).where(
+                ConsultationSession.appointment_id == api.appointment_id
+            )
+        )
+        assert record.status == "in_progress" and record.ended_at is None
+    api.state.pop("wrong_prescription_context", None)
+    api.state.pop("prescription_failure", None)
+    assert api.client.post(path + "/complete", headers=api.headers(api.doctor)).status_code == 200
+    assert api.state["appointment"]["status"] == "completed"
+    assert api.state["prescription_calls"] == 2

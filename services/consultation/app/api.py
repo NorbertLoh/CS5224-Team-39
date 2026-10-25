@@ -44,6 +44,7 @@ def complete(appointment_id: UUID, request: Request, identity: Identity, session
         identity,
         request.state.request_id,
         "complete",
+        user_token=request.headers["authorization"].split(" ", 1)[1],
     )
 
 

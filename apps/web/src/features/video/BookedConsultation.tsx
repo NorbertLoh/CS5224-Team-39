@@ -119,10 +119,11 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
       }
       endActions={
         role === 'doctor' && appointment.data.status === 'in_progress'
-          ? (blocked) => (
+          ? (blocked, onPendingChange) => (
               <ConsultationActions
                 appointment={appointment.data}
                 disabled={blocked}
+                onPendingChange={onPendingChange}
               />
             )
           : undefined

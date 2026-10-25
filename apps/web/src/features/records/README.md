@@ -49,7 +49,11 @@ and incomplete MC/prescription inputs, and all three valid autosaved drafts surv
 a full browser reload. No MC/prescription was issued, visit completed, payment made
 or delivery sent. Labelled synthetic visit/note/catalogue examples remain local.
 
-Medication names remain unrestricted text. Once the doctor issues a prescription,
+Medication names remain unrestricted text. End consultation waits for valid
+autosaved drafts, issues the saved prescription and completes the consultation
+and MC decision. The fields are disabled while completion is pending. The
+completed view shows prescription details and offers a completion retry if an
+existing draft or MC decision still needs finalising. Once a prescription is issued,
 the clinic admin enters each medication's price for that prescription under
 Prescription pricing. No catalogue maintenance is required. See
 [pricing setup](../../../../../docs/medication-pricing.md): clinical-records 0006

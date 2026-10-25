@@ -1,13 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import type { Appointment } from '../scheduling/api'
 import { consultationAction, consultationError } from './admission'
 
 export function ConsultationActions({
   appointment,
   disabled = false,
+  onPendingChange,
 }: {
   appointment: Appointment
   disabled?: boolean
+  onPendingChange?: (pending: boolean) => void
 }) {
   const cache = useQueryClient()
   const action = appointment.status === 'confirmed' ? 'start' : 'complete'
@@ -23,6 +26,10 @@ export function ConsultationActions({
     },
     retry: false,
   })
+  useEffect(() => {
+    onPendingChange?.(mutation.isPending)
+    return () => onPendingChange?.(false)
+  }, [mutation.isPending, onPendingChange])
   return (
     <section
       className="space-y-3 rounded-xl border bg-white p-5 text-sm"
@@ -33,7 +40,7 @@ export function ConsultationActions({
           ? 'Start the consultation to enable clinical notes, prescriptions and MC drafts.'
           : disabled
             ? 'Wait for your draft changes to save before ending the consultation.'
-            : 'Ending closes the room for both participants and finalises the saved MC decision. Leaving video alone does not end the consultation.'}
+            : 'Ending issues your saved prescription, completes the consultation and finalises the MC decision. Leaving video alone does not end the consultation.'}
       </p>
       <button
         className={`rounded-lg px-5 py-3 font-medium disabled:opacity-50 ${action === 'start' ? 'bg-teal-800 text-white' : 'bg-red-50 text-red-800 border border-red-200'}`}
@@ -45,7 +52,9 @@ export function ConsultationActions({
         onClick={() => mutation.mutate(action)}
       >
         {mutation.isPending
-          ? 'Updating consultation...'
+          ? action === 'complete'
+            ? 'Finishing consultation...'
+            : 'Starting consultation...'
           : action === 'start'
             ? 'Start consultation'
             : appointment.status === 'completed'
@@ -61,7 +70,7 @@ export function ConsultationActions({
       {mutation.isSuccess && (
         <p role="status">
           {mutation.variables === 'complete'
-            ? 'Consultation completion and MC decision confirmed. Refresh Documents for PDF status.'
+            ? 'Prescription, consultation completion and MC decision confirmed. Refresh Documents for PDF status.'
             : 'Consultation started.'}
         </p>
       )}
