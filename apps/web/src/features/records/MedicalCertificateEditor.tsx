@@ -4,15 +4,23 @@ import { saveMedicalCertificate, recordsError } from './api'
 import { mcEndDate, type MedicalCertificate } from './medicalCertificate'
 import { MedicalCertificateFields } from './MedicalCertificateFields'
 import { ErrorState } from '../../components/ErrorState'
+import { FileCheck2 } from 'lucide-react'
+import { Button } from '../../components/ui/button'
+import {
+  useRecordFormState,
+  type RecordFormStateChange,
+} from './useRecordFormState'
 
 export function MedicalCertificateEditor({
   appointmentId,
   draft,
   editable,
+  onStateChange,
 }: {
   appointmentId: string
   draft: MedicalCertificate | null
   editable: boolean
+  onStateChange?: RecordFormStateChange
 }) {
   const [selected, setSelected] = useState(draft?.selected ?? false)
   const [start, setStart] = useState(draft?.start_date ?? '')
@@ -48,24 +56,33 @@ export function MedicalCertificateEditor({
     gcTime: 0,
   })
   const locked = !editable || Boolean(draft?.finalized_at) || mutation.isPending
+  useRecordFormState(current !== saved, mutation.isPending, onStateChange)
   return (
     <form
-      className="space-y-3 rounded border p-4"
+      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       aria-label="Medical certificate"
       onSubmit={(event) => {
         event.preventDefault()
         if (!locked && (!selected || end)) mutation.mutate()
       }}
     >
-      <h3 className="font-semibold">Medical certificate</h3>
+      <div className="flex items-center gap-3">
+        <span className="rounded-lg bg-teal-50 p-2 text-teal-800">
+          <FileCheck2 aria-hidden="true" size={18} />
+        </span>
+        <h3 className="font-semibold">Medical certificate</h3>
+        <span className="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+          Optional
+        </span>
+      </div>
       <p className="text-sm text-slate-600">
-        Save this draft before completing the consultation. Only the saved
-        selection is issued after completion succeeds. Private consultation
-        notes are excluded.
+        Save your selection before completing the visit. The MC is issued after
+        completion; private visit notes are excluded.
       </p>
-      <label className="flex items-center gap-2">
+      <label className="flex items-center gap-3 rounded-xl bg-slate-50 p-3 text-sm font-medium">
         <input
           type="checkbox"
+          className="size-4 accent-teal-700"
           checked={selected}
           disabled={locked}
           onChange={(event) => {
@@ -97,14 +114,18 @@ export function MedicalCertificateEditor({
         />
       )}
       {!draft?.finalized_at && (
-        <button
-          className="rounded border px-4 py-2 disabled:opacity-50"
+        <Button
+          className="h-10 px-4"
           disabled={locked || current === saved || (selected && !end)}
         >
           {mutation.isPending ? 'Saving MC draft...' : 'Save MC draft'}
-        </button>
+        </Button>
       )}
-      {current !== saved && <p role="status">MC has unsaved changes.</p>}
+      {current !== saved && (
+        <p role="status" className="text-xs text-amber-800">
+          MC has unsaved changes.
+        </p>
+      )}
       {mutation.isSuccess && (
         <p role="status">
           MC draft saved.{' '}

@@ -29,3 +29,17 @@ its saved note only when opened, through the existing audited note API. Missing
 notes and request failures have explicit empty/retry states. Expanding history
 never resets the current note, prescription or MC draft. No migrations or new
 configuration are needed.
+
+The clinical workspace now uses consistent cards, patient/session context and
+clear save states. **Reload saved records** reloads the note, prescription and MC
+from fresh server reads. It asks for confirmation only when any of those forms
+has unsaved edits; **Keep editing** preserves them, while **Discard and reload**
+restores the saved state. Reload is disabled during note/MC saves and prescription
+save/issuance. Each form still saves independently. No API/configuration changes.
+
+Local verification: lint, TypeScript and production build; live Tailscale checks
+of clean reload without a prompt, dirty detection in all three forms, cancellation
+and focus restoration, combined discard/reset, and the previous-note accordion.
+Only unsaved test fields were changed; no note, MC or prescription was saved or
+issued during the UI checks. One labelled demo catalogue item was added locally
+so the prescription editor can be tested.

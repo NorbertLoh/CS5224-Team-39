@@ -12,7 +12,12 @@ import { prescriptionItems, validItems } from './types'
 import type { Prescription, PrescriptionInput } from './types'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
-const button = 'rounded border px-4 py-2 disabled:opacity-50'
+import { Pill, Plus } from 'lucide-react'
+import { Button } from '../../components/ui/button'
+import {
+  useRecordFormState,
+  type RecordFormStateChange,
+} from './useRecordFormState'
 
 export function PrescriptionEditor({
   appointmentId,
@@ -21,6 +26,7 @@ export function PrescriptionEditor({
   prescription,
   editable,
   onFailure,
+  onStateChange,
 }: {
   appointmentId: string
   tenantId: string
@@ -28,6 +34,7 @@ export function PrescriptionEditor({
   prescription: Prescription | null
   editable: boolean
   onFailure: () => void
+  onStateChange?: RecordFormStateChange
 }) {
   const [saved, setSaved] = useState(prescription)
   const [items, setItems] = useState<PrescriptionInput[]>(
@@ -71,6 +78,7 @@ export function PrescriptionEditor({
         (medication) => medication.medication_id === item.medication_id,
       ),
     )
+  useRecordFormState(dirty, busy, onStateChange)
   const writable = editable && !locked && medications.isSuccess && !busy
   const changeItems = (next: PrescriptionInput[]) => {
     setItems(next)
@@ -79,13 +87,24 @@ export function PrescriptionEditor({
   }
   return (
     <form
-      className="space-y-4"
+      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       onSubmit={(event) => {
         event.preventDefault()
         if (writable && valid && dirty) save.mutate()
       }}
     >
-      <h3 className="font-semibold">Prescription · {saved?.status ?? 'new'}</h3>
+      <div className="flex items-center gap-3">
+        <span className="rounded-lg bg-teal-50 p-2 text-teal-800">
+          <Pill aria-hidden="true" size={18} />
+        </span>
+        <h3 className="font-semibold">Prescription</h3>
+        <span className="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs capitalize text-slate-600">
+          {saved?.status ?? 'New'}
+        </span>
+      </div>
+      <p className="text-sm text-slate-600">
+        Add medications, save a draft, then issue the prescription when ready.
+      </p>
       {locked || !editable ? (
         <>
           {saved ? (
@@ -107,15 +126,20 @@ export function PrescriptionEditor({
             />
           )}
           {medications.isSuccess && !medications.data.length && (
-            <p role="status">
-              No active medications in this clinic's catalogue.
+            <p
+              role="status"
+              className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600"
+            >
+              This clinic has no active catalogue medications. Ask the clinic
+              admin to add medications before prescribing.
             </p>
           )}
           <fieldset disabled={!writable} className="space-y-4">
-            <button
-              className={button}
+            <Button
+              variant="outline"
+              className="h-10 px-4"
               type="button"
-              disabled={items.length >= 100}
+              disabled={items.length >= 100 || !medications.data?.length}
               onClick={() =>
                 changeItems([
                   ...items,
@@ -123,9 +147,13 @@ export function PrescriptionEditor({
                 ])
               }
             >
-              Add medication
-            </button>
-            {!items.length && <p>No medications added.</p>}
+              <Plus aria-hidden="true" /> Add medication
+            </Button>
+            {!items.length && (
+              <p className="text-sm text-slate-500">
+                No medications added to this visit.
+              </p>
+            )}
             {items.map((item, index) => (
               <PrescriptionItemFields
                 key={index}
@@ -145,11 +173,15 @@ export function PrescriptionEditor({
               />
             ))}
             <div className="flex flex-wrap gap-3">
-              <button className={button} disabled={!valid || !dirty}>
+              <Button
+                className="h-10 px-4"
+                variant="outline"
+                disabled={!valid || !dirty}
+              >
                 {save.isPending ? 'Saving draft...' : 'Save draft'}
-              </button>
-              <button
-                className={button}
+              </Button>
+              <Button
+                className="h-10 px-4"
                 type="button"
                 disabled={!saved || dirty || !valid}
                 onClick={() => {
@@ -157,7 +189,7 @@ export function PrescriptionEditor({
                 }}
               >
                 {issue.isPending ? 'Issuing...' : 'Issue prescription'}
-              </button>
+              </Button>
             </div>
           </fieldset>
           {dirty && (

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, History } from 'lucide-react'
 import type { Appointment } from '../scheduling/api'
 import { nameOrId } from '../appointments/display'
 import { previousVisits, readNote, recordsError } from './api'
@@ -33,10 +33,15 @@ export function PreviousVisitNotes({
   const visits = history.data?.pages.flatMap((page) => page.items) ?? []
   return (
     <section
-      className="space-y-3 rounded-xl border p-4"
+      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       aria-label="Previous visit notes"
     >
-      <h3 className="font-semibold">Previous visit notes</h3>
+      <div className="flex items-center gap-3">
+        <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
+          <History aria-hidden="true" size={18} />
+        </span>
+        <h3 className="font-semibold">Previous visit notes</h3>
+      </div>
       <p className="text-sm text-slate-600">
         Earlier completed visits for this patient with you at this clinic,
         newest first. Open a visit to read its saved note.
@@ -104,7 +109,7 @@ function VisitNote({ visit, token }: { visit: Appointment; token: string }) {
   })
   return (
     <details
-      className="group rounded-lg border"
+      className="group rounded-xl border border-slate-200 bg-slate-50/50"
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg p-4 focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
@@ -123,7 +128,7 @@ function VisitNote({ visit, token }: { visit: Appointment; token: string }) {
         />
       </summary>
       {open && (
-        <div className="border-t p-4">
+        <div className="rounded-b-xl border-t border-slate-200 bg-white p-4">
           {note.isPending ? (
             <LoadingState message="Loading saved note..." />
           ) : note.isError ? (
@@ -132,7 +137,7 @@ function VisitNote({ visit, token }: { visit: Appointment; token: string }) {
               onRetry={() => void note.refetch()}
             />
           ) : note.data ? (
-            <p className="whitespace-pre-wrap break-words text-sm">
+            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
               {note.data.text}
             </p>
           ) : (

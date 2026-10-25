@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { appointmentDetail } from '../scheduling/api'
 import { nameOrId, readableStatus } from '../appointments/display'
 import { readNote, appointmentPrescriptions, recordsError } from './api'
@@ -10,6 +10,8 @@ import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { DocumentList } from '../documents/DocumentList'
 import { PreviousVisitNotes } from './PreviousVisitNotes'
+import { ReloadRecordsButton } from './ReloadRecordsButton'
+import type { RecordFormState } from './useRecordFormState'
 
 export function RecordWorkspace({
   appointmentId,
@@ -21,6 +23,7 @@ export function RecordWorkspace({
   subjectId: string
 }) {
   const [revision, setRevision] = useState(0)
+  const cache = useQueryClient()
   const appointment = useQuery({
     queryKey: ['records', 'context', token, appointmentId],
     queryFn: ({ signal }) => appointmentDetail(appointmentId, signal),
@@ -46,40 +49,51 @@ export function RecordWorkspace({
       <ErrorState message="This appointment is unavailable to your account." />
     )
   return (
-    <div className="space-y-4">
-      <dl className="grid gap-2 text-sm">
-        <div>
-          <dt className="font-medium">Patient</dt>
-          <dd className="break-all">
-            {nameOrId(context.patient_name, context.patient_id)}
-          </dd>
-        </div>
-        <div>
-          <dt className="font-medium">Clinic</dt>
-          <dd className="break-all">
-            {nameOrId(context.clinic_name, context.tenant_id)}
-          </dd>
-        </div>
-        <div>
-          <dt className="font-medium">Session</dt>
-          <dd className="capitalize">{readableStatus(context.status)}</dd>
-        </div>
-      </dl>
-      <button
-        className="rounded border px-4 py-2"
-        onClick={() => {
-          void appointment.refetch()
-          setRevision((value) => value + 1)
-        }}
+    <div className="space-y-5">
+      <section
+        className="rounded-2xl border border-teal-100 bg-teal-50/60 p-5"
+        aria-label="Visit context"
       >
-        Reload records and discard unsaved changes
-      </button>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-teal-800">
+          Current visit
+        </p>
+        <dl className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt className="text-xs text-slate-600">Patient</dt>
+            <dd className="mt-1 break-words font-semibold">
+              {nameOrId(context.patient_name, context.patient_id)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-slate-600">Clinic</dt>
+            <dd className="mt-1 break-words font-medium">
+              {nameOrId(context.clinic_name, context.tenant_id)}
+            </dd>
+          </div>
+          <div className="col-span-2 flex items-center justify-between border-t border-teal-100 pt-3">
+            <dt className="text-slate-600">Session</dt>
+            <dd className="rounded-full bg-white px-3 py-1 text-xs font-medium capitalize text-teal-900">
+              {readableStatus(context.status)}
+            </dd>
+          </div>
+        </dl>
+      </section>
       <Records
         key={`${appointmentId}:${revision}`}
         appointmentId={appointmentId}
         tenantId={context.tenant_id}
         token={token}
         editable={context.status === 'in_progress'}
+        onReload={() => {
+          void appointment.refetch()
+          for (const resource of ['workspace', 'mc']) {
+            cache.removeQueries({
+              queryKey: ['records', resource, token, appointmentId],
+              exact: true,
+            })
+          }
+          setRevision((value) => value + 1)
+        }}
       />
       <PreviousVisitNotes
         key={appointmentId}
@@ -100,13 +114,29 @@ function Records({
   tenantId,
   token,
   editable,
+  onReload,
 }: {
   appointmentId: string
   tenantId: string
   token: string
   editable: boolean
+  onReload: () => void
 }) {
   const [uncertain, setUncertain] = useState(false)
+  const [noteState, setNoteState] = useState<RecordFormState>({
+    dirty: false,
+    busy: false,
+  })
+  const [mcState, setMcState] = useState<RecordFormState>({
+    dirty: false,
+    busy: false,
+  })
+  const [prescriptionState, setPrescriptionState] = useState<RecordFormState>({
+    dirty: false,
+    busy: false,
+  })
+  const dirty = noteState.dirty || mcState.dirty || prescriptionState.dirty
+  const busy = noteState.busy || mcState.busy || prescriptionState.busy
   const records = useQuery({
     queryKey: ['records', 'workspace', token, appointmentId],
     queryFn: async ({ signal }) => {
@@ -137,16 +167,36 @@ function Records({
   if (!records.data || records.isFetching)
     return <LoadingState message="Loading clinical records..." />
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">Clinical records</h2>
+          <p className="mt-1 text-xs text-slate-600" role="status">
+            {busy
+              ? 'Saving changes…'
+              : dirty
+                ? 'You have unsaved changes.'
+                : 'Changes are saved with each section’s save button.'}
+          </p>
+        </div>
+        <ReloadRecordsButton dirty={dirty} busy={busy} onReload={onReload} />
+      </div>
       {!editable && (
-        <p role="status">
-          Records are read-only while this appointment is not in progress.
+        <p
+          role="status"
+          className="rounded-xl bg-slate-100 p-4 text-sm text-slate-600"
+        >
+          Read-only records. Editing is available while the consultation is in
+          progress.
         </p>
       )}
       {uncertain && (
-        <p role="alert">
-          Reload records before making further changes to check the last
-          request's outcome.
+        <p
+          role="alert"
+          className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+        >
+          A request could not be confirmed. Reload saved records to check its
+          outcome before making further changes.
         </p>
       )}
       <ConsultationNoteForm
@@ -154,11 +204,13 @@ function Records({
         note={records.data.note}
         editable={editable && !uncertain}
         onFailure={() => setUncertain(true)}
+        onStateChange={setNoteState}
       />
       <MedicalCertificateForm
         appointmentId={appointmentId}
         token={token}
         editable={editable && !uncertain}
+        onStateChange={setMcState}
       />
       <PrescriptionEditor
         appointmentId={appointmentId}
@@ -167,6 +219,7 @@ function Records({
         prescription={records.data.prescription}
         editable={editable && !uncertain}
         onFailure={() => setUncertain(true)}
+        onStateChange={setPrescriptionState}
       />
     </div>
   )
