@@ -70,3 +70,12 @@ locks still apply. An isolated browser check using the production components and
 800 ms delayed responses verified retained focus, caret 2 -> 3, pending-request
 edits and two prescription rows staying in order across saves for all three forms.
 The temporary check did not call real clinical APIs and is not a production route.
+
+Doctor lifecycle controls: **Start consultation** appears above the records before
+clinical start. Once in progress, **End consultation** appears below records,
+history and documents. End is disabled while any note/MC/prescription changes are
+unsaved or saving. Existing start-time guards, completion handoff and separate
+video Leave behavior are preserved. Browser verification on a separate synthetic
+visit covered confirmed/start visibility, start -> in-progress transition, bottom
+End after Documents, disabled End for unsaved text and re-enabled End after saving.
+The visit was not ended. Frontend lint, TypeScript and production build passed.

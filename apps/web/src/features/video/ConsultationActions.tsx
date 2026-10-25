@@ -4,8 +4,10 @@ import { consultationAction, consultationError } from './admission'
 
 export function ConsultationActions({
   appointment,
+  disabled = false,
 }: {
   appointment: Appointment
+  disabled?: boolean
 }) {
   const cache = useQueryClient()
   const action = appointment.status === 'confirmed' ? 'start' : 'complete'
@@ -23,19 +25,20 @@ export function ConsultationActions({
   })
   return (
     <section
-      className="mb-6 space-y-3 rounded-xl border bg-white p-6 text-sm"
+      className="space-y-3 rounded-xl border bg-white p-5 text-sm"
       aria-label="Consultation lifecycle"
     >
       <p>
-        Start the consultation to enable clinical writing. Completing it ends
-        room access for both participants. Leaving video alone does not complete
-        the appointment. Save any MC draft first. If completion reports an error
-        after the appointment ends, retry the completion handoff below to
-        finalize the saved MC decision.
+        {action === 'start'
+          ? 'Start the consultation to enable clinical notes, prescriptions and MC drafts.'
+          : disabled
+            ? 'Wait for your draft changes to save before ending the consultation.'
+            : 'Ending closes the room for both participants and finalises the saved MC decision. Leaving video alone does not end the consultation.'}
       </p>
       <button
-        className="rounded border px-4 py-2"
+        className={`rounded-lg px-5 py-3 font-medium disabled:opacity-50 ${action === 'start' ? 'bg-teal-800 text-white' : 'bg-red-50 text-red-800 border border-red-200'}`}
         disabled={
+          disabled ||
           mutation.isPending ||
           (action === 'start' && Date.now() < Date.parse(appointment.starts_at))
         }
@@ -44,10 +47,10 @@ export function ConsultationActions({
         {mutation.isPending
           ? 'Updating consultation...'
           : action === 'start'
-            ? 'Start clinical consultation'
+            ? 'Start consultation'
             : appointment.status === 'completed'
               ? 'Retry completion handoff'
-              : 'Complete consultation'}
+              : 'End consultation'}
       </button>
       {mutation.isError && (
         <p role="alert">

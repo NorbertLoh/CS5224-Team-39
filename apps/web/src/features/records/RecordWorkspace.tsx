@@ -11,16 +11,22 @@ import { LoadingState } from '../../components/LoadingState'
 import { DocumentList } from '../documents/DocumentList'
 import { PreviousVisitNotes } from './PreviousVisitNotes'
 import { ReloadRecordsButton } from './ReloadRecordsButton'
-import type { RecordFormState } from './useRecordFormState'
+import {
+  useRecordFormState,
+  type RecordFormState,
+  type RecordFormStateChange,
+} from './useRecordFormState'
 
 export function RecordWorkspace({
   appointmentId,
   token,
   subjectId,
+  onStateChange,
 }: {
   appointmentId: string
   token: string
   subjectId: string
+  onStateChange?: RecordFormStateChange
 }) {
   const [revision, setRevision] = useState(0)
   const cache = useQueryClient()
@@ -84,6 +90,7 @@ export function RecordWorkspace({
         tenantId={context.tenant_id}
         token={token}
         editable={context.status === 'in_progress'}
+        onStateChange={onStateChange}
         onReload={() => {
           void appointment.refetch()
           for (const resource of ['workspace', 'mc']) {
@@ -115,12 +122,14 @@ function Records({
   token,
   editable,
   onReload,
+  onStateChange,
 }: {
   appointmentId: string
   tenantId: string
   token: string
   editable: boolean
   onReload: () => void
+  onStateChange?: RecordFormStateChange
 }) {
   const [uncertain, setUncertain] = useState(false)
   const [noteState, setNoteState] = useState<RecordFormState>({
@@ -137,6 +146,7 @@ function Records({
   })
   const dirty = noteState.dirty || mcState.dirty || prescriptionState.dirty
   const busy = noteState.busy || mcState.busy || prescriptionState.busy
+  useRecordFormState(dirty, busy, onStateChange)
   useEffect(() => {
     if (!dirty && !busy) return
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
