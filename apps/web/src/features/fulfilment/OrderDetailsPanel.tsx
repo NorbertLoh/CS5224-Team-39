@@ -4,6 +4,7 @@ import type { OrderContext } from './model'
 import { PatientOrderDetails } from './PatientOrderDetails'
 import { TrackingOrderDetails } from './TrackingOrderDetails'
 import { LiveMedicineReadiness } from './LiveMedicineReadiness'
+import { OrderMedicationPricing } from './OrderMedicationPricing'
 
 export function OrderDetailsPanel({
   snapshot,
@@ -26,6 +27,7 @@ export function OrderDetailsPanel({
     <TrackingOrderDetails
       key={snapshot.order.order_id}
       order={trackingOrder(snapshot.order, snapshot.delivery)}
+      pricing={<OrderMedicationPricing order={snapshot.order} />}
       readiness={
         <LiveMedicineReadiness
           order={snapshot.order}

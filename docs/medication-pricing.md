@@ -1,11 +1,23 @@
 # Prescription-specific medication pricing (RF12)
 
 Clinic admins do not maintain a medication catalogue. Doctors type medication
-names freely and issue prescriptions. Under **Clinic administration -> Prescription
-pricing**, choose a clinic and enter an SGD unit price for each medication on each
+names freely and issue prescriptions. Open the clinic's **Medicine & delivery**
+page, then open the relevant medicine card to enter an SGD unit price for each medication on each
 issued prescription. Quantity and line totals are shown; all items must be priced.
 Use the clinic's existing system as a reference; this is manual price entry, not
 an integration or synchronisation with that system.
+
+Pricing is scoped by the selected clinic's Medicine & delivery page rather than
+the Manage clinics dashboard. There is one combined list of medicine cards,
+with no separate pricing section or side details panel. Each order shows **1. Medication
+pricing** with its saved unit prices, quantities, line totals and medication total,
+followed by **2. Medicine preparation** and **Mark medicine ready**. Existing-order
+prices use its immutable order snapshot and remain locked. An issued prescription
+can be priced before the patient opens an order; preparation is recorded on the
+actual order once it exists. A prescription waiting for an order shows pricing
+and a disabled preparation action within its own card; once the order is loaded,
+the matching prescription and order are combined rather than repeated. The readiness, payment and delivery checks still run
+on the server.
 
 The queue exposes patient/visit metadata, medication names and quantities only.
 It excludes consultation notes, MC details and prescribing instructions. Reads are

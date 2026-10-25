@@ -26,7 +26,7 @@ export function LiveMedicineReadiness({
       aria-labelledby="live-readiness-heading"
     >
       <h3 id="live-readiness-heading" className="font-semibold">
-        Medicine preparation
+        2. Medicine preparation
       </h3>
       <p className="text-sm">
         Mark this order ready once its medicine has been prepared. Payment and

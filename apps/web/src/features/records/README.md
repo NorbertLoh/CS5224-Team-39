@@ -54,8 +54,8 @@ autosaved drafts, issues the saved prescription and completes the consultation
 and MC decision. The fields are disabled while completion is pending. The
 completed view shows prescription details and offers a completion retry if an
 existing draft or MC decision still needs finalising. Once a prescription is issued,
-the clinic admin enters each medication's price for that prescription under
-Prescription pricing. No catalogue maintenance is required. See
+the clinic admin enters each medication's price within its Medicine & delivery
+card. Each card shows pricing before medicine preparation. No catalogue maintenance is required. See
 [pricing setup](../../../../../docs/medication-pricing.md): clinical-records 0006
 and fulfilment 0007 preserve legacy issued/paid behavior and require explicit
 prices for new/draft prescriptions.

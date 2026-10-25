@@ -15,6 +15,15 @@ Clinic Medicine & delivery uses the selected clinic's name and navigation in the
 shared management navbar. It does not repeat a clinic UUID or a back-to-clinics
 link in the page body; Change clinic remains available in the navbar.
 
+The clinic page has one list of medicine cards combining issued prescriptions
+and their orders. Cards for prescriptions awaiting an order contain editable
+pricing and a disabled preparation action. In each expanded order card, Medication pricing shows
+its saved unit prices, quantities and totals before the Medicine preparation
+card and Mark medicine ready action. Order snapshots remain locked; readiness
+and payment/delivery gating use the existing APIs. Pricing is no longer rendered
+on the Manage clinics dashboard, and there is no separate pricing section or
+side details panel. No new routes or setup are required.
+
 Order borders and text labels show payment/preparation waits, delivery progress,
 completion and problems requiring review. Selection preserves the status border.
 

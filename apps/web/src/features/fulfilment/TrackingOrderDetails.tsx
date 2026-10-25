@@ -7,9 +7,11 @@ import type { ReactNode } from 'react'
 export function TrackingOrderDetails({
   order,
   readiness,
+  pricing,
 }: {
   order: TrackingOrder
   readiness: ReactNode
+  pricing: ReactNode
 }) {
   return (
     <article
@@ -53,18 +55,7 @@ export function TrackingOrderDetails({
           <dd>{trackingTime(order.updated_at)}</dd>
         </div>
       </dl>
-      <section aria-labelledby="dispensing-items-heading" className="space-y-2">
-        <h3 id="dispensing-items-heading" className="font-semibold">
-          Order items
-        </h3>
-        <ul className="space-y-2 text-sm">
-          {order.items.map((item, index) => (
-            <li key={index}>
-              {item.display_name} · {item.quantity} dispensing units
-            </li>
-          ))}
-        </ul>
-      </section>
+      {pricing}
       {readiness}
       <DeliveryTracking order={order} />
     </article>
