@@ -15,23 +15,18 @@ workers while comparing snapshots; unrelated activity on the target can correctl
 make an equality check fail. Keep credentials and logs in ignored local files.
 
 The billing probe needs the original Stripe test key, a configured local webhook
-secret, network access to read the original Stripe event, and a real billing HTTP
-receiver using the same configuration. It retrieves a genuine provider snapshot
+secret and network access to read the original Stripe event. It starts a temporary
+real billing HTTP receiver on an exclusively bound ephemeral loopback port, using
+the same Settings instance as its database checks. An unrelated running receiver
+cannot be selected. It retrieves a genuine provider snapshot
 and signs its unchanged event content with the current local secret. This is an
 operator replay, not a new Stripe-initiated callback or hosted payment.
-
-From `services/billing` in the configured checkout, start a dedicated receiver:
-
-```powershell
-.venv/Scripts/python.exe -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 18009 --no-access-log
-```
 
 The observed receiver used the existing billing `0005` schema and original
 webhook tables. Only its live endpoint and webhook route were exercised; this
 does not claim readiness for the newer refund feature or the full application.
 No persistent migration was needed. Fresh setups should follow the current
-service setup guide separately. An already-running configured host billing API
-on `8009` can be selected with `--billing-url http://127.0.0.1:8009`.
+service setup guide separately.
 
 From the repository root, using the retained I03 identifiers:
 
@@ -43,8 +38,8 @@ services/fulfilment/.venv/Scripts/python.exe tests/e2e/replay_q03_fulfilment.py 
 
 Use `--config-root <configured-checkout>` when running from a separate source
 worktree. Commands print check names only; provider bodies, signatures, database
-credentials and private delivery payloads remain in memory. Stop the dedicated
-receiver when finished. The probes do not start background services.
+credentials and private delivery payloads remain in memory. The temporary receiver
+is stopped and joined on success or failure; it does not remain as a background service.
 
 ## Observed evidence
 
@@ -92,7 +87,7 @@ plus four fulfilment acknowledgment, uncertain-send and post-dispatch replay tes
 Provider responses in those service tests are fixtures; the live probes above use
 actual retained I03 records, Stripe event retrieval, HTTP, PostgreSQL and Floci.
 Unrelated payment/order IDs were rejected before replay or queue creation. A
-nonlocal receiver URL was rejected before any Stripe retrieval or HTTP replay.
+receiver-URL override was rejected before any Stripe retrieval or HTTP replay.
 
 ## Limits
 

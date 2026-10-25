@@ -8,20 +8,24 @@ import argparse
 import hashlib
 import hmac
 import json
+import socket
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
-from urllib.parse import urlsplit
+from threading import Thread
 from uuid import UUID
 
 import httpx
 import psycopg
+import uvicorn
 from psycopg.rows import dict_row
 from sqlalchemy.engine import make_url
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "services/billing"))
+from app.main import create_app  # noqa: E402
 from app.settings import Settings  # noqa: E402
 
 
@@ -31,34 +35,50 @@ def check(name, passed):
         raise AssertionError(name)
 
 
+@contextmanager
+def receiver(settings):
+    """Bind the real HTTP app to the exact settings used for database snapshots."""
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(128)
+        address = f"http://127.0.0.1:{listener.getsockname()[1]}"
+        server = uvicorn.Server(
+            uvicorn.Config(create_app(settings), log_config=None, access_log=False)
+        )
+        thread = Thread(target=server.run, kwargs={"sockets": [listener]}, daemon=True)
+        thread.start()
+        try:
+            deadline = time.monotonic() + 15
+            while not server.started and thread.is_alive() and time.monotonic() < deadline:
+                time.sleep(0.05)
+            if not server.started:
+                raise RuntimeError("Temporary billing receiver did not start")
+            yield address
+        finally:
+            server.should_exit = True
+            thread.join(timeout=15)
+            if thread.is_alive():
+                raise RuntimeError("Temporary billing receiver did not stop")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("payment_id", type=UUID)
     parser.add_argument("--config-root", type=Path, default=ROOT)
-    parser.add_argument("--billing-url", default="http://127.0.0.1:18009")
     args = parser.parse_args()
     settings = Settings(_env_file=args.config_root / "services/billing/.env")
     url = make_url(settings.database_url.get_secret_value())
-    target = urlsplit(args.billing_url)
     if (
         settings.environment not in {"local", "test"}
         or url.host not in {"localhost", "127.0.0.1"}
         or url.port != 55411
         or url.username != "billing"
         or url.database != "telelink"
-        or target.scheme != "http"
-        or target.hostname not in {"localhost", "127.0.0.1"}
-        or target.port not in {8009, 18009}
-        or target.path not in {"", "/"}
-        or target.username
-        or target.password
-        or target.query
-        or target.fragment
         or not settings.stripe_secret_key
         or not settings.stripe_secret_key.get_secret_value().startswith("sk_test_")
         or not settings.stripe_webhook_secret
     ):
-        parser.error("Use local billing on 55411, a loopback receiver and Stripe test credentials")
+        parser.error("Use local billing on 55411 and Stripe test credentials")
 
     with (
         psycopg.connect(
@@ -68,6 +88,7 @@ def main():
             row_factory=dict_row,
         ) as db,
         httpx.Client(timeout=20, trust_env=False) as http,
+        ExitStack() as stack,
     ):
 
         def snapshot():
@@ -126,7 +147,8 @@ def main():
             and obj.get("amount_total") == payment["amount_minor"]
             and obj.get("payment_status") == "paid",
         )
-        response = http.get(args.billing_url.rstrip("/") + "/health/live")
+        billing_url = stack.enter_context(receiver(settings))
+        response = http.get(billing_url + "/health/live")
         response.raise_for_status()
         check("actual billing HTTP receiver", response.json().get("service") == "billing")
         body = json.dumps(event, separators=(",", ":")).encode()
@@ -137,7 +159,7 @@ def main():
             hashlib.sha256,
         ).hexdigest()
         headers = {"Stripe-Signature": f"t={timestamp},v1={digest}"}
-        endpoint = args.billing_url.rstrip("/") + "/webhooks/stripe"
+        endpoint = billing_url + "/webhooks/stripe"
         response = http.post(endpoint, content=body + b" ", headers=headers)
         check("tampered replay is rejected", response.status_code == 400)
         check("rejected replay leaves durable state unchanged", snapshot() == before)
