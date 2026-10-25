@@ -21,3 +21,11 @@ U14 adds appointment document lists and downloads beside this workspace; see
 
 Configuration, service startup, integration checks and observed limitations:
 [docs/records-frontend.md](../../../../../docs/records-frontend.md).
+
+RF12 adds **Previous visit notes** below the current editing forms. Completed
+visits are scoped to the selected patient, clinic and assigned doctor, ordered
+newest first with older-page loading. Each keyboard-accessible disclosure loads
+its saved note only when opened, through the existing audited note API. Missing
+notes and request failures have explicit empty/retry states. Expanding history
+never resets the current note, prescription or MC draft. No migrations or new
+configuration are needed.

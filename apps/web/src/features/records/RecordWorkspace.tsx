@@ -9,6 +9,7 @@ import { PrescriptionEditor } from './PrescriptionEditor'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { DocumentList } from '../documents/DocumentList'
+import { PreviousVisitNotes } from './PreviousVisitNotes'
 
 export function RecordWorkspace({
   appointmentId,
@@ -79,6 +80,11 @@ export function RecordWorkspace({
         tenantId={context.tenant_id}
         token={token}
         editable={context.status === 'in_progress'}
+      />
+      <PreviousVisitNotes
+        key={appointmentId}
+        appointment={context}
+        token={token}
       />
       <DocumentList
         role="doctor"
