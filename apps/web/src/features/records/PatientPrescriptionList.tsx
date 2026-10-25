@@ -103,6 +103,14 @@ export function PatientPrescriptionList({
               <li key={prescription.prescription_id}>
                 <PrescriptionSummary
                   prescription={prescription}
+                  order={orders.data?.find(
+                    (order) =>
+                      order.prescription_id === prescription.prescription_id &&
+                      order.tenant_id === prescription.tenant_id &&
+                      order.appointment_id === prescription.appointment_id,
+                  )}
+                  checking={orders.isPending}
+                  unavailable={orders.isError}
                   token={token}
                   selected={selected === prescription.prescription_id}
                   onToggle={() =>
