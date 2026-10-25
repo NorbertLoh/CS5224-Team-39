@@ -248,6 +248,8 @@ export function trackingOrder(
   }
 }
 export function fulfilmentError(error: unknown) {
+  if (error instanceof ApiError && error.code === 'medication_unpriced')
+    return 'The clinic admin needs to set medication prices before you can order or pay. Try again once pricing is ready.'
   if (error instanceof ApiError && error.status === 422)
     return 'The request could not be accepted. Check your delivery address and supported postcode.'
   if (error instanceof ApiError && error.status === 409)

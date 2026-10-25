@@ -13,8 +13,8 @@ Clinical records owns notes and prescriptions. Prescription requires
 `status` (`draft`, `issued`, `voided`), `items`, `issued_at` (instant or null),
 `created_at`, `updated_at`. Each item requires `prescription_item_id`,
 `medication_id`, `quantity` (positive integer dispensing units), `instructions`
-(plain text) and `display_name` (snapshot). Initial prototype uses the owning
-clinic's fixed catalogue, no substitutions/partial fills or arbitrary patient
+(plain text) and `display_name` (snapshot). RF12 lets doctors register typed names in the owning
+clinic's catalogue as unpriced references. No substitutions/partial fills or arbitrary patient
 quantities. Instructions are supplied by the authorized doctor; fixtures have
 nonclinical placeholder text. A prescription has no trusted charge total.
 
@@ -56,10 +56,10 @@ Patient PDF retrieval still goes through document authorization/auditing below.
 ## Catalogue, order and quote shapes
 
 Fulfilment owns the catalogue and orders. A catalogue item requires `medication_id`,
-`tenant_id`, `display_name`, `unit_label`, `unit_price` (C01 SGD Money), `active`,
+`tenant_id`, `display_name`, `unit_label`, `unit_price` (C01 SGD Money or null while awaiting admin pricing), `active`,
 `updated_at`. Clinic admin controls price/active status; prescription display name
-does not establish price. A doctor selects active medications, not patient-supplied
-prices. An order price is frozen at successful checkout reservation; before that,
+does not establish price. A doctor can register any typed medication name as an active unpriced reference, never a fabricated free item. Retried names reuse the clinic reference case-insensitively. Neither doctor nor patient supplies
+prices. Orders and new quotes reject any unpriced medicine with 409 `medication_unpriced`; prescription drafts/issuance remain allowed. An order price is frozen at successful checkout reservation; before that,
 the server refreshes current catalogue prices on each new quote.
 
 Order requires `order_id`, `tenant_id`, `prescription_id`, `appointment_id`,
@@ -86,6 +86,7 @@ Provider references and address payloads never appear in C05 events/general logs
 | Route (prefix `/api/v1/fulfilment`) | Body / response | Policy |
 | --- | --- | --- |
 | GET `/clinics/{tenant_id}/catalogue` | Active items, C01 pagination ordered display_name, medication_id ascending | Active owning-clinic doctor/admin; not a public medical catalogue |
+| POST `/clinics/{tenant_id}/catalogue` | display_name; existing item 200 or new unpriced item 201 | Active owning-clinic doctor/admin; name-only input; stable reference on case-insensitive replay |
 | PUT `/clinics/{tenant_id}/catalogue/{medication_id}` | display_name, unit_label, unit_price, active; item, 201/200 | Active owning-clinic admin; server validates SGD/nonnegative amount |
 | POST `/orders` | prescription_id; order, 201 new / 200 existing | Own patient; one order per issued prescription, including retries |
 | GET `/orders/{order_id}` | Order, 200 | Own patient or active owning-clinic admin; platform operational view, no clinical data |

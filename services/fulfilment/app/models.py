@@ -45,7 +45,7 @@ class CatalogueItem(Base):
     medication_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     display_name: Mapped[str] = mapped_column(String(200))
     unit_label: Mapped[str] = mapped_column(String(80))
-    unit_price_minor: Mapped[int] = mapped_column(BigInteger)
+    unit_price_minor: Mapped[int | None] = mapped_column(BigInteger)
     active: Mapped[bool]
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

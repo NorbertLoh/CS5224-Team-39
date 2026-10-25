@@ -141,6 +141,10 @@ def create_order(
             item = catalogue.get(source.medication_id)
             if item is None or not item.active:
                 raise DomainError(409, "medication_unavailable", "Medication is unavailable.")
+            if item.unit_price_minor is None:
+                raise DomainError(
+                    409, "medication_unpriced", "Clinic admin must price all medicines first."
+                )
             line_total = source.quantity * item.unit_price_minor
             subtotal += line_total
             if subtotal > MAX_MONEY:

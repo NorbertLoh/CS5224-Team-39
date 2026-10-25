@@ -119,3 +119,33 @@ def test_catalogue_context_and_pagination(case):
 def test_nonlocal_configuration_rejects_unsafe_values(field, value):
     with pytest.raises(ValueError):
         Settings(_env_file=None, environment="demo", **{field: value})
+
+
+def test_unpriced_catalogue_name_is_valid_for_prescribing():
+    tenant, medication = uuid4(), uuid4()
+    upstream = RecordsUpstream(
+        Settings(_env_file=None, fulfilment_url="http://fulfilment"),
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                json={
+                    "items": [
+                        {
+                            "tenant_id": str(tenant),
+                            "medication_id": str(medication),
+                            "display_name": "Free typed medicine",
+                            "active": True,
+                            "unit_price": None,
+                        }
+                    ],
+                    "next_cursor": None,
+                },
+            )
+        ),
+    )
+    try:
+        assert upstream.medications(tenant, {medication}, "token", "request") == {
+            medication: "Free typed medicine"
+        }
+    finally:
+        upstream.close()

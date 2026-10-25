@@ -164,14 +164,55 @@ export async function savePrescription(
   appointmentId: string,
   prescriptionId: string | undefined,
   items: PrescriptionInput[],
+  tenantId: string,
 ): Promise<Prescription> {
+  const resolved = []
+  for (const item of prescriptionItems(items)) {
+    const medication = item.medication_id
+      ? null
+      : await registerMedication(tenantId, item.display_name ?? '')
+    resolved.push({
+      medication_id: item.medication_id || medication!.medication_id,
+      quantity: item.quantity,
+      instructions: item.instructions,
+    })
+  }
   return (
     await request(
       prescriptionId
         ? `${base}/prescriptions/${id(prescriptionId)}`
         : `${base}/appointments/${id(appointmentId)}/prescriptions`,
       json(prescriptionId ? 'PATCH' : 'POST', {
-        items: prescriptionItems(items),
+        items: resolved,
+      }),
+    )
+  ).json()
+}
+export async function registerMedication(
+  tenantId: string,
+  displayName: string,
+): Promise<Medication> {
+  return (
+    await request(
+      `/fulfilment/clinics/${id(tenantId)}/catalogue`,
+      json('POST', { display_name: displayName.trim() }),
+    )
+  ).json()
+}
+export async function priceMedication(
+  tenantId: string,
+  medication: Medication,
+  amountMinor: number,
+  unitLabel: string,
+): Promise<Medication> {
+  return (
+    await request(
+      `/fulfilment/clinics/${id(tenantId)}/catalogue/${id(medication.medication_id)}`,
+      json('PUT', {
+        display_name: medication.display_name,
+        unit_label: unitLabel.trim(),
+        unit_price: { amount_minor: amountMinor, currency: 'SGD' },
+        active: true,
       }),
     )
   ).json()

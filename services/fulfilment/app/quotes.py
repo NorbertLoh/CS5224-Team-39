@@ -53,6 +53,10 @@ def refresh_items(session, order):
         current = catalogue.get(item.medication_id)
         if current is None or not current.active:
             raise DomainError(409, "medication_unavailable", "Medication is unavailable.")
+        if current.unit_price_minor is None:
+            raise DomainError(
+                409, "medication_unpriced", "Clinic admin must price all medicines first."
+            )
         item.display_name = current.display_name
         item.unit_price_minor = current.unit_price_minor
         item.line_total_minor = current.unit_price_minor * item.quantity

@@ -37,7 +37,7 @@ Missing notes and failed requests have explicit empty/retry states.
 
 ## Setup and verification
 
-No new configuration or migrations. See [records setup](../../../../../docs/records-frontend.md),
+Fulfilment migration 0006 is required for typed medication pricing; no new environment variables. See [records setup](../../../../../docs/records-frontend.md),
 [MC setup](../../../../../docs/medical-certificates.md) and [documents](../documents/README.md).
 The patient `/patient` view continues to use real authorised prescription/document APIs.
 
@@ -48,3 +48,10 @@ A separate synthetic consultation verified database preservation for blank notes
 and incomplete MC/prescription inputs, and all three valid autosaved drafts survived
 a full browser reload. No MC/prescription was issued, visit completed, payment made
 or delivery sent. Labelled synthetic visit/note/catalogue examples remain local.
+
+Medication entry is now an unrestricted name textbox. Valid autosaves reuse or
+register a clinic-owned unpriced medication reference. Clinic admins price these
+under Medications & prices on their existing dashboard. Prescriptions may be
+issued before pricing, but order/quote creation waits for every medicine to be
+priced. Setup: [medication pricing](../../../../../docs/medication-pricing.md),
+including fulfilment migration 0006. Prescription/event/document IDs are unchanged.

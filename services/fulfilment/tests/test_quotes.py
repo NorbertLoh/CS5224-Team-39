@@ -253,3 +253,14 @@ def test_unauthenticated_quotes_fail_closed():
             ).status_code
             == 401
         )
+
+
+def test_unpriced_catalogue_blocks_quote_without_provider_call(quotes):
+    client, state = quotes
+    with state.sessions.begin() as db:
+        db.get(CatalogueItem, (TENANT, MEDICATION)).unit_price_minor = None
+    response = quote(client, state)
+    assert response.status_code == 409 and response.json()["error"]["code"] == "medication_unpriced"
+    assert state.provider.calls == 0
+    with state.sessions() as db:
+        assert db.scalar(select(func.count()).select_from(Quote)) == 0

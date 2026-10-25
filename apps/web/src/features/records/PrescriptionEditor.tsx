@@ -1,17 +1,11 @@
 import { useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { PrescriptionItemFields } from './PrescriptionItemFields'
 import { PrescriptionDetails } from './PrescriptionDetails'
-import {
-  catalogue,
-  savePrescription,
-  issuePrescription,
-  recordsError,
-} from './api'
+import { savePrescription, issuePrescription, recordsError } from './api'
 import { prescriptionItems, validItems } from './types'
 import type { Prescription, PrescriptionInput } from './types'
 import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
 import { Pill, Plus } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { useDraftAutosave } from './useDraftAutosave'
@@ -23,7 +17,6 @@ import {
 export function PrescriptionEditor({
   appointmentId,
   tenantId,
-  token,
   prescription,
   editable,
   onFailure,
@@ -42,20 +35,13 @@ export function PrescriptionEditor({
     prescriptionItems(prescription?.items ?? []),
   )
   const locked = Boolean(saved && saved.status !== 'draft')
-  const medications = useQuery({
-    queryKey: ['records', 'catalogue', token, tenantId],
-    queryFn: ({ signal }) => catalogue(tenantId, signal),
-    enabled: editable && !locked,
-    retry: false,
-    gcTime: 0,
-  })
   const accept = (result: Prescription) => {
     setSaved(result)
     setItems(prescriptionItems(result.items))
   }
   const save = useMutation({
     mutationFn: () =>
-      savePrescription(appointmentId, saved?.prescription_id, items),
+      savePrescription(appointmentId, saved?.prescription_id, items, tenantId),
     onSuccess: accept,
     onError: onFailure,
     retry: false,
@@ -72,15 +58,9 @@ export function PrescriptionEditor({
   const dirty =
     JSON.stringify(prescriptionItems(items)) !==
     JSON.stringify(prescriptionItems(saved?.items ?? []))
-  const valid =
-    validItems(items) &&
-    items.every((item) =>
-      medications.data?.some(
-        (medication) => medication.medication_id === item.medication_id,
-      ),
-    )
+  const valid = validItems(items)
   useRecordFormState(dirty, busy, onStateChange)
-  const writable = editable && !locked && medications.isSuccess && !busy
+  const writable = editable && !locked && !busy
   useDraftAutosave(
     writable && valid && dirty && !save.isError && !issue.isError,
     JSON.stringify(items),
@@ -109,7 +89,7 @@ export function PrescriptionEditor({
       </div>
       <p className="text-sm text-slate-600">
         Complete each medication to autosave the draft. Issue the prescription
-        when ready.
+        when ready. The clinic admin sets prices before checkout.
       </p>
       {locked || !editable ? (
         <>
@@ -122,34 +102,21 @@ export function PrescriptionEditor({
         </>
       ) : (
         <>
-          {medications.isPending && (
-            <LoadingState message="Loading clinic medications..." />
-          )}
-          {medications.isError && (
-            <ErrorState
-              message={recordsError(medications.error)}
-              onRetry={() => void medications.refetch()}
-            />
-          )}
-          {medications.isSuccess && !medications.data.length && (
-            <p
-              role="status"
-              className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600"
-            >
-              This clinic has no active catalogue medications. Ask the clinic
-              admin to add medications before prescribing.
-            </p>
-          )}
           <fieldset disabled={!writable} className="space-y-4">
             <Button
               variant="outline"
               className="h-10 px-4"
               type="button"
-              disabled={items.length >= 100 || !medications.data?.length}
+              disabled={items.length >= 100}
               onClick={() =>
                 changeItems([
                   ...items,
-                  { medication_id: '', quantity: 1, instructions: '' },
+                  {
+                    medication_id: '',
+                    display_name: '',
+                    quantity: 1,
+                    instructions: '',
+                  },
                 ])
               }
             >
@@ -165,7 +132,6 @@ export function PrescriptionEditor({
                 key={index}
                 item={item}
                 index={index}
-                medications={medications.data ?? []}
                 onChange={(change) =>
                   changeItems(
                     items.map((current, position) =>

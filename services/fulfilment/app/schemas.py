@@ -26,6 +26,10 @@ class CatalogueWrite(StrictModel):
     active: bool = Field(strict=True)
 
 
+class MedicationRegister(StrictModel):
+    display_name: str = Field(min_length=1, max_length=200)
+
+
 class Resource(StrictModel):
     @field_serializer("*", when_used="json", check_fields=False)
     def serialize_field(self, value):
@@ -39,6 +43,7 @@ class Resource(StrictModel):
 
 
 class CataloguePublic(Resource, CatalogueWrite):
+    unit_price: Money | None
     medication_id: UUID
     tenant_id: UUID
     updated_at: datetime
