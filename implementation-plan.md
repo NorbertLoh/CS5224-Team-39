@@ -233,6 +233,15 @@ Week 4: finish essential checks in the first half; freeze features, rehearse and
 Deferred verification is tracked separately from accepted local deliverables.
 These tasks do not establish AWS integration until their evidence is recorded.
 
+- [ ] RF02: Give prescription, receipt and medical certificate PDFs a shared formal
+clinic layout with readable tables, patient/issuer sections, wrapping and pagination.
+Issue #244; Assignee: NorbertLoh; status: in progress. Dependencies: P01 and U17
+(complete). Effort: M. Preserve existing template-data contracts, glyph rejection,
+private metadata and offline fonts. Verify document tests and attach synthetic
+sample PDFs to the draft PR. Receipt generation wiring and signatures are out of scope.
+Draft PR #263; design and synthetic PDF previews: `docs/RF02-pdf-design.md`.
+Verification: 105 document tests passed against disposable PostgreSQL; changed-file
+Ruff checks passed. Keep the task open until merge.
 - [x] RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
 access message while preserving public routes and signed-in access checks. Remove
 the redundant Explore clinics section from the patient workspace, retaining clinic
