@@ -1,6 +1,11 @@
 # TeleLink Health implementation plan
 
-Status: architecture plan, 12 October 2026. F02 scaffold and F03 FastAPI template are merged; F04's optional database/migration example is implemented on its task branch with review/merge pending. No business workflows or AWS resources have been created.
+Status: architecture plan, originally 12 October 2026; current implementation
+summary updated 26 October 2026. The React frontend, independent business APIs,
+workers and local Compose application are implemented. Local integration evidence,
+remaining checks and AWS deployment work are tracked in
+[implementation-plan.md](implementation-plan.md). Local verification does not
+establish deployed AWS behavior.
 
 Execution checklist: [implementation-plan.md](implementation-plan.md), with small unassigned tasks, effort estimates, dependencies and completion criteria for the four-week prototype. Anyone can claim a ready task.
 

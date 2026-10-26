@@ -88,11 +88,12 @@ before attempting a different lifecycle action.
 
 ## Verification
 
-Run `npm test`, `npm run lint` and `npm run build` from `apps/web`; run `npm test`
+Run `npm run lint`, `npm run typecheck` and `npm run build` from `apps/web`; run `npm test`
 from `services/signalling`. Consultation uses the disposable PostgreSQL setup,
 `python -m pytest -q`, `python -m ruff check .` and `python -m ruff format --check .`
-described in its README. Frontend checks include a real Vite proxy test blocking
-consultation-internal access. Results/browser evidence are recorded in PR #202.
+described in its README. RF04 removed the frontend test harness; current frontend
+scripts do not provide `npm test`. Historical proxy/browser checks below were
+recorded in PR #202 and do not represent a new run.
 
 Synthetic persisted paid bookings and signed test identities establish local
 integration, not a new hosted Stripe payment or a complete patient booking flow.

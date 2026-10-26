@@ -17,7 +17,8 @@ This is an inspected candidate list, not a claim that subsequent phases are comp
 | Existing service tests, template and common package | Keep | Active CI installs/runs template and shared tests; service ownership remains independent. | Do not remove based on names or apparent scaffolding. |
 | Root/feature/service documentation | Consolidate in RF19 | `plan.md` introduction predates implemented services; scheduling guide still advertises removed frontend tests and disconnected billing. | Correct current behavior against actual routes/scripts; keep historical verification labeled historical. |
 | Former X04 webhook setup document | Consolidated/deleted in RF18 | Commands launched the superseded isolated handler; inbound backlog/README/Stripe guide references updated. | Unique evidence and current commands retained in billing `WEBHOOKS.md`. |
-| RF09/RF10 notes and design screenshots/PDF samples | Keep unless redundancy is demonstrated | Notes carry cursor/API semantics and live evidence; samples support PDF/sign-in design reference. | Do not delete unique evidence/assets just to shrink the repository. |
+| RF10 appointment note | Consolidated/deleted in RF19 | Current scheduling frontend guide owns the same role browsing behavior. | Period/cursor/API semantics and dated RF10 evidence moved into that guide; inbound links repaired. |
+| RF09 note and design screenshots/PDF samples | Keep | Note carries multi-service history/cursor semantics; samples support PDF/sign-in design reference. | Unique evidence/assets remain useful. |
 | Imports/dependencies/large components | Keep unless demonstrated unused | No proven unused runtime dependency or unsafe large-module responsibility found in this pass. | Avoid speculative refactoring; lint catches unused imports. |
 | Generated caches, runtime data and `dist/` | Keep ignored | `.gitignore` already excludes caches/build/runtime state. | No recursive local cleanup or data reset. |
 
