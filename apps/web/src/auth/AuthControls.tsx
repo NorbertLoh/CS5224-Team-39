@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
 import { SignInPage } from './SignInPage'
@@ -14,6 +14,7 @@ import {
   readSession,
   refreshSession,
   signInWithPassword,
+  subscribeToSession,
 } from './session'
 import type { AuthConfig, Session } from './session'
 
@@ -75,11 +76,25 @@ export function AuthControls({
 }) {
   const queryClient = useQueryClient()
   const [session, setSession] = useState(readSession)
+  const observedSession = useRef(session)
   const [message, setMessage] = useState(logoutWarning)
   const [busy, setBusy] = useState(false)
   useEffect(() => {
     onSessionChange?.(session)
   }, [session, onSessionChange])
+
+  useEffect(
+    () => subscribeToSession(() => {
+      const next = readSession()
+      const previous = observedSession.current
+      if (JSON.stringify(next) === JSON.stringify(previous)) return
+      observedSession.current = next
+      if (next?.refreshToken !== previous?.refreshToken) queryClient.clear()
+      setSession(next)
+      setMessage('')
+    }),
+    [queryClient],
+  )
 
   const signOut = useCallback(
     (notice = '') => {
@@ -124,7 +139,12 @@ export function AuthControls({
         const renewed = await refreshSession(settings, session)
         if (!cancelled) setSession(renewed)
       } catch {
-        if (!cancelled) signOut('Your session expired. Please sign in again.')
+        if (!cancelled) {
+          const current = readSession()
+          if (current?.accessToken === session.accessToken)
+            signOut('Your session expired. Please sign in again.')
+          else setSession(current)
+        }
       }
     }
     const timer = window.setInterval(check, 5000)
