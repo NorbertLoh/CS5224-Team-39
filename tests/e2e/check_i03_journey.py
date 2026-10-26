@@ -62,8 +62,7 @@ def main():
             appointment = get(8003, f"/appointments/{args.appointment_id}")
             order = get(8006, f"/orders/{args.order_id}")
             prescription = get(
-                8005,
-                "/api/v1/clinical-records/prescriptions/" + order["prescription_id"],
+                8005, "/api/v1/clinical-records/prescriptions/" + order["prescription_id"]
             )
             consultation = get(8009, f"/payments/{args.consultation_payment_id}")
             medication = get(8009, "/payments/" + order["payment_id"])
@@ -88,13 +87,8 @@ def main():
             )
             check(
                 "order quantities come from the issued prescription",
-                sorted(
-                    (i["prescription_item_id"], i["quantity"]) for i in order["items"]
-                )
-                == sorted(
-                    (i["prescription_item_id"], i["quantity"])
-                    for i in prescription["items"]
-                )
+                sorted((i["prescription_item_id"], i["quantity"]) for i in order["items"])
+                == sorted((i["prescription_item_id"], i["quantity"]) for i in prescription["items"])
                 and bool(order["items"]),
             )
             check(
@@ -121,13 +115,10 @@ def main():
                 order["payment_status"] == "succeeded"
                 and order["medicine_status"] == "ready"
                 and delivery["order_id"] == str(args.order_id)
-                and delivery["status"]
-                in {"submitted", "picked_up", "delivered", "cancelled"},
+                and delivery["status"] in {"submitted", "picked_up", "delivered", "cancelled"},
             )
             with psycopg.connect(
-                database.set(drivername="postgresql").render_as_string(
-                    hide_password=False
-                ),
+                database.set(drivername="postgresql").render_as_string(hide_password=False),
                 autocommit=True,
                 options="-c default_transaction_read_only=on",
             ) as db:
@@ -143,9 +134,7 @@ def main():
                     and bool(rows[0][1])
                     and rows[0][2] is not None,
                 )
-            print(
-                f"I03 persisted-state checks passed; delivery status={delivery['status']}."
-            )
+            print(f"I03 persisted-state checks passed; delivery status={delivery['status']}.")
             print("Provider and transport observations: docs/I03-local-journey.md")
         finally:
             verification_failed = sys.exc_info()[0] is not None
@@ -160,10 +149,7 @@ def main():
             except Exception:
                 if not verification_failed:
                     raise
-                print(
-                    "Verification failed; token revocation also needs retry.",
-                    file=sys.stderr,
-                )
+                print("Verification failed; token revocation also needs retry.", file=sys.stderr)
 
 
 if __name__ == "__main__":

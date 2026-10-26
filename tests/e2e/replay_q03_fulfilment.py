@@ -68,10 +68,7 @@ def main():
     parser.add_argument("--config-root", type=Path, default=ROOT)
     args = parser.parse_args()
     settings = Settings(_env_file=args.config_root / "services/fulfilment/.env")
-    if settings.environment not in {
-        "local",
-        "test",
-    } or settings.aws_endpoint_url not in {
+    if settings.environment not in {"local", "test"} or settings.aws_endpoint_url not in {
         "http://localhost:4566",
         "http://127.0.0.1:4566",
     }:
@@ -95,14 +92,10 @@ def main():
                     and make_url(settings.database_url.get_secret_value()) != url
                 )
             ):
-                parser.error(
-                    "Use each service's own role on the persistent local database, 55411"
-                )
+                parser.error("Use each service's own role on the persistent local database, 55411")
             return stack.enter_context(
                 psycopg.connect(
-                    url.set(drivername="postgresql").render_as_string(
-                        hide_password=False
-                    ),
+                    url.set(drivername="postgresql").render_as_string(hide_password=False),
                     autocommit=True,
                     options="-c default_transaction_read_only=on",
                     row_factory=dict_row,
@@ -174,9 +167,7 @@ def main():
             ).fetchall()
 
         original_inbox = inbox()
-        check(
-            "one original committed fulfilment inbox receipt", len(original_inbox) == 1
-        )
+        check("one original committed fulfilment inbox receipt", len(original_inbox) == 1)
         engine = create_database_engine(settings)
         stack.callback(engine.dispose)
         sessions = sessionmaker(engine)
@@ -188,9 +179,7 @@ def main():
             region_name=settings.aws_region,
             aws_access_key_id="test",
             aws_secret_access_key="test",
-            config=Config(
-                connect_timeout=3, read_timeout=5, retries={"max_attempts": 1}
-            ),
+            config=Config(connect_timeout=3, read_timeout=5, retries={"max_attempts": 1}),
         )
         stack.callback(sqs.close)
         suffix = uuid4().hex[:12]
@@ -201,19 +190,15 @@ def main():
             stack.callback(sqs.delete_queue, QueueUrl=url)
             return url
 
-        dlq = create_queue(
-            f"telelink-q03-{suffix}-dlq", {"MessageRetentionPeriod": "1209600"}
-        )
-        arn = sqs.get_queue_attributes(QueueUrl=dlq, AttributeNames=["QueueArn"])[
-            "Attributes"
-        ]["QueueArn"]
+        dlq = create_queue(f"telelink-q03-{suffix}-dlq", {"MessageRetentionPeriod": "1209600"})
+        arn = sqs.get_queue_attributes(QueueUrl=dlq, AttributeNames=["QueueArn"])["Attributes"][
+            "QueueArn"
+        ]
         queue = create_queue(
             f"telelink-q03-{suffix}",
             {
                 "VisibilityTimeout": "1",
-                "RedrivePolicy": json.dumps(
-                    {"deadLetterTargetArn": arn, "maxReceiveCount": 3}
-                ),
+                "RedrivePolicy": json.dumps({"deadLetterTargetArn": arn, "maxReceiveCount": 3}),
             },
         )
         sqs.send_message(QueueUrl=queue, MessageBody=body)
@@ -233,13 +218,9 @@ def main():
                 max_messages=1,
             )
             if result.processed or result.failed:
-                raise AssertionError(
-                    "Committed replay unexpectedly ran or failed its handler"
-                )
+                raise AssertionError("Committed replay unexpectedly ran or failed its handler")
             duplicate_receives += result.duplicates
-            messages = sqs.receive_message(QueueUrl=dlq, WaitTimeSeconds=1).get(
-                "Messages", []
-            )
+            messages = sqs.receive_message(QueueUrl=dlq, WaitTimeSeconds=1).get("Messages", [])
             if messages:
                 message = messages[0]
                 break
@@ -267,8 +248,7 @@ def main():
         for _ in range(2):
             check(
                 "delivery submission replay is a no-op",
-                submit_delivery(sessions, UUID(order["delivery_id"]), blocked, blocked)
-                is False,
+                submit_delivery(sessions, UUID(order["delivery_id"]), blocked, blocked) is False,
             )
         check(
             "one delivery and original domain/inbox/outbox state remain",
@@ -277,13 +257,9 @@ def main():
         for queue_url in (queue, dlq):
             check(
                 "probe queue drained",
-                not sqs.receive_message(QueueUrl=queue_url, WaitTimeSeconds=1).get(
-                    "Messages"
-                ),
+                not sqs.receive_message(QueueUrl=queue_url, WaitTimeSeconds=1).get("Messages"),
             )
-        print(
-            "Q03 fulfilment replay passed; post-commit acknowledgment failure was injected."
-        )
+        print("Q03 fulfilment replay passed; post-commit acknowledgment failure was injected.")
 
 
 if __name__ == "__main__":

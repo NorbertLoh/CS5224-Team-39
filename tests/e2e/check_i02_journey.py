@@ -33,16 +33,12 @@ def token(client, role):
     client.cookies.clear()
     # cognito.sh always registers the 127.0.0.1 callback, whatever COGNITO_CALLBACK_URL is.
     callback = "http://127.0.0.1:5173/auth/callback"
-    tokens = login(
-        client, client_id, callback=callback, username=f"{role}@example.test"
-    )
+    tokens = login(client, client_id, callback=callback, username=f"{role}@example.test")
     return tokens["access_token"]
 
 
 def get(client, url, access_token, **params):
-    response = client.get(
-        url, headers={"Authorization": "Bearer " + access_token}, params=params
-    )
+    response = client.get(url, headers={"Authorization": "Bearer " + access_token}, params=params)
     response.raise_for_status()
     return response.json()
 
@@ -66,9 +62,7 @@ def seed_catalogue(client, tenant_id):
 def verify(client, appointment_id):
     patient = token(client, "patient")
     appointment = get(client, f"{SCHEDULING}/appointments/{appointment_id}", patient)
-    prescriptions = get(
-        client, f"{RECORDS}/prescriptions", patient, appointment_id=appointment_id
-    )
+    prescriptions = get(client, f"{RECORDS}/prescriptions", patient, appointment_id=appointment_id)
     documents = get(client, DOCUMENTS, patient, appointment_id=appointment_id)
     issued = [item for item in prescriptions["items"] if item["status"] == "issued"]
     pdfs = [
@@ -80,15 +74,12 @@ def verify(client, appointment_id):
     ]
     pdf = b""
     if pdfs:
-        download = get(
-            client, f"{DOCUMENTS}/{pdfs[0]['document_id']}/download", patient
-        )
+        download = get(client, f"{DOCUMENTS}/{pdfs[0]['document_id']}/download", patient)
         # The signed URL is fetched without the API bearer token, as the browser does.
         pdf = httpx.get(download["download_url"], timeout=15, trust_env=False).content
     checks = {
         "appointment completed": appointment["status"] == "completed",
-        "prescription issued for this appointment": len(issued) == 1
-        and bool(issued[0]["items"]),
+        "prescription issued for this appointment": len(issued) == 1 and bool(issued[0]["items"]),
         "prescription PDF ready for the patient": len(pdfs) == 1,
         "signed download returns a PDF": pdf.startswith(b"%PDF"),
     }

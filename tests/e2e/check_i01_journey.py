@@ -32,16 +32,12 @@ def token(client, role):
     client.cookies.clear()
     # cognito.sh always registers the 127.0.0.1 callback, whatever COGNITO_CALLBACK_URL is.
     callback = "http://127.0.0.1:5173/auth/callback"
-    tokens = login(
-        client, client_id, callback=callback, username=f"{role}@example.test"
-    )
+    tokens = login(client, client_id, callback=callback, username=f"{role}@example.test")
     return tokens["access_token"]
 
 
 def get(client, base, path, access_token):
-    response = client.get(
-        base + path, headers={"Authorization": "Bearer " + access_token}
-    )
+    response = client.get(base + path, headers={"Authorization": "Bearer " + access_token})
     response.raise_for_status()
     return response.json()
 
@@ -63,34 +59,25 @@ def submit_clinic(client):
     )
     response.raise_for_status()
     clinic = response.json()
-    print(
-        f"Submitted {clinic['status']} clinic {clinic['slug']} (tenant {clinic['tenant_id']})"
-    )
+    print(f"Submitted {clinic['status']} clinic {clinic['slug']} (tenant {clinic['tenant_id']})")
 
 
 def verify(client, appointment_id):
     patient = token(client, "patient")
     appointment = get(client, SCHEDULING, f"/appointments/{appointment_id}", patient)
     payment = get(client, BILLING, f"/payments/{appointment['payment_id']}", patient)
-    clinic = get(
-        client,
-        TENANT,
-        f"/clinics/{appointment['tenant_id']}",
-        token(client, "platform"),
-    )
+    clinic = get(client, TENANT, f"/clinics/{appointment['tenant_id']}", token(client, "platform"))
     checks = {
         "clinic approved and active": clinic["status"] == "active",
         "appointment confirmed": appointment["status"] == "confirmed",
         "appointment payment resolution confirmed": appointment["payment_resolution"]
         == "confirmed",
         "payment succeeded": payment["status"] == "succeeded",
-        "payment is the consultation for this appointment": payment["purpose"]
-        == "consultation"
+        "payment is the consultation for this appointment": payment["purpose"] == "consultation"
         and payment["appointment_id"] == appointment_id,
         "same patient and clinic": payment["patient_id"] == appointment["patient_id"]
         and payment["tenant_id"] == appointment["tenant_id"],
-        "amount matches booked price": payment["amount"]
-        == appointment["consultation_price"],
+        "amount matches booked price": payment["amount"] == appointment["consultation_price"],
     }
     for name, passed in checks.items():
         print(f"{'PASS' if passed else 'FAIL'}  {name}")
