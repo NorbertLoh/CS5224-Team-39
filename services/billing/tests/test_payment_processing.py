@@ -16,11 +16,11 @@ from sqlalchemy.orm import Session, sessionmaker
 from telelink_common.outbox import publish_pending
 
 from app.api.webhooks import persist_receipt, verify_event
-from app.checkout import checkout_lock
+from app.integrations.stripe import StripeCheckout
 from app.main import create_app
 from app.models import CheckoutAttempt, Payment, StripeWebhookEvent, event_outbox
-from app.payments import process_pending
-from app.provider import StripeCheckout
+from app.services.checkout import checkout_lock
+from app.services.payments import process_pending
 from app.settings import Settings
 from tests.helpers import insert, payment_values, read
 
@@ -351,7 +351,7 @@ def test_receipt_waits_for_inflight_checkout_and_missing_session_link(flow):
 
 @pytest.mark.parametrize("stage", ["staging", "commit"])
 def test_crash_rolls_back_receipt_payment_and_outbox(flow, monkeypatch, stage):
-    import app.payments as payments
+    import app.services.payments as payments
 
     event_id = receipt(flow)
     original = payments.add_event

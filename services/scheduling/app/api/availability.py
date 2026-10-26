@@ -11,10 +11,10 @@ from telelink_common.access import (
 from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.api.dependencies import DB, Doctor, Identity
-from app.holds import expire_slot_holds, server_now
 from app.models import ACTIVE_RESERVATION_STATES, Appointment, AvailabilitySlot
 from app.pagination import cursor_key, decode_cursor, encode_cursor
 from app.schemas import SlotCreate, SlotPage, SlotPublic, utc_instant
+from app.services.holds import expire_slot_holds, server_now
 
 router = APIRouter(
     tags=["availability"],

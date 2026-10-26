@@ -17,8 +17,8 @@ from app.api.patient_profiles import router as patient_profiles_router
 from app.api.provisioning import router as provisioning_router
 from app.api.registration import router as registration_router
 from app.api.sessions import router as session_router
-from app.clinics import ClinicDirectory
 from app.database import create_database_engine
+from app.integrations.clinics import ClinicDirectory
 from app.models import Membership, Subject
 from app.settings import Settings
 

@@ -7,9 +7,7 @@ from sqlalchemy.orm import Session
 from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.api.dependencies import Fulfilment, Patient, PaymentReader, ResolutionCaller
-from app.checkout import create_checkout, now
 from app.database import get_session
-from app.medication_checkout import create_medication_checkout
 from app.models import MedicationCheckoutAttempt, Payment
 from app.schemas import (
     CheckoutCreate,
@@ -19,6 +17,8 @@ from app.schemas import (
     PaymentPublic,
     payment_public,
 )
+from app.services.checkout import create_checkout, now
+from app.services.medication_checkout import create_medication_checkout
 
 router = APIRouter(
     responses={s: {"model": ErrorEnvelope} for s in (401, 403, 404, 409, 422, 502, 503)}

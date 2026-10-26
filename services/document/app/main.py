@@ -14,7 +14,7 @@ from app.access import AppointmentClient
 from app.api.documents import router
 from app.api.notification_context import router as notification_router
 from app.database import create_database_engine
-from app.downloads import Downloads, create_signer
+from app.services.downloads import Downloads, create_signer
 from app.settings import Settings
 
 

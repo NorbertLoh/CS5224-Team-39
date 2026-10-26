@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 from telelink_common.errors import DomainError
 
-from app.delivery_provider import HOST, SandboxQuotes
+from app.integrations.delivery_provider import HOST, SandboxQuotes
 from app.schemas import Destination
 from app.settings import Settings
 

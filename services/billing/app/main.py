@@ -15,9 +15,9 @@ from app.api.queries import router as query_router
 from app.api.refunds import router as refund_router
 from app.api.webhooks import router as webhook_router
 from app.database import create_database_engine
-from app.provider import StripeCheckout
+from app.integrations.stripe import StripeCheckout
+from app.integrations.upstream import CheckoutSources
 from app.settings import Settings
-from app.upstream import CheckoutSources
 
 
 def create_app(settings: Settings | None = None):

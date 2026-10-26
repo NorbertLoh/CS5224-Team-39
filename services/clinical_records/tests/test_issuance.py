@@ -15,8 +15,8 @@ from test_api import PREFIX, body, create
 from test_api import api as api
 from test_api import database as database
 
-from app.issuance import issuance_event_id
 from app.models import Prescription, PrescriptionItem, event_outbox
+from app.services.issuance import issuance_event_id
 
 
 def outbox_row(engine, prescription_id):

@@ -11,8 +11,8 @@ from telelink_common.errors import DomainError
 from app.api.dependencies import DB
 from app.api.documents import ClinicName, ParticipantNames, document_service, profile
 from app.api.medical_certificates import MCPublic
+from app.integrations.upstream import not_found
 from app.models import MedicalCertificate, ServiceReadAudit
-from app.upstream import not_found
 
 router = APIRouter(prefix="/api/v1/clinical-records/internal", tags=["internal"])
 

@@ -13,9 +13,9 @@ from telelink_common.inbox.consumer import handle_event
 from test_persistence import database as database
 from test_worker import MemoryS3
 
-from app.mc_generation import GenerateMedicalCertificate, IssuedMC, document_id_for
+from app.integrations.storage import PrivatePDFStore
 from app.models import Document, event_inbox, event_outbox
-from app.storage import PrivatePDFStore
+from app.services.mc_generation import GenerateMedicalCertificate, IssuedMC, document_id_for
 
 
 @pytest.fixture

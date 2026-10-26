@@ -12,8 +12,8 @@ def main():
     parser.add_argument("--state", required=True, type=Path)
     args = parser.parse_args()
     sys.path.insert(0, str(args.root / "services/document"))
-    from app.template_data import MedicalCertificate, Prescription, Receipt
-    from app.templates import (
+    from app.rendering.template_data import MedicalCertificate, Prescription, Receipt
+    from app.rendering.templates import (
         render_medical_certificate,
         render_prescription,
         render_receipt,

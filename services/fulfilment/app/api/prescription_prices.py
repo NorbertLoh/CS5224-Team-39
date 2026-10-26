@@ -12,6 +12,7 @@ from app.access import require_clinic
 from app.api.dependencies import DB, Identity
 from app.models import MAX_MONEY, Order, PrescriptionPrice
 from app.schemas import Money, StrictModel
+from app.services.pricing import saved_prices
 
 router = APIRouter(tags=["prescription-pricing"])
 
@@ -36,19 +37,6 @@ class PriceResult(StrictModel):
     prescription_id: UUID
     locked: bool
     items: list[PriceLine]
-
-
-def saved_prices(session, tenant_id, prescription_id):
-    return list(
-        session.scalars(
-            select(PrescriptionPrice)
-            .where(
-                PrescriptionPrice.tenant_id == tenant_id,
-                PrescriptionPrice.prescription_id == prescription_id,
-            )
-            .order_by(PrescriptionPrice.prescription_item_id)
-        )
-    )
 
 
 def price_result(session, tenant_id, prescription_id):
@@ -91,7 +79,7 @@ def put_prices(
     identity: Identity,
     session: DB,
 ):
-    from app.api.orders import lock
+    from app.services.orders import lock
 
     require_clinic(identity, tenant_id, {"clinic_admin"})
     lock(session, f"orders:prescription:{prescription_id}")

@@ -4,7 +4,7 @@ from urllib.parse import urlsplit
 from pydantic import Field, SecretStr, field_validator, model_validator
 from telelink_common.settings import ServiceName, ServiceSettings
 
-from app.templates import validate_app_url
+from app.services.templates import validate_app_url
 
 
 def validate_email(value: str) -> str:

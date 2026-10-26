@@ -8,12 +8,12 @@ from telelink_common.errors import DomainError
 
 from app.api.booking import appointment_public
 from app.api.dependencies import DB, Billing
-from app.billing import BillingClient
-from app.holds import expire_slot_holds, server_now
+from app.integrations.billing import BillingClient
 from app.models import Appointment, PaymentRecovery
-from app.payments import PaymentEventRejected
 from app.schemas import AppointmentPublic
-from app.transitions import lock_appointment
+from app.services.holds import expire_slot_holds, server_now
+from app.services.payments import PaymentEventRejected
+from app.services.transitions import lock_appointment
 
 router = APIRouter(tags=["internal"])
 

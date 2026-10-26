@@ -21,9 +21,9 @@ from telelink_common.events import parse_sqs_body
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "services/notification"))
-from app.recipients import RecipientDirectory  # noqa: E402
+from app.integrations.recipients import RecipientDirectory  # noqa: E402
+from app.services.templates import render_email  # noqa: E402
 from app.settings import Settings  # noqa: E402
-from app.templates import render_email  # noqa: E402
 
 
 def main():

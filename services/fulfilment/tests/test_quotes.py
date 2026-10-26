@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from telelink_common.errors import DomainError
 
-from app.delivery_provider import DeliveryPrice
+from app.integrations.delivery_provider import DeliveryPrice
 from app.main import create_app
 from app.models import CatalogueItem, Order, Quote, QuoteRequest
 from app.settings import Settings
@@ -119,13 +119,13 @@ def test_concurrent_quotes(quotes, same_key):
 def test_expiry_equality_and_ten_minute_cap(quotes, monkeypatch):
     client, state = quotes
     now = datetime.now(timezone.utc)
-    monkeypatch.setattr("app.api.quotes.utcnow", lambda: now)
+    monkeypatch.setattr("app.services.quotes.utcnow", lambda: now)
     state.provider.expiry = now + timedelta(hours=1)
     data = quote(client, state).json()
     expiry = now + timedelta(minutes=10)
     with state.sessions() as db:
         assert db.get(Quote, UUID(data["quote_id"])).expires_at == expiry
-    monkeypatch.setattr("app.api.quotes.utcnow", lambda: expiry)
+    monkeypatch.setattr("app.services.quotes.utcnow", lambda: expiry)
     assert client.get(f"/quotes/{data['quote_id']}").json()["status"] == "expired"
     state.provider.expiry = expiry
     assert quote(client, state, key="expired").status_code == 409

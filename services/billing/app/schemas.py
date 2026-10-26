@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.refund_policy import RefundAvailability, refund_availability
+from app.services.refund_policy import RefundAvailability, refund_availability
 
 
 class Money(BaseModel):

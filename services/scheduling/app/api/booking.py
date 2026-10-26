@@ -7,9 +7,9 @@ from sqlalchemy.exc import IntegrityError
 from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.api.dependencies import DB, Patient
-from app.holds import expire_slot_holds, server_now
 from app.models import ACTIVE_RESERVATION_STATES, Appointment, AvailabilitySlot
 from app.schemas import AppointmentPublic, HoldCreate, Money
+from app.services.holds import expire_slot_holds, server_now
 
 router = APIRouter(
     tags=["booking"],

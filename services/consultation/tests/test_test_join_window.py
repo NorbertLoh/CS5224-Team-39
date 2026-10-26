@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
-from app.lifecycle import can_join
+from app.services.lifecycle import can_join
 from app.settings import Settings
 from tests.test_lifecycle import END, START
 

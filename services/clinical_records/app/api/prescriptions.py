@@ -7,7 +7,7 @@ from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.access import prescription_scope
 from app.api.dependencies import DB, Identity, context, token
-from app.issuance import issue_draft
+from app.integrations.upstream import not_found
 from app.models import Prescription
 from app.pagination import decode, encode, key, scope_for
 from app.schemas import (
@@ -16,8 +16,8 @@ from app.schemas import (
     PrescriptionPage,
     PrescriptionPublic,
 )
+from app.services.issuance import issue_draft
 from app.services.records import audit, fields, lock_appointment, prescription_public, replace_items
-from app.upstream import not_found
 
 router = APIRouter(
     prefix="/api/v1/clinical-records",

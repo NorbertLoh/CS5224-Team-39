@@ -3,10 +3,11 @@ from uuid import UUID
 from fastapi import APIRouter, Request, Response
 from telelink_common.errors import ErrorEnvelope
 
-from app import admissions, ice
 from app.api.dependencies import DB, Identity, Signalling
+from app.integrations import ice
 from app.schemas import AdmissionPublic, AdmissionRequest, LeasePublic, LeaseRequest
-from app.session_actions import act
+from app.services import admissions
+from app.services.session_actions import act
 
 router = APIRouter(
     responses={s: {"model": ErrorEnvelope} for s in (401, 403, 404, 409, 422, 502, 503)}

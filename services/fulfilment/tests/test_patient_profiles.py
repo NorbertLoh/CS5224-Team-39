@@ -4,7 +4,7 @@ import httpx
 import jwt
 import pytest
 
-from app.patient_profiles import HttpPatientProfiles, PatientContactUnavailable
+from app.integrations.patient_profiles import HttpPatientProfiles, PatientContactUnavailable
 from app.settings import Settings
 
 SECRET = "patient-profile-lookup-secret-32-bytes-minimum"

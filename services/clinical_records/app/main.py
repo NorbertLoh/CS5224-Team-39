@@ -19,8 +19,8 @@ from app.api.prescription_corrections import router as prescription_corrections_
 from app.api.prescription_pricing import router as pricing_router
 from app.api.prescriptions import router
 from app.database import create_database_engine
+from app.integrations.upstream import RecordsUpstream
 from app.settings import Settings
-from app.upstream import RecordsUpstream
 
 
 def create_app(settings: Settings | None = None):

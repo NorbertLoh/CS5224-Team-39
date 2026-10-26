@@ -10,7 +10,7 @@ from telelink_common.access import ClinicMembership, CurrentIdentity, require_id
 from telelink_common.errors import DomainError
 
 from app.database import get_session
-from app.dispensing import DispensingContext
+from app.integrations.dispensing import DispensingContext
 from app.main import create_app
 from app.models import CatalogueItem, Order, OrderRequest
 from app.settings import Settings

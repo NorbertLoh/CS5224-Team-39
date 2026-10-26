@@ -9,11 +9,11 @@ from sqlalchemy import select
 from telelink_common.errors import DomainError
 
 from app.api.dependencies import DB, Identity, token
-from app.issuance import issue_draft
+from app.integrations.upstream import not_found
 from app.models import Prescription, PrescriptionCorrection, PrescriptionItem
 from app.schemas import Input, ItemInput, PrescriptionInput, PrescriptionPublic
+from app.services.issuance import issue_draft
 from app.services.records import audit, fields, lock_appointment, prescription_public
-from app.upstream import not_found
 
 router = APIRouter(prefix="/api/v1/clinical-records", tags=["prescription-corrections"])
 

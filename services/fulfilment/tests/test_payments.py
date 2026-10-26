@@ -14,9 +14,9 @@ from sqlalchemy.exc import IntegrityError
 from telelink_common.events import new_event
 from telelink_common.inbox import consume_batch, handle_event
 
-from app.billing import BillingClient, PaymentFact
+from app.integrations.billing import BillingClient, PaymentFact
 from app.models import Order, Quote, event_inbox
-from app.payments import PaymentEventRejected, confirm_payment
+from app.services.payments import PaymentEventRejected, confirm_payment
 from app.settings import Settings
 
 SECRET = "d04-synthetic-service-secret-at-least-32-bytes"
