@@ -40,8 +40,6 @@ export function LiveDestinationForm({
     },
     retry: false,
     onSuccess: () => {
-      setAddress('')
-      setPostcode('')
       onEditingChange(false)
       onRefresh()
     },
