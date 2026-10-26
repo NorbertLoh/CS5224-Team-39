@@ -21,7 +21,7 @@ but issues #293/#296 remain open for those unverified checks; no browser result 
 
 | Done | ID | Deliverable and completion criterion | Dependencies | Effort | Claim |
 | --- | --- | --- | --- | --- | --- | --- |
-| [ ] | RF21 | Deeper backend audit; consolidate cursor JWT mechanics while preserving cursor wire/scope/error compatibility, remove demonstrated dead interfaces and pass shared/service regression checks. | RF16-RF20 changes merged; UI follow-ups separate | L | NorbertLoh; In progress; #302 |
+| [x] | RF21 | Deeper backend audit; consolidated cursor JWT mechanics across seven services, preserved compatibility and removed two unused interfaces. Merged PR #303 (`8f12b02`); all 17 final CI checks passed. Local: 517 tests + 38 subtests passed, 1,375 skipped; 201 cursor compatibility comparisons passed. No new configuration/migrations; rebuild updated images with the common package. | RF16-RF20 changes merged; UI follow-ups separate | L | NorbertLoh; complete; #302 closed |
 
 RF21 scope and evidence: [backend cleanup audit](docs/backend-cleanup.md).
 
