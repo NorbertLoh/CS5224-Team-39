@@ -1,5 +1,21 @@
 # TeleLink Health: shared implementation backlog
 
+## Phased cleanup (26 October 2026)
+
+Scope: [cleanup plan](cleanup-plan.md). Execution: [phase checklist](cleanup-implementation.md).
+User requested a separate PR per phase; PRs are stacked in order. Stacked dependencies
+are available for review, not claimed merged. Issues remain In progress until merge
+and satisfaction of their completion criteria. Existing task totals below predate these additions.
+
+| Done | ID | Deliverable and completion criterion | Dependencies | Effort | Claim |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ ] | RF16 | Cleanup plan/inventory with checked consumers and baseline evidence. | RF04, RF15 merged | S | NorbertLoh; In progress; #292 |
+| [ ] | RF17 | Product-oriented checkout/refund copy; guards preserved; frontend and screen checks recorded. | RF16 inventory | S | NorbertLoh; In progress; #293 |
+| [ ] | RF18 | Retire proven obsolete tooling; preserve unique checks and active consumers. | RF17; pending screen acceptance recorded explicitly | M | NorbertLoh; In progress; #294 |
+| [ ] | RF19 | Consolidate current docs, preserve unique evidence and repair stale instructions/links. | RF18 artifact decisions | M | NorbertLoh; In progress; #295 |
+| [ ] | RF20 | Final verification report with actual outcomes and unresolved acceptance checks. | RF16-RF19; merge in order | M | NorbertLoh; In progress; #296 |
+
+
 - [x] RF15: Share sign-in sessions across same-origin browser tabs, synchronize logout/account changes and guard concurrent refreshes. Keep PKCE transactions tab-local. Dependencies: A01, A02, RF03 (merged). Effort: M. Completed in merged PR #290 (`5e3e3b1`) on 26 October 2026; issue #289 closed. Frontend lint/typecheck/build and seven focused simulated-tab session checks passed; all PR checks passed. Setup/persistence: `docs/authentication.md`; no environment or migration changes. Live browser and AWS checks remain unverified.
 
 RF14 clinic-details refinement: user requests patient name, contact and delivery address inside clinic order details. Show the authorized appointment patient name separately from the confirmed order recipient/phone/address/postcode; indicate missing legacy details. Private delivery-details readback now permits active owning-clinic administrators and the owning patient, denying foreign/revoked clinics, doctors and platform-only access. All 378 fulfilment tests, Ruff and frontend lint/typecheck/build passed; actual shared-HTTPS API matching-context and denied-role checks passed. Visual browser check unavailable because Work browser automation was disabled. Web/fulfilment refreshed with Tailscale preserved. No migration/configuration changes or data mutations; PR #287 merged on 26 October 2026; issue #286 closed.
