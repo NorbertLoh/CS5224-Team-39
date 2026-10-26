@@ -42,11 +42,13 @@ source of access to appointments and clinic data. No configuration or migrations
 
 Selecting a clinic opens its profile as the management landing page. A persistent
 Clinic management navbar shows the selected clinic's name and Profile, Staff,
-Appointments, Payments and Medicine & delivery links, preserving that clinic in
+Appointments, Payments, Medicine & delivery and Settings links, preserving that clinic in
 every URL. Appointments opens `/clinic-admin/clinics/<UUID>/appointments` with the
 schedule fixed to that clinic and no clinic selector. Both the scoped schedule
 and Medicine & delivery require active administration of the selected clinic;
 platform access to profile/staff/payments does not grant those clinical views.
+Settings also requires active owning-clinic administration and saves the pickup
+location used for new delivery quotations. See [pickup settings](../../../../docs/clinic-pickup-settings.md).
 Change clinic returns to the list;
 Manage clinic stays within the selected clinic. The clinic choice is never stored
 in browser storage, and the shared identity gate blocks revoked/other-clinic links.

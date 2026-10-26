@@ -66,6 +66,7 @@ def database():
         assert sorted(inspect(engine).get_table_names(schema="tenant")) == [
             "alembic_version",
             "audit_events",
+            "clinic_locations",
             "clinics",
         ]
         yield engine

@@ -7,6 +7,12 @@ No delivery is submitted by these endpoints.
 
 ## Setup
 
+Clinic-managed pickup addresses are now available in the selected clinic's
+**Settings** page. Configure the tenant connection as described in
+[clinic pickup settings](../../docs/clinic-pickup-settings.md); its saved location
+overrides file-based origins for new quotes. The destination directory below
+remains required.
+
 Run `python -m alembic upgrade head` as the restricted fulfilment database role;
 migration `0002` adds `quotes`, `quote_requests` and one-active-quote-per-order
 uniqueness. Existing D01 orders are preserved. Readiness requires both order and

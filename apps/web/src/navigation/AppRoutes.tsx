@@ -13,6 +13,7 @@ import { BookedConsultation } from '../features/video/BookedConsultation'
 import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
 import { LiveOrders } from '../features/fulfilment/LiveOrders'
 import { ClinicPayments } from '../features/payments/ClinicPayments'
+import { ClinicSettings } from '../features/clinics/ClinicSettings'
 import { roleLabels } from './access'
 import type { Route } from './access'
 import type { Session } from '../auth/session'
@@ -50,6 +51,8 @@ export function AppRoutes({
       return <BookedConsultation role={route.role} />
     case 'profile':
       return <ClinicProfileEditor tenantId={route.tenantId} />
+    case 'settings':
+      return <ClinicSettings key={route.tenantId} tenantId={route.tenantId} />
     case 'staff':
       return <StaffManagement tenantId={route.tenantId} />
     case 'payments':
@@ -101,8 +104,7 @@ export function AppRoutes({
               </a>
             </section>
           )}
-          {(route.role === 'patient' ||
-            route.role === 'doctor') && (
+          {(route.role === 'patient' || route.role === 'doctor') && (
             <AppointmentSchedule
               key={`${route.role}:${route.tenantId ?? ''}`}
               role={route.role}

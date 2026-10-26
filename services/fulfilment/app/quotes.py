@@ -145,7 +145,13 @@ def create_quote(
     subtotal = refresh_items(session, order)
     # Bounded provider I/O while holding order/catalogue locks serializes repricing
     # and future checkout reservation. Quote creation never submits a delivery.
-    price = request.app.state.delivery_quotes.quote(order.tenant_id, body.destination)
+    if request.app.state.settings.tenant_url:
+        origin = request.app.state.clinic_locations.get(order.tenant_id)
+        price = request.app.state.delivery_quotes.quote(
+            order.tenant_id, body.destination, origin=origin
+        )
+    else:
+        price = request.app.state.delivery_quotes.quote(order.tenant_id, body.destination)
     now = utcnow()
     expires_at = min(price.expires_at, now + timedelta(minutes=10))
     if expires_at <= now:

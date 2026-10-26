@@ -13,7 +13,7 @@ export type Route =
   | { kind: 'clinic-appointments'; role: 'clinic_admin'; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | {
-      kind: 'profile' | 'staff' | 'payments' | 'orders'
+      kind: 'profile' | 'staff' | 'payments' | 'orders' | 'settings'
       role: 'clinic_admin'
       tenantId: string
     }
@@ -53,7 +53,7 @@ export function hasRole(identity: Identity, role: Role) {
 export function canAccess(identity: Identity, route: Route) {
   if (!('role' in route)) return true
   // Orders and clinic-scoped schedules require active owning-clinic administration.
-  if (route.kind === 'orders')
+  if (route.kind === 'orders' || route.kind === 'settings')
     return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
   if (route.kind === 'clinic-appointments' && route.tenantId)
     return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
@@ -118,7 +118,7 @@ export function parseRoute(path: string): Route {
       tenantId: platform[1].toLowerCase(),
     }
   const clinic =
-    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|orders|appointments)$/.exec(
+    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|orders|appointments|settings)$/.exec(
       normalized,
     )
   if (clinic && uuid.test(clinic[1])) {
@@ -129,7 +129,12 @@ export function parseRoute(path: string): Route {
         tenantId: clinic[1].toLowerCase(),
       }
     return {
-      kind: clinic[2] as 'profile' | 'staff' | 'payments' | 'orders',
+      kind: clinic[2] as
+        | 'profile'
+        | 'staff'
+        | 'payments'
+        | 'orders'
+        | 'settings',
       role: 'clinic_admin',
       tenantId: clinic[1].toLowerCase(),
     }

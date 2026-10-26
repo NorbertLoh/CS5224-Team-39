@@ -16,6 +16,7 @@ from app.billing_profiles import router as billing_profiles_router
 from app.database import create_database_engine
 from app.doctors import router as doctors_router
 from app.document_profiles import router as document_profiles_router
+from app.locations import router as locations_router
 from app.logos import LogoStorage
 from app.logos import router as logos_router
 from app.models import AuditEvent, Clinic
@@ -73,6 +74,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(logos_router)
     app.include_router(document_profiles_router)
     app.include_router(billing_profiles_router)
+    app.include_router(locations_router)
 
     @app.get("/health/live", tags=["health"])
     def live():
@@ -98,7 +100,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     connection.execute(select(AuditEvent.event_id).limit(1))
                     available = (
                         connection.scalar(text("SELECT version_num FROM tenant.alembic_version"))
-                        == "0003"
+                        == "0004"
                     )
             except SQLAlchemyError:
                 available = False

@@ -77,10 +77,10 @@ class SandboxQuotes:
     def close(self):
         self.client.close()
 
-    def quote(self, tenant_id, destination: Destination):
+    def quote(self, tenant_id, destination: Destination, *, origin=None):
         if self.key is None or self.secret is None or self.locations is None:
             raise unavailable()
-        origin = self.locations.origins.get(str(tenant_id))
+        origin = origin if origin is not None else self.locations.origins.get(str(tenant_id))
         if origin is None:
             raise unavailable()
         coordinates = self.locations.destinations.get(destination.postal_code)

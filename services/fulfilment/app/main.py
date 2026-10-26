@@ -8,6 +8,7 @@ from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.catalogue import router as catalogue_router
 from app.checkout import router as checkout_router
+from app.clinic_locations import HttpClinicLocations
 from app.database import Database
 from app.deliveries import router as deliveries_router
 from app.delivery_provider import SandboxQuotes
@@ -34,6 +35,7 @@ def create_app(settings: Settings | None = None):
             app.state.ready = False
             app.state.identity_client.close()
             app.state.delivery_quotes.close()
+            app.state.clinic_locations.close()
             if isinstance(app.state.dispensing, HttpDispensing):
                 app.state.dispensing.close()
             if app.state.database is not None:
@@ -54,6 +56,7 @@ def create_app(settings: Settings | None = None):
     app.state.identity_client = IdentityClient(config)
     app.state.token_verifier = TokenVerifier(config)
     app.state.delivery_quotes = SandboxQuotes(config)
+    app.state.clinic_locations = HttpClinicLocations(config)
     app.state.dispensing = (
         FixtureDispensing(config.dispensing_fixture_path)
         if config.dispensing_fixture_path

@@ -11,6 +11,14 @@ verification evidence. This does not complete W11, Q04 or the AWS integration ga
 
 ## 1. Decisions and scope
 
+RF12 scope extension (26 October 2026): selected-clinic Settings owns a saved
+medicine pickup location in tenant storage, with clinic-admin authorization and
+audited updates. Fulfilment fetches the minimal active-clinic location through
+an authenticated tenant API for new quotations. Existing quote/payment/delivery
+route snapshots remain authoritative. Destination postcode coordinates retain
+the prototype's operator-maintained coverage directory; broad geocoding is not
+part of this extension. Setup and validation: [clinic pickup settings](docs/clinic-pickup-settings.md).
+
 - React + TypeScript + Vite frontend.
 - Python + FastAPI business microservices, independently deployable to ECS Fargate. This is a confirmed requirement.
 - One monorepo, separate service entry points, Docker images, database migrations, and deployment definitions.

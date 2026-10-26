@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { createQuote, fulfilmentError } from './api'
+import { createQuote, deliveryQuoteError } from './api'
 import { stableKey } from './checkout'
 
 export function LiveDestinationForm({
@@ -98,7 +98,7 @@ export function LiveDestinationForm({
       </fieldset>
       {quote.isError && (
         <p role="alert" className="text-sm text-red-700">
-          {fulfilmentError(quote.error)}
+          {deliveryQuoteError(quote.error)}
         </p>
       )}
     </form>
