@@ -16,7 +16,7 @@ const labels = {
 function refundError(error: unknown) {
   if (error instanceof ApiError) {
     if (error.code === 'refund_demo_payment')
-      return 'This is a demo payment. No actual charge was made, so there is nothing to refund.'
+      return 'No charge was made, so there is nothing to refund.'
     if (error.code === 'refund_appointment_active')
       return 'The appointment is still active. Cancel it in Appointments, then request the refund.'
     if (error.status === 409)
@@ -66,10 +66,9 @@ export function ConsultationRefund({ payment }: { payment: Payment }) {
         className="mt-4 space-y-3 rounded border p-3"
         aria-label="Consultation refund"
       >
-        <h3 className="font-semibold">Demo payment</h3>
+        <h3 className="font-semibold">Refund unavailable</h3>
         <p>
-          This is a simulated payment. No actual charge was made, so there is
-          nothing to refund.
+          No charge was made, so there is nothing to refund.
         </p>
       </section>
     )

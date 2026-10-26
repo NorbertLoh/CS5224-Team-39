@@ -145,8 +145,7 @@ export function LiveMedicationCheckout({
         canQuote(snapshot) ||
         order.payment_status === 'pending') && (
         <p className="text-sm text-slate-600">
-          Stripe test checkout. Your payment status updates here after
-          confirmation.
+          Your payment status updates here after confirmation.
         </p>
       )}
     </section>

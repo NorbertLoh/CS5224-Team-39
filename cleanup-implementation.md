@@ -45,20 +45,20 @@ Evidence: frontend lint/typecheck/build passed; see docs/cleanup-inventory.md. I
 
 Prerequisite: Phase 1 gate. Estimated effort: S (1-3 hours).
 
-- [ ] Apply the exact checkout/refund wording decisions in the cleanup plan.
-- [ ] Review all four role workspaces and loading/empty/error/success states for
+- [x] Apply the exact checkout/refund wording decisions in the cleanup plan.
+- [x] Review all four role workspaces and loading/empty/error/success states for
       additional developer-facing instructions; replace with concise user guidance.
-- [ ] Check backend error mappings so old wording is not reintroduced by a response.
-- [ ] Preserve internal payment markers, error codes, queries and refund guards.
-- [ ] Leave stored sample records and seed labels unchanged.
-- [ ] From `apps/web`, run `npm run lint`, `npm run typecheck` and `npm run build`.
+- [x] Check backend error mappings so old wording is not reintroduced by a response.
+- [x] Preserve internal payment markers, error codes, queries and refund guards.
+- [x] Leave stored sample records and seed labels unchanged.
+- [x] From `apps/web`, run `npm run lint`, `npm run typecheck` and `npm run build`.
 - [ ] Inspect affected screens using existing local accounts/data, including a
       synthetic-payment state with no refund action and normal refund eligibility.
 
 Gate: checks pass, UI language is accurate, and payment behavior is unchanged.
 Do not add a frontend test framework that RF04 removed for this copy change.
 
-Evidence: not run. Blockers: not assessed.
+Evidence: only rendered strings changed in three components; frontend lint/typecheck/build passed. API errors expose codes rather than server messages; refund mapping remains local. Browser automation disabled in Work settings, so screen acceptance remains open. Issue #293; stacked on RF16 PR #297.
 
 ## Phase 3 - Obsolete artifacts and focused refactoring
 
@@ -132,4 +132,5 @@ Gate: all cleanup acceptance criteria are met and recorded. No completion claim
 is made merely because local edits or documentation are finished.
 
 Evidence: not run. Blockers: not assessed. Merge reference: pending.
+
 
