@@ -73,5 +73,5 @@ Retain `.local/compose/tailscale.yaml` for the current shared-HTTPS deployment.
 No schema migration or configuration keys are added. AWS and a new paid-to-courier
 journey for this contact snapshot remain unverified.
 
-Issue #286 stays In progress and the backlog unchecked until PR #287 merges.
-The PR is stacked on signup PR #285 to retain the current application state.
+PR #287 merged into main on 26 October 2026 after signup dependency PR #285
+and all final checks passed; issue #286 closed. The backlog records both tasks complete.

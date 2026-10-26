@@ -99,4 +99,4 @@ and [ResendConfirmationCode](https://docs.aws.amazon.com/cognito-user-identity-p
 - Actual AWS email delivery, hosted first-login provisioning and AWS deployment
   remain unverified.
 
-Issue #284 stays In progress until PR #285 is merged and completion criteria are met.
+PR #285 merged on 26 October 2026 after all final checks passed; issue #284 closed.
