@@ -9,6 +9,7 @@ type Location = {
   postal_code: string
   country_code: 'SG'
   coordinates: { lat: string; lng: string }
+  pickup_contact?: { name: string; phone: string } | null
 }
 type Settings = { tenant_id: string; location: Location | null }
 
@@ -45,12 +46,18 @@ function LocationEditor({
   initial: Location | null
 }) {
   const [location, setLocation] = useState<Location>(
-    initial ?? {
-      address_line: '',
-      postal_code: '',
-      country_code: 'SG',
-      coordinates: { lat: '', lng: '' },
-    },
+    initial
+      ? {
+          ...initial,
+          pickup_contact: initial.pickup_contact ?? { name: '', phone: '' },
+        }
+      : {
+          address_line: '',
+          postal_code: '',
+          country_code: 'SG',
+          coordinates: { lat: '', lng: '' },
+          pickup_contact: { name: '', phone: '' },
+        },
   )
   const [saved, setSaved] = useState(initial)
   const dirty = JSON.stringify(location) !== JSON.stringify(saved)
@@ -89,6 +96,55 @@ function LocationEditor({
         </p>
       </div>
       <fieldset disabled={mutation.isPending} className="space-y-4">
+        <h3 className="font-semibold">Pickup contact</h3>
+        <p className="text-sm text-slate-600">
+          The courier uses these details to contact the clinic for medicine
+          pickup.
+        </p>
+        <label className="block text-sm font-medium">
+          Pickup contact name
+          <input
+            required
+            maxLength={100}
+            className="mt-1 block w-full rounded-lg border p-3"
+            autoComplete="name"
+            value={location.pickup_contact?.name ?? ''}
+            onChange={(event) =>
+              setLocation({
+                ...location,
+                pickup_contact: {
+                  name: event.target.value,
+                  phone: location.pickup_contact?.phone ?? '',
+                },
+              })
+            }
+          />
+        </label>
+        <label className="block text-sm font-medium">
+          Pickup phone number
+          <input
+            required
+            type="tel"
+            maxLength={24}
+            className="mt-1 block w-full rounded-lg border p-3"
+            autoComplete="tel"
+            placeholder="e.g. +65 8123 4567"
+            value={location.pickup_contact?.phone ?? ''}
+            onChange={(event) =>
+              setLocation({
+                ...location,
+                pickup_contact: {
+                  name: location.pickup_contact?.name ?? '',
+                  phone: event.target.value,
+                },
+              })
+            }
+          />
+        </label>
+        <p className="text-sm text-slate-600">
+          Use an 8-digit Singapore number or include +65.
+        </p>
+        <h3 className="font-semibold">Pickup location</h3>
         <label className="block text-sm font-medium">
           Clinic pickup address
           <input
@@ -168,18 +224,20 @@ function LocationEditor({
           disabled={!dirty}
           className="rounded-lg bg-slate-900 px-5 py-3 font-medium text-white disabled:opacity-50"
         >
-          {mutation.isPending ? 'Saving location...' : 'Save pickup location'}
+          {mutation.isPending
+            ? 'Saving pickup details...'
+            : 'Save pickup details'}
         </button>
       </fieldset>
       {mutation.isSuccess && !dirty && (
         <p role="status" className="text-sm text-emerald-800">
-          Pickup location saved.
+          Pickup details saved.
         </p>
       )}
       {mutation.isError && (
         <p role="alert" className="text-sm text-red-700">
-          Could not save the pickup location. Check the address, postcode and
-          Singapore coordinates, then try again.
+          Could not save the pickup details. Check the contact name, Singapore
+          phone number, address, postcode and coordinates, then try again.
         </p>
       )}
     </form>

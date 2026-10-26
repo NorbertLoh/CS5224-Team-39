@@ -10,7 +10,9 @@ from uuid import UUID, uuid4
 
 import httpx
 from pydantic import BaseModel, Field, ValidationError
+from telelink_common.errors import DomainError
 
+from app.clinic_locations import HttpClinicLocations
 from app.delivery_provider import HOST, Coordinates, Price, SandboxQuotes
 from app.schemas import StrictModel
 
@@ -57,6 +59,7 @@ class SandboxDeliveries:
     def __init__(self, settings, *, transport=None):
         self.key = settings.lalamove_api_key
         self.secret = settings.lalamove_api_secret
+        self.clinic_locations = HttpClinicLocations(settings) if settings.tenant_url else None
         try:
             self.contacts = (
                 Contacts.model_validate_json(settings.delivery_contacts_path.read_text())
@@ -71,14 +74,20 @@ class SandboxDeliveries:
         )
 
     def close(self):
+        if self.clinic_locations is not None:
+            self.clinic_locations.close()
         self.client.close()
         self.quotes.close()
 
     def prepare(self, order, quote, delivery):
-        if self.contacts is None:
-            raise DeliveryUnavailable("Delivery contacts are unavailable")
-        sender = self.contacts.senders.get(order.tenant_id)
-        recipient = self.contacts.recipients.get(order.patient_id)
+        if self.clinic_locations is not None:
+            try:
+                sender = Contact.model_validate(self.clinic_locations.get_contact(order.tenant_id))
+            except (DomainError, ValidationError):
+                raise DeliveryUnavailable("Clinic pickup contact is unavailable") from None
+        else:
+            sender = self.contacts.senders.get(order.tenant_id) if self.contacts else None
+        recipient = self.contacts.recipients.get(order.patient_id) if self.contacts else None
         context = quote.provider_context
         if (
             sender is None

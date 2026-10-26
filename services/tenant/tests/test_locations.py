@@ -16,6 +16,7 @@ LOCATION = {
     "postal_code": "048616",
     "country_code": "SG",
     "coordinates": {"lat": "1.2844", "lng": "103.8511"},
+    "pickup_contact": None,
 }
 
 
@@ -67,6 +68,11 @@ def test_save_read_audit_and_tenant_role_boundaries(api):
         {"coordinates": {"lat": "1.8", "lng": "103.8"}},
         {"coordinates": {"lat": "1.3", "lng": "104.9"}},
         {"tenant_id": "forged"},
+        {"pickup_contact": {"name": "   ", "phone": "+6581234567"}},
+        {"pickup_contact": {"name": "Clinic", "phone": "+60123456789"}},
+        {"pickup_contact": {"name": "Clinic", "phone": "12345678"}},
+        {"pickup_contact": {"name": "Clinic\ncontact", "phone": "81234567"}},
+        {"pickup_contact": {"name": "Clinic", "phone": "81234567", "extra": "forged"}},
     ],
 )
 def test_location_validation(api, change):
@@ -96,3 +102,23 @@ def test_internal_location_is_service_only_and_requires_active_clinic(api):
     response = api.client.get(path, headers=headers)
     assert response.json() == {"tenant_id": tenant, "location": LOCATION}
     assert response.headers["Cache-Control"] == "no-store"
+
+
+def test_pickup_contact_normalized_audited_and_preserved_for_older_clients(api):
+    tenant = clinic(api)
+    path = f"/clinics/{tenant}/location"
+    contact = {"name": "  Clinic pickup desk  ", "phone": "8123 4567"}
+    value = LOCATION | {"pickup_contact": contact}
+    first = api.client.put(path, json=value, headers=api.user())
+    assert first.status_code == 200, first.text
+    normalized = {"name": "Clinic pickup desk", "phone": "+6581234567"}
+    assert first.json()["location"]["pickup_contact"] == normalized
+    legacy = {key: value for key, value in LOCATION.items() if key != "pickup_contact"}
+    second = api.client.put(path, json=legacy, headers=api.user())
+    assert second.status_code == 200
+    assert second.json()["location"]["pickup_contact"] == normalized
+    with Session(api.engine) as db:
+        events = db.scalars(select(AuditEvent).where(AuditEvent.tenant_id == UUID(tenant))).all()
+        assert len(events) == 1
+        assert events[0].new_values["location"]["pickup_contact"] == normalized
+    assert api.client.get(path, headers=api.user("other")).status_code == 404

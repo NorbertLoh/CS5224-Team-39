@@ -19,7 +19,7 @@ class HttpClinicLocations:
     def close(self):
         self.client.close()
 
-    def get(self, tenant_id):
+    def read_location(self, tenant_id):
         config = self.settings
         if not config.tenant_url or not config.tenant_secret:
             raise DomainError(
@@ -43,13 +43,33 @@ class HttpClinicLocations:
                 raise DomainError(
                     409, "clinic_location_missing", "Clinic pickup location has not been saved."
                 )
+            if not isinstance(location, dict):
+                raise ValueError("Invalid clinic location")
+            return location
+        except (httpx.HTTPError, ValueError, KeyError, TypeError):
+            raise DomainError(
+                503, "clinic_location_unavailable", "Clinic pickup location is unavailable."
+            ) from None
+
+    def get(self, tenant_id):
+        location = self.read_location(tenant_id)
+        try:
             return Stop.model_validate(
                 {
                     "address": f"{location['address_line']}, Singapore {location['postal_code']}",
                     "coordinates": location["coordinates"],
                 }
             )
-        except (httpx.HTTPError, ValueError, KeyError, TypeError):
+        except (ValueError, KeyError, TypeError):
             raise DomainError(
                 503, "clinic_location_unavailable", "Clinic pickup location is unavailable."
             ) from None
+
+    def get_contact(self, tenant_id):
+        location = self.read_location(tenant_id)
+        contact = location.get("pickup_contact")
+        if not contact:
+            raise DomainError(
+                409, "clinic_contact_missing", "Clinic pickup contact has not been saved."
+            )
+        return contact

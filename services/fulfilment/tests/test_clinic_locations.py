@@ -76,6 +76,28 @@ def test_location_fails_closed(status, data, code):
     source.close()
 
 
+def test_service_pickup_contact_and_missing_contact():
+    data = {
+        "tenant_id": str(TENANT),
+        "location": LOCATION | {"pickup_contact": {"name": "Clinic desk", "phone": "+6581234567"}},
+    }
+    source = HttpClinicLocations(
+        Settings(
+            _env_file=None,
+            environment="test",
+            tenant_url="http://tenant.test",
+            tenant_secret=SECRET,
+        ),
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, json=data)),
+    )
+    assert source.get_contact(TENANT) == data["location"]["pickup_contact"]
+    data["location"].pop("pickup_contact")
+    with pytest.raises(DomainError) as error:
+        source.get_contact(TENANT)
+    assert error.value.code == "clinic_contact_missing"
+    source.close()
+
+
 def test_saved_origin_overrides_file_and_is_snapshotted(tmp_path):
     import json
 

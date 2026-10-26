@@ -5,6 +5,23 @@ address, Singapore postcode and map coordinates of the pickup entrance. The
 clinic location is required before a new delivery quotation can be calculated.
 No location is invented or seeded for an existing clinic.
 
+The same form includes **Pickup contact name** and **Pickup phone number**.
+Names cannot be blank or contain control characters. Singapore numbers can be
+entered as eight digits or with `+65`; spaces, parentheses and hyphens are removed,
+and numbers are saved in the `+65` format required for delivery. Contact details
+are stored inside the existing location JSON and audited atomically, so no new
+migration is needed for the contact fields. Older location-only clients preserve
+the saved contact when they omit that field.
+
+Before preparing a courier request, the delivery worker reads the saved clinic
+pickup contact through the same authenticated tenant projection. If the tenant
+connection is configured, missing/invalid clinic contacts block preparation;
+the worker does not silently substitute a sender from the old file directory.
+An already-prepared request keeps its recorded contact details. Patient recipient
+contacts remain separately required through `SERVICE_DELIVERY_CONTACTS_PATH`;
+adding clinic contact fields alone does not supply a patient's name or phone.
+Restart the delivery worker when deploying this integration.
+
 Only active admins of that clinic can read/write
 `GET/PUT /tenant/clinics/{tenant_id}/location`. A platform role alone is insufficient.
 Updates validate Singapore coordinates, serialize on the clinic row and atomically
@@ -57,3 +74,9 @@ and frontend lint/typecheck/production build passed. Local tenant schema was bac
 up before migration; tenant, fulfilment and web were rebuilt and are healthy.
 The browser verified Settings in the clinic navbar and the empty pickup form.
 No real clinic address, quote, payment or delivery was created for verification.
+
+Pickup-contact extension: 97 tenant API/location checks and 70 fulfilment
+location/dispatch checks passed on isolated PostgreSQL, plus Ruff and frontend
+lint/typecheck/build. Browser verification confirmed the two contact fields and
+preserved saved location. No real contact data was saved and no courier request
+was submitted during verification.

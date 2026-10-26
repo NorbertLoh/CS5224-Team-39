@@ -44,6 +44,7 @@ class Location(BaseModel):
     postal_code: str = Field(pattern=r"^\d{6}$")
     country_code: Literal["SG"] = "SG"
     coordinates: Coordinates
+    pickup_contact: "PickupContact | None" = None
 
     @field_validator("address_line")
     @classmethod
@@ -51,6 +52,28 @@ class Location(BaseModel):
         value = value.strip()
         if not value or any(ord(char) < 32 for char in value):
             raise ValueError("Enter a plain address without control characters")
+        return value
+
+
+class PickupContact(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(min_length=1, max_length=100, pattern=r"^[^\x00-\x1f\x7f]+$")
+    phone: str = Field(pattern=r"^\+65[689][0-9]{7}$")
+
+    @field_validator("name")
+    @classmethod
+    def contact_name(cls, value):
+        if not value.strip():
+            raise ValueError("Enter a pickup contact name")
+        return value.strip()
+
+    @field_validator("phone", mode="before")
+    @classmethod
+    def singapore_phone(cls, value):
+        if isinstance(value, str):
+            value = value.translate(str.maketrans("", "", " -()"))
+            if len(value) == 8:
+                value = "+65" + value
         return value
 
 
@@ -79,6 +102,9 @@ def save_location(tenant_id: UUID, body: Location, identity: Admin, session: DB)
     row = session.get(ClinicLocation, tenant_id)
     value = body.model_dump(mode="json")
     previous = row.location if row else None
+    # Older location-only clients must not erase a contact saved by Settings.
+    if "pickup_contact" not in body.model_fields_set and previous:
+        value["pickup_contact"] = previous.get("pickup_contact")
     if value != previous:
         if row is None:
             row = ClinicLocation(tenant_id=tenant_id)
