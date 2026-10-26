@@ -98,3 +98,16 @@ probes were updated alongside the moves.
 All nine OpenAPI snapshots still match exactly. Existing local suites for the
 nine changed services passed with their database-dependent skips; the import
 boundary guard passes. CLI and full database CI results are recorded in the PR.
+
+## RF24 frontend organization
+
+Large fulfilment and clinical-record features are being organized by workflow,
+with API transport/types separate from endpoint operations. Video media, hooks,
+room orchestration and controls get explicit homes. Clinic and patient page
+composition is separated from reusable navigation/components. Authentication token
+and identity lookup move out of the clinic-directory API. Smaller cohesive feature
+folders remain small rather than gaining empty layers.
+
+Public feature entry points keep navigation from knowing internal file layouts.
+Import rewrites include existing developer adapter probes and documentation.
+No URLs, cache scopes, autosave timings, styling or backend contracts change.
