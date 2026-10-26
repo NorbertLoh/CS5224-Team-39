@@ -5,8 +5,8 @@ import jwt
 import pytest
 from telelink_common.errors import DomainError
 
-from app.clinic_locations import HttpClinicLocations
-from app.delivery_provider import SandboxQuotes, Stop
+from app.integrations.clinic_locations import HttpClinicLocations
+from app.integrations.delivery_provider import SandboxQuotes, Stop
 from app.schemas import Destination
 from app.settings import Settings
 from tests.test_api import api as api
@@ -131,7 +131,7 @@ def test_saved_origin_overrides_file_and_is_snapshotted(tmp_path):
 def test_new_quotes_read_saved_location_and_replay_preserves_snapshot(api):
     from datetime import datetime, timedelta, timezone
 
-    from app.delivery_provider import DeliveryPrice
+    from app.integrations.delivery_provider import DeliveryPrice
 
     client, state, app = api
     order_id = create(client).json()["order_id"]

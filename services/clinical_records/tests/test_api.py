@@ -17,10 +17,10 @@ from sqlalchemy.orm import Session
 from telelink_common.access import CurrentIdentity, require_identity
 
 from app.database import create_database_engine
+from app.integrations.upstream import Appointment, RecordsUpstream
 from app.main import create_app
 from app.models import Note, Prescription, PrescriptionItem, ReadAudit
 from app.settings import Settings
-from app.upstream import Appointment, RecordsUpstream
 
 PREFIX = "/api/v1/clinical-records"
 

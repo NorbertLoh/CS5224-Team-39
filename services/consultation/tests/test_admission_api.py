@@ -22,13 +22,13 @@ from sqlalchemy.orm import Session
 from telelink_common.access import IdentityClient
 from telelink_common.service_auth import service_token
 
-from app import admissions
 from app.database import create_database_engine
-from app.lifecycle import transition
+from app.integrations.upstream import AdmissionSources
 from app.main import create_app
 from app.models import Admission, ConsultationSession
+from app.services import admissions
+from app.services.lifecycle import transition
 from app.settings import Settings
-from app.upstream import AdmissionSources
 
 
 @pytest.fixture(scope="module")

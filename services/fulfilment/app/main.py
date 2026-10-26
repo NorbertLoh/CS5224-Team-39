@@ -15,10 +15,10 @@ from app.api.orders import router as orders_router
 from app.api.prescription_corrections import router as prescription_corrections_router
 from app.api.prescription_prices import router as prescription_prices_router
 from app.api.quotes import router as quotes_router
-from app.clinic_locations import HttpClinicLocations
 from app.database import Database
-from app.delivery_provider import SandboxQuotes
-from app.dispensing import FixtureDispensing, HttpDispensing, UnavailableDispensing
+from app.integrations.clinic_locations import HttpClinicLocations
+from app.integrations.delivery_provider import SandboxQuotes
+from app.integrations.dispensing import FixtureDispensing, HttpDispensing, UnavailableDispensing
 from app.settings import Settings
 
 

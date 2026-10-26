@@ -11,18 +11,22 @@ from telelink_common.events import new_event
 from telelink_common.inbox import handle_event
 from telelink_common.outbox import publish_pending
 
-from app.api.deliveries import (
+from app.integrations.delivery_orders import (
+    DeliveryUnavailable,
+    SubmissionRejected,
+    SubmissionUncertain,
+)
+from app.integrations.delivery_provider import DeliveryPrice
+from app.models import Delivery, Order, Quote, event_inbox, event_outbox
+from app.services.deliveries import (
     claim_deliveries,
     deliver_resolutions,
     prepare_submission,
     reconcile,
     submit_delivery,
 )
-from app.delivery_orders import DeliveryUnavailable, SubmissionRejected, SubmissionUncertain
-from app.delivery_provider import DeliveryPrice
-from app.delivery_worker import submit_pending
-from app.models import Delivery, Order, Quote, event_inbox, event_outbox
-from app.payments import confirm_payment
+from app.services.payments import confirm_payment
+from app.workers.deliveries import submit_pending
 from tests.test_api import OTHER_PATIENT, OTHER_TENANT, create, identity
 from tests.test_api import api as api
 from tests.test_payments import payment_case as payment_case
@@ -216,7 +220,7 @@ def test_crash_after_provider_acceptance_before_local_result_commit(eligible, mo
         raise RuntimeError("Synthetic failure while persisting acceptance")
 
     with monkeypatch.context() as patch:
-        patch.setattr("app.api.deliveries.finish_submission", crash)
+        patch.setattr("app.services.deliveries.finish_submission", crash)
         assert submit_pending(case.sessions, case.provider, case.billing)["errors"] == 1
     assert rows(case)[1].status == "unknown"
     submit_pending(case.sessions, case.provider, case.billing)
@@ -238,7 +242,7 @@ def test_claim_and_outbox_roll_back_together(eligible, monkeypatch):
         raise RuntimeError("Synthetic outbox failure")
 
     with monkeypatch.context() as patch:
-        patch.setattr("app.api.deliveries.emit", crash)
+        patch.setattr("app.services.deliveries.emit", crash)
         with pytest.raises(RuntimeError):
             claim_deliveries(case.sessions)
     order, delivery, statuses = rows(case)

@@ -38,7 +38,9 @@ def cleanup(request, http, client_id, tokens, appointments, slot):
             if current["status"] in {"held", "pending_payment"}:
                 response = http.post(
                     SCHEDULING + path + "/cancel",
-                    headers={"Authorization": "Bearer " + tokens[actor]["access_token"]},
+                    headers={
+                        "Authorization": "Bearer " + tokens[actor]["access_token"]
+                    },
                     json={"reason": "Synthetic Q02 verification complete"},
                 )
                 if response.status_code == 409:
@@ -51,12 +53,20 @@ def cleanup(request, http, client_id, tokens, appointments, slot):
             errors.append(f"appointment {appointment_id}: {type(exc).__name__}")
     if slot is not None:
         try:
-            request("DELETE", SCHEDULING, "/slots/" + slot["slot_id"], "doctor", expected=204)
+            request(
+                "DELETE",
+                SCHEDULING,
+                "/slots/" + slot["slot_id"],
+                "doctor",
+                expected=204,
+            )
         except Exception as exc:
             errors.append(f"slot {slot['slot_id']}: {type(exc).__name__}")
     for actor, token in tokens.items():
         try:
-            result = cognito(http, "RevokeToken", ClientId=client_id, Token=token["refresh_token"])
+            result = cognito(
+                http, "RevokeToken", ClientId=client_id, Token=token["refresh_token"]
+            )
             if result.status_code != 200:
                 raise RuntimeError("RevokeToken failed")
         except Exception as exc:
@@ -74,7 +84,10 @@ def main():
     if not identity["SERVICE_AUTH_ISSUER"].startswith("http://localhost:4566/"):
         parser.error("Only the documented local Floci configuration is supported")
     database_url = make_url(settings["SERVICE_DATABASE_URL"])
-    if database_url.host not in {"localhost", "127.0.0.1"} or database_url.port != 55411:
+    if (
+        database_url.host not in {"localhost", "127.0.0.1"}
+        or database_url.port != 55411
+    ):
         parser.error("Use the persistent local development database on port 55411")
     redis_url = make_url(settings["SERVICE_REDIS_URL"])
     if redis_url.host not in {"localhost", "127.0.0.1"}:
@@ -106,15 +119,23 @@ def main():
     with (
         httpx.Client(timeout=20, trust_env=False) as http,
         psycopg.connect(
-            database_url.set(drivername="postgresql").render_as_string(hide_password=False),
+            database_url.set(drivername="postgresql").render_as_string(
+                hide_password=False
+            ),
             autocommit=True,
             options="-c default_transaction_read_only=on",
         ) as db,
-        redis.Redis.from_url(settings["SERVICE_REDIS_URL"], decode_responses=True) as cache,
+        redis.Redis.from_url(
+            settings["SERVICE_REDIS_URL"], decode_responses=True
+        ) as cache,
     ):
 
         def request(method, base, path, actor=None, expected=200, **kwargs):
-            headers = {"Authorization": "Bearer " + tokens[actor]["access_token"]} if actor else {}
+            headers = (
+                {"Authorization": "Bearer " + tokens[actor]["access_token"]}
+                if actor
+                else {}
+            )
             response = http.request(method, base + path, headers=headers, **kwargs)
             if response.status_code != expected:
                 raise AssertionError(
@@ -138,7 +159,10 @@ def main():
             check(
                 "two distinct authenticated patient identities",
                 people["patient"]["subject_id"] != people["clinic"]["subject_id"]
-                and all("patient" in people[a]["global_roles"] for a in ("patient", "clinic")),
+                and all(
+                    "patient" in people[a]["global_roles"]
+                    for a in ("patient", "clinic")
+                ),
             )
             latest = db.execute(
                 "SELECT max(ends_at) FROM scheduling.availability_slots "
@@ -169,13 +193,17 @@ def main():
                 response = http.post(
                     SCHEDULING + "/appointments",
                     json=body,
-                    headers={"Authorization": "Bearer " + tokens[actor]["access_token"]},
+                    headers={
+                        "Authorization": "Bearer " + tokens[actor]["access_token"]
+                    },
                 )
                 return actor, response
 
             with ThreadPoolExecutor(2) as pool:
                 results = list(pool.map(reserve, ("patient", "clinic")))
-            report["race_statuses"] = {actor: response.status_code for actor, response in results}
+            report["race_statuses"] = {
+                actor: response.status_code for actor, response in results
+            }
             for actor, response in results:
                 if response.status_code == 201:
                     appointments.append((actor, response.json()["appointment_id"]))
@@ -183,7 +211,9 @@ def main():
                 "competing requests return exactly one 201 and one 409",
                 sorted(report["race_statuses"].values()) == [201, 409],
             )
-            winner, response = next(pair for pair in results if pair[1].status_code == 201)
+            winner, response = next(
+                pair for pair in results if pair[1].status_code == 201
+            )
             loser = "clinic" if winner == "patient" else "patient"
             original = response.json()
             report["original_appointment_id"] = original["appointment_id"]
@@ -194,7 +224,9 @@ def main():
                 "Redis mirrors the winning reservation",
                 cache.get(hold_key) == original["appointment_id"],
             )
-            request("POST", SCHEDULING, "/appointments", winner, expected=409, json=body)
+            request(
+                "POST", SCHEDULING, "/appointments", winner, expected=409, json=body
+            )
             repeated = request(
                 "GET", SCHEDULING, "/appointments/" + original["appointment_id"], winner
             )
@@ -202,9 +234,17 @@ def main():
                 "retry does not extend the original server deadline",
                 repeated["hold_expires_at"] == original["hold_expires_at"],
             )
-            request("DELETE", SCHEDULING, "/slots/" + slot["slot_id"], "doctor", expected=409)
+            request(
+                "DELETE",
+                SCHEDULING,
+                "/slots/" + slot["slot_id"],
+                "doctor",
+                expected=409,
+            )
             check("reserved capacity cannot be withdrawn", active_count() == 1)
-            deadline = datetime.fromisoformat(original["hold_expires_at"].replace("Z", "+00:00"))
+            deadline = datetime.fromisoformat(
+                original["hold_expires_at"].replace("Z", "+00:00")
+            )
             limit = time.monotonic() + 630
             while True:
                 remaining = (
@@ -238,7 +278,10 @@ def main():
                 "replacement belongs to the other patient",
                 replacement["patient_id"] == people[loser]["subject_id"],
             )
-            check("reallocation still leaves exactly one active reservation", active_count() == 1)
+            check(
+                "reallocation still leaves exactly one active reservation",
+                active_count() == 1,
+            )
             check(
                 "Redis now mirrors the replacement",
                 cache.get(hold_key) == replacement["appointment_id"],

@@ -17,8 +17,8 @@ from pydantic import SecretStr, ValidationError
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.clinics import ClinicDirectory
 from app.database import create_database_engine
+from app.integrations.clinics import ClinicDirectory
 from app.main import create_app
 from app.models import Membership, Subject
 from app.settings import Settings

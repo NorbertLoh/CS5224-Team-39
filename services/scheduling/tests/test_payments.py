@@ -15,11 +15,11 @@ from telelink_common.events import new_event
 from telelink_common.inbox import consume_batch, handle_event
 from test_appointments import record
 
-from app import payments
-from app.billing import BillingClient
+from app.integrations.billing import BillingClient
 from app.models import Appointment, event_inbox, event_outbox
-from app.payments import PaymentEventRejected, confirm_payment
-from app.transitions import cancel_appointment, lock_appointment
+from app.services import payments
+from app.services.payments import PaymentEventRejected, confirm_payment
+from app.services.transitions import cancel_appointment, lock_appointment
 
 api = test_api.api
 api_database = test_api.api_database

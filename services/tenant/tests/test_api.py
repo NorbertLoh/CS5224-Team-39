@@ -22,8 +22,8 @@ from sqlalchemy.orm import Session
 from telelink_common.access import IdentityClient
 
 from app.api import admin
-from app.api.logos import MAX_LOGO_BYTES, LogoStorage, logo_png
 from app.database import create_database_engine
+from app.integrations.logos import MAX_LOGO_BYTES, LogoStorage, logo_png
 from app.main import create_app
 from app.models import AuditEvent, Clinic
 from app.settings import Settings

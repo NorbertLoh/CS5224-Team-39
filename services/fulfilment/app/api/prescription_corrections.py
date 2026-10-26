@@ -9,9 +9,9 @@ from telelink_common.errors import DomainError
 
 from app.access import require_clinic
 from app.api.dependencies import DB, Identity
-from app.api.orders import lock
 from app.models import Order, PrescriptionCorrectionHold
 from app.schemas import StrictModel
+from app.services.orders import lock
 
 router = APIRouter(tags=["prescription-corrections"])
 

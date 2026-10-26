@@ -16,9 +16,9 @@ from app.api.clinics import router
 from app.api.doctors import router as doctors_router
 from app.api.document_profiles import router as document_profiles_router
 from app.api.locations import router as locations_router
-from app.api.logos import LogoStorage
 from app.api.logos import router as logos_router
 from app.database import create_database_engine
+from app.integrations.logos import LogoStorage
 from app.models import AuditEvent, Clinic
 from app.settings import Settings
 

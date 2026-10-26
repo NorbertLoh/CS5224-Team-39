@@ -4,8 +4,8 @@ from sqlalchemy import false, or_
 from telelink_common.access import has_tenant_role
 from telelink_common.errors import DomainError
 
+from app.integrations.upstream import not_found
 from app.models import Prescription
-from app.upstream import not_found
 
 
 def assigned_doctor(identity, appointment):

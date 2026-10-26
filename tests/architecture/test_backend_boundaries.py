@@ -14,6 +14,8 @@ def test_non_http_packages_do_not_import_api_modules():
             for node in ast.walk(tree):
                 if isinstance(node, ast.ImportFrom):
                     modules = [node.module or ""]
+                    if node.module == "app":
+                        modules.extend("app." + alias.name for alias in node.names)
                 elif isinstance(node, ast.Import):
                     modules = [alias.name for alias in node.names]
                 else:

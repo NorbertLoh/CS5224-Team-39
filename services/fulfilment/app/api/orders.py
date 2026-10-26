@@ -1,89 +1,31 @@
-import hashlib
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request, Response
-from sqlalchemy import select, text, tuple_
+from sqlalchemy import select, tuple_
 from telelink_common.errors import DomainError, ErrorEnvelope
 
-from app.access import can_read_items, order_scope, permission_fingerprint, require_clinic
+from app.access import order_scope, permission_fingerprint, require_clinic
 from app.api.dependencies import DB, IdempotencyKey, Identity, Patient
-from app.api.prescription_prices import saved_prices
 from app.models import CatalogueItem, Order, OrderItem, OrderRequest, PrescriptionCorrectionHold
 from app.pagination import decode, encode
 from app.schemas import (
     MAX_MONEY,
     MedicineReady,
-    Money,
     OrderCreate,
     OrderOperational,
     OrderPage,
     OrderPublic,
     OrderStatus,
 )
+from app.services.orders import lock, own_order, public_order
+from app.services.pricing import saved_prices
 
 router = APIRouter(
     tags=["orders"],
     responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 409, 422, 502, 503)},
 )
-
-
-def public_order(order, identity=None):
-    fields = {
-        key: getattr(order, key)
-        for key in (
-            "order_id",
-            "tenant_id",
-            "prescription_id",
-            "appointment_id",
-            "patient_id",
-            "status",
-            "medicine_status",
-            "payment_status",
-            "payment_id",
-            "quote_id",
-            "delivery_id",
-            "created_at",
-            "updated_at",
-        )
-    }
-    result = OrderPublic(
-        **fields,
-        items=[
-            dict(
-                prescription_item_id=item.prescription_item_id,
-                medication_id=item.medication_id,
-                display_name=item.display_name,
-                quantity=item.quantity,
-                unit_price=Money(currency="SGD", amount_minor=item.unit_price_minor),
-                line_total=Money(currency="SGD", amount_minor=item.line_total_minor),
-            )
-            for item in order.items
-        ],
-        medication_subtotal=Money(currency="SGD", amount_minor=order.medication_subtotal_minor),
-        delivery_fee=None
-        if order.delivery_fee_minor is None
-        else Money(currency="SGD", amount_minor=order.delivery_fee_minor),
-        total=None
-        if order.total_minor is None
-        else Money(currency="SGD", amount_minor=order.total_minor),
-    )
-    if identity is not None and not can_read_items(identity, order):
-        return OrderOperational.model_validate(result.model_dump(exclude={"items"}))
-    return result
-
-
-def lock(session, scope):
-    # Transaction-scoped locks cover absent rows as well as existing rows. All creators
-    # lock subject/key then prescription, so retries cannot race unique constraints.
-    lock_id = int.from_bytes(hashlib.sha256(scope.encode()).digest()[:8], "big", signed=True)
-    session.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": lock_id})
-
-
-def own_order(order, identity):
-    if order.patient_id != identity.subject_id:
-        raise DomainError(404, "not_found", "Resource not found.")
 
 
 @router.post(

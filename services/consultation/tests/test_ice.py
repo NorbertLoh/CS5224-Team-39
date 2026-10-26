@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from app.ice import configuration
+from app.integrations.ice import configuration
 from app.settings import Settings
 
 

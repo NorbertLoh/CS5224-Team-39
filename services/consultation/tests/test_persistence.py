@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 from telelink_common.errors import DomainError
 
 from app.database import create_database_engine
-from app.lifecycle import can_join, ensure_session, transition
 from app.models import ConsultationSession
+from app.services.lifecycle import can_join, ensure_session, transition
 from tests.test_lifecycle import END, START
 
 

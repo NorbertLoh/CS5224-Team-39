@@ -6,13 +6,13 @@ from telelink_common.errors import ErrorEnvelope
 
 from app.access import authorize
 from app.api.dependencies import DB, Identity, context
+from app.integrations.upstream import not_found
 from app.models import Note
 from app.schemas import (
     NoteInput,
     NotePublic,
 )
 from app.services.records import audit, fields, lock_appointment
-from app.upstream import not_found
 
 router = APIRouter(
     prefix="/api/v1/clinical-records",

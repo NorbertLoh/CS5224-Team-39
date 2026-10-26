@@ -16,10 +16,10 @@ from app.api.booking import router as booking_router
 from app.api.checkout import router as checkout_router
 from app.api.notification_context import router as notification_router
 from app.database import create_database_engine
-from app.holds import HoldCache
+from app.integrations.tenant import TenantClient
 from app.models import Appointment, AvailabilitySlot
+from app.services.holds import HoldCache
 from app.settings import Settings
-from app.tenant import TenantClient
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

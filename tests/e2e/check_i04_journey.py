@@ -21,9 +21,9 @@ from telelink_common.events import parse_sqs_body
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "services/notification"))
-from app.recipients import RecipientDirectory  # noqa: E402
+from app.integrations.recipients import RecipientDirectory  # noqa: E402
+from app.services.templates import render_email  # noqa: E402
 from app.settings import Settings  # noqa: E402
-from app.templates import render_email  # noqa: E402
 
 
 def main():
@@ -34,7 +34,10 @@ def main():
     parser.add_argument("--config-root", type=Path, default=ROOT)
     args = parser.parse_args()
     settings = Settings(_env_file=args.config_root / "services/notification/.env")
-    if settings.environment not in {"local", "test"} or settings.aws_endpoint_url not in {
+    if settings.environment not in {
+        "local",
+        "test",
+    } or settings.aws_endpoint_url not in {
         "http://localhost:4566",
         "http://127.0.0.1:4566",
     }:
@@ -60,7 +63,9 @@ def main():
                 parser.error("Use the persistent local database on 55411")
             return stack.enter_context(
                 psycopg.connect(
-                    url.set(drivername="postgresql").render_as_string(hide_password=False),
+                    url.set(drivername="postgresql").render_as_string(
+                        hide_password=False
+                    ),
                     autocommit=True,
                     options="-c default_transaction_read_only=on",
                     row_factory=dict_row,
@@ -68,7 +73,8 @@ def main():
             )
 
         owners = {
-            service: database(service) for service in ("scheduling", "document", "fulfilment")
+            service: database(service)
+            for service in ("scheduling", "document", "fulfilment")
         }
         jobs_db = database("notification")
         directory = RecipientDirectory(settings)
@@ -100,7 +106,13 @@ def main():
                 args.appointment_id,
                 "booking_confirmed",
             ),
-            ("document", "document_ready.v1", "document_id", args.document_id, "document_ready"),
+            (
+                "document",
+                "document_ready.v1",
+                "document_id",
+                args.document_id,
+                "document_ready",
+            ),
             (
                 "fulfilment",
                 "delivery_status_changed.v1",
@@ -167,7 +179,10 @@ def main():
                 "WHERE consumer='notification' AND event_id=%s",
                 (event.event_id,),
             ).fetchone()["count"]
-            check(f"{template}: one committed job and inbox receipt", len(jobs) == inbox == 1)
+            check(
+                f"{template}: one committed job and inbox receipt",
+                len(jobs) == inbox == 1,
+            )
             job = jobs[0]
             check(
                 f"{template}: accepted once for the correct patient",
@@ -181,13 +196,18 @@ def main():
                 and bool(job["provider_message_id"])
                 and job["error_code"] is None,
             )
-            messages = [item for item in captured if item.get("Id") == job["provider_message_id"]]
+            messages = [
+                item
+                for item in captured
+                if item.get("Id") == job["provider_message_id"]
+            ]
             expected = render_email(template, settings.app_url)
             check(
                 f"{template}: exact generic SES capture",
                 len(messages) == 1
                 and messages[0].get("Source") == settings.email_sender
-                and messages[0].get("Destination", {}).get("ToAddresses") == [recipient.email]
+                and messages[0].get("Destination", {}).get("ToAddresses")
+                == [recipient.email]
                 and not messages[0].get("Destination", {}).get("CcAddresses")
                 and not messages[0].get("Destination", {}).get("BccAddresses")
                 and messages[0].get("Subject") == expected.subject

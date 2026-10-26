@@ -11,8 +11,8 @@ from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.api.sessions import router
 from app.database import create_database_engine
+from app.integrations.upstream import AdmissionSources
 from app.settings import Settings
-from app.upstream import AdmissionSources
 
 
 def create_app(settings: Settings | None = None):

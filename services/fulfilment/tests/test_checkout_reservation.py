@@ -9,7 +9,7 @@ from pydantic import SecretStr
 from telelink_common.errors import DomainError
 from telelink_common.service_auth import service_token
 
-from app.dispensing import HttpDispensing
+from app.integrations.dispensing import HttpDispensing
 from app.models import CatalogueItem, Order, Quote
 from app.settings import Settings
 from tests.test_api import MEDICATION, PATIENT, TENANT, context, identity

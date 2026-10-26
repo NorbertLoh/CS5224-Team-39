@@ -5,14 +5,14 @@ import pytest
 from pydantic import ValidationError
 from pypdf import PdfReader
 
-from app.template_data import (
+from app.rendering.template_data import (
     MedicalCertificate,
     Prescription,
     PrescriptionItem,
     Receipt,
     ReceiptItem,
 )
-from app.templates import render_medical_certificate, render_prescription, render_receipt
+from app.rendering.templates import render_medical_certificate, render_prescription, render_receipt
 
 HEADER = {
     "clinic_name": "Synthetic Clinic & Care",

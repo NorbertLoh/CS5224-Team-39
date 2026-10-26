@@ -11,11 +11,11 @@ from sqlalchemy.orm import Session, sessionmaker
 from telelink_common.events import new_event
 from telelink_common.inbox import consume_batch, handle_event
 
-from app.dispatch import dispatch_one, recover_stale
-from app.email import EmailSendError
-from app.intake import QueueNotification
+from app.integrations.email import EmailSendError
+from app.integrations.recipients import Recipient, RecipientLookupError
 from app.models import NotificationJob, event_inbox
-from app.recipients import Recipient, RecipientLookupError
+from app.services.dispatch import dispatch_one, recover_stale
+from app.services.intake import QueueNotification
 from app.settings import Settings
 
 database = test_persistence.database

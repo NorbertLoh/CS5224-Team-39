@@ -12,9 +12,9 @@ from telelink_common.errors import DomainError, ErrorEnvelope
 from app.api.dependencies import DB, Identity
 from app.api.dependencies import ClinicAdmin as Admin
 from app.auth import require_booking_service, require_identity_service
+from app.integrations.identity import provision_creator
 from app.models import Clinic
 from app.pagination import cursor_key, decode_cursor, encode_cursor
-from app.provisioning import provision_creator
 from app.schemas import (
     ClinicAdmin,
     ClinicCreate,
@@ -59,7 +59,12 @@ def create_clinic(
     ):
         raise DomainError(409, "slug_taken", "Clinic slug is already taken.")
     if not clinic.membership_provisioned:
-        provision_creator(request, clinic)
+        provision_creator(
+            request.app.state.identity_client.client,
+            request.app.state.settings,
+            clinic,
+            request.state.request_id,
+        )
         clinic.membership_provisioned = True
         session.commit()
     else:

@@ -85,3 +85,16 @@ must be reusable without importing API routers. Document rendering gets its own
 package. Existing worker CLI module names remain thin entrypoints, while internal
 imports and tests use the actual worker/operation modules. Implementation and
 verification evidence follows in the phase PR.
+
+RF23 implementation now groups operations, integrations and workers across nine
+services, with document rendering separate from storage/download orchestration.
+Delivery submission/status transitions, refund processing, price snapshots and
+order helpers no longer live in HTTP modules. Tenant provisioning receives its
+client/settings/request metadata explicitly instead of a Request object.
+Stable root worker modules contain only CLI delegation/error handling; internal
+imports use the implementation packages. External notification/replay/seed-render
+probes were updated alongside the moves.
+
+All nine OpenAPI snapshots still match exactly. Existing local suites for the
+nine changed services passed with their database-dependent skips; the import
+boundary guard passes. CLI and full database CI results are recorded in the PR.

@@ -5,8 +5,8 @@ import pytest
 from pydantic import ValidationError
 from telelink_common.errors import DomainError
 
+from app.services.transitions import consultation_action
 from app.settings import Settings
-from app.transitions import consultation_action
 
 
 def test_early_start_requires_opt_in_and_supports_completion():

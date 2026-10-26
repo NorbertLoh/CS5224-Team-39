@@ -21,10 +21,10 @@ from sqlalchemy.orm import Session
 from telelink_common.access import IdentityClient
 
 from app.database import create_database_engine
+from app.integrations.tenant import TenantClient
 from app.main import create_app
 from app.models import Appointment, AvailabilitySlot
 from app.settings import Settings
-from app.tenant import TenantClient
 
 CURSOR = "s02-cursor-test-secret-at-least-32-bytes"
 SERVICE = "s02-booking-test-secret-at-least-32-bytes"

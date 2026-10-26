@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.lifecycle import can_join, utc
+from app.services.lifecycle import can_join, utc
 
 START = datetime(2030, 1, 1, 10, tzinfo=timezone.utc)
 END = START + timedelta(minutes=30)

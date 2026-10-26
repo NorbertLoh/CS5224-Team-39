@@ -9,8 +9,8 @@ import httpx
 import jwt
 import pytest
 
-from app.billing import BillingClient
-from app.delivery_orders import (
+from app.integrations.billing import BillingClient
+from app.integrations.delivery_orders import (
     Contacts,
     DeliveryUnavailable,
     SandboxDeliveries,

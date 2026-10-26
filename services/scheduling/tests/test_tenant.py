@@ -4,8 +4,8 @@ import httpx
 import pytest
 from telelink_common.errors import DomainError
 
+from app.integrations.tenant import TenantClient
 from app.settings import Settings
-from app.tenant import TenantClient
 
 
 def client_for(handler, **changes):

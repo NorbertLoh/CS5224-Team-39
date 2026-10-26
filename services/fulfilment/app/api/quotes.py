@@ -1,6 +1,6 @@
 import hashlib
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Request, Response
@@ -9,85 +9,15 @@ from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.access import can_read_items
 from app.api.dependencies import DB, IdempotencyKey, Identity, Patient
-from app.api.orders import lock, own_order
-from app.api.prescription_prices import saved_prices
-from app.models import MAX_MONEY, CatalogueItem, Order, Quote, QuoteRequest
-from app.schemas import DeliveryDetails, Destination, Money, QuoteCreate, QuotePublic
+from app.models import MAX_MONEY, Order, Quote, QuoteRequest
+from app.schemas import DeliveryDetails, Destination, QuoteCreate, QuotePublic
+from app.services.orders import lock, own_order
+from app.services.quotes import public_quote, refresh_items, utcnow
 
 router = APIRouter(
     tags=["quotes"],
     responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 409, 422, 503)},
 )
-
-
-def utcnow():
-    return datetime.now(timezone.utc)
-
-
-def public_quote(quote, now):
-    return QuotePublic(
-        contact_confirmed=bool(quote.destination.get("recipient_contact")),
-        quote_id=quote.quote_id,
-        order_id=quote.order_id,
-        tenant_id=quote.tenant_id,
-        status="expired" if quote.status == "active" and now >= quote.expires_at else quote.status,
-        medication_subtotal=Money(amount_minor=quote.medication_subtotal_minor, currency="SGD"),
-        delivery_fee=Money(amount_minor=quote.delivery_fee_minor, currency="SGD"),
-        total=Money(amount_minor=quote.total_minor, currency="SGD"),
-        expires_at=quote.expires_at,
-        created_at=quote.created_at,
-    )
-
-
-def refresh_items(session, order):
-    if order.pricing_mode == "prescription":
-        prices = {
-            row.prescription_item_id: row
-            for row in saved_prices(session, order.tenant_id, order.prescription_id)
-        }
-        subtotal = 0
-        for item in order.items:
-            current = prices.get(item.prescription_item_id)
-            if (
-                current is None
-                or current.medication_id != item.medication_id
-                or current.quantity != item.quantity
-            ):
-                raise DomainError(
-                    409, "medication_unpriced", "Clinic admin must price this prescription first."
-                )
-            item.unit_price_minor = current.unit_price_minor
-            item.line_total_minor = item.quantity * current.unit_price_minor
-            subtotal += item.line_total_minor
-        if subtotal > MAX_MONEY:
-            raise DomainError(409, "amount_out_of_range", "Order amount exceeds supported range.")
-        return subtotal
-    rows = session.scalars(
-        select(CatalogueItem)
-        .where(
-            CatalogueItem.tenant_id == order.tenant_id,
-            CatalogueItem.medication_id.in_([item.medication_id for item in order.items]),
-        )
-        .order_by(CatalogueItem.medication_id)
-        .with_for_update()
-    ).all()
-    catalogue = {item.medication_id: item for item in rows}
-    subtotal = 0
-    for item in order.items:
-        current = catalogue.get(item.medication_id)
-        if current is None or not current.active:
-            raise DomainError(409, "medication_unavailable", "Medication is unavailable.")
-        if current.unit_price_minor is None:
-            raise DomainError(
-                409, "medication_unpriced", "Clinic admin must price all medicines first."
-            )
-        item.display_name = current.display_name
-        item.unit_price_minor = current.unit_price_minor
-        item.line_total_minor = current.unit_price_minor * item.quantity
-        subtotal += item.line_total_minor
-        if subtotal > MAX_MONEY:
-            raise DomainError(409, "amount_out_of_range", "Order amount exceeds supported range.")
-    return subtotal
 
 
 @router.post(
@@ -127,7 +57,7 @@ def create_quote(
         raise DomainError(404, "not_found", "Resource not found.")
     own_order(order, identity)
     if order.payment_status == "pending":
-        from app.api.checkout import release_failed
+        from app.services.checkout import release_failed
 
         release_failed(session, order, request.app.state.settings)
     if (

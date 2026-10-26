@@ -4,8 +4,8 @@ import httpx
 import pytest
 from telelink_common.errors import DomainError
 
+from app.integrations.upstream import RecordsUpstream
 from app.settings import Settings
-from app.upstream import RecordsUpstream
 
 
 @pytest.mark.parametrize(

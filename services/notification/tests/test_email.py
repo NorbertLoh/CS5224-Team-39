@@ -4,9 +4,9 @@ from botocore.exceptions import EndpointConnectionError
 from botocore.stub import Stubber
 from pydantic import ValidationError
 
-from app.email import EmailSendError, SESEmailSender
+from app.integrations.email import EmailSendError, SESEmailSender
+from app.services.templates import COPY, EmailMessage, render_email
 from app.settings import Settings, validate_email
-from app.templates import COPY, EmailMessage, render_email
 
 
 def settings(**overrides):

@@ -49,7 +49,9 @@ def receiver(settings):
         thread.start()
         try:
             deadline = time.monotonic() + 15
-            while not server.started and thread.is_alive() and time.monotonic() < deadline:
+            while (
+                not server.started and thread.is_alive() and time.monotonic() < deadline
+            ):
                 time.sleep(0.05)
             if not server.started:
                 raise RuntimeError("Temporary billing receiver did not start")
@@ -150,7 +152,9 @@ def main():
         billing_url = stack.enter_context(receiver(settings))
         response = http.get(billing_url + "/health/live")
         response.raise_for_status()
-        check("actual billing HTTP receiver", response.json().get("service") == "billing")
+        check(
+            "actual billing HTTP receiver", response.json().get("service") == "billing"
+        )
         body = json.dumps(event, separators=(",", ":")).encode()
         timestamp = str(int(time.time()))
         digest = hmac.new(
@@ -169,11 +173,17 @@ def main():
             return result.status_code == 200 and result.json() == {"received": True}
 
         with ThreadPoolExecutor(max_workers=4) as pool:
-            check("four concurrent signed replays acknowledged", all(pool.map(resend, range(4))))
+            check(
+                "four concurrent signed replays acknowledged",
+                all(pool.map(resend, range(4))),
+            )
         check(
-            "one receipt, same payment and same success outbox after replay", snapshot() == before
+            "one receipt, same payment and same success outbox after replay",
+            snapshot() == before,
         )
-        print("Q03 billing replay passed; body retrieved from Stripe and re-signed locally.")
+        print(
+            "Q03 billing replay passed; body retrieved from Stripe and re-signed locally."
+        )
 
 
 if __name__ == "__main__":

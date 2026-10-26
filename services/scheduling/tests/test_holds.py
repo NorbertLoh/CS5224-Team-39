@@ -14,10 +14,10 @@ from sqlalchemy.orm import Session
 from test_api import list_params, slot_body
 
 from app.api import booking
-from app.expire_holds import expire_batch
-from app.holds import HoldCache, expire_slot_holds
 from app.models import ACTIVE_RESERVATION_STATES, Appointment, AvailabilitySlot
+from app.services.holds import HoldCache, expire_slot_holds
 from app.settings import Settings
+from app.workers.expiry import expire_batch
 
 # Reuse the real PostgreSQL and signed upstream HTTP fixtures from S02.
 api = test_api.api

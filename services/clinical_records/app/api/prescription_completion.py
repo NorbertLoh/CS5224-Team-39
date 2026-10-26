@@ -10,10 +10,10 @@ from telelink_common.errors import DomainError
 
 from app.access import assigned_doctor, authorize
 from app.api.dependencies import DB, Identity, context, token
-from app.issuance import issue_draft
+from app.integrations.upstream import not_found
 from app.models import Prescription
+from app.services.issuance import issue_draft
 from app.services.records import lock_appointment
-from app.upstream import not_found
 
 router = APIRouter(prefix="/api/v1/clinical-records", tags=["clinical-records"])
 

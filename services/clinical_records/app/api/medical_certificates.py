@@ -14,10 +14,10 @@ from telelink_common.service_auth import require_service
 
 from app.access import assigned_doctor, authorize
 from app.api.dependencies import DB, Identity, context
+from app.integrations.upstream import not_found
 from app.models import MedicalCertificate, event_outbox
 from app.schemas import Input, RecordPublic
 from app.services.records import audit, fields, lock_appointment
-from app.upstream import not_found
 
 router = APIRouter(prefix="/api/v1/clinical-records", tags=["medical-certificates"])
 

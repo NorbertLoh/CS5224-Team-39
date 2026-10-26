@@ -8,18 +8,18 @@ from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.api.booking import appointment_public
 from app.api.dependencies import DB, Identity
-from app.appointment_access import (
+from app.models import Appointment
+from app.pagination import cursor_key, decode_appointment_cursor, encode_appointment_cursor
+from app.schemas import AppointmentPage, AppointmentPublic, Cancellation, utc_instant
+from app.service_auth import require_consultation, require_operator
+from app.services.appointment_access import (
     appointment_scope,
     authorization_scope,
     can_access,
     require_collection_tenant,
 )
-from app.holds import expire_slot_holds, server_now
-from app.models import Appointment
-from app.pagination import cursor_key, decode_appointment_cursor, encode_appointment_cursor
-from app.schemas import AppointmentPage, AppointmentPublic, Cancellation, utc_instant
-from app.service_auth import require_consultation, require_operator
-from app.transitions import (
+from app.services.holds import expire_slot_holds, server_now
+from app.services.transitions import (
     cancel_appointment,
     consultation_action,
     invalid_transition,
