@@ -1,8 +1,9 @@
 # Deeper backend cleanup (RF21)
 
-Issue #302; assigned to NorbertLoh and marked In progress. Based on merged cleanup
-stack #297-#301. Status: implementation and local checks complete; PostgreSQL CI
-passed on runtime revision `a7074a5`. PR #303 remains unmerged for review.
+Issue #302 closed after [PR #303](https://github.com/NorbertLoh/CS5224-Team-39/pull/303)
+merged on 26 October 2026 at `8f12b02`. Based on merged cleanup stack #297-#301.
+All 17 final-head CI checks passed at `29b646c`; runtime PostgreSQL evidence below
+was first established at `a7074a5` and also passed on the final head.
 
 ## Inspected scope and decisions
 
@@ -92,4 +93,5 @@ restart updated APIs so imports use the matching common package. Services retain
 their existing entry points and deployment boundaries.
 
 Required manual UI follow-ups from RF17/RF20 stay in issues #293/#296 and are not
-established by backend checks. This PR remains unmerged pending review.
+established by backend checks. RF21 implementation and verification are complete;
+those separate frontend follow-ups remain open.
