@@ -90,22 +90,22 @@ Evidence: retired only the isolated billing webhook spike/workflow/lockfile and 
 
 Prerequisite: Phase 3 gate. Estimated effort: M (half a day).
 
-- [ ] Assign each retained setup/operations topic one current owning guide.
-- [ ] Move unique current instructions and verification limitations into that guide.
-- [ ] Preserve compact evidence summaries and issue/PR references before removing
+- [x] Assign each retained setup/operations topic one current owning guide.
+- [x] Move unique current instructions and verification limitations into that guide.
+- [x] Preserve compact evidence summaries and issue/PR references before removing
       redundant task narratives; do not turn local evidence into AWS claims.
-- [ ] Correct stale status text in root/architecture/service documentation.
-- [ ] Remove unused documentation images and sample PDFs only after purpose checks.
-- [ ] Repair inbound links, anchors, commands and CI references for removed paths.
-- [ ] Keep root navigation concise and preserve backlog IDs, dependencies and
+- [x] Correct stale status text in root/architecture/service documentation.
+- [x] Remove unused documentation images and sample PDFs only after purpose checks.
+- [x] Repair inbound links, anchors, commands and CI references for removed paths.
+- [x] Keep root navigation concise and preserve backlog IDs, dependencies and
       completion history. Keep cleanup status as planned/in progress until verified.
-- [ ] Check local Markdown links and referenced script/configuration paths;
+- [x] Check local Markdown links and referenced script/configuration paths;
       inspect rewritten commands against the current implementation.
 
 Gate: retained guides cover active setup and verification, links resolve, unique
 evidence survives and no archive or redundant replacement document is introduced.
 
-Evidence: not run. Blockers: not assessed.
+Evidence: consolidated RF10 behavior/API/cursor semantics and dated evidence into scheduling-frontend.md, removed the duplicate note and repaired inbound links. Corrected stale architecture, booking/billing, clinical autosave, removed npm test/preview instructions and migration guidance. Added root guide navigation. Checked all 112 tracked Markdown files: zero missing local file links. No documentation assets removed without demonstrated redundancy. git diff --check passed. Issue #295.
 
 ## Phase 5 - Final verification and merge completion
 

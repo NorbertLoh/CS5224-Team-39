@@ -38,7 +38,7 @@ Doctor and clinic-admin views retain their date-based timetables.
 
 RF10 supersedes that staff layout: patient, doctor and clinic-admin appointment
 views now share Upcoming/Past cards with server-filtered pagination. See
-[RF10 appointment periods](RF10-appointment-periods.md).
+[current appointment periods and RF10 evidence](scheduling-frontend.md#appointment-periods-rf10).
 
 Lint and production build passed. Authenticated browser checks verified all 16
 local patient appointments across dates, each date/time label, no patient dropdown,

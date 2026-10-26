@@ -1,6 +1,6 @@
 # TeleLink Health
 
-CS5224 Team 39's multi-tenant teleconsultation prototype. Planned stack: React + TypeScript + Vite, independent FastAPI business services, PeerJS signalling, Floci for local AWS APIs, and AWS hosting.
+CS5224 Team 39's multi-tenant teleconsultation prototype. Stack: React + TypeScript + Vite, independent FastAPI business services, PeerJS signalling and Floci for local AWS APIs. AWS hosting remains planned.
 
 ## Current status
 
@@ -25,6 +25,22 @@ can also run independently.
 | `docs/` | Setup guides, architecture decisions and runbooks |
 
 Each business service owns its database schema and Alembic migrations. Do not write another service's tables. Frontend and backend work can be claimed separately using agreed contracts.
+
+## Documentation
+
+| Need | Current guide |
+| --- | --- |
+| Run the complete local app | [Compose setup](docs/compose-stack.md) |
+| Sign-in and session behavior | [Authentication](docs/authentication.md) |
+| Frontend setup and checks | [Web README](apps/web/README.md) |
+| Booking and Upcoming/Past appointments | [Scheduling frontend](docs/scheduling-frontend.md) |
+| Clinical notes, prescriptions and PDFs | [Records setup](docs/records-frontend.md), [documents](docs/document-frontend.md) |
+| Payment callbacks and refunds | [Billing webhooks](services/billing/WEBHOOKS.md), [refunds](services/billing/REFUNDS.md) |
+| Local tools and synthetic data | [Development support](dev/README.md) |
+| Architecture, contracts and remaining work | [Architecture](plan.md), [contracts](contracts/README.md), [backlog](implementation-plan.md) |
+
+Task-specific evidence is historical unless explicitly dated as a new verification.
+Use current setup guides and package scripts when reproducing checks.
 
 ## Getting started
 

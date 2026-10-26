@@ -23,8 +23,8 @@ DOCUMENT_API_TARGET=http://127.0.0.1:8007
 The existing records/catalogue/tenant pages also require their own services as
 described in [records frontend setup](records-frontend.md). Restart Vite after
 configuration changes. `/api/v1/document/*` is forwarded unchanged to P03 because
-the document API owns that full prefix. Vite preview inherits the development
-proxy configuration. AWS uses the existing `VITE_USE_AWS=true` and deployed
+the document API owns that full prefix. Run the development server for local
+proxy checks; no npm preview command is provided. AWS uses `VITE_USE_AWS=true` and deployed
 HTTPS `VITE_AWS_API_BASE_URL`; deployed ingress must route `/api/v1/document/*`
 to the document service without caching. No AWS routing is provisioned here.
 
