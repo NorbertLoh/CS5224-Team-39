@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 MAX_MONEY = 9007199254740991
 OrderStatus = Literal[
@@ -116,12 +116,50 @@ class Destination(StrictModel):
     postal_code: str = Field(pattern=r"^[0-9]{6}$")
     country_code: Literal["SG"]
 
+    @field_validator("address_line")
+    @classmethod
+    def nonblank_address(cls, value):
+        value = value.strip()
+        if not value:
+            raise ValueError("Enter the delivery address")
+        return value
+
+
+class RecipientContact(StrictModel):
+    name: str = Field(min_length=1, max_length=100, pattern=r"^[^\x00-\x1f\x7f]+$")
+    phone_number: str = Field(pattern=r"^\+65[689][0-9]{7}$")
+
+    @field_validator("name")
+    @classmethod
+    def nonblank_name(cls, value):
+        value = value.strip()
+        if not value:
+            raise ValueError("Enter the recipient name")
+        return value
+
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def singapore_phone(cls, value):
+        if isinstance(value, str):
+            value = value.translate(str.maketrans("", "", " -()"))
+            if len(value) == 8:
+                value = "+65" + value
+        return value
+
 
 class QuoteCreate(StrictModel):
     destination: Destination
+    recipient: RecipientContact
+
+
+class DeliveryDetails(StrictModel):
+    quote_id: UUID | None = None
+    destination: Destination | None = None
+    recipient: RecipientContact | None = None
 
 
 class QuotePublic(Resource):
+    contact_confirmed: bool = False
     quote_id: UUID
     order_id: UUID
     tenant_id: UUID

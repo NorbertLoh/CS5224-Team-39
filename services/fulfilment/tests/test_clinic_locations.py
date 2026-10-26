@@ -167,16 +167,31 @@ def test_new_quotes_read_saved_location_and_replay_preserves_snapshot(api):
         "country_code": "SG",
     }
     first = client.post(
-        path, json={"destination": destination}, headers={"Idempotency-Key": "first-location"}
+        path,
+        json={
+            "destination": destination,
+            "recipient": {"name": "Synthetic patient", "phone_number": "+6581234567"},
+        },
+        headers={"Idempotency-Key": "first-location"},
     )
     assert first.status_code == 201, first.text
     saved = saved.model_copy(update={"address": "Changed saved pickup"})
     replay = client.post(
-        path, json={"destination": destination}, headers={"Idempotency-Key": "first-location"}
+        path,
+        json={
+            "destination": destination,
+            "recipient": {"name": "Synthetic patient", "phone_number": "+6581234567"},
+        },
+        headers={"Idempotency-Key": "first-location"},
     )
     assert replay.json() == first.json()
     second = client.post(
-        path, json={"destination": destination}, headers={"Idempotency-Key": "second-location"}
+        path,
+        json={
+            "destination": destination,
+            "recipient": {"name": "Synthetic patient", "phone_number": "+6581234567"},
+        },
+        headers={"Idempotency-Key": "second-location"},
     )
     assert second.status_code == 201
     assert origins == ["First saved pickup", "Changed saved pickup"]

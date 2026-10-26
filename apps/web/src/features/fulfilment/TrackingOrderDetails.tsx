@@ -8,10 +8,12 @@ export function TrackingOrderDetails({
   order,
   readiness,
   pricing,
+  contact,
 }: {
   order: TrackingOrder
   readiness: ReactNode
   pricing: ReactNode
+  contact?: ReactNode
 }) {
   return (
     <article
@@ -21,6 +23,7 @@ export function TrackingOrderDetails({
       <h2 id="tracking-detail-heading" className="text-xl font-semibold">
         Order details
       </h2>
+      {contact}
       <dl className="space-y-3 text-sm">
         <div>
           <dt className="font-medium">Order reference</dt>

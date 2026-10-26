@@ -1,5 +1,9 @@
 # Patient profile
 
+RF14 medicine checkout prefills these details, permits order-only edits and offers
+an unchecked **Save to my profile** option. Confirmed order contacts stay fixed
+when this Profile changes later. See [checkout contacts](RF14-checkout-contacts.md).
+
 Patients open **Profile** at `/patient/profile` to save their name, Singapore
 contact number, address and six-digit postcode. Eight-digit contact numbers and
 `+65` numbers are accepted and normalized. The name updates the patient's current

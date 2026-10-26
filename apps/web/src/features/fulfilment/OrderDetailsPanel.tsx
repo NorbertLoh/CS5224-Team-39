@@ -5,6 +5,7 @@ import { PatientOrderDetails } from './PatientOrderDetails'
 import { TrackingOrderDetails } from './TrackingOrderDetails'
 import { LiveMedicineReadiness } from './LiveMedicineReadiness'
 import { OrderMedicationPricing } from './OrderMedicationPricing'
+import { ClinicOrderContact } from './ClinicOrderContact'
 
 export function OrderDetailsPanel({
   snapshot,
@@ -29,6 +30,7 @@ export function OrderDetailsPanel({
     <TrackingOrderDetails
       key={snapshot.order.order_id}
       order={trackingOrder(snapshot.order, snapshot.delivery)}
+      contact={<ClinicOrderContact order={snapshot.order} />}
       pricing={<OrderMedicationPricing order={snapshot.order} token={token} />}
       readiness={
         <LiveMedicineReadiness

@@ -22,6 +22,7 @@ from tests.test_api import (
 from tests.test_api import api as api
 
 DESTINATION = {"address_line": "3 Temasek Boulevard", "postal_code": "038983", "country_code": "SG"}
+RECIPIENT = {"name": "Synthetic recipient", "phone_number": "+6581234567"}
 
 
 class Provider:
@@ -59,7 +60,7 @@ def quote(client, state, key="quote-key", destination=None, **extra):
     return client.post(
         f"/orders/{state.order_id}/quotes",
         headers={"Idempotency-Key": key},
-        json={"destination": destination or DESTINATION} | extra,
+        json={"destination": destination or DESTINATION, "recipient": RECIPIENT} | extra,
     )
 
 
@@ -88,7 +89,7 @@ def test_trusted_totals_refresh_snapshots_supersession_and_replay(quotes):
     with state.sessions() as db:
         old = db.get(Quote, UUID(data["quote_id"]))
         assert old.items[0]["unit_price_minor"] == 1234
-        assert old.destination == DESTINATION
+        assert old.destination == DESTINATION | {"recipient_contact": RECIPIENT}
     assert (
         quote(client, state, destination=DESTINATION | {"address_line": "other"}).status_code == 409
     )

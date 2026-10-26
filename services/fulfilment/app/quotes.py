@@ -12,7 +12,7 @@ from app.catalogue import DB, Identity
 from app.models import MAX_MONEY, CatalogueItem, Order, Quote, QuoteRequest
 from app.orders import IdempotencyKey, Patient, lock, own_order
 from app.prescription_prices import saved_prices
-from app.schemas import Money, QuoteCreate, QuotePublic
+from app.schemas import DeliveryDetails, Destination, Money, QuoteCreate, QuotePublic
 
 router = APIRouter(
     tags=["quotes"],
@@ -26,6 +26,7 @@ def utcnow():
 
 def public_quote(quote, now):
     return QuotePublic(
+        contact_confirmed=bool(quote.destination.get("recipient_contact")),
         quote_id=quote.quote_id,
         order_id=quote.order_id,
         tenant_id=quote.tenant_id,
@@ -172,7 +173,10 @@ def create_quote(
         total_minor=total,
         created_at=now,
         expires_at=expires_at,
-        destination=body.destination.model_dump(mode="json"),
+        destination={
+            **body.destination.model_dump(mode="json"),
+            "recipient_contact": body.recipient.model_dump(mode="json"),
+        },
         provider_context=price.context,
         items=[
             dict(
@@ -213,3 +217,23 @@ def get_quote(quote_id: UUID, identity: Identity, session: DB):
     if quote is None or not can_read_items(identity, session.get(Order, quote.order_id)):
         raise DomainError(404, "not_found", "Resource not found.")
     return public_quote(quote, utcnow())
+
+
+@router.get("/orders/{order_id}/delivery-details", response_model=DeliveryDetails)
+def delivery_details(order_id: UUID, response: Response, identity: Identity, session: DB):
+    order = session.get(Order, order_id)
+    if order is None:
+        raise DomainError(404, "not_found", "Resource not found.")
+    if not can_read_items(identity, order):
+        raise DomainError(404, "not_found", "Resource not found.")
+    response.headers["Cache-Control"] = "no-store"
+    quote = session.get(Quote, order.quote_id) if order.quote_id else None
+    if quote is None:
+        return DeliveryDetails()
+    return DeliveryDetails(
+        quote_id=quote.quote_id,
+        destination=Destination.model_validate(
+            {key: quote.destination[key] for key in ("address_line", "postal_code", "country_code")}
+        ),
+        recipient=quote.destination.get("recipient_contact"),
+    )

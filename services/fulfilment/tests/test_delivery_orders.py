@@ -36,7 +36,8 @@ def adapter():
         "operation_id": str(delivery.operation_id),
     }
     quote = SimpleNamespace(
-        provider_context={"mode": "lalamove-sandbox", "service_type": "MOTORCYCLE", "stops": STOPS}
+        destination={},
+        provider_context={"mode": "lalamove-sandbox", "service_type": "MOTORCYCLE", "stops": STOPS},
     )
     data = {
         "orderId": PROVIDER,
@@ -226,7 +227,8 @@ def test_invalid_saved_contact_never_falls_back_to_file_contact(adapter):
         client.prepare(order, quote, delivery)
 
 
-def test_prepare_uses_patient_profile_contact_without_file_directory(adapter):
+@pytest.mark.parametrize("saved_contact", [False, True])
+def test_prepare_uses_patient_profile_contact_without_file_directory(adapter, saved_contact):
     client, delivery, quote, _ = adapter
     order = SimpleNamespace(tenant_id=uuid4(), patient_id=uuid4())
     sender = {"name": "Clinic desk", "phone": "+6580000000"}
@@ -241,10 +243,24 @@ def test_prepare_uses_patient_profile_contact_without_file_directory(adapter):
     client.quotes.quote_route = lambda stops: SimpleNamespace(
         context={"quotation_id": QUOTE, "stop_ids": ["pickup", "dropoff"]}
     )
+    if saved_contact:
+        quote.destination = {
+            "recipient_contact": {"name": "Order recipient", "phone_number": "+6591112222"}
+        }
     _, payload = client.prepare(order, quote, delivery)
     assert payload["sender"] == {"stopId": "pickup", **sender}
-    assert payload["recipients"] == [{"stopId": "dropoff", **recipient}]
+    expected = {"name": "Order recipient", "phone": "+6591112222"} if saved_contact else recipient
+    assert payload["recipients"] == [{"stopId": "dropoff", **expected}]
     recipient["phone"] = "invalid"
+    if saved_contact:
+        _, again = client.prepare(order, quote, delivery)
+        assert again["recipients"] == payload["recipients"]
+        quote.destination = {
+            "recipient_contact": {"name": "Order recipient", "phone_number": "invalid"}
+        }
+        with pytest.raises(DeliveryUnavailable, match="Saved recipient contact is unavailable"):
+            client.prepare(order, quote, delivery)
+        return
     with pytest.raises(DeliveryUnavailable, match="Patient recipient contact is unavailable"):
         client.prepare(order, quote, delivery)
 

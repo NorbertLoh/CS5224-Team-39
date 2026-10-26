@@ -34,6 +34,7 @@ export type Order = {
   updated_at: string
 }
 export type Quote = {
+  contact_confirmed: boolean
   quote_id: string
   order_id: string
   tenant_id: string
@@ -56,6 +57,12 @@ export type Destination = {
   address_line: string
   postal_code: string
   country_code: 'SG'
+}
+export type RecipientContact = { name: string; phone_number: string }
+export type DeliveryDetails = {
+  quote_id: string | null
+  destination: Destination | null
+  recipient: RecipientContact | null
 }
 export type OrderSnapshot = {
   order: Order
@@ -125,12 +132,23 @@ export async function createQuote(
   orderId: string,
   destination: Destination,
   key: string,
+  recipient: RecipientContact,
 ): Promise<Quote> {
   return (
     await request(`/orders/${encodeURIComponent(orderId)}/quotes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
-      body: JSON.stringify({ destination }),
+      body: JSON.stringify({ destination, recipient }),
+    })
+  ).json()
+}
+export async function readDeliveryDetails(
+  orderId: string,
+  signal?: AbortSignal,
+): Promise<DeliveryDetails> {
+  return (
+    await request(`/orders/${encodeURIComponent(orderId)}/delivery-details`, {
+      signal,
     })
   ).json()
 }
@@ -248,10 +266,12 @@ export function trackingOrder(
   }
 }
 export function fulfilmentError(error: unknown) {
+  if (error instanceof ApiError && error.code === 'delivery_contact_required')
+    return 'Confirm the recipient contact and delivery address with a new quote before payment.'
   if (error instanceof ApiError && error.code === 'medication_unpriced')
     return 'The clinic admin needs to price this prescription before you can order or pay. Try again once pricing is ready.'
   if (error instanceof ApiError && error.status === 422)
-    return 'The request could not be accepted. Check your delivery address and supported postcode.'
+    return 'Check the recipient name, Singapore contact number, delivery address and six-digit postal code.'
   if (error instanceof ApiError && error.status === 409)
     return 'The order or quote changed, expired, or has a pending payment. Refresh its status before continuing.'
   return 'Could not verify the order or payment. Check your connection and session, then refresh. Keep the same payment attempt while its outcome is unknown.'
