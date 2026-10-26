@@ -1,7 +1,8 @@
 # Deeper backend cleanup (RF21)
 
 Issue #302; assigned to NorbertLoh and marked In progress. Based on merged cleanup
-stack #297-#301. Status: implementation and local checks complete; PostgreSQL CI pending.
+stack #297-#301. Status: implementation and local checks complete; PostgreSQL CI
+passed on runtime revision `a7074a5`. PR #303 remains unmerged for review.
 
 ## Inspected scope and decisions
 
@@ -70,7 +71,14 @@ The probe is an ignored local audit tool; permanent regression coverage is in
 the shared tests and existing service suites, not a dependency on Git history.
 
 Database/emulator-dependent tests are skipped locally, not claimed passed.
-Existing per-service PostgreSQL CI is required before review completion. The
+Existing PostgreSQL CI passed for identity, tenant, scheduling/Redis, billing,
+fulfilment, clinical records, document/PDF, notification/SES and consultation at
+runtime revision `a7074a5`. Backend/common/template, seed safeguards and frontend
+jobs also passed. Exact check/run links are in
+[PR #303](https://github.com/NorbertLoh/CS5224-Team-39/pull/303/checks).
+All 114 Markdown files were checked for local links with no missing targets.
+Subsequent documentation-only evidence changes do not change that runtime result;
+normal PR checks must also pass on the final head before merge. The
 existing Starlette TestClient deprecation warning remains. A full-directory Ruff
 format check also flags an existing Python snippet in the common README; changed
 Python files themselves pass, and that unrelated snippet was not reformatted.
