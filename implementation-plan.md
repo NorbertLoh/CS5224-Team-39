@@ -1,5 +1,7 @@
 # TeleLink Health: shared implementation backlog
 
+- [ ] RF13: Add Create account within the branded sign-in page, Cognito registration, email confirmation/resend, validation and pending/error/success states. Preserve sign-in and workspace destinations. Enable local self-registration and document setup and AWS verification limits. Dependencies: RF03, A01, A02, U05 (complete). Effort: M. Issue #284 assigned NorbertLoh, In progress. Completion: accessible responsive flow, lint/typecheck/build and focused API/UI verification; keep integration limitations explicit.
+
 Five people, four weeks. Anyone can claim any ready task. Architecture: [plan.md](plan.md).
 
 ## Claiming and finishing tasks
