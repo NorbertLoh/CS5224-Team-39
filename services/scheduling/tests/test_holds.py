@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from test_api import list_params, slot_body
 
-from app import booking
+from app.api import booking
 from app.expire_holds import expire_batch
 from app.holds import HoldCache, expire_slot_holds
 from app.models import ACTIVE_RESERVATION_STATES, Appointment, AvailabilitySlot

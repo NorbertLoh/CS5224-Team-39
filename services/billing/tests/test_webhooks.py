@@ -16,10 +16,10 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from app.api.webhooks import MAX_BODY_BYTES
 from app.main import create_app
 from app.models import Payment, StripeWebhookEvent
 from app.settings import Settings
-from app.webhooks import MAX_BODY_BYTES
 from tests.helpers import insert, payment_values
 
 SECRET = "whsec_B03_synthetic_only"
@@ -263,7 +263,7 @@ def test_secret_is_validated_and_redacted():
 def test_utf8_raw_bytes_and_rotating_signatures(client, monkeypatch, old_first):
     receipts = []
     monkeypatch.setattr(
-        "app.webhooks.persist_receipt", lambda engine, values: receipts.append(values)
+        "app.api.webhooks.persist_receipt", lambda engine, values: receipts.append(values)
     )
     event = snapshot()
     event["data"]["object"]["description"] = "café"
@@ -289,7 +289,7 @@ def test_loopback_http_signature_boundary(monkeypatch):
     """Retain X04 socket coverage against the real route; storage is an explicit spy."""
     receipts = []
     monkeypatch.setattr(
-        "app.webhooks.persist_receipt", lambda engine, values: receipts.append(values)
+        "app.api.webhooks.persist_receipt", lambda engine, values: receipts.append(values)
     )
     app = create_app(Settings(_env_file=None, environment="test", stripe_webhook_secret=SECRET))
     event = snapshot()

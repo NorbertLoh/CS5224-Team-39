@@ -11,10 +11,10 @@ from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.access import AppointmentClient
-from app.api import router
+from app.api.documents import router
+from app.api.notification_context import router as notification_router
 from app.database import create_database_engine
 from app.downloads import Downloads, create_signer
-from app.notification_context import router as notification_router
 from app.settings import Settings
 
 

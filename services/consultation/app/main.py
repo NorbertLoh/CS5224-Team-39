@@ -9,7 +9,7 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
-from app.api import router
+from app.api.sessions import router
 from app.database import create_database_engine
 from app.settings import Settings
 from app.upstream import AdmissionSources

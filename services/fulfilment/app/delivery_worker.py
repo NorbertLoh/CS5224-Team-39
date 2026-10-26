@@ -12,9 +12,7 @@ from telelink_common.aws import create_client
 from telelink_common.logging import configure_logging
 from telelink_common.outbox import publish_pending
 
-from app.billing import BillingClient
-from app.database import create_database_engine
-from app.deliveries import (
+from app.api.deliveries import (
     claim_deliveries,
     deliver_resolutions,
     locked,
@@ -22,6 +20,8 @@ from app.deliveries import (
     submit_delivery,
     utcnow,
 )
+from app.billing import BillingClient
+from app.database import create_database_engine
 from app.delivery_orders import SandboxDeliveries
 from app.models import Delivery, event_outbox
 from app.settings import Settings

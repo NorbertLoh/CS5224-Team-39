@@ -10,14 +10,14 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
-from app.api import router
-from app.appointments import router as appointments_router
-from app.booking import router as booking_router
-from app.checkout import router as checkout_router
+from app.api.appointments import router as appointments_router
+from app.api.availability import router
+from app.api.booking import router as booking_router
+from app.api.checkout import router as checkout_router
+from app.api.notification_context import router as notification_router
 from app.database import create_database_engine
 from app.holds import HoldCache
 from app.models import Appointment, AvailabilitySlot
-from app.notification_context import router as notification_router
 from app.settings import Settings
 from app.tenant import TenantClient
 

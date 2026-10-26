@@ -1,5 +1,17 @@
 # TeleLink Health: shared implementation backlog
 
+## Structural refactor requested after RF21
+
+Target responsibilities and verification: [project structure](docs/project-structure.md).
+These are separate user-authorized phases, reviewed as a stack. They do not count
+as merged/completed until their respective PRs and checks are complete.
+
+| Done | ID | Deliverable | Dependencies | Effort | Claim |
+| --- | --- | --- | --- | --- | --- |
+| [ ] | RF22 | Separate backend HTTP routes, dependency definitions and reusable helpers; preserve all OpenAPI contracts. | RF21 #303 and completion #304 merged | L | NorbertLoh; In progress; #305 |
+| [ ] | RF23 | Group service operations, integrations and workers; remove worker-to-router dependencies and preserve CLI entrypoints. | RF22 structural foundation in preceding PR | L | NorbertLoh; In progress; #306 |
+| [ ] | RF24 | Organize frontend feature APIs/types/hooks/components/pages and remove clinic-specific auth coupling. | RF22-RF23 preceding PRs; existing live contracts | L | NorbertLoh; In progress; #307 |
+
 ## Phased cleanup (26 October 2026)
 
 Scope: [cleanup plan](cleanup-plan.md). Execution: [phase checklist](cleanup-implementation.md).

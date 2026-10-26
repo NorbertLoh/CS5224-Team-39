@@ -178,7 +178,7 @@ def test_finalization_and_event_roll_back_together(api):
 
 
 def test_mc_document_projection_is_service_only_and_excludes_private_notes(api, monkeypatch):
-    from app import mc_documents
+    from app.api import mc_documents
     from app.models import ServiceReadAudit
 
     assert api[0].put(url(api), json=draft()).status_code == 200

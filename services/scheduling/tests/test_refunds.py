@@ -90,7 +90,7 @@ def test_completion_verifies_billing_truth_and_context(api, monkeypatch):
             assert payment_id == appointment.payment_id
             return fact
 
-    monkeypatch.setattr("app.checkout.BillingClient", Billing)
+    monkeypatch.setattr("app.api.checkout.BillingClient", Billing)
     assert action(api, appointment, path="refund-complete").status_code == 409
     fact.status = "refunded"
     assert (

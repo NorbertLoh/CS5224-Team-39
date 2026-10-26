@@ -6,19 +6,19 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
-from app.catalogue import router as catalogue_router
-from app.checkout import router as checkout_router
+from app.api.catalogue import router as catalogue_router
+from app.api.checkout import router as checkout_router
+from app.api.deliveries import router as deliveries_router
+from app.api.health import router as health_router
+from app.api.notification_context import router as notification_router
+from app.api.orders import router as orders_router
+from app.api.prescription_corrections import router as prescription_corrections_router
+from app.api.prescription_prices import router as prescription_prices_router
+from app.api.quotes import router as quotes_router
 from app.clinic_locations import HttpClinicLocations
 from app.database import Database
-from app.deliveries import router as deliveries_router
 from app.delivery_provider import SandboxQuotes
 from app.dispensing import FixtureDispensing, HttpDispensing, UnavailableDispensing
-from app.health import router as health_router
-from app.notification_context import router as notification_router
-from app.orders import router as orders_router
-from app.prescription_corrections import router as prescription_corrections_router
-from app.prescription_prices import router as prescription_prices_router
-from app.quotes import router as quotes_router
 from app.settings import Settings
 
 

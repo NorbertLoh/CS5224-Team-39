@@ -10,15 +10,15 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
-from app.admin import router as admin_router
-from app.api import router
-from app.billing_profiles import router as billing_profiles_router
+from app.api.admin import router as admin_router
+from app.api.billing_profiles import router as billing_profiles_router
+from app.api.clinics import router
+from app.api.doctors import router as doctors_router
+from app.api.document_profiles import router as document_profiles_router
+from app.api.locations import router as locations_router
+from app.api.logos import LogoStorage
+from app.api.logos import router as logos_router
 from app.database import create_database_engine
-from app.doctors import router as doctors_router
-from app.document_profiles import router as document_profiles_router
-from app.locations import router as locations_router
-from app.logos import LogoStorage
-from app.logos import router as logos_router
 from app.models import AuditEvent, Clinic
 from app.settings import Settings
 

@@ -10,11 +10,11 @@ from telelink_common.aws import create_client
 from telelink_common.logging import configure_logging
 from telelink_common.outbox import publish_pending
 
+from app.api.refunds import process_refunds
 from app.database import create_database_engine
 from app.models import event_outbox
 from app.payments import process_pending
 from app.provider import StripeCheckout
-from app.refunds import process_refunds
 from app.settings import Settings
 from app.upstream import CheckoutSources
 

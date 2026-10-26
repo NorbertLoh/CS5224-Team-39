@@ -11,7 +11,7 @@ from test_api import PREFIX, create
 from test_api import api as api
 from test_api import database as database
 
-from app import documents
+from app.api import documents
 from app.models import ServiceReadAudit
 
 KEY = SecretStr("document-records-test-key-at-least-32-bytes")

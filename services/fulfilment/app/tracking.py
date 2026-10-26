@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from sqlalchemy import select
 
-from app.deliveries import change_status, locked, utcnow
+from app.api.deliveries import change_status, locked, utcnow
 from app.delivery_orders import DeliveryUnavailable
 from app.models import Delivery, Quote
 
