@@ -19,6 +19,7 @@ export interface Session {
 
 const pendingKey = 'telelink.pkce'
 const sessionKey = 'telelink.session'
+const sessionChanged = 'telelink.session-changed'
 const pendingLifetime = 10 * 60 * 1000
 const expiredMessage = 'Your session expired. Please sign in again.'
 const refreshes = new WeakMap<Storage, Promise<Session>>()
@@ -100,7 +101,7 @@ function readStored(key: string, storage: Storage) {
   }
 }
 
-export function readSession(storage: Storage = sessionStorage): Session | null {
+export function readSession(storage: Storage = localStorage): Session | null {
   const session = readStored(sessionKey, storage)
   if (
     session &&
@@ -109,18 +110,38 @@ export function readSession(storage: Storage = sessionStorage): Session | null {
     Number.isFinite(session.expiresAt)
   )
     return session
-  storage.removeItem(sessionKey)
+  if (storage.getItem(sessionKey) !== null) storage.removeItem(sessionKey)
   return null
 }
 
-export function clearSession(storage: Storage = sessionStorage): void {
+export function clearSession(storage: Storage = localStorage): void {
   storage.removeItem(sessionKey)
-  storage.removeItem(pendingKey)
+  sessionStorage.removeItem(sessionKey) // Discard credentials from before RF15.
+  sessionStorage.removeItem(pendingKey)
+  window.dispatchEvent(new Event(sessionChanged))
 }
 
 function saveSession(session: Session, storage: Storage): Session {
   storage.setItem(sessionKey, JSON.stringify(session))
+  window.dispatchEvent(new Event(sessionChanged))
   return session
+}
+
+export function subscribeToSession(listener: () => void): () => void {
+  const onStorage = (event: StorageEvent) => {
+    if (
+      event.storageArea === localStorage &&
+      (event.key === sessionKey || event.key === null)
+    )
+      listener()
+  }
+  window.addEventListener('storage', onStorage)
+  window.addEventListener(sessionChanged, listener)
+  listener() // Catch changes between the initial render and subscribing.
+  return () => {
+    window.removeEventListener('storage', onStorage)
+    window.removeEventListener(sessionChanged, listener)
+  }
 }
 
 async function post(
@@ -222,7 +243,7 @@ export async function signInWithPassword(
   config: AuthConfig,
   username: string,
   password: string,
-  storage: Storage = sessionStorage,
+  storage: Storage = localStorage,
 ): Promise<Session> {
   if (!username.trim() || !password)
     throw new Error('Enter your email and password.')
@@ -261,7 +282,7 @@ export async function signInWithPassword(
   } catch {
     throw new Error('Sign-in could not be completed. Please try again.')
   }
-  storage.removeItem(pendingKey)
+  sessionStorage.removeItem(pendingKey)
   return saveSession(session, storage)
 }
 
@@ -269,6 +290,7 @@ export async function finishLogin(
   config: AuthConfig,
   search: string,
   storage: Storage = sessionStorage,
+  tokenStorage: Storage = localStorage,
 ): Promise<Session> {
   const pending = readStored(pendingKey, storage)
   storage.removeItem(pendingKey) // Consume once, including failed attempts.
@@ -307,20 +329,30 @@ export async function finishLogin(
       tokens.refresh_token,
       tokens.expires_in,
     ),
-    storage,
+    tokenStorage,
   )
 }
 
 export function refreshSession(
   config: AuthConfig,
   session: Session,
-  storage: Storage = sessionStorage,
+  storage: Storage = localStorage,
 ): Promise<Session> {
   const existing = refreshes.get(storage)
   if (existing) return existing
-  const pending = performRefresh(config, session, storage).finally(() =>
-    refreshes.delete(storage),
-  )
+  const refresh = () => {
+    const current = readSession(storage)
+    if (!current || current.refreshToken !== session.refreshToken)
+      throw new Error('Session changed during refresh.')
+    if (current.expiresAt - Date.now() > 60000)
+      return Promise.resolve(current)
+    return performRefresh(config, current, storage)
+  }
+  // Web Locks serialize refreshes across same-origin tabs on secure origins.
+  const work = navigator.locks
+    ? navigator.locks.request('telelink.session-refresh', refresh)
+    : Promise.resolve().then(refresh)
+  const pending = work.finally(() => refreshes.delete(storage))
   refreshes.set(storage, pending)
   return pending
 }
@@ -358,7 +390,7 @@ async function performRefresh(
 export async function endSession(
   config: AuthConfig,
   session: Session | null,
-  storage: Storage = sessionStorage,
+  storage: Storage = localStorage,
 ): Promise<string> {
   clearSession(storage)
   try {
@@ -368,7 +400,7 @@ export async function endSession(
         Token: session.refreshToken,
       })
   } catch {
-    storage.setItem(
+    sessionStorage.setItem(
       'telelink.logout-warning',
       'Signed out locally. Token revocation could not be confirmed.',
     )
