@@ -16,8 +16,9 @@ The isolated [X03 Stripe spike](../../docs/stripe-spike.md) provides test-mode
 Checkout/Connect verification commands and an explicitly labelled offline demo.
 It does not implement billing application APIs or webhook verification.
 
-The separate [X04 webhook spike](../../docs/stripe-webhook-spike.md) verifies
-sample raw-body signatures using the Stripe SDK, without processing payments.
+The former X04 standalone webhook spike has been retired. Its raw-byte/UTF-8,
+signature-rotation and loopback HTTP checks now exercise the billing receiver;
+see [webhook verification and historical evidence](WEBHOOKS.md#verification).
 
 For B02 routes, service credentials, API/expiry-worker startup, idempotency and
 the approved Stripe hosted-session expiry limitation, see [CHECKOUT.md](CHECKOUT.md).
