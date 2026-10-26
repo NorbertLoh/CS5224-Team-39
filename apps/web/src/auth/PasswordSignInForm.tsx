@@ -5,7 +5,7 @@ interface PasswordSignInFormProps {
   busy: boolean
   disabled: boolean
   noticeId?: string
-  onSignIn: (email: string, password: string) => Promise<void>
+  onSignIn: (email: string, password: string) => Promise<boolean>
 }
 
 export function PasswordSignInForm({

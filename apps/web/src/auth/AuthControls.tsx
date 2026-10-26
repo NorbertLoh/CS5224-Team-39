@@ -154,14 +154,16 @@ export function AuthControls({
   }
 
   async function handlePasswordSignIn(email: string, password: string) {
-    if (!config || busy) return
+    if (!config || busy) return false
     setBusy(true)
     setMessage('')
     try {
       const value = await signInWithPassword(config, email, password)
       queryClient.clear()
+      const destination = await signInDestination()
       setSession(value)
-      location.assign(await signInDestination())
+      location.assign(destination)
+      return true
     } catch (error) {
       clearSession()
       setSession(null)
@@ -171,6 +173,7 @@ export function AuthControls({
           : 'Unable to sign in. Please try again.',
       )
       setBusy(false)
+      return false
     }
   }
 

@@ -10,7 +10,7 @@ interface SignInPageProps {
   busy: boolean
   message: string
   configurationError: string
-  onSignIn: (email: string, password: string) => Promise<void>
+  onSignIn: (email: string, password: string) => Promise<boolean>
   config: AuthConfig | null
 }
 
@@ -70,6 +70,7 @@ export function SignInPage({
             ) : signingUp ? (
               <SignUpForm
                 config={config}
+                onSignIn={onSignIn}
                 onReturn={(notice = '') => {
                   setSigningUp(false)
                   setRegistrationMessage(notice)

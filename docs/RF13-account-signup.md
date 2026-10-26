@@ -11,10 +11,14 @@ password and password confirmation, then calls Cognito `SignUp`. Unconfirmed use
 enter their emailed code (`ConfirmSignUp`); **Resend verification code** uses
 `ResendConfirmationCode`, with a 60-second UI cooldown. Successful signup advances
 directly to the verification-code form; there is no separate verification-code
-entry link on the signup form. Passwords stay
-in component memory and are cleared after successful account creation.
+entry link on the signup form. The signup password is retained only in component
+memory while verification is pending, then consumed for automatic sign-in. It is
+never written to browser storage and is discarded when the form is left. Password
+inputs are cleared after account creation; the verification email is read-only.
 
-After confirmation, sign in normally. Only when identity `/me` returns
+After confirmation, the app automatically signs in and opens the appropriate
+workspace. If automatic sign-in fails, it returns to the normal sign-in form with
+confirmation that verification succeeded. Only when identity `/me` returns
 `identity_not_provisioned`, the frontend calls authenticated
 `POST /api/v1/identity/me/registration`. The service verifies the access token,
 loads attributes through Cognito `GetUser`, requires the matching `sub` and
@@ -87,6 +91,11 @@ and [ResendConfirmationCode](https://docs.aws.amazon.com/cognito-user-identity-p
 - Desktop and 390px mobile-width layouts were visually checked. Switching forms
   focuses the heading so the new form is visible and keyboard navigation resumes
   in the correct place.
+- Shared HTTPS signup followed by an incorrect-code retry and then correct
+  verification automatically signed in, provisioned the patient and loaded the
+  patient appointments workspace without entering credentials again. Frontend
+  lint/typecheck/build passed after this refinement. The web restart retained the
+  existing Tailscale overlay.
 - Actual AWS email delivery, hosted first-login provisioning and AWS deployment
   remain unverified.
 

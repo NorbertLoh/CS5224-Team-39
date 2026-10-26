@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole } from 'lucide-react'
 import type { AuthConfig } from './session'
 import { confirmSignUp, resendSignUpCode, signUp } from './registration'
@@ -6,9 +6,11 @@ import { confirmSignUp, resendSignUpCode, signUp } from './registration'
 export function SignUpForm({
   config,
   onReturn,
+  onSignIn,
 }: {
   config: AuthConfig | null
   onReturn: (message?: string) => void
+  onSignIn: (email: string, password: string) => Promise<boolean>
 }) {
   const [step, setStep] = useState<'details' | 'verify'>('details')
   const [name, setName] = useState('')
@@ -20,6 +22,14 @@ export function SignUpForm({
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [cooldown, setCooldown] = useState(0)
+  const pendingSignIn = useRef<{ email: string; password: string } | null>(null)
+
+  useEffect(
+    () => () => {
+      pendingSignIn.current = null
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!cooldown) return
@@ -29,6 +39,19 @@ export function SignUpForm({
     )
     return () => clearTimeout(timer)
   }, [cooldown])
+
+  async function finishRegistration() {
+    const credentials = pendingSignIn.current
+    pendingSignIn.current = null
+    if (
+      !credentials ||
+      !(await onSignIn(credentials.email, credentials.password))
+    ) {
+      onReturn(
+        'Your account is verified, but automatic sign-in could not be completed. Please sign in to continue.',
+      )
+    }
+  }
 
   async function perform(action: 'submit' | 'resend') {
     if (!config || busy) return
@@ -47,9 +70,11 @@ export function SignUpForm({
         )
       } else if (step === 'details') {
         const confirmed = await signUp(config, name, email, password)
+        // Retain only in memory until verification completes or the form is left.
+        pendingSignIn.current = { email: email.trim(), password }
         setPassword('')
         setConfirmation('')
-        if (confirmed) onReturn('Account created. Sign in to continue.')
+        if (confirmed) await finishRegistration()
         else {
           setStep('verify')
           setCooldown(60)
@@ -57,7 +82,8 @@ export function SignUpForm({
         }
       } else {
         await confirmSignUp(config, email, code)
-        onReturn('Email verified. Sign in to start using your account.')
+        setMessage('Email verified. Signing you in…')
+        await finishRegistration()
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Please try again.')
@@ -98,6 +124,7 @@ export function SignUpForm({
             id="sign-up-email"
             name="email"
             type="email"
+            readOnly={step === 'verify'}
             autoComplete="email"
             autoCapitalize="none"
             spellCheck={false}
