@@ -28,7 +28,7 @@ from telelink_common.inbox import ConsumeResult, consume_batch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "services/fulfilment"))
 from app.database import create_database_engine  # noqa: E402
-from app.deliveries import submit_delivery  # noqa: E402
+from app.api.deliveries import submit_delivery  # noqa: E402
 from app.models import event_inbox  # noqa: E402
 from app.payments import confirm_payment  # noqa: E402
 from app.settings import Settings  # noqa: E402
