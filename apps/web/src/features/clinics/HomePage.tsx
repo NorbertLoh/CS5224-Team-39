@@ -14,6 +14,9 @@ export function HomePage() {
           A shared home for patients, doctors and clinic teams.
         </p>
         <section id="clinics" className="mt-10">
+          <a href="/register-clinic" className="mb-6 inline-block rounded-md bg-slate-900 px-4 py-3 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2">
+            Register your clinic
+          </a>
           <h2 className="text-2xl font-semibold">Explore clinics</h2>
           <ClinicDirectory />
         </section>

@@ -69,3 +69,7 @@ denied patient/doctor platform reads and hosted logout/token revocation. Access
 rules were also run against the four live identity responses. Browser interaction,
 visual/mobile layout and AWS integration were not verified: no browser surface was
 available through the session's UI tool.
+
+Doctor workspace navigation separates Appointments at /doctor from Availability at /doctor/availability. Clinic-scoped /doctor/clinics/<tenant UUID> URLs support the /availability suffix and preserve clinic scope across tabs. Both pages retain authentication and doctor membership checks.
+
+The public homepage links to /register-clinic. This route requires a session but no pre-existing clinic role. A fixed, allowlisted session-storage destination returns applicants after either sign-in flow. The form POSTs the existing tenant /clinics API, which provisions creator administration; success opens the clinic profile showing its approval status. Existing accounts are assigned by email under Manage clinic > Staff. No signup/invitation-email flow is added. Default sign-in destinations prefer platform administration, active clinic administration, active doctor membership, then patient appointments; accounts without a role retain the public homepage.

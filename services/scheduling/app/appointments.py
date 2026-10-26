@@ -181,9 +181,9 @@ def cancel(
     return appointment_public(appointment)
 
 
-def internal_action(appointment_id, action, session):
+def internal_action(appointment_id, action, session, *, early_minutes=0):
     appointment = lock_appointment(session, appointment_id)
-    consultation_action(appointment, action, server_now(session))
+    consultation_action(appointment, action, server_now(session), early_minutes=early_minutes)
     session.commit()
     return appointment_public(appointment)
 
@@ -207,8 +207,11 @@ def consultation_context(appointment_id: UUID, session: DB):
     dependencies=[Depends(require_consultation)],
     tags=["internal"],
 )
-def start(appointment_id: UUID, session: DB):
-    return internal_action(appointment_id, "start", session)
+def start(appointment_id: UUID, request: Request, session: DB):
+    minutes = request.app.state.settings.test_join_early_minutes
+    return internal_action(
+        appointment_id, "start", session, early_minutes=minutes if minutes > 10 else 0
+    )
 
 
 @router.post(
@@ -217,8 +220,11 @@ def start(appointment_id: UUID, session: DB):
     dependencies=[Depends(require_consultation)],
     tags=["internal"],
 )
-def complete(appointment_id: UUID, session: DB):
-    return internal_action(appointment_id, "complete", session)
+def complete(appointment_id: UUID, request: Request, session: DB):
+    minutes = request.app.state.settings.test_join_early_minutes
+    return internal_action(
+        appointment_id, "complete", session, early_minutes=minutes if minutes > 10 else 0
+    )
 
 
 @router.post(

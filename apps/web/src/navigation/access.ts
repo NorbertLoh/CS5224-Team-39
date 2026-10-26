@@ -4,12 +4,14 @@ export type Role = 'patient' | 'doctor' | 'clinic_admin' | 'platform_admin'
 export type Route =
   | { kind: 'home' }
   | { kind: 'sign-in' }
+  | { kind: 'clinic-registration' }
   | { kind: 'storefront'; slug: string }
   | { kind: 'booking'; role: 'patient'; slug: string }
   | { kind: 'checkout'; role: 'patient' }
   | { kind: 'medication-orders'; role: 'patient' }
   | { kind: 'prescriptions' | 'documents'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
+  | { kind: 'doctor-availability'; role: 'doctor'; tenantId?: string }
   | { kind: 'clinic-appointments'; role: 'clinic_admin'; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | {
@@ -33,6 +35,13 @@ export const rolePaths: Record<Role, string> = {
   platform_admin: '/platform-admin/clinics',
 }
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export function defaultWorkspace(identity: Identity) {
+  const role = (
+    ['platform_admin', 'clinic_admin', 'doctor', 'patient'] as const
+  ).find((item) => hasRole(identity, item))
+  return role ? rolePaths[role] : '/'
+}
 
 export function clinicIds(identity: Identity, role: 'doctor' | 'clinic_admin') {
   return [
@@ -77,6 +86,7 @@ export function canAccess(identity: Identity, route: Route) {
 export function parseRoute(path: string): Route {
   const normalized = path.replace(/\/$/, '') || '/'
   if (normalized === '/sign-in') return { kind: 'sign-in' }
+  if (normalized === '/register-clinic') return { kind: 'clinic-registration' }
   if (normalized === '/' || normalized === '/auth/callback')
     return { kind: 'home' }
   if (
@@ -93,6 +103,8 @@ export function parseRoute(path: string): Route {
   if (normalized === '/patient/medication-orders')
     return { kind: 'medication-orders', role: 'patient' }
   if (normalized === '/doctor') return { kind: 'role', role: 'doctor' }
+  if (normalized === '/doctor/availability')
+    return { kind: 'doctor-availability', role: 'doctor' }
   if (normalized === '/patient/consultation')
     return { kind: 'consultation', role: 'patient' }
   if (normalized === '/doctor/consultation')
@@ -134,8 +146,12 @@ export function parseRoute(path: string): Route {
       tenantId: clinic[1].toLowerCase(),
     }
   }
-  const doctor = /^\/doctor\/clinics\/([^/]+)$/.exec(normalized)
+  const doctor = /^\/doctor\/clinics\/([^/]+)(\/availability)?$/.exec(normalized)
   if (doctor && uuid.test(doctor[1]))
-    return { kind: 'role', role: 'doctor', tenantId: doctor[1].toLowerCase() }
+    return {
+      kind: doctor[2] ? 'doctor-availability' : 'role',
+      role: 'doctor',
+      tenantId: doctor[1].toLowerCase(),
+    }
   return { kind: 'missing' }
 }

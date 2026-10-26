@@ -1,5 +1,8 @@
 # Local development support
 
+For a repeatable upcoming-slot command and opt-in three-hour local video joining,
+see [local test slots](../docs/local-test-slots.md). No full reseed is needed.
+
 For repeatable synthetic demo data, see [the local demo seed](demo_seed/README.md).
 Its default command is read-only preflight; explicit `--reset` backs up the
 configured host stack before replacing local accounts and linked examples.

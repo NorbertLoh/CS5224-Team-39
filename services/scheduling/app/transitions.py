@@ -1,5 +1,7 @@
 """S04 transitions; all callers lock slot before appointment and use server time."""
 
+from datetime import timedelta
+
 from sqlalchemy import select
 from telelink_common.errors import DomainError
 
@@ -57,16 +59,20 @@ def cancel_appointment(appointment, now, reason, actor_id, *, session):
     return True
 
 
-def consultation_action(appointment, action, now):
+def consultation_action(appointment, action, now, *, early_minutes=0):
     if action == "start":
         if (
             appointment.status != "confirmed"
-            or not appointment.starts_at <= now < appointment.ends_at
+            or not appointment.starts_at - timedelta(minutes=early_minutes)
+            <= now
+            < appointment.ends_at
         ):
             invalid_transition()
         appointment.status = "in_progress"
     elif action == "complete":
-        if appointment.status != "in_progress" or now < appointment.starts_at:
+        if appointment.status != "in_progress" or now < appointment.starts_at - timedelta(
+            minutes=early_minutes
+        ):
             invalid_transition()
         appointment.status = "completed"
     elif action == "no-show":

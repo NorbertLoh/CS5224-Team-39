@@ -3,6 +3,7 @@ import { accessToken } from '../clinics/api'
 import type { Appointment } from '../scheduling/api'
 import type { CallAdmission, RoomConnection } from './connection'
 import { validateAdmission, RoomAccessError } from './connection'
+import { joinEarlyMinutes } from './joinWindow'
 
 export async function consultationAction(
   id: string,
@@ -31,7 +32,7 @@ export function roomEligibility(
     ['confirmed', 'in_progress'].includes(appointment.status) &&
     appointment.payment_resolution === 'confirmed' &&
     Boolean(appointment.payment_id) &&
-    Date.parse(appointment.starts_at) - 600000 <= now &&
+    Date.parse(appointment.starts_at) - joinEarlyMinutes * 60000 <= now &&
     now < Date.parse(appointment.ends_at)
   )
 }
