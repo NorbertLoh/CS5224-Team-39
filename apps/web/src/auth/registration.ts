@@ -2,7 +2,7 @@ import type { AuthConfig } from './session'
 
 const errors: Record<string, string> = {
   UsernameExistsException:
-    'An account with this email already exists. Sign in, or choose “I have a verification code” to finish verifying it.',
+    'An account with this email already exists. Try signing in.',
   InvalidPasswordException:
     'Choose a stronger password that meets the account password requirements.',
   CodeMismatchException:

@@ -210,27 +210,10 @@ export function SignUpForm({
         {message}
       </p>
       {step === 'details' && (
-        <>
-          <p className="sign-in-explanation">
-            <LockKeyhole size={15} aria-hidden="true" /> Your account gives you
-            access to patient care.
-          </p>
-          <button
-            type="button"
-            className="sign-in-hosted"
-            disabled={busy || !config}
-            onClick={() => {
-              setStep('verify')
-              setPassword('')
-              setConfirmation('')
-              setMessage(
-                'Enter your email and verification code, or request a new code.',
-              )
-            }}
-          >
-            I have a verification code
-          </button>
-        </>
+        <p className="sign-in-explanation">
+          <LockKeyhole size={15} aria-hidden="true" /> Your account gives you
+          access to patient care.
+        </p>
       )}
       <button
         type="button"

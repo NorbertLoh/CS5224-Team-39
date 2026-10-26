@@ -9,8 +9,9 @@ receive an explicit message that the step is not available on this page yet.
 At `/sign-in`, choose **Create an account**. The form collects full name, email,
 password and password confirmation, then calls Cognito `SignUp`. Unconfirmed users
 enter their emailed code (`ConfirmSignUp`); **Resend verification code** uses
-`ResendConfirmationCode`, with a 60-second UI cooldown. **I have a verification
-code** resumes confirmation after leaving or reloading the page. Passwords stay
+`ResendConfirmationCode`, with a 60-second UI cooldown. Successful signup advances
+directly to the verification-code form; there is no separate verification-code
+entry link on the signup form. Passwords stay
 in component memory and are cleared after successful account creation.
 
 After confirmation, sign in normally. Only when identity `/me` returns
