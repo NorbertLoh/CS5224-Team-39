@@ -15,6 +15,7 @@ CS5224 Team 39 prototype. Source review date: **27 October 2026**.
 7. [End-to-end workflow traces](#7-end-to-end-workflow-traces)
 8. [Events, consistency and failure recovery](#8-events-consistency-and-failure-recovery)
 9. [Local operations and proposed AWS deployment](#9-local-operations-and-proposed-aws-deployment)
+   - [Worker diagrams and explanations](#worker-diagrams-and-explanations)
 10. [Code navigation, verification and troubleshooting](#10-code-navigation-verification-and-troubleshooting)
 
 ### How to read status claims
@@ -729,7 +730,185 @@ containers on the same storage. Consult [Compose setup](compose-stack.md) for
 adoption, local certificate handling and configuration; no such setup is run by
 this documentation task.
 
-### Worker process map
+### Worker diagrams and explanations
+
+A **worker** is a long-running background process with its own command, rather
+than an HTTP endpoint. It repeatedly looks for eligible work in a database or
+queue, processes a bounded batch, then polls again. An API can accept and durably
+record a request while workers finish the slow or retryable steps afterward.
+Closing the browser does not cancel that committed background work.
+
+The full local Compose stack defines **16 worker containers** across six owning
+services. They reuse their owner's image and schema; they do not share a global
+worker database. A Python module can have several modes, each running as a
+separate container. For example, scheduling's `app.payment_worker` runs separately
+as consumer, publisher and resolver. Identity, tenant and consultation have no
+dedicated worker containers in this stack.
+
+#### Event-processing workers
+
+Every worker box below uses its actual Compose process name. Solid arrows show
+event delivery or the flow of durable work. Dashed arrows mean **staging an outbox
+entry in the owning database**, not a direct worker-to-worker call. Outbox
+publishers read those entries independently. Only EventBridge-to-SQS edges and
+SQS-to-consumer edges represent message routing; the ready-order and tracking
+edges represent database work/provider progress.
+
+```mermaid
+flowchart TD
+    StripeReceipt[Billing API stores verified Stripe webhook] --> BP
+    RecordsAPI[Records API commits prescription or MC issuance] -. stage outbox .-> RP
+    Ready[Clinic API commits medicine readiness] --> Gate[Paid AND ready order in fulfilment DB]
+
+    subgraph BillingWorkers[Billing workers]
+        BP[bill-processor: process receipts and refunds]
+        BPub[bill-publisher: publish payment successes]
+        BP -. stage outbox .-> BPub
+    end
+    subgraph SchedulingWorkers[Scheduling event workers]
+        SC[sched-consumer: verify payment and confirm booking]
+        SP[sched-publisher: publish appointment confirmation]
+        SC -. stage outbox .-> SP
+    end
+    subgraph RecordsWorkers[Clinical records worker]
+        RP[records-publisher: publish issuance]
+    end
+    subgraph DocumentWorkers[Document workers]
+        DW[document-worker: fetch source and store private PDF]
+        DP[document-publisher: publish document ready]
+        DW -. stage outbox .-> DP
+    end
+    subgraph FulfilmentWorkers[Fulfilment event and delivery workers]
+        FC[fulfilment-consumer: verify medication payment]
+        Submit[delivery-worker: claim and submit eligible orders]
+        Track[delivery-tracker: poll linked provider orders]
+        DelPub[delivery-publisher: publish delivery status]
+        FC --> Gate
+        Gate --> Submit
+        Submit -->|Persist provider reference| Track
+        Submit -. stage outbox .-> DelPub
+        Track -. stage outbox .-> DelPub
+    end
+    subgraph NotificationWorkers[Notification worker]
+        NW[notification-worker: intake events and dispatch email jobs]
+    end
+
+    Bus[EventBridge: exact source and event-type rules]
+    SQ[scheduling SQS queue]
+    FQ[fulfilment SQS queue]
+    DQ[document SQS queue]
+    NQ[notification SQS queue]
+    BPub --> Bus
+    SP --> Bus
+    RP --> Bus
+    DP --> Bus
+    DelPub --> Bus
+    Bus -->|Consultation payment success| SQ
+    Bus -->|Medication payment success| FQ
+    Bus -->|Prescription or MC issuance| DQ
+    Bus -->|Appointment confirmed or document ready or delivery status| NQ
+    SQ --> SC
+    FQ --> FC
+    DQ --> DW
+    NQ --> NW
+    DW --> S3[Private S3 PDF object]
+    NW --> SES[SES email or local Floci capture]
+    Submit -->|Create courier order| Provider[Lalamove sandbox]
+    Track -->|Read provider status| Provider
+```
+
+For example, a successful payment needs **three separate steps** before booking
+confirmation is visible: `bill-processor` commits verified payment state,
+`bill-publisher` gets its event onto the bus, and `sched-consumer` applies the
+booking decision. `sched-publisher` then publishes the confirmation used by
+notification. If the publisher stops, payment can be committed while the
+appointment still awaits processing; the outbox preserves the missing handoff.
+
+Similarly, issuing a prescription does not immediately create a PDF. The records
+publisher delivers the issuance fact, the document worker generates/stores the
+PDF, and the document publisher announces readiness. Email delivery follows that
+announcement through a different queue and worker.
+
+#### Expiry and resolution workers
+
+These four workers scan durable state instead of consuming a workflow SQS queue.
+**Resolve** here means retrying a committed refund-required handoff to billing.
+It does not mean automatically refunding money or blindly resubmitting an uncertain
+courier order.
+
+```mermaid
+flowchart LR
+    Holds[(Scheduling appointments and deadlines)] --> SE[sched-expiry]
+    SE -->|Expire due holds under slot locks| Holds
+    SE -->|Best-effort mirror cleanup| Redis[(Redis holds)]
+    Attempts[(Billing checkout attempts and deadlines)] --> BE[bill-expiry]
+    BE -->|Inspect or expire checkout safely| Stripe[Stripe test API]
+    BE -->|Persist reconciled attempt state| Attempts
+    Recoveries[(Scheduling payment recovery records)] --> SR[sched-resolver]
+    Exceptions[(Fulfilment delivery resolution records)] --> DR[delivery-resolver]
+    SR -->|Authenticated resolution handoff| BillingAPI[Billing internal resolution API]
+    DR -->|Authenticated resolution handoff| BillingAPI
+    BillingAPI -->|Persist refund-required flag| Payments[(Billing payments)]
+```
+
+#### What each worker actually does
+
+| Compose worker | Input / trigger | Work and durable result | If stopped or a dependency fails |
+| --- | --- | --- | --- |
+| `sched-expiry` | Database scan for due held/pending-payment appointments | Locks a slot, expires its due holds and cleans the Redis mirror when available | Cleanup is delayed; request/payment paths still check persisted deadlines and use the same capacity locks |
+| `sched-consumer` | Scheduling SQS: `consultation_payment_succeeded.v1` | Reads authoritative billing state, checks appointment/capacity, commits inbox plus confirmation/recovery decision and any confirmation outbox | Confirmation waits; unprocessed messages retry and persistent failures can reach the DLQ |
+| `sched-publisher` | Due scheduling outbox rows | Publishes `appointment_confirmed.v1` with stable event IDs | Booking may already be confirmed while its email-triggering event remains pending |
+| `sched-resolver` | Undelivered refund-required payment recovery records | Calls billing's authenticated resolution endpoint, verifies returned context and marks the handoff delivered | The recorded exception remains retryable; it does not reopen the appointment or execute a refund |
+| `bill-expiry` | Due consultation/medication checkout attempts | Reconciles or expires provider checkout state under checkout locks and records safe closure | Stale attempts remain pending for later reconciliation; an uncertain provider response is not treated as proof of failure |
+| `bill-processor` | Persisted Stripe webhook receipts and due refund attempts | Verifies/reconciles payment facts, stages payment-success outbox entries, processes eligible requested refunds and later synchronizes their completion | Receipt/refund work remains durable; provider uncertainty is deferred or held for review rather than creating a new unverified operation |
+| `bill-publisher` | Due billing outbox rows | Publishes the two purpose-specific payment-success event types | Payment may show succeeded in billing before scheduling/fulfilment sees it |
+| `records-publisher` | Due clinical-records outbox rows | Publishes prescription/MC issuance metadata | Issuance stays committed, but downstream PDF generation waits |
+| `document-worker` | Document SQS: prescription/MC issuance | Fetches audited source projection, renders/stores private PDF, commits document metadata, inbox and ready-event outbox | Document remains unavailable until processing succeeds; safe object recovery handles upload-before-commit failures |
+| `document-publisher` | Due document outbox rows | Publishes `document_ready.v1` | A PDF can already be available through the document API while its notification event waits |
+| `fulfilment-consumer` | Fulfilment SQS: `medication_payment_succeeded.v1` | Rechecks billing and order/quote context, commits payment application with inbox deduplication | Order payment propagation waits; receiving the event never bypasses the independent readiness gate |
+| `delivery-worker` | Paid, ready orders without a delivery plus due unsent delivery work | Claims work under locks, persists submission intent, validates provider/payment/quote context and submits eligible courier requests | Pre-send failures back off; possibly-sent requests retain uncertainty and are not blindly submitted again |
+| `delivery-resolver` | Pending delivery refund-required resolution records | Sends verified payment-resolution context to billing and records delivery of that handoff | Financial exception remains pending; provider-order reconciliation is a separate explicit operator action |
+| `delivery-publisher` | Due fulfilment outbox rows | Publishes `delivery_status_changed.v1` staged by submission/tracking operations | Tracking state may be committed before the corresponding notification event is sent |
+| `delivery-tracker` | Due active deliveries with a known provider order ID | Performs authenticated provider GET, validates linkage, normalizes status and commits order/delivery update plus outbox | Last known status remains; failed polls back off. Unknown submissions without a provider reference need separate reconciliation |
+| `notification-worker` | Notification SQS, then due durable email jobs | Commits inbox/job intake, dispatches generic SES email outside the claim transaction and records send result | Queue/job backlog waits. Ambiguous sends or stale sending claims become `uncertain`, not automatic resends |
+
+The five publishers share the outbox mechanism; they are not business-event
+consumers. The three dedicated SQS consumers (`sched-consumer`,
+`fulfilment-consumer`, `document-worker`) and notification intake share inbox
+deduplication. `bill-processor` reads persisted webhook work, not an EventBridge
+payment queue. `notification-worker` combines queue intake and job dispatch in one
+process; there is no separate email-dispatch container in the current stack.
+
+#### Running, stopping and scaling workers
+
+Workers start after required APIs/dependencies are ready and normally run until
+stopped. They poll for due work; they are not launched once per browser request.
+Restarting a worker resumes committed work, subject to its retry/claim rules.
+Persisted inbox/outbox and send-intent state explain what survives a restart;
+in-memory state alone does not provide that guarantee.
+
+Most entry points support `--once` for one bounded pass. **That pass still processes
+real work**: it is not a dry run. A healthy API is not proof its publisher or
+consumer is running. When diagnosing a stalled journey, check the owning database
+state, matching worker logs, pending outbox, queue/inbox and DLQ in that order of
+the workflow.
+
+HTTP and worker processes can be deployed/scaled independently, but scaling must
+respect domain locks, provider limits and ambiguous external side effects. In
+particular, the tracking entry point specifies **one worker per sandbox provider
+account**; increasing replicas without a shared rate limiter is not an accepted
+scaling strategy. A resolver's automatic loop is also distinct from the delivery
+worker's explicit `--reconcile` operator mode, which verifies a supplied provider
+order reference rather than sending another order.
+
+Source: [Compose commands](../compose.app.yaml),
+[scheduling workers](../services/scheduling/app/workers),
+[billing workers](../services/billing/app/workers),
+[document generation](../services/document/app/workers/generation.py),
+[fulfilment workers](../services/fulfilment/app/workers),
+[notification loop](../services/notification/app/workers/notifications.py).
+
+#### Worker commands
 
 Commands below run **inside the corresponding service image**. Relative Python
 module names repeat across services by design; running them from the wrong service
