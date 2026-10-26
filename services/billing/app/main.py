@@ -10,14 +10,14 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
-from app.api import router
+from app.api.checkout import router
+from app.api.queries import router as query_router
+from app.api.refunds import router as refund_router
+from app.api.webhooks import router as webhook_router
 from app.database import create_database_engine
 from app.provider import StripeCheckout
-from app.queries import router as query_router
-from app.refunds import router as refund_router
 from app.settings import Settings
 from app.upstream import CheckoutSources
-from app.webhooks import router as webhook_router
 
 
 def create_app(settings: Settings | None = None):

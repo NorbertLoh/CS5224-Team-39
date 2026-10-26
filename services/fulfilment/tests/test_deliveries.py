@@ -11,7 +11,7 @@ from telelink_common.events import new_event
 from telelink_common.inbox import handle_event
 from telelink_common.outbox import publish_pending
 
-from app.deliveries import (
+from app.api.deliveries import (
     claim_deliveries,
     deliver_resolutions,
     prepare_submission,
@@ -216,7 +216,7 @@ def test_crash_after_provider_acceptance_before_local_result_commit(eligible, mo
         raise RuntimeError("Synthetic failure while persisting acceptance")
 
     with monkeypatch.context() as patch:
-        patch.setattr("app.deliveries.finish_submission", crash)
+        patch.setattr("app.api.deliveries.finish_submission", crash)
         assert submit_pending(case.sessions, case.provider, case.billing)["errors"] == 1
     assert rows(case)[1].status == "unknown"
     submit_pending(case.sessions, case.provider, case.billing)
@@ -238,7 +238,7 @@ def test_claim_and_outbox_roll_back_together(eligible, monkeypatch):
         raise RuntimeError("Synthetic outbox failure")
 
     with monkeypatch.context() as patch:
-        patch.setattr("app.deliveries.emit", crash)
+        patch.setattr("app.api.deliveries.emit", crash)
         with pytest.raises(RuntimeError):
             claim_deliveries(case.sessions)
     order, delivery, statuses = rows(case)

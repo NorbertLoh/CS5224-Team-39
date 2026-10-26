@@ -185,7 +185,7 @@ def test_registration_preserves_existing_identity(api, monkeypatch):
     def unexpected(*args):
         pytest.fail("Existing identities must not require Cognito or change roles")
 
-    monkeypatch.setattr("app.registration.account_attributes", unexpected)
+    monkeypatch.setattr("app.api.registration.account_attributes", unexpected)
     response = api.client.post("/me/registration", headers=headers(api, "doctor"))
     assert response.status_code == 200
     assert response.json()["global_roles"] == []
@@ -195,7 +195,9 @@ def test_registration_preserves_existing_identity(api, monkeypatch):
 def test_registration_is_idempotent_and_patient_only(api, monkeypatch):
     sub = str(uuid4())
     email = f"{sub}@example.test"
-    monkeypatch.setattr("app.registration.account_attributes", lambda *args: (email, "New Patient"))
+    monkeypatch.setattr(
+        "app.api.registration.account_attributes", lambda *args: (email, "New Patient")
+    )
     auth = headers(api, sub, **{"cognito:groups": ["platform_admin", "doctor"]})
     try:
         first = api.client.post("/me/registration", headers=auth)
@@ -212,7 +214,7 @@ def test_registration_is_idempotent_and_patient_only(api, monkeypatch):
 
 def test_registration_does_not_take_over_email(api, monkeypatch):
     monkeypatch.setattr(
-        "app.registration.account_attributes", lambda *args: ("patient@example.test", "Other")
+        "app.api.registration.account_attributes", lambda *args: ("patient@example.test", "Other")
     )
     response = api.client.post("/me/registration", headers=headers(api, str(uuid4())))
     assert response.status_code == 409
@@ -228,7 +230,7 @@ def test_registration_does_not_take_over_email(api, monkeypatch):
 )
 def test_registration_requires_matching_verified_cognito_account(api, monkeypatch, attributes):
     monkeypatch.setattr(
-        "app.registration.httpx.post",
+        "app.api.registration.httpx.post",
         lambda *args, **kwargs: httpx.Response(
             200, json={"UserAttributes": [{"Name": k, "Value": v} for k, v in attributes.items()]}
         ),
@@ -239,7 +241,9 @@ def test_registration_requires_matching_verified_cognito_account(api, monkeypatc
 
 
 def test_registration_fails_closed_when_cognito_unavailable(api, monkeypatch):
-    monkeypatch.setattr("app.registration.httpx.post", lambda *args, **kwargs: httpx.Response(503))
+    monkeypatch.setattr(
+        "app.api.registration.httpx.post", lambda *args, **kwargs: httpx.Response(503)
+    )
     response = api.client.post("/me/registration", headers=headers(api, "new-user"))
     assert response.status_code == 503
 
@@ -247,7 +251,7 @@ def test_registration_fails_closed_when_cognito_unavailable(api, monkeypatch):
 @pytest.mark.parametrize("attributes", [None, [None], [{"Name": "name", "Value": 123}]])
 def test_registration_rejects_malformed_provider_attributes(api, monkeypatch, attributes):
     monkeypatch.setattr(
-        "app.registration.httpx.post",
+        "app.api.registration.httpx.post",
         lambda *args, **kwargs: httpx.Response(200, json={"UserAttributes": attributes}),
     )
     response = api.client.post("/me/registration", headers=headers(api, "new-user"))

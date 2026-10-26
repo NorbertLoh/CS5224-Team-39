@@ -9,16 +9,17 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
-from app.api import router
+from app.api.doctors import router as doctors_router
+from app.api.document_profiles import router as document_profiles_router
+from app.api.memberships import router
+from app.api.notification_context import router as notification_router
+from app.api.patient_profiles import router as patient_profiles_router
+from app.api.provisioning import router as provisioning_router
+from app.api.registration import router as registration_router
+from app.api.sessions import router as session_router
 from app.clinics import ClinicDirectory
 from app.database import create_database_engine
-from app.doctors import router as doctors_router
-from app.document_profiles import router as document_profiles_router
 from app.models import Membership, Subject
-from app.notification_context import router as notification_router
-from app.patient_profiles import router as patient_profiles_router
-from app.provisioning import router as provisioning_router
-from app.registration import router as registration_router
 from app.settings import Settings
 
 
@@ -66,6 +67,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestLoggingMiddleware, service="identity")
     app.include_router(notification_router)
     install_error_handlers(app)
+    app.include_router(session_router)
     app.include_router(router)
     app.include_router(provisioning_router)
     app.include_router(doctors_router)

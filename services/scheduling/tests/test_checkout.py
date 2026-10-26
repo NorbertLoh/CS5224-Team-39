@@ -103,7 +103,7 @@ def test_replacement_independently_checks_previous_payment(
         def close(self):
             pass
 
-    monkeypatch.setattr("app.checkout.BillingClient", Billing)
+    monkeypatch.setattr("app.api.checkout.BillingClient", Billing)
     assert reserve(api, appointment).status_code == expected
 
 
@@ -117,7 +117,7 @@ def test_concurrent_same_payment_reservation_is_idempotent(api):
 
 def test_exact_deadline_is_expired_and_does_not_bind_payment(api, monkeypatch):
     appointment = record(api)
-    monkeypatch.setattr("app.checkout.server_now", lambda session: appointment.hold_expires_at)
+    monkeypatch.setattr("app.api.checkout.server_now", lambda session: appointment.hold_expires_at)
     result = reserve(api, appointment)
     assert result.status_code == 409 and result.json()["error"]["code"] == "hold_expired"
     with Session(api[-1]) as session:

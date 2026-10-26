@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from sqlalchemy.orm import Session
 
-from app import appointments
+from app.api import appointments
 from app.main import create_app
 from app.models import Appointment, AvailabilitySlot
 from app.settings import Settings

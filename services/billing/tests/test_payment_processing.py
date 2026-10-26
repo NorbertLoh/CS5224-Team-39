@@ -15,13 +15,13 @@ from sqlalchemy import event, select, text
 from sqlalchemy.orm import Session, sessionmaker
 from telelink_common.outbox import publish_pending
 
+from app.api.webhooks import persist_receipt, verify_event
 from app.checkout import checkout_lock
 from app.main import create_app
 from app.models import CheckoutAttempt, Payment, StripeWebhookEvent, event_outbox
 from app.payments import process_pending
 from app.provider import StripeCheckout
 from app.settings import Settings
-from app.webhooks import persist_receipt, verify_event
 from tests.helpers import insert, payment_values, read
 
 SECRET = "whsec_B04_synthetic"

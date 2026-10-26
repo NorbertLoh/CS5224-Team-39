@@ -59,3 +59,20 @@ session behavior, UI wording and visual layout. No new frontend test framework.
   Browser verification remains unavailable unless Work browser settings change;
   do not claim visual/runtime results from a successful build.
 - No migration, configuration, provider transaction, data reset or deployment.
+
+## RF22 implementation evidence
+
+Eight substantial HTTP services now have explicit `app/api` packages and request
+dependencies. Identity sessions/access decisions are separate from memberships;
+clinical notes are separate from prescription endpoints. Reusable identity and
+clinic lookup/locking helpers live in `app/services`. Clinical record audit/item
+operations take explicit actor/token/request metadata rather than a FastAPI Request.
+Distinct clinic-admin versus pickup-admin permission dependencies remain distinct.
+
+OpenAPI for all nine HTTP apps (including the unchanged template) matches the
+captured pre-refactor contract exactly: 106 paths, operation IDs, schemas and
+validation/security declarations unchanged. Local suites for all eight changed
+services passed with the same database-dependent skips as before. Ruff passed.
+The architecture check in `tests/architecture` prevents operations, integrations
+and workers from depending on HTTP router modules; backend CI runs it.
+Full database CI results are recorded in the phase PR before review completion.
