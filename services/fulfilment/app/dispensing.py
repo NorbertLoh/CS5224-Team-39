@@ -1,7 +1,7 @@
 """Minimum C04 projection boundary. No clinical database access or patient prices."""
 
 import json
-from typing import Literal, Protocol
+from typing import Literal
 from uuid import UUID
 
 import httpx
@@ -34,12 +34,6 @@ class DispensingContext(StrictModel):
         if len(ids) != len(set(ids)):
             raise ValueError("Duplicate prescription item IDs")
         return self
-
-
-class DispensingSource(Protocol):
-    def get(
-        self, prescription_id: UUID, patient_id: UUID, request_id: str
-    ) -> DispensingContext: ...
 
 
 class UnavailableDispensing:

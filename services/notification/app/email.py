@@ -1,7 +1,5 @@
 """SES acceptance is not a delivery receipt. No raw provider errors are exposed."""
 
-from typing import Protocol
-
 import boto3
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
@@ -18,10 +16,6 @@ class EmailSendError(RuntimeError):
         super().__init__(message)
         self.definitive = definitive
         self.retryable = retryable
-
-
-class EmailSender(Protocol):
-    def send(self, recipient: str, message: EmailMessage) -> str: ...
 
 
 class SESEmailSender:

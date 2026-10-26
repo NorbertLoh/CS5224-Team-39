@@ -1,6 +1,5 @@
 """Public doctor summaries, available only through the tenant service."""
 
-import time
 from typing import Annotated
 from uuid import UUID
 
@@ -9,6 +8,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from sqlalchemy import select, tuple_
+from telelink_common.pagination import sign_cursor, verify_cursor
 
 from app.api import DB
 from app.models import Membership, Subject
@@ -36,31 +36,22 @@ def require_doctor_directory(
 
 
 def encode_doctor_cursor(settings, tenant_id, subject):
-    now = int(time.time())
-    return jwt.encode(
-        {
-            "iss": "telelink-identity-cursor",
-            "aud": "public-doctors",
-            "tenant": str(tenant_id),
-            "name": subject.display_name,
-            "id": str(subject.subject_id),
-            "iat": now,
-            "exp": now + 900,
-        },
+    return sign_cursor(
+        {"tenant": str(tenant_id), "name": subject.display_name, "id": str(subject.subject_id)},
         cursor_key(settings),
-        algorithm="HS256",
+        issuer="telelink-identity-cursor",
+        audience="public-doctors",
     )
 
 
 def decode_doctor_cursor(settings, tenant_id, cursor):
     try:
-        claims = jwt.decode(
+        claims = verify_cursor(
             cursor,
             cursor_key(settings),
-            algorithms=["HS256"],
             issuer="telelink-identity-cursor",
             audience="public-doctors",
-            options={"require": ["exp", "iat", "tenant", "name", "id"]},
+            required=["tenant", "name", "id"],
         )
         if claims["tenant"] != str(tenant_id) or not isinstance(claims["name"], str):
             raise ValueError("Wrong cursor scope")

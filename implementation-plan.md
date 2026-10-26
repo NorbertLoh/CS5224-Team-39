@@ -9,11 +9,21 @@ and satisfaction of their completion criteria. Existing task totals below predat
 
 | Done | ID | Deliverable and completion criterion | Dependencies | Effort | Claim |
 | --- | --- | --- | --- | --- | --- | --- |
-| [ ] | RF16 | Cleanup plan/inventory with checked consumers and baseline evidence. | RF04, RF15 merged | S | NorbertLoh; In progress; #292 |
+| [x] | RF16 | Cleanup plan/inventory with checked consumers and baseline evidence. Merged PR #297. | RF04, RF15 merged | S | NorbertLoh; complete; #292 closed |
 | [ ] | RF17 | Product-oriented checkout/refund copy; guards preserved; frontend and screen checks recorded. | RF16 inventory | S | NorbertLoh; In progress; #293 |
-| [ ] | RF18 | Retire proven obsolete tooling; preserve unique checks and active consumers. | RF17; pending screen acceptance recorded explicitly | M | NorbertLoh; In progress; #294 |
-| [ ] | RF19 | Consolidate current docs, preserve unique evidence and repair stale instructions/links. | RF18 artifact decisions | M | NorbertLoh; In progress; #295 |
+| [x] | RF18 | Retire proven obsolete tooling; preserve unique checks and active consumers. Merged PR #299; all 315 billing tests and 38 subtests passed in CI. | RF17; pending screen acceptance recorded explicitly | M | NorbertLoh; complete; #294 closed |
+| [x] | RF19 | Consolidate current docs, preserve unique evidence and repair stale instructions/links. Merged PR #300. | RF18 artifact decisions | M | NorbertLoh; complete; #295 closed |
 | [ ] | RF20 | Final verification report with actual outcomes and unresolved acceptance checks. | RF16-RF19; merge in order | M | NorbertLoh; In progress; #296 |
+
+PRs #297-#301 merged on 26 October 2026 with explicit user authorization to merge
+while manual UI acceptance remains deferred. RF17 (#298) and RF20 (#301) are merged,
+but issues #293/#296 remain open for those unverified checks; no browser result is claimed.
+
+| Done | ID | Deliverable and completion criterion | Dependencies | Effort | Claim |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ ] | RF21 | Deeper backend audit; consolidate cursor JWT mechanics while preserving cursor wire/scope/error compatibility, remove demonstrated dead interfaces and pass shared/service regression checks. | RF16-RF20 changes merged; UI follow-ups separate | L | NorbertLoh; In progress; #302 |
+
+RF21 scope and evidence: [backend cleanup audit](docs/backend-cleanup.md).
 
 
 - [x] RF15: Share sign-in sessions across same-origin browser tabs, synchronize logout/account changes and guard concurrent refreshes. Keep PKCE transactions tab-local. Dependencies: A01, A02, RF03 (merged). Effort: M. Completed in merged PR #290 (`5e3e3b1`) on 26 October 2026; issue #289 closed. Frontend lint/typecheck/build and seven focused simulated-tab session checks passed; all PR checks passed. Setup/persistence: `docs/authentication.md`; no environment or migration changes. Live browser and AWS checks remain unverified.

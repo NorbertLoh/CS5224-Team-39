@@ -1,7 +1,7 @@
 # Notification foundation (N01)
 
 This service owns notification jobs, three version-one email templates and the
-`EmailSender` interface / SES implementation. N02 adds the separately run event
+SES implementation. N02 adds the separately run event
 worker, authoritative recipient resolution and durable send states; see
 [WORKER.md](WORKER.md) for setup, operations and verification. There is no public
 send endpoint.
