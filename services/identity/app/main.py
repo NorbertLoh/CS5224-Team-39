@@ -18,6 +18,7 @@ from app.models import Membership, Subject
 from app.notification_context import router as notification_router
 from app.patient_profiles import router as patient_profiles_router
 from app.provisioning import router as provisioning_router
+from app.registration import router as registration_router
 from app.settings import Settings
 
 
@@ -70,6 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(doctors_router)
     app.include_router(document_profiles_router)
     app.include_router(patient_profiles_router)
+    app.include_router(registration_router)
 
     @app.get("/health/live", tags=["health"])
     def live():

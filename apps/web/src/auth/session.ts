@@ -210,7 +210,7 @@ export async function beginLogin(
     client_id: config.clientId,
     response_type: 'code',
     redirect_uri: config.redirectUri,
-    scope: 'openid email profile',
+    scope: 'openid email profile aws.cognito.signin.user.admin',
     state,
     code_challenge: challenge,
     code_challenge_method: 'S256',

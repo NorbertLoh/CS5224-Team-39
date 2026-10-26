@@ -1,6 +1,9 @@
 import { ArrowLeft, ArrowRight, HeartPulse } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { PasswordSignInForm } from './PasswordSignInForm'
 import { SignInStory } from './SignInStory'
+import { SignUpForm } from './SignUpForm'
+import type { AuthConfig } from './session'
 
 interface SignInPageProps {
   signedIn: boolean
@@ -9,6 +12,7 @@ interface SignInPageProps {
   configurationError: string
   onSignIn: (email: string, password: string) => Promise<void>
   onHostedSignIn: () => void
+  config: AuthConfig | null
 }
 
 export function SignInPage({
@@ -18,11 +22,18 @@ export function SignInPage({
   configurationError,
   onSignIn,
   onHostedSignIn,
+  config,
 }: SignInPageProps) {
+  const [signingUp, setSigningUp] = useState(false)
+  const [registrationMessage, setRegistrationMessage] = useState('')
+  const heading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    heading.current?.focus()
+  }, [signingUp])
   return (
     <div className="sign-in-page">
       <a href="#sign-in-content" className="sign-in-skip">
-        Skip to sign in
+        Skip to account form
       </a>
       <SignInStory />
 
@@ -38,11 +49,19 @@ export function SignInPage({
             <HeartPulse size={29} aria-hidden="true" />
           </span>
           <p className="sign-in-eyebrow">Your TeleLink account</p>
-          <h1>{signedIn ? 'You’re already signed in.' : 'Welcome back.'}</h1>
+          <h1 ref={heading} tabIndex={-1}>
+            {signedIn
+              ? 'You’re already signed in.'
+              : signingUp
+                ? 'Your care starts here.'
+                : 'Welcome back.'}
+          </h1>
           <p className="sign-in-intro">
             {signedIn
               ? 'Head home to choose your workspace and pick up where you left off.'
-              : 'A familiar face. Your next appointment. Everything you need to keep your care moving.'}
+              : signingUp
+                ? 'Create your TeleLink account to book appointments and keep your care connected.'
+                : 'A familiar face. Your next appointment. Everything you need to keep your care moving.'}
           </p>
 
           <div className="sign-in-action-area">
@@ -50,23 +69,53 @@ export function SignInPage({
               <a href="/" className="sign-in-primary">
                 Go to your workspace <ArrowRight size={19} aria-hidden="true" />
               </a>
+            ) : signingUp ? (
+              <SignUpForm
+                config={config}
+                onReturn={(notice = '') => {
+                  setSigningUp(false)
+                  setRegistrationMessage(notice)
+                }}
+              />
             ) : (
               <PasswordSignInForm
                 busy={busy}
                 disabled={Boolean(configurationError)}
                 noticeId={
-                  message || configurationError ? 'sign-in-notice' : undefined
+                  message || registrationMessage || configurationError
+                    ? 'sign-in-notice'
+                    : undefined
                 }
-                onSignIn={onSignIn}
+                onSignIn={(email, password) => {
+                  setRegistrationMessage('')
+                  return onSignIn(email, password)
+                }}
                 onHostedSignIn={onHostedSignIn}
               />
             )}
-            {(configurationError || message) && (
+            {(configurationError ||
+              (!signingUp && (registrationMessage || message))) && (
               <p id="sign-in-notice" role="status" className="sign-in-notice">
-                {configurationError || message}
+                {configurationError || registrationMessage || message}
               </p>
             )}
           </div>
+
+          {!signedIn && !signingUp && (
+            <p className="sign-in-browse sign-up-entry">
+              New to TeleLink?{' '}
+              <button
+                type="button"
+                disabled={busy || !config}
+                onClick={() => {
+                  setRegistrationMessage('')
+                  setSigningUp(true)
+                }}
+              >
+                Create an account <ArrowRight size={14} aria-hidden="true" />
+              </button>
+            </p>
+          )}
 
           <div className="sign-in-account-note">
             <span className="sign-in-account-note-icon">

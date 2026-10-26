@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
 import { SignInPage } from './SignInPage'
-import { currentIdentity } from '../features/clinics/api'
+import { accessToken, currentIdentity } from '../features/clinics/api'
+import { ApiError, apiFetch } from '../lib/api'
 import { defaultWorkspace } from '../navigation/access'
 import {
   authConfig,
@@ -32,13 +33,35 @@ sessionStorage.removeItem('telelink.logout-warning')
 
 async function signInDestination() {
   try {
-    const identity = await currentIdentity()
+    let identity
+    try {
+      identity = await currentIdentity()
+    } catch (error) {
+      if (
+        !(error instanceof ApiError) ||
+        error.code !== 'identity_not_provisioned'
+      )
+        throw error
+      try {
+        identity = await (
+          await apiFetch('/identity/me/registration', {
+            method: 'POST',
+            accessToken: await accessToken(),
+          })
+        ).json()
+      } catch {
+        throw new Error(
+          'Your patient account could not be prepared. Verify your email and try signing in again. If this continues, contact your clinic.',
+        )
+      }
+    }
     const destination = sessionStorage.getItem('telelink.after-sign-in')
     sessionStorage.removeItem('telelink.after-sign-in')
     return destination === '/register-clinic'
       ? destination
       : defaultWorkspace(identity)
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && !(error instanceof ApiError)) throw error
     return '/'
   }
 }
@@ -79,7 +102,7 @@ export function AuthControls({
         queryClient.clear()
         setSession(value)
         setMessage('Signed in.')
-        void signInDestination().then((destination) => {
+        return signInDestination().then((destination) => {
           if (!cancelled && destination !== '/') location.replace(destination)
         })
       })
@@ -140,6 +163,8 @@ export function AuthControls({
       setSession(value)
       location.assign(await signInDestination())
     } catch (error) {
+      clearSession()
+      setSession(null)
       setMessage(
         error instanceof Error
           ? error.message
@@ -152,6 +177,7 @@ export function AuthControls({
   if (presentation === 'page') {
     return (
       <SignInPage
+        config={config}
         signedIn={Boolean(session)}
         busy={busy}
         message={message}
