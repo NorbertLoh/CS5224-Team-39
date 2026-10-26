@@ -1,7 +1,6 @@
 /** Real R04 adapters through Vite; run check_records_frontend.py. */
 import assert from 'node:assert/strict'
 import {
-  catalogue,
   readNote,
   saveNote,
   listPrescriptions,
@@ -10,7 +9,10 @@ import {
   issuePrescription,
 } from '../apps/web/src/features/records/api'
 import { listAppointments } from '../apps/web/src/features/scheduling/api'
-import { ApiError } from '../apps/web/src/lib/api'
+import { ApiError, apiFetch } from '../apps/web/src/lib/api'
+import { accessToken } from '../apps/web/src/auth/access-token'
+import type { CursorPage } from '../apps/web/src/lib/api-types'
+import type { Medication } from '../apps/web/src/features/records/types'
 
 const run = JSON.parse(process.env.R04_CONTEXT ?? '{}')
 assert.ok(
@@ -24,7 +26,7 @@ globalThis.fetch = (input, init) => {
   return nativeFetch(`${run.web}${input}`, init)
 }
 const values = new Map<string, string>()
-Object.defineProperty(globalThis, 'sessionStorage', {
+Object.defineProperty(globalThis, 'localStorage', {
   value: {
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => values.set(key, value),
@@ -41,6 +43,15 @@ function signIn(role: string) {
       expiresAt: Date.now() + 1800000,
     }),
   )
+}
+async function catalogue(tenantId: string) {
+  const page: CursorPage<Medication> = await (
+    await apiFetch(
+      `/fulfilment/clinics/${encodeURIComponent(tenantId)}/catalogue?limit=100`,
+      { accessToken: await accessToken() },
+    )
+  ).json()
+  return page.items
 }
 const denied = (status: number) => (error: unknown) =>
   error instanceof ApiError && error.status === status
@@ -73,7 +84,12 @@ if (run.phase === 'completed') {
       instructions: 'R04 synthetic instructions',
     },
   ]
-  const draft = await savePrescription(run.appointment, undefined, items)
+  const draft = await savePrescription(
+    run.appointment,
+    undefined,
+    items,
+    run.tenant,
+  )
   assert.equal(draft.status, 'draft')
   assert.equal(
     draft.items[0].display_name,
@@ -81,9 +97,12 @@ if (run.phase === 'completed') {
   )
   assert.equal(
     (
-      await savePrescription(run.appointment, draft.prescription_id, [
-        { ...items[0], quantity: 3 },
-      ])
+      await savePrescription(
+        run.appointment,
+        draft.prescription_id,
+        [{ ...items[0], quantity: 3 }],
+        run.tenant,
+      )
     ).items[0].quantity,
     3,
   )
@@ -98,7 +117,7 @@ if (run.phase === 'completed') {
     3,
   )
   await assert.rejects(
-    savePrescription(run.appointment, draft.prescription_id, items),
+    savePrescription(run.appointment, draft.prescription_id, items, run.tenant),
     denied(409),
   )
   signIn('patient')

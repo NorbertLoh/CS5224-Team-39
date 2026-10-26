@@ -1,4 +1,4 @@
-import type { Identity } from '../features/clinics/api'
+import type { Identity } from '@/auth/identity'
 
 export type Role = 'patient' | 'doctor' | 'clinic_admin' | 'platform_admin'
 export type Route =
@@ -154,7 +154,9 @@ export function parseRoute(path: string): Route {
       tenantId: clinic[1].toLowerCase(),
     }
   }
-  const doctor = /^\/doctor\/clinics\/([^/]+)(\/availability)?$/.exec(normalized)
+  const doctor = /^\/doctor\/clinics\/([^/]+)(\/availability)?$/.exec(
+    normalized,
+  )
   if (doctor && uuid.test(doctor[1]))
     return {
       kind: doctor[2] ? 'doctor-availability' : 'role',

@@ -1,4 +1,4 @@
-import type { Appointment } from '../scheduling/api'
+import type { Appointment } from '@/features/scheduling/api'
 
 export function dateInSingapore(instant: string) {
   return new Date(Date.parse(instant) + 8 * 3600000).toISOString().slice(0, 10)

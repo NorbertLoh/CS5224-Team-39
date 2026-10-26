@@ -1,6 +1,6 @@
+import { documentDownloadUrl, documentsError } from '@/features/documents/api'
+import type { DocumentMetadata } from '@/features/documents/types'
 import { useEffect, useRef, useState } from 'react'
-import { documentDownloadUrl, documentsError } from './api'
-import type { DocumentMetadata } from './types'
 
 export function useDocumentDownload(item: DocumentMetadata) {
   const [busy, setBusy] = useState(false)

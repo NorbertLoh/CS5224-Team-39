@@ -98,3 +98,31 @@ probes were updated alongside the moves.
 All nine OpenAPI snapshots still match exactly. Existing local suites for the
 nine changed services passed with their database-dependent skips; the import
 boundary guard passes. CLI and full database CI results are recorded in the PR.
+
+## RF24 frontend organization
+
+Large fulfilment and clinical-record features are being organized by workflow,
+with API transport/types separate from endpoint operations. Video media, hooks,
+room orchestration and controls get explicit homes. Clinic and patient page
+composition is separated from reusable navigation/components. Authentication token
+and identity lookup move out of the clinic-directory API. Smaller cohesive feature
+folders remain small rather than gaining empty layers.
+
+Public feature entry points keep navigation from knowing internal file layouts.
+Import rewrites include existing developer adapter probes and documentation.
+No URLs, cache scopes, autosave timings, styling or backend contracts change.
+
+RF24 implementation relocates 72 modules into workflow groups, splits records and
+fulfilment APIs into focused transport/types/endpoint modules, extracts generic auth
+token/identity access and separates record validators from wire types. Navigation
+uses public feature entry points and a shared workspace frame. Existing internal
+imports use the configured alias; all source URLs/probe consumers were updated.
+
+Local verification: ESLint, frontend typecheck and production build passed. Semantic
+AST comparisons preserved all 28 original API function bodies, 98 moved component/
+hook bodies and all session function bodies; the generic missing-session wording
+is now "Sign in to continue." Seven existing cross-tab session checks passed.
+Records/scheduling probes were repaired for the current API/session contracts,
+typechecked and verified to resolve through Vite before their missing-context guards.
+No live probe or browser operation is claimed. The existing bundle-size warning
+remains. CI now checks probe types, runner syntax and the existing session checks.

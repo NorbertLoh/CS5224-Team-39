@@ -1,10 +1,10 @@
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { AppointmentPeriods } from '@/features/appointments/AppointmentPeriods'
+import type { AppointmentRole } from '@/features/appointments/types'
+import { useClinicNames } from '@/features/clinics/hooks/useClinicNames'
+import { useSchedulingIdentity } from '@/features/scheduling/useSchedulingIdentity'
 import { useState } from 'react'
-import type { AppointmentRole } from './types'
-import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
-import { useClinicNames } from '../clinics/useClinicNames'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
-import { AppointmentPeriods } from './AppointmentPeriods'
 
 export function AppointmentSchedule({
   role,

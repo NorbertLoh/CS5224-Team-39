@@ -1,9 +1,9 @@
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { DoctorTimetable } from '@/features/availability/DoctorTimetable'
+import { useClinicNames } from '@/features/clinics/hooks/useClinicNames'
+import { useSchedulingIdentity } from '@/features/scheduling/useSchedulingIdentity'
 import { useState } from 'react'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
-import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
-import { DoctorTimetable } from './DoctorTimetable'
-import { useClinicNames } from '../clinics/useClinicNames'
 
 export function AvailabilityEditor({
   tenantId: routeClinic,

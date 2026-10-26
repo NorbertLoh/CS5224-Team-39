@@ -1,12 +1,20 @@
 type ApiFetchOptions = RequestInit & { accessToken?: string }
-import { apiBaseUrl } from './backend-config'
+import { apiBaseUrl } from '@/lib/backend-config'
 
 export class ApiError extends Error {
-  constructor(public status: number, public code?: string) { super(`Request failed (HTTP ${status}).`) }
+  constructor(
+    public status: number,
+    public code?: string,
+  ) {
+    super(`Request failed (HTTP ${status}).`)
+  }
 }
 
 /** Like fetch(), with the API base, optional bearer token and HTTP error checking. */
-export async function apiFetch(path: string, options: ApiFetchOptions = {}): Promise<Response> {
+export async function apiFetch(
+  path: string,
+  options: ApiFetchOptions = {},
+): Promise<Response> {
   if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\')) {
     throw new Error('Use an API path starting with a single slash.')
   }

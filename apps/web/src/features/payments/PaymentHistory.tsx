@@ -1,7 +1,11 @@
-import type { Payment } from './api'
-import { consultationPrice } from '../../lib/money'
-import { paymentTime, purposeLabels, statusLabels } from './model'
-import { PaymentDetails } from './PaymentDetails'
+import type { Payment } from '@/features/payments/api'
+import {
+  paymentTime,
+  purposeLabels,
+  statusLabels,
+} from '@/features/payments/model'
+import { PaymentDetails } from '@/features/payments/PaymentDetails'
+import { consultationPrice } from '@/lib/money'
 
 export function PaymentHistory({ payments }: { payments: Payment[] }) {
   if (!payments.length)

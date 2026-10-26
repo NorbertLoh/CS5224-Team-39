@@ -1,13 +1,13 @@
-import { useEffect, useId, useState } from 'react'
-import type { Appointment } from '../scheduling/api'
-import { roomEligibility } from '../video/admission'
-import { joinEarlyMinutes } from '../video/joinWindow'
 import {
   dateInSingapore,
   formatDate,
   formatTime,
   readableStatus,
-} from './display'
+} from '@/features/appointments/display'
+import type { Appointment } from '@/features/scheduling/api'
+import { roomEligibility } from '@/features/video/api/admission'
+import { joinEarlyMinutes } from '@/features/video/domain/joinWindow'
+import { useEffect, useId, useState } from 'react'
 
 export function AppointmentJoinButton({
   appointment,

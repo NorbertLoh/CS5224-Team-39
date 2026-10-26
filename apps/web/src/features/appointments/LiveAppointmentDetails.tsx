@@ -1,18 +1,18 @@
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AppointmentDetails } from './AppointmentDetails'
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { AppointmentDetails } from '@/features/appointments/AppointmentDetails'
+import { AppointmentJoinButton } from '@/features/appointments/AppointmentJoinButton'
+import { AppointmentPaymentAction } from '@/features/appointments/AppointmentPaymentAction'
+import type { AppointmentRole } from '@/features/appointments/types'
+import { DocumentList } from '@/features/documents/DocumentList'
 import {
   appointmentDetail,
-  cancelAppointment,
   canCancel,
+  cancelAppointment,
   schedulingError,
-} from '../scheduling/api'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
-import { DocumentList } from '../documents/DocumentList'
-import type { AppointmentRole } from './types'
-import { AppointmentJoinButton } from './AppointmentJoinButton'
-import { AppointmentPaymentAction } from './AppointmentPaymentAction'
+} from '@/features/scheduling/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 export function LiveAppointmentDetails({
   id,

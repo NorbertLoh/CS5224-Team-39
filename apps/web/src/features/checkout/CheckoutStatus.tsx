@@ -1,5 +1,5 @@
-import { consultationPrice } from '../../lib/money'
-import type { CheckoutState } from './status'
+import type { CheckoutState } from '@/features/checkout/status'
+import { consultationPrice } from '@/lib/money'
 
 const messages: Record<
   CheckoutState | 'ready' | 'return' | 'error' | 'missing',
@@ -191,7 +191,9 @@ export function CheckoutStatus({
             Retry payment
           </button>
         )}
-        {!['ready', 'pending', 'expired', 'confirming', 'success'].includes(state) && (
+        {!['ready', 'pending', 'expired', 'confirming', 'success'].includes(
+          state,
+        ) && (
           <a className="rounded-lg border px-4 py-3" href="/patient">
             Appointments
           </a>

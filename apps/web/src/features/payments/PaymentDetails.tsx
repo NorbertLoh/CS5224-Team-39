@@ -1,7 +1,7 @@
-import type { Payment } from './api'
-import { consultationPrice } from '../../lib/money'
-import { paymentTime } from './model'
-import { ConsultationRefund } from './ConsultationRefund'
+import type { Payment } from '@/features/payments/api'
+import { ConsultationRefund } from '@/features/payments/ConsultationRefund'
+import { paymentTime } from '@/features/payments/model'
+import { consultationPrice } from '@/lib/money'
 import { useState } from 'react'
 
 export function PaymentDetails({ payment }: { payment: Payment }) {

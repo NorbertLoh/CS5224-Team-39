@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { Button } from '../components/ui/button'
-import { SignInPage } from './SignInPage'
-import { accessToken, currentIdentity } from '../features/clinics/api'
-import { ApiError, apiFetch } from '../lib/api'
-import { defaultWorkspace } from '../navigation/access'
+import { SignInPage } from '@/auth/SignInPage'
+import { accessToken } from '@/auth/access-token'
+import { currentIdentity } from '@/auth/identity'
+import type { AuthConfig, Session } from '@/auth/session'
 import {
   authConfig,
   beginLogin,
@@ -15,8 +12,12 @@ import {
   refreshSession,
   signInWithPassword,
   subscribeToSession,
-} from './session'
-import type { AuthConfig, Session } from './session'
+} from '@/auth/session'
+import { Button } from '@/components/ui/button'
+import { ApiError, apiFetch } from '@/lib/api'
+import { defaultWorkspace } from '@/navigation/access'
+import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Configuration is fixed for this Vite build. Callback work is shared across StrictMode mounts.
 let config: AuthConfig | null = null
@@ -84,15 +85,16 @@ export function AuthControls({
   }, [session, onSessionChange])
 
   useEffect(
-    () => subscribeToSession(() => {
-      const next = readSession()
-      const previous = observedSession.current
-      if (JSON.stringify(next) === JSON.stringify(previous)) return
-      observedSession.current = next
-      if (next?.refreshToken !== previous?.refreshToken) queryClient.clear()
-      setSession(next)
-      setMessage('')
-    }),
+    () =>
+      subscribeToSession(() => {
+        const next = readSession()
+        const previous = observedSession.current
+        if (JSON.stringify(next) === JSON.stringify(previous)) return
+        observedSession.current = next
+        if (next?.refreshToken !== previous?.refreshToken) queryClient.clear()
+        setSession(next)
+        setMessage('')
+      }),
     [queryClient],
   )
 

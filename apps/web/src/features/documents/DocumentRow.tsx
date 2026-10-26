@@ -1,7 +1,7 @@
-import { documentDate, documentStates } from './types'
-import { useDocumentName } from './useDocumentName'
-import { useDocumentDownload } from './useDocumentDownload'
-import type { DocumentMetadata } from './types'
+import type { DocumentMetadata } from '@/features/documents/types'
+import { documentDate, documentStates } from '@/features/documents/types'
+import { useDocumentDownload } from '@/features/documents/useDocumentDownload'
+import { useDocumentName } from '@/features/documents/useDocumentName'
 
 export function DocumentRow({
   document: item,

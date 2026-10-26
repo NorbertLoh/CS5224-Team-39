@@ -1,7 +1,11 @@
-import { useRef } from 'react'
+import type { Cell, Selection } from '@/features/availability/timetable'
+import {
+  applyDragSelection,
+  deselectCell,
+  updateSelections,
+} from '@/features/availability/timetable'
 import type { KeyboardEvent, MouseEvent, PointerEvent } from 'react'
-import { applyDragSelection, deselectCell, updateSelections } from './timetable'
-import type { Cell, Selection } from './timetable'
+import { useRef } from 'react'
 
 const arrowOffsets: Record<string, [number, number]> = {
   ArrowUp: [0, -1],

@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { readSession } from '@/auth/session'
+import {
+  refundHistory,
+  refundPayment,
+  type Payment,
+} from '@/features/payments/api'
+import { paymentTime } from '@/features/payments/model'
+import { ApiError } from '@/lib/api'
+import { consultationPrice } from '@/lib/money'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiError } from '../../lib/api'
-import { consultationPrice } from '../../lib/money'
-import { readSession } from '../../auth/session'
-import { refundHistory, refundPayment, type Payment } from './api'
-import { paymentTime } from './model'
+import { useState } from 'react'
 
 const labels = {
   pending: 'Refund processing',
@@ -67,9 +71,7 @@ export function ConsultationRefund({ payment }: { payment: Payment }) {
         aria-label="Consultation refund"
       >
         <h3 className="font-semibold">Refund unavailable</h3>
-        <p>
-          No charge was made, so there is nothing to refund.
-        </p>
+        <p>No charge was made, so there is nothing to refund.</p>
       </section>
     )
   }

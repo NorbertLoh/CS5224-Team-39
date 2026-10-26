@@ -1,17 +1,17 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
-import { appointmentDetail } from '../scheduling/api'
-import { useAppointmentNames } from '../appointments/useAppointmentNames'
-import { paymentDetail } from '../payments/api'
-import { CheckoutStatus } from './CheckoutStatus'
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { useAppointmentNames } from '@/features/appointments/useAppointmentNames'
+import { CheckoutStatus } from '@/features/checkout/CheckoutStatus'
 import {
   beginCheckout,
   billingError,
   canCheckout,
   liveCheckoutState,
-} from './live'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
+} from '@/features/checkout/live'
+import { paymentDetail } from '@/features/payments/api'
+import { appointmentDetail } from '@/features/scheduling/api'
+import { useSchedulingIdentity } from '@/features/scheduling/useSchedulingIdentity'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
 export function LiveCheckoutPage() {
   const identity = useSchedulingIdentity()

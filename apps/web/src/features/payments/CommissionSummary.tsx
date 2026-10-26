@@ -1,4 +1,4 @@
-import { consultationPrice } from '../../lib/money'
+import { consultationPrice } from '@/lib/money'
 
 export function CommissionSummary({
   totals,

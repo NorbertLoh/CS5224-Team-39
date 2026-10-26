@@ -1,13 +1,13 @@
-import { useState } from 'react'
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { AppointmentGrid } from '@/features/appointments/AppointmentGrid'
+import { LiveAppointmentDetails } from '@/features/appointments/LiveAppointmentDetails'
+import type { AppointmentRole } from '@/features/appointments/types'
+import type { AppointmentPeriod } from '@/features/scheduling/api'
+import { listAppointments, schedulingError } from '@/features/scheduling/api'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Tabs } from 'radix-ui'
-import { listAppointments, schedulingError } from '../scheduling/api'
-import type { AppointmentPeriod } from '../scheduling/api'
-import type { AppointmentRole } from './types'
-import { AppointmentGrid } from './AppointmentGrid'
-import { LiveAppointmentDetails } from './LiveAppointmentDetails'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
+import { useState } from 'react'
 
 export function AppointmentPeriods({
   role,

@@ -1,11 +1,11 @@
+import { slotStart } from '@/features/availability/slot-time'
+import type { Cell } from '@/features/availability/timetable'
+import type { Slot } from '@/features/scheduling/api'
 import type {
   KeyboardEventHandler,
   MouseEventHandler,
   PointerEventHandler,
 } from 'react'
-import { slotStart } from './slot-time'
-import type { Slot } from '../scheduling/api'
-import type { Cell } from './timetable'
 
 type TimetableCellProps = {
   cell: Cell

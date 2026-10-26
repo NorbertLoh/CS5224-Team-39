@@ -1,8 +1,8 @@
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { BookingFlow } from '@/features/booking/BookingFlow'
+import { clinicDoctors, publicClinic } from '@/features/clinics/api'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { publicClinic, clinicDoctors } from '../clinics/api'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
-import { BookingFlow } from './BookingFlow'
 
 export function ClinicBooking({ slug }: { slug: string }) {
   const clinic = useQuery({
