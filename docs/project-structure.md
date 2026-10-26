@@ -76,3 +76,12 @@ services passed with the same database-dependent skips as before. Ruff passed.
 The architecture check in `tests/architecture` prevents operations, integrations
 and workers from depending on HTTP router modules; backend CI runs it.
 Full database CI results are recorded in the phase PR before review completion.
+
+## RF23 workflow organization
+
+The next phase separates service operations, HTTP/provider/storage integrations
+and background workers. In particular, delivery submission and refund processing
+must be reusable without importing API routers. Document rendering gets its own
+package. Existing worker CLI module names remain thin entrypoints, while internal
+imports and tests use the actual worker/operation modules. Implementation and
+verification evidence follows in the phase PR.
