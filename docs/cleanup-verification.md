@@ -1,8 +1,9 @@
 # Cleanup verification and review handoff
 
 RF20 / issue #296. Recorded 26 October 2026 (Asia/Singapore).
-Status: implemented changes are available as five stacked draft PRs; required
-manual browser acceptance is pending. No PR has been merged by this work.
+Status: all five phase PRs merged on 26 October 2026 with explicit user
+authorization to defer manual browser acceptance. Issues #292/#294/#295 are
+closed; #293/#296 remain open for the unverified manual checks below.
 
 ## Review order
 
@@ -14,11 +15,11 @@ manual browser acceptance is pending. No PR has been merged by this work.
 | Documentation | RF19 / #295 | [#300](https://github.com/NorbertLoh/CS5224-Team-39/pull/300) | Duplicate RF10 note consolidated and stale setup/behavior corrected. |
 | Verification | RF20 / #296 | This phase's PR | Evidence and manual acceptance checklist recorded here. |
 
-Each PR targets the preceding phase branch, with #297 targeting main. Review and
-merge in order, retargeting/rebasing dependent PRs after each merge as needed,
-especially if squash merging. Rerun required checks on the resulting revisions.
-Do not merge later phases while the prior required browser gate remains open.
-Issues stay assigned to NorbertLoh and In progress until merge and criteria are met.
+The PRs were reviewed as a stack, retargeted to main and merged in order with merge
+commits, preserving their ancestry. All phase checks passed. The final merge is
+`f78534e`. The user explicitly authorized merging despite the deferred browser
+gate; no browser result is inferred from that authorization. RF17/RF20 issues stay
+assigned to NorbertLoh and In progress until their outstanding criteria are met.
 
 ## Checks actually run
 

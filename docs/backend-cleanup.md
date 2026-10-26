@@ -1,7 +1,7 @@
 # Deeper backend cleanup (RF21)
 
 Issue #302; assigned to NorbertLoh and marked In progress. Based on merged cleanup
-stack #297-#301. Status: audit complete; implementation/checks in progress.
+stack #297-#301. Status: implementation and local checks complete; PostgreSQL CI pending.
 
 ## Inspected scope and decisions
 
@@ -37,5 +37,51 @@ Authorization, tenant filtering and SQL pagination remain in each owning service
 - Require existing per-service PostgreSQL CI and Ruff checks for the shared change.
 - No frontend, provider transaction, Compose startup or deployment needed for this refactor.
 
-Results: pending. Required manual UI follow-ups from RF17/RF20 stay in their
-existing issues and are not established by backend checks.
+### Local results
+
+All ten Python service suites and the shared suite ran in separate processes with
+their service import paths, without a reset database. Ruff passed across all ten
+services and common code; format checks passed for changed Python files, and
+`pip check` passed in the isolated test environment.
+
+| Suite | Passed | Skipped locally |
+| --- | ---: | ---: |
+| Identity | 17 | 133 |
+| Tenant | 6 | 125 |
+| Scheduling | 35 | 229 |
+| Billing | 47 + 38 subtests | 268 |
+| Fulfilment | 96 | 282 |
+| Clinical records | 26 | 139 |
+| Document | 44 | 61 |
+| Notification | 62 | 29 |
+| Consultation | 37 | 96 |
+| Template | 37 | 1 |
+| Common | 110 | 12 |
+| Total | 517 + 38 subtests | 1,375 |
+
+The shared suite includes 17 new JWT compatibility/failure checks. An additional
+local differential probe loaded original cursor functions from merged baseline
+`f78534e` and compared them with the refactor: 12 cursor variants and 201 old/new
+behavior comparisons passed. These covered both directions, exact decoded claim
+sets, the 900-second lifetime, missing claims, expiry/future issue time, wrong
+issuer/audience/scope/order/subject/tenant, malformed IDs, timestamps without a
+timezone, both fulfilment value modes and nullable tenant-admin status.
+The probe is an ignored local audit tool; permanent regression coverage is in
+the shared tests and existing service suites, not a dependency on Git history.
+
+Database/emulator-dependent tests are skipped locally, not claimed passed.
+Existing per-service PostgreSQL CI is required before review completion. The
+existing Starlette TestClient deprecation warning remains. A full-directory Ruff
+format check also flags an existing Python snippet in the common README; changed
+Python files themselves pass, and that unrelated snippet was not reformatted.
+
+### Setup impact and remaining acceptance
+
+No new dependencies, environment settings, migrations, API/event shapes or data
+changes. Existing editable common-package installs pick up the new module.
+Rebuild service images or reinstall the common wheel together with service code;
+restart updated APIs so imports use the matching common package. Services retain
+their existing entry points and deployment boundaries.
+
+Required manual UI follow-ups from RF17/RF20 stay in issues #293/#296 and are not
+established by backend checks. This PR remains unmerged pending review.

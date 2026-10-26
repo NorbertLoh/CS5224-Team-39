@@ -1,7 +1,8 @@
 # Project cleanup plan
 
-Status: changes prepared in five stacked draft phase PRs; browser acceptance and
-merge completion remain pending. Actual results: [verification report](docs/cleanup-verification.md).
+Status: phase PRs #297-#301 merged on 26 October 2026 with explicit user
+authorization; browser acceptance remains pending in issues #293/#296.
+Actual results: [verification report](docs/cleanup-verification.md).
 Prepared: 26 October 2026.
 
 Execution checklist: [phased implementation](cleanup-implementation.md).

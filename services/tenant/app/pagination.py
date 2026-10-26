@@ -1,44 +1,29 @@
-import time
 from datetime import datetime
 from uuid import UUID
 
 import jwt
 from telelink_common.errors import DomainError
-
-
-def cursor_key(settings):
-    if settings.cursor_secret is None:
-        raise DomainError(503, "unavailable", "Pagination is not configured.")
-    return settings.cursor_secret.get_secret_value()
+from telelink_common.pagination import cursor_key, sign_cursor, verify_cursor
 
 
 def encode_cursor(settings, clinic):
-    now = int(time.time())
-    return jwt.encode(
-        {
-            "iss": "telelink-tenant-cursor",
-            "aud": "public-active-clinics",
-            "order": "name,tenant_id",
-            "name": clinic.name,
-            "id": str(clinic.tenant_id),
-            "iat": now,
-            "exp": now + 900,
-        },
+    return sign_cursor(
+        {"order": "name,tenant_id", "name": clinic.name, "id": str(clinic.tenant_id)},
         cursor_key(settings),
-        algorithm="HS256",
+        issuer="telelink-tenant-cursor",
+        audience="public-active-clinics",
     )
 
 
 def decode_cursor(settings, cursor):
     key = cursor_key(settings)
     try:
-        claims = jwt.decode(
+        claims = verify_cursor(
             cursor,
             key,
-            algorithms=["HS256"],
             issuer="telelink-tenant-cursor",
             audience="public-active-clinics",
-            options={"require": ["exp", "iat", "order", "name", "id"]},
+            required=["order", "name", "id"],
         )
         if claims["order"] != "name,tenant_id" or not isinstance(claims["name"], str):
             raise ValueError("Invalid cursor")
@@ -53,34 +38,29 @@ def decode_cursor(settings, cursor):
 
 
 def encode_admin_cursor(settings, subject_id, status, clinic):
-    now = int(time.time())
-    return jwt.encode(
+    return sign_cursor(
         {
-            "iss": "telelink-tenant-cursor",
-            "aud": "admin-clinics",
             "sub": str(subject_id),
             "status": status,
             "order": "created_at,tenant_id",
             "created_at": clinic.created_at.isoformat(),
             "id": str(clinic.tenant_id),
-            "iat": now,
-            "exp": now + 900,
         },
         cursor_key(settings),
-        algorithm="HS256",
+        issuer="telelink-tenant-cursor",
+        audience="admin-clinics",
     )
 
 
 def decode_admin_cursor(settings, cursor, subject_id, status):
     key = cursor_key(settings)
     try:
-        claims = jwt.decode(
+        claims = verify_cursor(
             cursor,
             key,
-            algorithms=["HS256"],
             issuer="telelink-tenant-cursor",
             audience="admin-clinics",
-            options={"require": ["exp", "iat", "sub", "order", "created_at", "id"]},
+            required=["sub", "order", "created_at", "id"],
         )
         # JWT's required-claim check rejects null; null means the unfiltered list.
         if "status" not in claims:

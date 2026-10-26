@@ -1,9 +1,10 @@
-import time
 from datetime import datetime
 from uuid import UUID
 
 import jwt
 from telelink_common.errors import DomainError
+from telelink_common.pagination import cursor_key as key
+from telelink_common.pagination import sign_cursor, verify_cursor
 
 
 def scope_for(identity, appointment_id):
@@ -20,39 +21,24 @@ def scope_for(identity, appointment_id):
     ]
 
 
-def key(settings):
-    if settings.cursor_secret is None:
-        raise DomainError(503, "unavailable", "Pagination is not configured.")
-    return settings.cursor_secret.get_secret_value()
-
-
 def encode(settings, scope, row):
-    now = int(time.time())
-    return jwt.encode(
-        {
-            "iss": "telelink-clinical-records",
-            "aud": "prescriptions",
-            "iat": now,
-            "exp": now + 900,
-            "scope": scope,
-            "created": row.created_at.isoformat(),
-            "id": str(row.prescription_id),
-        },
+    return sign_cursor(
+        {"scope": scope, "created": row.created_at.isoformat(), "id": str(row.prescription_id)},
         key(settings),
-        algorithm="HS256",
+        issuer="telelink-clinical-records",
+        audience="prescriptions",
     )
 
 
 def decode(settings, scope, cursor):
     secret = key(settings)
     try:
-        claims = jwt.decode(
+        claims = verify_cursor(
             cursor,
             secret,
-            algorithms=["HS256"],
             issuer="telelink-clinical-records",
             audience="prescriptions",
-            options={"require": ["iat", "exp", "scope", "created", "id"]},
+            required=["scope", "created", "id"],
         )
         created = datetime.fromisoformat(claims["created"])
         if claims["scope"] != scope or created.tzinfo is None:

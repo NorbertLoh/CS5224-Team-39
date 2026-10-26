@@ -1,6 +1,6 @@
 # Phased project cleanup implementation
 
-Status: RF16-RF20 changes prepared in stacked draft PRs. Browser acceptance and merge completion remain open. See [verification report](docs/cleanup-verification.md).
+Status: RF16-RF20 PRs #297-#301 merged with explicit user authorization on 26 October 2026. Browser acceptance remains open in #293/#296. See [verification report](docs/cleanup-verification.md).
 Scope and decisions: [cleanup plan](cleanup-plan.md).
 Shared backlog: [implementation-plan.md](implementation-plan.md).
 
