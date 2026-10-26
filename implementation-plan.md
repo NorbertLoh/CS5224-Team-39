@@ -12,11 +12,11 @@ UI work can start against the agreed API fixtures after its listed contract depe
 
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
-Completion audit, updated 22 October 2026: reconciled the backlog with open/closed
-GitHub issues, open/merged PRs and the current implementation. **97 tasks are complete,
-F01 is skipped by user decision, and 32 tasks remain unfinished.** The 98 checked
-rows include that skipped task. Completed work comprises F02-F16, C01-C05,
-A01-A11, U01-U17, S01-S08, R01-R04, P01-P03, M01-M04, D01-D07, B01-B07, V01-V04, N01-N02, I01-I04, Q02 and X01-X05.
+Completion audit, updated 26 October 2026: recounted task-ID entries after Q03
+merged in PR #279, retaining the recorded verification below. **107 tasks are complete,
+F01 is skipped by team decision, and 31 tasks remain unfinished.** The 108 checked
+entries include that skipped task. Completed work comprises F02-F17, C01-C05,
+A01-A11, U01-U17, S01-S08, R01-R04, P01-P03, M01-M04, D01-D07, B01-B07, V01-V04, N01-N02, I01-I04, Q02-Q03, X01-X05 and RF03-RF10.
 D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
 PR #138 and closed issue #137; P02 after merged PR #144 and closed issue #128;
 P03 after merged PR #148 and closed issue #147; U14 after merged PR #151 and
@@ -24,9 +24,11 @@ closed issue #150; X01 after merged PR #57 and closed issue #56; X02 after merge
 partial previews do not count as completed tasks. Verification below records the
 evidence reported for each implementation; this documentation audit did not rerun
 runtime checks or establish new integration/AWS evidence.
-The backlog now has 130 tasks including scheduling readiness follow-up S08 (#239),
+The backlog now has 139 tasks including scheduling readiness follow-up S08 (#239),
 refinement RF01 (#155) and the requested U17 MC issuance flow
 (issue #152); U17 completed in merged PR #204 and issue #152 is closed.
+The count includes task-ID checkboxes in both tables and refinement lists,
+including F17 and RF03-RF10.
 
 Current claims and remaining blockers:
 
@@ -37,10 +39,10 @@ Current claims and remaining blockers:
 | Documents | P02 completed in merged PR #144; issue #128 closed. The authenticated/audited records projection, trusted current-name lookups and stored-PDF worker passed local transport/replay/recovery checks and CI. P03 completed in merged PR #148; issue #147 closed. Authorised/audited lists and signed downloads passed 89 document tests, local HTTP verification and CI. U14 completed in merged PR #151; issue #150 closed. Patient/doctor lists and downloads passed 82 frontend tests, live adapter/Vite checks, Prettier and CI. Address/registration fields remain optional prototype omissions. Browser interaction and AWS privacy/download verification remain unfinished. |
 | Records / fulfilment | R01-R04 and D01-D07 are complete. I02 completed the actual booked consultation-to-prescription-to-private-PDF journey in merged PR #238; issue #237 closed. I03 subsequently verified actual doctor issuance through separate medication payment and one sandbox delivery in merged PR #249; issue #247 closed. Setup and limits: `docs/I02-local-journey.md` and `docs/I03-local-journey.md`. |
 | Delivery | D01-D07, U15-U16 and X05 are complete. I03 (merged PR #249) verified an actual doctor-issued prescription, trusted quote, separate Stripe test payment and one paid-and-ready Lalamove sandbox submission, then verified cancellation for cleanup. Evidence: `docs/I03-local-journey.md`. Arbitrary-address geocoding, physical delivery, refunds and deployed AWS remain unfinished. |
-| AWS / integration | AWS implementation is deferred until the local application and checks are ready. W01-W21 remain unchecked; W01 has draft PR #233. Issue #54 tracks real Cognito revocation/private-document checks. I01-I04 and Q02 are complete; I04 merged in PR #250 and issue #248 is closed. Notification evidence and limits: `docs/I04-local-journey.md`. I05, Q01, Q03-Q06 and E01-E04 remain unchecked. Local emulator evidence does not establish deployed AWS behavior. |
+| AWS / integration | AWS implementation is deferred until the local application and checks are ready. W01-W21 remain unchecked; W01 has draft PR #233. Issue #54 tracks real Cognito revocation/private-document checks. I01-I04 and Q02-Q03 are complete; Q03 merged in PR #279 and issue #278 is closed. Notification and replay evidence: `docs/I04-local-journey.md` and `docs/Q03-replay-verification.md`. I05, Q01, Q04-Q06 and E01-E04 remain unchecked. Local emulator evidence does not establish deployed AWS behavior. |
 
 Unclaimed tasks with complete listed dependencies:
-Q03 is available after merged I03. W01 is already covered by draft PR #233; AWS implementation is deferred.
+None currently. Q03 completed in merged PR #279. W01 is already covered by draft PR #233; AWS implementation is deferred.
 N02 completed in merged PR #230; issue #228 is closed. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
 For every other unchecked task, the Depends on column identifies unfinished
@@ -215,7 +217,7 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 | [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
 | [ ] | Q01 | Reject clinic A access to clinic B appointment, record and file; reject wrong roles/tokens. | I05 | M |
 | [x] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Completed in merged PR #242; issue #240 closed. All ten real local contention/deadline/natural-expiry checks and API cleanup passed. Final combined S08/Q02 CI passed 242 scheduling tests with two optional Floci checks skipped, including cleanup regressions and existing confirmation races using explicit billing-response fixtures. Setup/evidence and provider limits: `docs/Q02-booking-verification.md`; use the I01 local services and allow about ten minutes. No new application configuration. | S06 | S |
-| [ ] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. | I03, M04 | S |
+| [x] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. Completed in merged PR #279; issue #278 closed. All 37 local replay/recovery checks passed against retained I03 records; final CI passed 312 billing tests plus 38 subtests and 327 fulfilment tests. The operator replay uses locally re-signed genuine Stripe content and injected post-commit acknowledgment failure; no new payment/courier operation or AWS evidence is claimed. Setup/evidence: `docs/Q03-replay-verification.md`. | I03, M04 | S |
 | [ ] | Q04 | Verify AWS video across networks and reject unrelated participant/file access. | I05 | S |
 | [ ] | Q05 | Walk through all four roles; record blockers and create small fix tasks. | I05 | M |
 | [ ] | Q06 | Have a different teammate follow fresh local setup/seed/reset instructions. | F14, F16, W21 | M |
@@ -240,6 +242,96 @@ sample PDFs to the draft PR. Receipt generation wiring and signatures are out of
 Draft PR #263; design and synthetic PDF previews: `docs/RF02-pdf-design.md`.
 Verification: 105 document tests passed against disposable PostgreSQL; changed-file
 Ruff checks passed. Keep the task open until merge.
+- [x] RF05: Redirect signed-out protected-page visits to `/sign-in`, replacing the plain
+access message while preserving public routes and signed-in access checks. Remove
+the redundant Explore clinics section from the patient workspace, retaining clinic
+discovery on the public home page, as additionally requested by the user. Remove
+the patient's standalone video consultation card while retaining appointment-based
+joining.
+Patient appointments also display once per booking with their full time range,
+preventing duplicate selection when a booking spans multiple half-hour cells.
+Resolve missing legacy clinic/doctor names for appointment cards and details using
+the existing public directories, with readable unavailable labels instead of IDs.
+The local legacy name snapshots also required repair: 13 appointments had no saved
+patient/doctor/clinic names, including suspended test clinics absent from public
+directories. Missing snapshots were filled from existing local profiles, preserving
+saved names; patient-name fallbacks now use a readable label rather than UUIDs.
+The patient date dropdown is replaced by a chronological list across dates with
+the Singapore date and time on every appointment card; pagination is retained.
+Keep the consultation join control visible in appointment details, disabled with
+an explanation when unavailable, and update eligibility as time passes.
+Only payable unpaid patient bookings show Pay consultation fee; details show
+readable payment status, including Paid, and expired holds lose the payment action.
+Patient appointments have Upcoming/Past tabs with counts and keyboard navigation;
+ongoing/future active bookings appear nearest first, past/closed bookings newest first.
+Patient prescriptions/medicines and documents move to dedicated protected pages,
+with shared patient navigation linking appointments, prescriptions, medication
+orders/delivery and documents. Appointments remain the default patient page.
+Patient prescription and medication-order pages use Documents-style divided
+accordion rows, with one item expanded and medication/payment/delivery actions
+inside its content; direct order links and staff workflows remain supported.
+Expanded patient records prioritise medicines/instructions and relevant actions,
+with technical references and settled-order pricing collapsed instead of repeated
+cards. Pre-payment pricing, payment/refund guidance and delivery status remain visible.
+Remove the redundant View all medication orders link; direct order URLs already
+show and expand the requested order within the full accordion list.
+Patient medication orders request newest-first API pagination; direct-linked
+orders are inserted by creation date, with a stable ID tie-breaker, rather than
+pinned at the top. Default staff/API order remains oldest first.
+The standalone patient Documents page groups available PDFs by visit in shared
+accordion rows, with visit names/date/time, document counts and existing downloads.
+Appointment-scoped and staff document lists retain their flat presentation.
+Patient navigation starts with Find a clinic (existing home directory), then
+Appointments, Prescriptions, Orders & delivery and Documents. Successful patient
+sign-in defaults to Appointments using the backend identity's patient role.
+Issue #261; Assignee: NorbertLoh; status: complete in merged PR #262. Depends on F06-F08, U05
+and RF03 (complete). Effort: S. Completion requires no redirect loop, no protected
+feature mounting while signed out, and passing frontend lint/build and focused
+local navigation checks. Draft PR #262 implements the redirect; lint and production
+build passed, along with local browser checks for eight protected routes, four
+public routes, browser Back, real patient sign-in/access and wrong-role denial.
+The patient workspace cleanup also passed lint/build and a real signed-in browser
+check: clinic discovery is absent, prescriptions/documents/appointments and the
+medication-order link remain, and public home-page clinic discovery is present.
+No new configuration or migrations. PR #262 merged on 23 October 2026; issue #261
+is closed. Shared components and focused document hooks are retained; changed
+frontend files pass Prettier, lint, typecheck/build and live receipt download checks.
+All final frontend, backend Ruff and fulfilment PostgreSQL/API CI checks passed.
+Further refinements require explicit user scope.
+
+- [x] RF06: Separate clinic admin Manage clinic and Appointments pages with shared
+patient-style workspace navigation. Preserve clinic management actions, appointment
+clinic selection, existing direct links and authentication/membership checks.
+Issue #265 closed after merged PR #266; assignee NorbertLoh. Dependencies: F06-F08, U05,
+S07 and RF05 (complete). Effort: S. Completion requires separated pages, correct
+active navigation, narrow-screen wrapping, lint/typecheck/build and real local
+clinic admin navigation checks. No configuration or migrations required.
+User refinement: selecting one clinic opens its profile as the management landing
+page, with persistent Profile, Staff, Payments and Medicine & delivery navigation
+for that clinic and a Change clinic link. Replace the repeated per-card action
+links with one clinic entry; preserve existing URL and membership checks.
+Merged PR #266 implements the split. Frontend lint and typecheck/production build
+passed. Live local browser checks verified separate management/schedule content,
+active navigation, existing profile links and clinic selection; a 390px viewport
+kept both navigation links within the page. The Tailscale appointments direct link
+redirected a signed-out browser to sign-in. Merged on user instruction, 23 October 2026.
+The clinic-specific refinement also passed lint/typecheck/build and real clinic
+admin sign-in through Tailscale. Profile, Staff, Payments and Medicine & delivery
+kept the selected clinic and correct active tab; Change clinic returned to the
+list. The management navbar wrapped within a 390px viewport.
+User refinement: add an Appointments tab for each selected clinic, with its real
+schedule fixed to that clinic and no clinic selector. The scoped route requires
+active clinic administration; the overall Appointments entry remains available.
+Scoped appointments passed lint/typecheck/build, route/membership access checks
+and a Tailscale browser check of the active clinic tab with no clinic selector.
+The real scheduling API returned four appointments, all for the selected clinic.
+User refinement: remove the redundant Medicine & delivery back link and clinic
+UUID line, using the selected clinic name in the shared navbar. Staff and payments
+use readable loading/unavailable clinic labels rather than UUID fallbacks.
+This label/link cleanup passed frontend lint and typecheck/production build.
+User refinement: Staff and Payments also remove repeated clinic details from
+their page bodies, relying on the clinic name in the shared management navbar.
+Staff/Payments cleanup passed frontend lint and typecheck/production build.
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
@@ -248,9 +340,57 @@ Ruff checks passed. Keep the task open until merge.
 
 ## Completion checklist
 
+- [x] RF07: Save the clean local demo seed under `dev/` with a documented reset
+command, mandatory backup, local-target guards, relative paths and configurable
+app origin. Keep credentials, manifests, PDFs and backups ignored. Issue #267;
+assignee NorbertLoh; completed in merged PR #268, issue closed. Depends on F17 and existing migrated local
+schemas (complete). Effort: M. Completion requires non-destructive preflight,
+unsafe-target rejection, representative field/link coverage and focused checks
+of repeatability. No seed payment/courier calls; no reset of the current demo is
+required to package the tool. Merged on explicit user instruction, 23 October 2026.
+Merged PR #268 adds the command, documentation and dedicated safeguard CI. Ruff and
+13 offline checks passed. Two disposable-storage backup/reset/seed/render cycles
+preserved all nine migration markers, verified eight logins and 19 business tables,
+and reproduced 8 accounts, 5 clinics, 32 appointments, 14 orders and 42 PDFs without
+duplicates. Read-only preflight and packaged API verification passed against the
+current host demo; its data was not reset. After integrating the merged refinements, all 13 offline safeguards, lint and all 13 CI checks passed.
+
 - [ ] Actual AWS patient journey works with two separate payment purposes and paid+ready delivery gating.
 - [ ] All four role views support the journey; two clinics demonstrate tenant separation.
 - [ ] Independent service deployments, service-owned migrations and Floci setup are documented.
 - [ ] Essential checks and known limitations have brief evidence.
 - [ ] Demo script, backup recording and report are ready.
 | [x] | RF04 | Remove frontend test harnesses, synthetic preview routes and fixture-only code; retain live application flows and build tooling. Completed in merged PR #259; issue #258 closed. Clean npm install, lint, typecheck/production build, live-route/removed-preview/clinic-access smoke checks, Compose configuration and CI image builds passed. Current setup: `apps/web/README.md`; no new configuration or migrations. | F06-F08, S07, B07, R04, D07, V04 (complete) | M |
+
+- [x] RF08: Clinic admins issue full consultation refunds from their own clinic Payments, with required reason, confirmation, durable audit, Stripe idempotency/reconciliation and scheduling/patient status updates. No medication/delivery refund action; preserve delivery exception review. Demo payments are labelled and cannot be refunded; only active bookings trigger cancellation guidance. Issue #269 assigned NorbertLoh, closed after merged PR #270. Dependencies: B01-B07 and S04-S06 (complete), RF06 / PR #266 (merged). Effort: L.
+RF08 implementation merged in PR #270 after dependency #266. Verification: 306 billing tests plus 38 subtests, 21 focused refund/provider-shape checks, 17 scheduling refund/checkout checks, Ruff and frontend lint/typecheck/build passed. One user-approved SGD 0.50 Stripe sandbox payment was fully refunded; provider reads verified transfer and SGD 0.05 commission reversal using a disposable database and scheduling fixture. The live demo was backed up, billing migrated to 0006 and affected services restarted; all eight APIs and Tailscale billing are ready. Tailscale browser checks verified consultation confirmation preview and no medicine/delivery refund controls. The repeatable helper in `dev/refund_demo.py` now prepares real Stripe test Checkout separately from the simulated seed; an actual SGD 35 hosted payment passed real callback/worker confirmation and clinic cancellation, and is left ready for user refund. Setup/evidence: `docs/refund-demo.md`. Full hosted-checkout-to-refund completion and AWS remain unverified. Current RF08 CI passed all nine checks; issue #269 closed.
+
+- [x] RF09: Default payment, medicine/delivery order, prescription and document histories to newest first, with stable descending cursor pagination and matching UI labels. Preserve upcoming appointment chronology, catalogue/name sorting and worker processing order. Dependencies: B05/B07, D01/D07, R04 and P03/U14 complete; RF08 / #270 and RF06 / #266 merged. Issue #271 assigned NorbertLoh, closed after merged PR #272. Effort: M.
+RF09 merged in PR #272 after dependency #270. Isolated API verification: billing 28, documents 26, clinical records 28 and fulfilment 42 tests passed; Ruff and frontend lint/typecheck/build passed. Live Tailscale verification confirmed two descending pages for all four patient history APIs and clinic-admin payments/orders; all eight APIs ready after affected API restarts. No migrations/configuration changes. All final RF09 CI checks passed; issue #271 closed.
+
+- [x] RF10: Share Upcoming/Past appointment tabs across patient, clinic-admin and doctor workspaces, including selected-clinic appointments. Filter/paginate on the server: active ongoing/future nearest first, ended/cancelled/expired newest first. Preserve role-specific details/actions and clinic scoping. Dependencies: S04/S07 and RF05 complete; RF09 #272 and RF06 #266 merged. Issue #273 assigned NorbertLoh, closed after merged PR #274. Effort: M.
+RF10 merged in PR #274 after dependency #272. Local checks: 55 scheduling appointment/period tests passed (two Redis-dependent checks skipped), Ruff and frontend lint/typecheck/build passed. Real Tailscale API checks verified both periods for patient/doctor/clinic admin; browser checks covered overall and selected-clinic tabs, empty state, SGT cards, details/reset, clinic switching and keyboard tabs. Scheduling API restarted and ready; no migrations/new configuration. All final RF10 CI checks passed; issue #273 closed.
+
+- [ ] RF11: Consolidated user-requested workspace refinements in one PR. Remove the redundant doctor Video consultation card; retain appointment-level video access and booked consultation admission. Issue #276 assigned NorbertLoh, status In progress. Dependencies: RF10 (#274), F06-F08 and V04 complete. Effort: S initially. Completion: requested refinements implemented and frontend lint/typecheck/build pass. No configuration changes.
+
+RF11 refinement: split doctor Appointments (default /doctor) and Availability (/doctor/availability) into separate pages with shared workspace navigation. Clinic-scoped doctor URLs preserve the selected clinic across tabs and retain membership checks.
+
+RF11 onboarding refinement: add public Register your clinic entry and an authenticated registration form using the existing tenant API. Return signed-out applicants to registration after sign-in; send successful applicants to the selected clinic profile with approval status. Staff assignment remains under Manage clinic > Staff. Sign-in defaults to the available platform-admin, clinic-admin, doctor or patient workspace in that order; revoked memberships do not qualify. Dependencies: existing clinic creation/creator provisioning and staff assignment APIs (complete). No migrations/configuration. Verified lint/typecheck/build, role destination checks and actual local synthetic application creation with creator membership and pending-review profile.
+
+RF11 browser evidence: signed-out registration returned to the form after real local password sign-in; a negative fee was rejected; synthetic rf11-onboarding-check was created through the live APIs, provisioned patient2 as its clinic administrator, and opened the pending-review profile and Staff page. The test clinic remains pending and no staff were assigned. A separate doctor sign-in landed at /doctor with Appointments and Availability navigation. Hosted callback return uses the shared destination helper but was not exercised in the browser.
+
+RF11 local testing refinement: add dev/test_slots.py to populate the next 1–24 hours of half-hour availability for doctor@example.test at an existing active demo clinic (default local-clinic), skipping overlaps without resetting data or bookings. Add paired opt-in backend/frontend early-video flags, default 10 minutes and bounded to 180; backend rejects extensions outside local/test and AWS UI ignores the override. Payment/access/end checks remain; clinical start timing is unchanged. Setup: docs/local-test-slots.md. Verified 87 consultation admission/lifecycle/ICE/config checks in isolated rf11_join_test database, three helper checks, Ruff, frontend lint/typecheck/build, live creation of 11 upcoming slots and repeat with zero duplicates/11 overlap skips. Locally enabled 180-minute flags in ignored env files and restarted consultation/Vite; all stack processes running. No migrations.
+
+RF11 payment-card refinement: Ready for payment has only Continue to secure checkout, inside the card. Include clinic/doctor booking-time names (existing directory fallback for legacy bookings) and the original booking hold expiry in SGT with the consultation time and total. Other payment/recovery state actions remain. Frontend lint/typecheck/build and focused server-rendering checks for ready/pending/failed/expired actions, names and expiry passed. No configuration changes.
+
+RF11 appointment refinement: show eligible actions in the requested order: consultation payment, cancellation (with its result/error), open video consultation, then documents. Existing role/status eligibility is preserved. Frontend lint/typecheck/build passed; no configuration changes.
+
+RF11 payment-pending correction: both Ready for payment and Payment pending show only Continue to secure checkout inside the card. Pending resumes the existing checkout via the existing idempotency flow. Remove the separate page-level checkout button and update pending guidance. Other terminal/error/recovery states retain their actions. Frontend lint/typecheck/build and focused ready/pending/failed rendering checks passed.
+
+RF11 expired-hold refinement: Booking hold expired shows only Browse clinics, removing Check payment status and Appointments for that state and matching the guidance. Frontend lint/typecheck/build and focused single-link rendering check passed.
+
+RF11 booking-hold refinement: remove the redundant Appointments link beneath Continue to payment and Release booking and change time. Frontend lint/typecheck/build passed.
+
+RF11 confirmation-card refinement: hide Check payment status and Appointments for both confirming and confirmed appointments; automatic status polling remains. Frontend lint/typecheck/build and focused no-action rendering checks passed.
+
+RF11 early-clinical-start refinement supersedes the earlier video-only timing note: user explicitly requested local early clinical start. Values above 10 in existing test-window flags now permit clinical start/completion in consultation, scheduling and UI; default 10 retains scheduled clinical start. Consultation migration 0003 records a bounded per-session allowance, preserves actual start history, refuses destructive downgrade while early-start history exists, and readiness requires 0003. Added opening-time guidance and clock updates. Validation: 121 isolated consultation checks, 51 scheduling checks (two unrelated Redis skips), 55 admission checks rerun after readiness update, Ruff/format and frontend lint/typecheck/build passed. Backed up/migrated local consultation, enabled scheduling flag at 180, restarted affected APIs, verified full stack and enabled button. No clinical action was performed on the user appointment. Setup: docs/local-test-slots.md.

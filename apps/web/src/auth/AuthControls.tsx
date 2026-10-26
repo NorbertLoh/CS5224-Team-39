@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
 import { SignInPage } from './SignInPage'
+import { currentIdentity } from '../features/clinics/api'
+import { defaultWorkspace } from '../navigation/access'
 import {
   authConfig,
   beginLogin,
@@ -27,6 +29,19 @@ const callbackSearch =
 let callback: Promise<Session> | undefined
 const logoutWarning = sessionStorage.getItem('telelink.logout-warning') || ''
 sessionStorage.removeItem('telelink.logout-warning')
+
+async function signInDestination() {
+  try {
+    const identity = await currentIdentity()
+    const destination = sessionStorage.getItem('telelink.after-sign-in')
+    sessionStorage.removeItem('telelink.after-sign-in')
+    return destination === '/register-clinic'
+      ? destination
+      : defaultWorkspace(identity)
+  } catch {
+    return '/'
+  }
+}
 
 export function AuthControls({
   onSessionChange,
@@ -64,6 +79,9 @@ export function AuthControls({
         queryClient.clear()
         setSession(value)
         setMessage('Signed in.')
+        void signInDestination().then((destination) => {
+          if (!cancelled && destination !== '/') location.replace(destination)
+        })
       })
       .catch(() => {
         if (!cancelled) signOut('Sign-in failed or expired. Please try again.')
@@ -120,7 +138,7 @@ export function AuthControls({
       const value = await signInWithPassword(config, email, password)
       queryClient.clear()
       setSession(value)
-      location.assign('/')
+      location.assign(await signInDestination())
     } catch (error) {
       setMessage(
         error instanceof Error

@@ -1,4 +1,5 @@
 import { HomePage } from '../features/clinics/HomePage'
+import { ClinicRegistration } from '../features/clinics/ClinicRegistration'
 import { ClinicBooking } from '../features/booking/ClinicBooking'
 import { AvailabilityEditor } from '../features/availability/AvailabilityEditor'
 import { AppointmentSchedule } from '../features/appointments/AppointmentSchedule'
@@ -7,10 +8,8 @@ import { ClinicProfileEditor } from '../features/clinic-profile/ClinicProfileEdi
 import { StaffManagement } from '../features/staff/StaffManagement'
 import { PlatformClinics } from '../features/platform-clinics/PlatformClinics'
 import { ManagedClinics } from '../features/clinics/ManagedClinics'
-import { ClinicDirectory } from '../features/clinics/ClinicDirectory'
 import { ErrorState } from '../components/ErrorState'
-import { PatientPrescriptions } from '../features/records/PatientPrescriptions'
-import { DocumentList } from '../features/documents/DocumentList'
+import { PatientRecordsPage } from '../features/patient/PatientRecordsPage'
 import { BookedConsultation } from '../features/video/BookedConsultation'
 import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
 import { LiveOrders } from '../features/fulfilment/LiveOrders'
@@ -27,6 +26,15 @@ export function AppRoutes({
   session: Session | null
 }) {
   switch (route.kind) {
+    case 'clinic-registration':
+      return <ClinicRegistration />
+    case 'doctor-availability':
+      return (
+        <main className="mx-auto max-w-6xl px-6 py-10">
+          <h1 className="text-3xl font-semibold">Doctor availability</h1>
+          <AvailabilityEditor key={route.tenantId} tenantId={route.tenantId} />
+        </main>
+      )
     case 'home':
       return <HomePage />
     case 'storefront':
@@ -37,6 +45,9 @@ export function AppRoutes({
       return <LiveCheckoutPage />
     case 'medication-orders':
       return <LiveOrders role="patient" />
+    case 'prescriptions':
+    case 'documents':
+      return <PatientRecordsPage page={route.kind} />
     case 'orders':
       return (
         <LiveOrders
@@ -53,6 +64,17 @@ export function AppRoutes({
       return <StaffManagement tenantId={route.tenantId} />
     case 'payments':
       return <ClinicPayments key={route.tenantId} tenantId={route.tenantId} />
+    case 'clinic-appointments':
+      return (
+        <main className="mx-auto max-w-6xl px-6 py-10">
+          <h1 className="text-3xl font-semibold">Clinic appointments</h1>
+          <AppointmentSchedule
+            key={route.tenantId}
+            role="clinic_admin"
+            tenantId={route.tenantId}
+          />
+        </main>
+      )
     case 'platform':
       return (
         session && (
@@ -66,47 +88,11 @@ export function AppRoutes({
       return (
         <main className="mx-auto max-w-6xl px-6 py-10">
           <h1 className="text-3xl font-semibold">{roleLabels[route.role]}</h1>
-          {route.role === 'patient' && <PatientPrescriptions />}
-          {route.role === 'patient' && (
-            <section className="mt-8">
-              <h2 className="text-xl font-semibold">Explore clinics</h2>
-              <ClinicDirectory />
-            </section>
-          )}
-          {route.role === 'patient' && (
-            <p className="mt-6 text-sm">
-              <a className="underline" href="/patient/medication-orders">
-                Medication orders and delivery
-              </a>
-            </p>
-          )}
-          {route.role === 'patient' && <DocumentList role="patient" />}
           {route.role === 'clinic_admin' && session && (
             <ManagedClinics session={session} />
           )}
-          {route.role === 'doctor' && (
-            <AvailabilityEditor
-              key={route.tenantId}
-              tenantId={route.tenantId}
-            />
-          )}
-          {(route.role === 'patient' || route.role === 'doctor') && (
-            <section className="mt-8 rounded-xl border bg-slate-50 p-6">
-              <h2 className="text-xl font-semibold">Video consultation</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Open a booked appointment to join its video consultation.
-              </p>
-              <a
-                className="mt-4 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm text-white"
-                href={`/${route.role}/consultation`}
-              >
-                Choose a consultation
-              </a>
-            </section>
-          )}
           {(route.role === 'patient' ||
-            route.role === 'doctor' ||
-            route.role === 'clinic_admin') && (
+            route.role === 'doctor') && (
             <AppointmentSchedule
               key={`${route.role}:${route.tenantId ?? ''}`}
               role={route.role}

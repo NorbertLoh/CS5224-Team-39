@@ -4,10 +4,25 @@ S07 uses real authorized scheduling list/detail/cancellation APIs for patient,
 doctor and clinic admin workspaces. Lists support cursor pagination and Singapore
 dates; detail polling reflects server status, expiry and refund review. Metadata
 names are the booking-time snapshots from the API; appointments booked before
-scheduling migration `0007` fall back to identifiers.
+scheduling migration `0007` may have no saved names.
+Appointment cards and details resolve missing clinic/doctor names through the
+public paginated directories. Booking-time names take precedence; unavailable
+directory names use readable labels instead of identifiers.
 See [setup, boundaries and verification](../../../../../docs/scheduling-frontend.md).
 
 `AppointmentSchedule` coordinates current identity and role scope; `AppointmentGrid`
-and `AppointmentCell` display half-hour cells. `LiveAppointmentDetails` fetches detail
+and `AppointmentCell` display each booking once with its full date/time range.
+`LiveAppointmentDetails` fetches detail
 and handles eligible cancellations; `AppointmentDetails` renders server metadata.
+Patient, doctor and clinic-admin bookings appear across dates in Upcoming/Past
+tabs, with Singapore dates and times on each card; there is no date filter.
+The overall clinic-admin workspace retains its clinic selector; clinic-specific
+routes remain fixed to the selected clinic. Upcoming is selected by default and
+includes ongoing/future active bookings, nearest first. Ended or terminal-status
+bookings appear in Past, newest appointment date first. `AppointmentPeriods`
+requests the period from the scheduling API before pagination, so older history
+does not hide upcoming bookings. Each tab has independent loading/error/empty
+states and Load more appointments; the caption counts only displayed bookings.
+Changing period or clinic clears the selected details. Refresh/polling continues
+to reflect expiry, cancellation and refund state with existing role-specific actions.
 `display` contains pure formatting/grid helpers.

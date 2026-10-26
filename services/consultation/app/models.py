@@ -9,6 +9,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Index,
     MetaData,
+    SmallInteger,
     Text,
     UniqueConstraint,
     Uuid,
@@ -45,8 +46,14 @@ class ConsultationSession(Base):
         ),
         CheckConstraint(
             "started_at IS NULL OR (isfinite(started_at) "
-            "AND started_at >= starts_at AND started_at < ends_at)",
+            "AND started_at >= starts_at - test_start_early_minutes * interval '1 minute' "
+            "AND started_at < ends_at)",
             name="ck_sessions_start_window",
+        ),
+        CheckConstraint(
+            "test_start_early_minutes BETWEEN 0 AND 180 "
+            "AND (test_start_early_minutes = 0 OR started_at IS NOT NULL)",
+            name="ck_sessions_test_start_window",
         ),
         CheckConstraint(
             "ended_at IS NULL OR (isfinite(ended_at) AND ended_at >= started_at)",
@@ -67,6 +74,9 @@ class ConsultationSession(Base):
         Text, default="scheduled", server_default=text("'scheduled'")
     )
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    test_start_early_minutes: Mapped[int] = mapped_column(
+        SmallInteger, default=0, server_default=text("0")
+    )
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

@@ -4,6 +4,10 @@ The doctor availability editor, clinic booking and patient/doctor/clinic appoint
 pages use real scheduling APIs. No runtime fixture schedule, account selector,
 fabricated appointment ID or client-set payment state is used.
 
+RF10 updates appointment browsing for all three roles to shared Upcoming/Past
+cards across dates, with server-side period filtering and independent pagination.
+See [RF10 behavior and verification](RF10-appointment-periods.md).
+
 ## Local setup
 
 Start identity and tenant using [clinic backend setup](clinic-backend.md). Configure

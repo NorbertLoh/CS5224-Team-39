@@ -16,10 +16,12 @@ export function LiveMedicationCheckout({
   snapshot,
   subject,
   refresh,
+  compact = false,
 }: {
   snapshot: OrderSnapshot
   subject: string
   refresh: () => Promise<OrderSnapshot>
+  compact?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [now, setNow] = useState(Date.now)
@@ -40,17 +42,42 @@ export function LiveMedicationCheckout({
     },
   })
   const { order, quote } = snapshot
+  const showPaymentGuidance =
+    !compact ||
+    order.status === 'awaiting_payment' ||
+    ['pending', 'refund_required', 'refunded'].includes(order.payment_status) ||
+    (snapshot.payment &&
+      [
+        'pending',
+        'failed',
+        'refunded',
+        'refund_pending',
+        'refund_failed',
+      ].includes(snapshot.payment.status)) ||
+    snapshot.payment?.resolution === 'refund_required' ||
+    (snapshot.payment?.status === 'succeeded' &&
+      order.payment_status !== 'succeeded')
+  const Heading = compact ? 'h4' : 'h2'
   return (
     <section
       className="space-y-4"
       aria-labelledby="medication-checkout-heading"
     >
-      <h2 id="medication-checkout-heading" className="text-xl font-semibold">
-        {order.payment_status === 'succeeded'
-          ? 'Your medicines'
-          : 'Review medicines & pay'}
-      </h2>
-      <MedicationCheckoutSummary snapshot={snapshot} now={now} />
+      <Heading
+        id="medication-checkout-heading"
+        className={compact ? 'font-semibold' : 'text-xl font-semibold'}
+      >
+        {compact
+          ? 'Medicines & payment'
+          : order.payment_status === 'succeeded'
+            ? 'Your medicines'
+            : 'Review medicines & pay'}
+      </Heading>
+      <MedicationCheckoutSummary
+        snapshot={snapshot}
+        now={now}
+        compact={compact}
+      />
       {canQuote(snapshot) && (
         <LiveDestinationForm
           orderId={order.order_id}
@@ -61,16 +88,18 @@ export function LiveMedicationCheckout({
           onEditingChange={setEditing}
         />
       )}
-      <p role="status" className="text-sm">
-        {paymentMessage(snapshot)}
-      </p>
+      {showPaymentGuidance && (
+        <p role="status" className="text-sm">
+          {paymentMessage(snapshot)}
+        </p>
+      )}
       {editing && (
         <p className="text-sm">
           Request a new quote to use the edited address before continuing to
           payment.
         </p>
       )}
-      {order.payment_id && (
+      {!compact && order.payment_id && (
         <p className="break-all text-sm">
           Payment reference: {order.payment_id}
         </p>
@@ -111,10 +140,15 @@ export function LiveMedicationCheckout({
           {fulfilmentError(checkout.error)}
         </p>
       )}
-      <p className="text-sm text-slate-600">
-        Stripe test checkout. Your payment status updates here after
-        confirmation.
-      </p>
+      {(!compact ||
+        canPay(snapshot, now) ||
+        canQuote(snapshot) ||
+        order.payment_status === 'pending') && (
+        <p className="text-sm text-slate-600">
+          Stripe test checkout. Your payment status updates here after
+          confirmation.
+        </p>
+      )}
     </section>
   )
 }

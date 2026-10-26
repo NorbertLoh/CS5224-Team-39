@@ -1,6 +1,6 @@
 import hashlib
 from datetime import datetime, timezone
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response
@@ -235,6 +235,7 @@ def list_orders(
     status: OrderStatus | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     cursor: Annotated[str | None, Query(max_length=4096)] = None,
+    sort: Literal["oldest", "newest"] = "newest",
 ):
     query = select(Order).where(order_scope(identity))
     if tenant_id is not None:
@@ -242,12 +243,22 @@ def list_orders(
     if status is not None:
         query = query.where(Order.status == status)
     scope = ["orders", str(tenant_id), status, permission_fingerprint(identity), limit]
+    if sort == "newest":
+        scope.append("newest")
     if cursor:
         created_at, resource_id = decode(request.app.state.settings, scope, cursor, timestamp=True)
+        position = tuple_(Order.created_at, Order.order_id)
         query = query.where(
-            tuple_(Order.created_at, Order.order_id) > tuple_(created_at, resource_id)
+            position < tuple_(created_at, resource_id)
+            if sort == "newest"
+            else position > tuple_(created_at, resource_id)
         )
-    rows = session.scalars(query.order_by(Order.created_at, Order.order_id).limit(limit + 1)).all()
+    ordering = (
+        (Order.created_at.desc(), Order.order_id.desc())
+        if sort == "newest"
+        else (Order.created_at, Order.order_id)
+    )
+    rows = session.scalars(query.order_by(*ordering).limit(limit + 1)).all()
     next_cursor = None
     if len(rows) > limit:
         last = rows[limit - 1]

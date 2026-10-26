@@ -52,8 +52,8 @@ class BillingClient:
             or payment.appointment_id != recovery.appointment_id
             or payment.tenant_id != recovery.tenant_id
             or payment.purpose != "consultation"
-            or payment.status != "succeeded"
-            or payment.resolution != "refund_required"
+            or payment.status not in {"succeeded", "refund_pending", "refund_failed", "refunded"}
+            or (payment.status != "refunded" and payment.resolution != "refund_required")
         ):
             raise PaymentEventRejected("Billing resolution acknowledgement invalid")
         return payment

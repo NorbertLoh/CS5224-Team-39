@@ -5,18 +5,51 @@
 - `RoleNavigation.tsx`: granted role links.
 - `AppRoutes.tsx`: route-to-feature mapping; forms and API calls stay in their features.
 
+Patient navigation starts with Find a clinic (`/#clinics`, the existing public
+directory), followed by Appointments, Prescriptions, Orders & delivery and Documents.
+The four protected pages are `/patient` (appointments, default),
+`/patient/prescriptions` (prescriptions and medicines), the existing
+`/patient/medication-orders` (orders and delivery), and `/patient/documents`.
+The patient feature owns the shared page navigation and records-page composition.
+Direct links retain the normal authentication/identity gates. Checkout and video
+remain appointment actions, and medication order query links keep their existing URLs.
+
 Roles come from `/identity/me`, never Cognito groups or browser role storage.
 Identity is refreshed on page load, window focus and every 30 seconds. Protected
 features wait for a successful identity lookup; a failed refresh or revoked
 membership blocks them. Backend checks still enforce every protected API operation.
+Signed-out protected-page visits replace the current browser history entry with
+`/sign-in` before rendering feature content. Public pages remain accessible, and
+successful patient sign-in opens `/patient` after checking the backend identity.
+Other roles retain the home-page destination. Signed-in patients also keep their
+workspace navigation on the public directory and clinic storefronts.
 
 The clinic choice is the URL, checked against current active memberships for the
 route's role. Clinic administrators choose a named clinic from the Manage clinics
-cards in their workspace. The navigation contains role links only, without a
-duplicate clinic dropdown. There is no persisted clinic choice to carry between
+cards in their workspace. The role navigation has no duplicate clinic dropdown.
+There is no persisted clinic choice to carry between
 users. Platform administrators
 select clinics from the existing paginated platform list and retain the tenant
 APIs' explicit clinic administration access without a membership.
+
+Clinic administration has a shared workspace navigation matching the patient
+navigation: Manage clinic (`/clinic-admin`) contains the existing management
+clinic cards, while Appointments (`/clinic-admin/appointments`) contains the real
+schedule and its membership-scoped clinic selector. Profile, staff, payments and
+orders retain their existing direct links and highlight Manage clinic. Both entry
+pages use the existing sign-in and identity gates; backend permissions remain the
+source of access to appointments and clinic data. No configuration or migrations.
+
+Selecting a clinic opens its profile as the management landing page. A persistent
+Clinic management navbar shows the selected clinic's name and Profile, Staff,
+Appointments, Payments and Medicine & delivery links, preserving that clinic in
+every URL. Appointments opens `/clinic-admin/clinics/<UUID>/appointments` with the
+schedule fixed to that clinic and no clinic selector. Both the scoped schedule
+and Medicine & delivery require active administration of the selected clinic;
+platform access to profile/staff/payments does not grant those clinical views.
+Change clinic returns to the list;
+Manage clinic stays within the selected clinic. The clinic choice is never stored
+in browser storage, and the shared identity gate blocks revoked/other-clinic links.
 
 Routes: `/patient`, `/doctor`, `/doctor/clinics/<UUID>`, `/clinic-admin`, existing
 clinic profile/staff routes, and existing platform clinic routes. Unknown paths
@@ -36,3 +69,7 @@ denied patient/doctor platform reads and hosted logout/token revocation. Access
 rules were also run against the four live identity responses. Browser interaction,
 visual/mobile layout and AWS integration were not verified: no browser surface was
 available through the session's UI tool.
+
+Doctor workspace navigation separates Appointments at /doctor from Availability at /doctor/availability. Clinic-scoped /doctor/clinics/<tenant UUID> URLs support the /availability suffix and preserve clinic scope across tabs. Both pages retain authentication and doctor membership checks.
+
+The public homepage links to /register-clinic. This route requires a session but no pre-existing clinic role. A fixed, allowlisted session-storage destination returns applicants after either sign-in flow. The form POSTs the existing tenant /clinics API, which provisions creator administration; success opens the clinic profile showing its approval status. Existing accounts are assigned by email under Manage clinic > Staff. No signup/invitation-email flow is added. Default sign-in destinations prefer platform administration, active clinic administration, active doctor membership, then patient appointments; accounts without a role retain the public homepage.

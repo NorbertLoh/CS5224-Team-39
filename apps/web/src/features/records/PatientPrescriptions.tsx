@@ -3,7 +3,11 @@ import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { PatientPrescriptionList } from './PatientPrescriptionList'
 
-export function PatientPrescriptions() {
+export function PatientPrescriptions({
+  headingLevel = 2,
+}: {
+  headingLevel?: 1 | 2
+}) {
   const identity = useSchedulingIdentity()
   if (identity.isError)
     return (
@@ -19,6 +23,7 @@ export function PatientPrescriptions() {
       key={identity.token}
       token={identity.token}
       subjectId={identity.data.subject_id}
+      headingLevel={headingLevel}
     />
   )
 }

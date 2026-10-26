@@ -80,8 +80,11 @@ function ProfileEditor({ clinic }: { clinic: EditableClinic }) {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <main className="mx-auto max-w-6xl px-6 py-10 sm:px-8">
         {<a href={`/clinics/${clinic.slug}`} className="text-sm text-slate-600 underline underline-offset-4">View storefront</a>}
-        <a href={`/clinic-admin/clinics/${clinic.tenant_id}/staff`} className="ml-5 text-sm text-slate-600 underline underline-offset-4">Manage staff</a>
         <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">Clinic profile & branding</h1>
+        <p className="mt-3 rounded border bg-white p-3 text-sm" role="status">
+          Clinic status: {clinic.status.replaceAll('_', ' ')}.
+          {clinic.status === 'pending_review' && ' Your application is awaiting platform approval. Patients can find and book your clinic after approval.'}
+        </p>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">{`Edit ${saved.name}'s profile. Logo changes save immediately; use Save changes for the remaining fields.`}</p>
         <p className="mt-3 text-xs text-slate-500">Storefront address: /clinics/{clinic.slug} · The address cannot be changed here.</p>
         <div className="mt-5 grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">

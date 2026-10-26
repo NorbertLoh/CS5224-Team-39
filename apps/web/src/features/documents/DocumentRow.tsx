@@ -1,50 +1,23 @@
-import { useEffect, useRef, useState } from 'react'
-import { documentDownloadUrl, documentsError } from './api'
-import { documentDate, documentNames, documentStates } from './types'
+import { documentDate, documentStates } from './types'
+import { useDocumentName } from './useDocumentName'
+import { useDocumentDownload } from './useDocumentDownload'
 import type { DocumentMetadata } from './types'
 
 export function DocumentRow({
   document: item,
+  token,
 }: {
   document: DocumentMetadata
+  token: string
 }) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [requested, setRequested] = useState(false)
-  const controller = useRef<AbortController | null>(null)
-  useEffect(() => () => controller.current?.abort(), [])
-
-  async function download() {
-    if (controller.current || item.status !== 'ready') return
-    const pending = new AbortController()
-    controller.current = pending
-    setBusy(true)
-    setError(null)
-    setRequested(false)
-    try {
-      const url = await documentDownloadUrl(item.document_id, pending.signal)
-      if (pending.signal.aborted) return
-      const link = window.document.createElement('a')
-      link.href = url
-      link.referrerPolicy = 'no-referrer'
-      link.download = `${item.document_id}.pdf`
-      window.document.body.append(link)
-      link.click()
-      link.remove()
-      setRequested(true)
-    } catch (failure) {
-      if (!pending.signal.aborted) setError(documentsError(failure))
-    } finally {
-      if (!pending.signal.aborted) setBusy(false)
-      controller.current = null
-    }
-  }
+  const name = useDocumentName(item, token)
+  const { busy, error, requested, download } = useDocumentDownload(item)
 
   return (
     <article className="space-y-3 py-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h3 className="font-medium">{documentNames[item.kind]}</h3>
+          <h3 className="font-medium">{name}</h3>
           <p className="text-sm text-slate-600">
             <time dateTime={item.created_at}>
               {documentDate(item.created_at)} SGT
@@ -60,7 +33,7 @@ export function DocumentRow({
         {item.status === 'ready' && (
           <button
             type="button"
-            aria-label={`Download ${documentNames[item.kind]} PDF`}
+            aria-label={`Download ${name} PDF`}
             className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
             disabled={busy}
             onClick={() => void download()}

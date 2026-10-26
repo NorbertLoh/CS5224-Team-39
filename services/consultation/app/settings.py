@@ -20,9 +20,12 @@ class Settings(ServiceSettings):
     turn_urls: list[str] = Field(default_factory=list)
     turn_secret: SecretStr | None = None
     relay_only: bool = False
+    test_join_early_minutes: int = Field(default=10, ge=10, le=180)
 
     @model_validator(mode="after")
     def validate_admission(self):
+        if self.test_join_early_minutes != 10 and self.environment not in {"local", "test"}:
+            raise ValueError("Extended test join window requires local/test environment")
         if any(
             not url.startswith(("turn:", "turns:")) or any(c.isspace() for c in url)
             for url in self.turn_urls

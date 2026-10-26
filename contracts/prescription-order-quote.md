@@ -31,7 +31,7 @@ are audited. Clinic/platform admins receive no note or instruction content.
 | PATCH `/prescriptions/{prescription_id}` | Full `items` replacement; draft, 200 | Same doctor while draft/in_progress |
 | POST `/prescriptions/{prescription_id}/issue` | Empty body; issued prescription, 200 | Same doctor/in_progress; nonempty valid items; repeated issue returns same resource/event identity |
 | GET `/prescriptions/{prescription_id}` | Prescription, 200 | Own patient or assigned active doctor; audit |
-| GET `/prescriptions` | Optional appointment_id; C01 pagination ordered created_at, prescription_id ascending | Same scoped read policy |
+| GET `/prescriptions` | Optional appointment_id; C01 pagination ordered created_at, prescription_id descending (newest first) | Same scoped read policy |
 
 Issuance freezes content and commits prescription_issued.v1 to the same outbox
 transaction. Voiding is an authenticated operator workflow, outside the initial
@@ -89,7 +89,7 @@ Provider references and address payloads never appear in C05 events/general logs
 | PUT `/clinics/{tenant_id}/catalogue/{medication_id}` | display_name, unit_label, unit_price, active; item, 201/200 | Active owning-clinic admin; server validates SGD/nonnegative amount |
 | POST `/orders` | prescription_id; order, 201 new / 200 existing | Own patient; one order per issued prescription, including retries |
 | GET `/orders/{order_id}` | Order, 200 | Own patient or active owning-clinic admin; platform operational view, no clinical data |
-| GET `/orders` | Optional tenant_id/status; C01 pagination ordered created_at, order_id ascending | Same scoped policy |
+| GET `/orders` | Optional tenant_id/status; C01 pagination ordered created_at, order_id descending (newest first); explicit `sort=oldest` remains supported | Same scoped policy |
 | POST `/orders/{order_id}/quotes` | destination structured address; quote, 201 | Own patient; unpaid, no active pending payment; server obtains provider fee and refreshes catalogue snapshot |
 | GET `/quotes/{quote_id}` | Quote, 200 | Own patient or active owning-clinic admin; operational fields only |
 | POST `/orders/{order_id}/ready` | Empty body; order, 200 | Active owning-clinic admin; issued prescription, valid active order; repeated ready is safe |
@@ -186,7 +186,7 @@ delivery/audit history. Clinic readiness never implies payment or delivery succe
 
 Document service generates one PDF per issued prescription through C05/P02.
 GET `/api/v1/document/documents` (optional appointment_id; C01 pagination ordered
-created_at, document_id ascending) returns metadata `document_id`, `tenant_id`,
+created_at, document_id descending, newest first) returns metadata `document_id`, `tenant_id`,
 `appointment_id`, `prescription_id`, `kind=prescription_pdf`, `status` (`pending`,
 `ready`, `failed`), created_at/updated_at. GET `/documents/{document_id}/download`
 returns 200 `{ "download_url": "https://...", "expires_at": "..." }` for ready

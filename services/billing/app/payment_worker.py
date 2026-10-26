@@ -14,7 +14,9 @@ from app.database import create_database_engine
 from app.models import event_outbox
 from app.payments import process_pending
 from app.provider import StripeCheckout
+from app.refunds import process_refunds
 from app.settings import Settings
+from app.upstream import CheckoutSources
 
 
 def main():
@@ -33,9 +35,11 @@ def main():
     )
     provider = None
     client = None
+    sources = None
     try:
         client = create_client("events", settings) if args.publish else None
         provider = None if args.publish else StripeCheckout(settings)
+        sources = None if args.publish else CheckoutSources(settings)
         while True:
             try:
                 result = (
@@ -45,6 +49,8 @@ def main():
                     if args.publish
                     else process_pending(engine, provider)
                 )
+                if not args.publish:
+                    result["refunds"] = process_refunds(engine, provider, sources)
             except SQLAlchemyError:
                 # Transaction rolled back. Never log SQL parameters or provider bodies.
                 logging.getLogger(__name__).error("payment_worker_storage_unavailable")
@@ -60,6 +66,8 @@ def main():
             provider.close()
         if client:
             client.close()
+        if sources:
+            sources.close()
         engine.dispose()
 
 

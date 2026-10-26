@@ -144,6 +144,39 @@ class Payment(Base):
     )
 
 
+class RefundAttempt(Base):
+    __tablename__ = "refund_attempts"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'succeeded', 'failed', 'review')", name="ck_refund_status"
+        ),
+        CheckConstraint("length(trim(reason)) BETWEEN 1 AND 1000", name="ck_refund_reason"),
+        Index("ix_refund_payment", "payment_id", "created_at"),
+        Index("ix_refund_pending", "status", "next_attempt_at"),
+        Index(
+            "uq_refund_active_payment",
+            "payment_id",
+            unique=True,
+            postgresql_where=text("status <> 'failed'"),
+        ),
+    )
+    refund_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    payment_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("billing.payments.payment_id"))
+    requested_by: Mapped[UUID] = mapped_column(Uuid)
+    requested_by_name: Mapped[str] = mapped_column(Text)
+    reason: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, server_default=text("'pending'"))
+    provider_refund_id: Mapped[str | None] = mapped_column(Text, unique=True)
+    attempts: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    last_error: Mapped[str | None] = mapped_column(Text)
+    synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class CheckoutAttempt(Base):
     """Durable operation before reservation/provider calls; may precede its payment snapshot."""
 

@@ -27,6 +27,27 @@ Deliver a complete journey: clinic approval -> booking -> consultation payment -
 
 Premium subscriptions, promoted placement, extensive analytics, custom clinic domains, video recording, and production onboarding are later work.
 
+RF08 scope override (23 October 2026): user-requested, clinic-admin full consultation
+refunds are now in scope. No platform approval queue or medication/delivery refund
+action is included. Use durable provider idempotency, current clinic membership,
+audit history and provider polling. Preserve existing delivery exception review;
+payment alone does not guarantee dispatch. Broader automatic/partial/out-of-band
+refund reconciliation remains deferred. Track implementation in issue #269 / PR #270.
+
+RF09 history refinement (23 October 2026): payment, medicine/delivery order,
+prescription and document API histories default to descending creation time with
+descending ID tie-breakers. Cursor scopes include the ordering so previously issued
+ascending cursors cannot be used to page descending results. Patient visit grouping
+and upcoming appointment chronology remain as designed. Track issue #271 / PR #272.
+
+RF10 appointment refinement (23 October 2026): patient, doctor and clinic-admin
+workspaces use shared Upcoming/Past cards across dates, including clinic-specific
+appointments. The scheduling API classifies effective expiry and filters periods
+before pagination: upcoming is active/ongoing with a future end, nearest first;
+past is ended/terminal, newest appointment date first. Existing role/clinic scope
+and booking, availability, payment and consultation rules remain unchanged.
+Track issue #273 / PR #274.
+
 ## 2. Frontend design
 
 Use one React application initially, with role-specific route groups and shared components. Clinics get branded storefronts through configuration, not separate code deployments.

@@ -6,12 +6,14 @@ on:
       - 'services/fulfilment/**'
       - 'packages/python_common/**'
       - 'tests/e2e/check_i03_journey.py'
+      - 'tests/e2e/replay_q03_fulfilment.py'
       - '.github/workflows/fulfilment-checks.yml'
   pull_request:
     paths:
       - 'services/fulfilment/**'
       - 'packages/python_common/**'
       - 'tests/e2e/check_i03_journey.py'
+      - 'tests/e2e/replay_q03_fulfilment.py'
       - '.github/workflows/fulfilment-checks.yml'
 
 permissions:
@@ -61,6 +63,8 @@ jobs:
       - run: python -m ruff format --check .
       - run: python -m ruff check ../../tests/e2e/check_i03_journey.py --config pyproject.toml
       - run: python -m ruff format --check ../../tests/e2e/check_i03_journey.py --config pyproject.toml
+      - run: python -m ruff check ../../tests/e2e/replay_q03_fulfilment.py --config pyproject.toml
+      - run: python -m ruff format --check ../../tests/e2e/replay_q03_fulfilment.py --config pyproject.toml
       - run: python -m pytest -q
       - name: Verify protected sentinel survived
         env:

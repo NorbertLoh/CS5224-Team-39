@@ -104,7 +104,30 @@ class StripeCheckout:
             if result.status_code != 200:
                 raise ProviderUncertain("Stripe outcome needs reconciliation")
             value = result.json()
-            if not isinstance(value, dict) or value.get("livemode") is not False:
+            # Refund objects (and lists) omit livemode. Settings enforces sk_test_;
+            # explicitly reject any live marker and keep other object checks strict.
+            refund_response = (
+                isinstance(value, dict)
+                and (path == "refunds" or path.startswith(("refunds/", "refunds?")))
+                and "livemode" not in value
+                and (
+                    value.get("object") == "refund"
+                    or (
+                        method == "GET"
+                        and value.get("object") == "list"
+                        and isinstance(value.get("data"), list)
+                        and all(
+                            isinstance(item, dict)
+                            and item.get("object") == "refund"
+                            and ("livemode" not in item or item["livemode"] is False)
+                            for item in value["data"]
+                        )
+                    )
+                )
+            )
+            if not isinstance(value, dict) or (
+                value.get("livemode") is not False and not refund_response
+            ):
                 raise ProviderUncertain("Stripe test-mode response required")
             return value
         except (httpx.RequestError, ValueError, TypeError, AttributeError):

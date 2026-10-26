@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import case, func, select, tuple_
+from sqlalchemy import and_, case, func, select, tuple_
 from telelink_common.access import CurrentIdentity, require_identity
 from telelink_common.errors import DomainError, ErrorEnvelope
 
@@ -48,7 +48,7 @@ def effective_status():
     return case(
         (
             Appointment.status.in_(("held", "pending_payment"))
-            & (Appointment.hold_expires_at <= func.clock_timestamp()),
+            & (Appointment.hold_expires_at <= func.statement_timestamp()),
             "expired",
         ),
         else_=Appointment.status,
@@ -84,6 +84,7 @@ def list_appointments(
     to_at: Annotated[str | None, Query(alias="to", max_length=64)] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     cursor: Annotated[str | None, Query(max_length=4096)] = None,
+    period: Literal["upcoming", "past"] | None = None,
 ):
     scope_predicate = appointment_scope(identity)
     require_collection_tenant(identity, tenant_id)
@@ -99,9 +100,17 @@ def list_appointments(
         start.isoformat() if start else None,
         end.isoformat() if end else None,
     ]
+    if period is not None:
+        scope.extend([period, "desc" if period == "past" else "asc"])
     position = decode_appointment_cursor(settings, scope, cursor) if cursor is not None else None
     current_status = effective_status()
     query = select(Appointment, current_status).where(scope_predicate)
+    if period is not None:
+        upcoming = and_(
+            current_status.in_(("held", "pending_payment", "confirmed", "in_progress")),
+            Appointment.ends_at > func.statement_timestamp(),
+        )
+        query = query.where(upcoming if period == "upcoming" else ~upcoming)
     if tenant_id is not None:
         query = query.where(Appointment.tenant_id == tenant_id)
     if status is not None:
@@ -111,12 +120,18 @@ def list_appointments(
     if end is not None:
         query = query.where(Appointment.starts_at < end)
     if position is not None:
+        position_key = tuple_(Appointment.starts_at, Appointment.appointment_id)
         query = query.where(
-            tuple_(Appointment.starts_at, Appointment.appointment_id) > tuple_(*position)
+            position_key < tuple_(*position)
+            if period == "past"
+            else position_key > tuple_(*position)
         )
-    rows = session.execute(
-        query.order_by(Appointment.starts_at, Appointment.appointment_id).limit(limit + 1)
-    ).all()
+    ordering = (
+        (Appointment.starts_at.desc(), Appointment.appointment_id.desc())
+        if period == "past"
+        else (Appointment.starts_at, Appointment.appointment_id)
+    )
+    rows = session.execute(query.order_by(*ordering).limit(limit + 1)).all()
     next_cursor = (
         encode_appointment_cursor(settings, scope, rows[limit - 1][0])
         if len(rows) > limit
@@ -166,9 +181,9 @@ def cancel(
     return appointment_public(appointment)
 
 
-def internal_action(appointment_id, action, session):
+def internal_action(appointment_id, action, session, *, early_minutes=0):
     appointment = lock_appointment(session, appointment_id)
-    consultation_action(appointment, action, server_now(session))
+    consultation_action(appointment, action, server_now(session), early_minutes=early_minutes)
     session.commit()
     return appointment_public(appointment)
 
@@ -192,8 +207,11 @@ def consultation_context(appointment_id: UUID, session: DB):
     dependencies=[Depends(require_consultation)],
     tags=["internal"],
 )
-def start(appointment_id: UUID, session: DB):
-    return internal_action(appointment_id, "start", session)
+def start(appointment_id: UUID, request: Request, session: DB):
+    minutes = request.app.state.settings.test_join_early_minutes
+    return internal_action(
+        appointment_id, "start", session, early_minutes=minutes if minutes > 10 else 0
+    )
 
 
 @router.post(
@@ -202,8 +220,11 @@ def start(appointment_id: UUID, session: DB):
     dependencies=[Depends(require_consultation)],
     tags=["internal"],
 )
-def complete(appointment_id: UUID, session: DB):
-    return internal_action(appointment_id, "complete", session)
+def complete(appointment_id: UUID, request: Request, session: DB):
+    minutes = request.app.state.settings.test_join_early_minutes
+    return internal_action(
+        appointment_id, "complete", session, early_minutes=minutes if minutes > 10 else 0
+    )
 
 
 @router.post(
