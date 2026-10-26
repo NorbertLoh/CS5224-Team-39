@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import type { Appointment } from '../scheduling/api'
 import { roomEligibility } from '../video/admission'
+import { joinEarlyMinutes } from '../video/joinWindow'
 import {
   dateInSingapore,
   formatDate,
@@ -26,7 +27,7 @@ export function AppointmentJoinButton({
 
   const canJoin = roomEligibility(appointment, role, subjectId, now)
   const opensAt = new Date(
-    Date.parse(appointment.starts_at) - 600000,
+    Date.parse(appointment.starts_at) - joinEarlyMinutes * 60000,
   ).toISOString()
   let reason = ''
   if (
@@ -51,7 +52,7 @@ export function AppointmentJoinButton({
   ) {
     reason = 'Joining is available after payment and appointment confirmation.'
   } else if (!canJoin) {
-    reason = `Joining opens on ${formatDate(dateInSingapore(opensAt))} at ${formatTime(opensAt)} SGT, 10 minutes before the appointment.`
+    reason = `Joining opens on ${formatDate(dateInSingapore(opensAt))} at ${formatTime(opensAt)} SGT, ${joinEarlyMinutes} minutes before the appointment.`
   }
 
   return (

@@ -19,9 +19,12 @@ class Settings(ServiceSettings):
     cors_origins: list[str] = []
     redis_url: SecretStr | None = None
     redis_timeout_seconds: float = Field(default=0.3, ge=0.05, le=5)
+    test_join_early_minutes: int = Field(default=10, ge=10, le=180)
 
     @model_validator(mode="after")
     def validate_configuration(self):
+        if self.test_join_early_minutes != 10 and self.environment not in {"local", "test"}:
+            raise ValueError("Extended test start window requires local/test environment")
         if self.billing_url is not None:
             url = urlsplit(self.billing_url)
             if (

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { joinEarlyMinutes } from './joinWindow'
 import { useQuery } from '@tanstack/react-query'
 import { appointmentDetail } from '../scheduling/api'
 import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
@@ -97,7 +98,7 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
     !roomEligibility(appointment.data, role, subject)
   )
     return (
-      <ErrorState message="This appointment is not ready for video. Calls open 10 minutes before the appointment and require confirmed payment and current participant access." />
+      <ErrorState message={`This appointment is not ready for video. Calls open ${joinEarlyMinutes} minutes before the appointment and require confirmed payment and current participant access.`} />
     )
   if (setup.error || !setup.connection)
     return (

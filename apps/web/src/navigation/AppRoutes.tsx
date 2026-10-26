@@ -1,4 +1,5 @@
 import { HomePage } from '../features/clinics/HomePage'
+import { ClinicRegistration } from '../features/clinics/ClinicRegistration'
 import { ClinicBooking } from '../features/booking/ClinicBooking'
 import { AvailabilityEditor } from '../features/availability/AvailabilityEditor'
 import { AppointmentSchedule } from '../features/appointments/AppointmentSchedule'
@@ -27,6 +28,15 @@ export function AppRoutes({
   session: Session | null
 }) {
   switch (route.kind) {
+    case 'clinic-registration':
+      return <ClinicRegistration />
+    case 'doctor-availability':
+      return (
+        <main className="mx-auto max-w-6xl px-6 py-10">
+          <h1 className="text-3xl font-semibold">Doctor availability</h1>
+          <AvailabilityEditor key={route.tenantId} tenantId={route.tenantId} />
+        </main>
+      )
     case 'home':
       return <HomePage />
     case 'storefront':
@@ -86,26 +96,6 @@ export function AppRoutes({
           <h1 className="text-3xl font-semibold">{roleLabels[route.role]}</h1>
           {route.role === 'clinic_admin' && session && (
             <ManagedClinics session={session} />
-          )}
-          {route.role === 'doctor' && (
-            <AvailabilityEditor
-              key={route.tenantId}
-              tenantId={route.tenantId}
-            />
-          )}
-          {route.role === 'doctor' && (
-            <section className="mt-8 rounded-xl border bg-slate-50 p-6">
-              <h2 className="text-xl font-semibold">Video consultation</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Open a booked appointment to join its video consultation.
-              </p>
-              <a
-                className="mt-4 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm text-white"
-                href={`/${route.role}/consultation`}
-              >
-                Choose a consultation
-              </a>
-            </section>
           )}
           {(route.role === 'patient' || route.role === 'doctor') && (
             <AppointmentSchedule

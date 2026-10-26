@@ -6,6 +6,7 @@ import { currentIdentity } from '../features/clinics/api'
 import { ErrorState } from '../components/ErrorState'
 import { LoadingState } from '../components/LoadingState'
 import { RoleNavigation } from './RoleNavigation'
+import { DoctorNavigation } from './DoctorNavigation'
 import { PatientNavigation } from '../features/patient/PatientNavigation'
 import { ClinicAdminNavigation } from '../features/clinics/ClinicAdminNavigation'
 import { canAccess, hasRole } from './access'
@@ -29,10 +30,15 @@ export function AppShell({
     refetchOnWindowFocus: true,
     refetchInterval: 30000,
   })
-  const requiresSignIn = 'role' in route && !session
+  const requiresSignIn =
+    ('role' in route || route.kind === 'clinic-registration') && !session
   useEffect(() => {
-    if (requiresSignIn) window.location.replace('/sign-in')
-  }, [requiresSignIn])
+    if (requiresSignIn) {
+      if (route.kind === 'clinic-registration')
+        sessionStorage.setItem('telelink.after-sign-in', '/register-clinic')
+      window.location.replace('/sign-in')
+    }
+  }, [requiresSignIn, route.kind])
 
   if (requiresSignIn)
     return <LoadingState message="Redirecting to sign in..." />
@@ -77,6 +83,11 @@ export function AppShell({
         {session && !('role' in route) && identity.isPending && (
           <LoadingState message="Loading your roles..." />
         )}
+        {session &&
+          identity.isSuccess &&
+          'role' in route &&
+          route.role === 'doctor' &&
+          canAccess(identity.data, route) && <DoctorNavigation route={route} />}
         {session &&
           identity.isSuccess &&
           'role' in route &&

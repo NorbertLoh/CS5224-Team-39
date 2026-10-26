@@ -5,11 +5,13 @@ on:
     paths:
       - 'services/billing/**'
       - 'packages/python_common/**'
+      - 'tests/e2e/replay_q03_billing.py'
       - '.github/workflows/billing-checks.yml'
   pull_request:
     paths:
       - 'services/billing/**'
       - 'packages/python_common/**'
+      - 'tests/e2e/replay_q03_billing.py'
       - '.github/workflows/billing-checks.yml'
 
 permissions:
@@ -57,5 +59,7 @@ jobs:
           psql -h 127.0.0.1 -U postgres -d telelink -v ON_ERROR_STOP=1 -f scripts/create-test-sentinel.sql
       - run: python -m ruff check .
       - run: python -m ruff format --check .
+      - run: python -m ruff check ../../tests/e2e/replay_q03_billing.py --config pyproject.toml
+      - run: python -m ruff format --check ../../tests/e2e/replay_q03_billing.py --config pyproject.toml
       - run: python -m pip check
       - run: python -m pytest -q

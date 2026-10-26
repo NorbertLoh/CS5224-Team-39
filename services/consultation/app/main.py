@@ -89,7 +89,7 @@ def create_app(settings: Settings | None = None):
                         connection.scalar(
                             text("SELECT version_num FROM consultation.alembic_version")
                         )
-                        == "0002"
+                        == "0003"
                     )
             except SQLAlchemyError:
                 available = False
