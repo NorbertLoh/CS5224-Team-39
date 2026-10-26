@@ -3,14 +3,15 @@
 ## Structural refactor requested after RF21
 
 Target responsibilities and verification: [project structure](docs/project-structure.md).
-These are separate user-authorized phases, reviewed as a stack. They do not count
-as merged/completed until their respective PRs and checks are complete.
+These user-authorized phases were reviewed as a stack and merged in order on
+26 October 2026. All final PR checks passed. Issues #305-#307 are closed; existing
+manual UI follow-ups #293/#296 remain separate and are not claimed verified.
 
 | Done | ID | Deliverable | Dependencies | Effort | Claim |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | RF22 | Separate backend HTTP routes, dependency definitions and reusable helpers; preserve all OpenAPI contracts. | RF21 #303 and completion #304 merged | L | NorbertLoh; In progress; #305 |
-| [ ] | RF23 | Group service operations, integrations and workers; remove worker-to-router dependencies and preserve CLI entrypoints. | RF22 structural foundation in preceding PR | L | NorbertLoh; In progress; #306 |
-| [ ] | RF24 | Organize frontend feature APIs/types/hooks/components/pages and remove clinic-specific auth coupling. | RF22-RF23 preceding PRs; existing live contracts | L | NorbertLoh; In progress; #307 |
+| [x] | RF22 | Separate backend HTTP routes, dependency definitions and reusable helpers; preserve all nine OpenAPI contracts (106 paths). Merged PR #308 (`b952d72`); all 17 checks passed. | RF21 #303 and completion #304 merged | L | NorbertLoh; complete; #305 closed |
+| [x] | RF23 | Group operations, integrations, workers and rendering across nine services; remove worker-to-router dependencies and preserve 11 CLI entrypoints. Merged PR #309 (`746a517`); all 18 checks passed. | RF22 merged | L | NorbertLoh; complete; #306 closed |
+| [x] | RF24 | Organize 72 frontend modules, split API responsibilities, extract auth ownership and repair/typecheck existing probes. Merged PR #310 (`5ebcfb4`); all eight checks passed. | RF22-RF23 merged; existing live contracts | L | NorbertLoh; complete; #307 closed |
 
 ## Phased cleanup (26 October 2026)
 

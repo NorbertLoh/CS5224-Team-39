@@ -1,8 +1,17 @@
 # Project structure refactor
 
-User-requested structural work after RF21. Issues RF22 #305, RF23 #306 and RF24
-#307 are assigned to NorbertLoh and In progress. This document describes the target;
-actual implementation/check results are recorded in the phase PRs.
+User-requested structural work after RF21, completed and merged on 26 October 2026.
+RF22 #305, RF23 #306 and RF24 #307 are closed after their respective PRs merged.
+This document describes the implemented layout; detailed evidence is in the PRs.
+
+| Phase | Merged PR / commit | Final checks |
+| --- | --- | --- |
+| Backend HTTP boundaries | [#308](https://github.com/NorbertLoh/CS5224-Team-39/pull/308), `b952d72` | 17 passed |
+| Backend workflow packages | [#309](https://github.com/NorbertLoh/CS5224-Team-39/pull/309), `746a517` | 18 passed |
+| Frontend feature structure | [#310](https://github.com/NorbertLoh/CS5224-Team-39/pull/310), `5ebcfb4` | Eight passed |
+
+Merge approval does not establish browser verification. Manual UI checks remain
+in #293/#296; the running application was not rebuilt or deployed by these merges.
 
 ## Backend boundaries
 
