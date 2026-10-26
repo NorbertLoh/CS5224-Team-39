@@ -6,10 +6,10 @@ from telelink_common.errors import DomainError
 
 from app.admissions import CONTEXT_FIELDS
 from app.lifecycle import ensure_session, transition
-from app.upstream import Appointment, MCCompletion
+from app.upstream import Appointment, MCCompletion, PrescriptionCompletion
 
 
-def act(db, sources, appointment_id, identity, request_id, action):
+def act(db, sources, appointment_id, identity, request_id, action, *, user_token=None):
     appointment = sources.appointment(appointment_id, request_id)
     if appointment.doctor_id != identity.subject_id:
         raise DomainError(404, "not_found", "Resource not found.")
@@ -20,6 +20,22 @@ def act(db, sources, appointment_id, identity, request_id, action):
     if any(getattr(current, key) != getattr(record, key) for key in CONTEXT_FIELDS):
         raise DomainError(409, "session_context_conflict", "Session context has changed.")
     sources.validate(current, identity.subject_id, request_id, statuses=statuses)
+    if action == "complete":
+        if not user_token:
+            raise DomainError(401, "unauthenticated", "Doctor credentials are required.")
+        prescription = sources.call(
+            "records",
+            f"/appointments/{appointment_id}/finalize-prescription",
+            PrescriptionCompletion,
+            request_id,
+            {},
+            user_token=user_token,
+        )
+        if any(
+            getattr(prescription, field) != getattr(record, field)
+            for field in ("appointment_id", "tenant_id", "patient_id", "doctor_id")
+        ):
+            raise DomainError(502, "upstream_error", "Invalid prescription completion response.")
     transition(
         db,
         session_id=record.session_id,

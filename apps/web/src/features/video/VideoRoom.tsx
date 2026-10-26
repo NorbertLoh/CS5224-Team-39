@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { CallStage } from './CallStage'
 import { CallControls } from './CallControls'
 import { useExpandedRoom } from './useExpandedRoom'
@@ -8,6 +8,7 @@ import { RecordWorkspace } from '../records/RecordWorkspace'
 import { useLocalMedia } from './useLocalMedia'
 import { useRemoteCall } from './useRemoteCall'
 import type { CallState, RoomConnection } from './connection'
+import type { RecordFormState } from '../records/useRecordFormState'
 
 export function VideoRoom({
   role,
@@ -16,6 +17,7 @@ export function VideoRoom({
   token,
   subjectId,
   actions,
+  endActions,
 }: {
   role: 'patient' | 'doctor'
   connection?: RoomConnection
@@ -23,10 +25,18 @@ export function VideoRoom({
   token?: string
   subjectId?: string
   actions?: ReactNode
+  endActions?: (blocked: boolean, onPendingChange: (pending: boolean) => void) => ReactNode
 }) {
   const media = useLocalMedia()
   const call = useRemoteCall(connection, role, media)
   const [expanded, setExpanded] = useState(false)
+  const [finishing, setFinishing] = useState(false)
+  const [cameraPaneSize, setCameraPaneSize] = useState(58)
+  const doctorLayout = useRef<HTMLDivElement>(null)
+  const [formState, setFormState] = useState<RecordFormState>({
+    dirty: false,
+    busy: false,
+  })
   const [previewState, setPreviewState] = useState<CallState>('waiting')
   const doctor = role === 'doctor'
   const peer = doctor ? 'patient' : 'doctor'
@@ -50,6 +60,21 @@ export function VideoRoom({
     expanded,
     leave,
   )
+  const cameraPaneLimits = () => {
+    const availableWidth = (doctorLayout.current?.getBoundingClientRect().width ?? 0) - 24
+    const min = Math.max(35, (360 / availableWidth) * 100)
+    const max = Math.max(min, Math.min(70, 100 - (320 / availableWidth) * 100))
+    return { min, max }
+  }
+  const resizeCameraPane = (clientX: number) => {
+    const bounds = doctorLayout.current?.getBoundingClientRect()
+    if (!bounds) return
+
+    const availableWidth = bounds.width - 24
+    const cameraWidth = clientX - bounds.left - 12
+    const { min, max } = cameraPaneLimits()
+    setCameraPaneSize(Math.min(max, Math.max(min, (cameraWidth / availableWidth) * 100)))
+  }
 
   return (
     <main
@@ -97,61 +122,119 @@ export function VideoRoom({
         </p>
       </div>
       <div
-        className={`grid grid-cols-1 gap-6 ${expanded ? 'min-h-full lg:h-full lg:min-h-0' : 'mt-6 items-start'} ${doctor ? 'lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)]' : expanded ? 'h-full' : ''}`}
+        ref={doctor ? doctorLayout : undefined}
+        style={
+          doctor
+            ? ({
+                '--camera-size': `${cameraPaneSize}fr`,
+                '--notes-size': `${100 - cameraPaneSize}fr`,
+              } as CSSProperties)
+            : undefined
+        }
+        className={`grid grid-cols-1 gap-6 ${expanded ? 'min-h-full lg:h-full lg:min-h-0' : 'mt-6 items-start'} ${doctor ? 'lg:grid-cols-[minmax(0,var(--camera-size))_24px_minmax(0,var(--notes-size))] lg:gap-0' : expanded ? 'h-full' : ''}`}
       >
-        <section
-          aria-label="Video call"
-          className={`flex min-w-0 flex-col overflow-hidden rounded-2xl bg-slate-950 text-white shadow-lg ${expanded ? 'min-h-[calc(100dvh-1.5rem)] sm:min-h-[calc(100dvh-2.5rem)] lg:h-full lg:min-h-0' : ''}`}
+        <div
+          className={`relative min-w-0 ${expanded ? 'min-h-0 lg:h-full' : ''}`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
-            <span className="text-sm font-medium">
-              Consultation · {doctor ? 'Doctor' : 'Patient'} view
-            </span>
-            <span role="status" className="text-sm text-slate-300">
-              {state === 'connected'
-                ? 'Connected'
-                : state === 'joining' || state === 'connecting'
-                  ? 'Connecting'
-                  : state === 'waiting'
-                    ? 'Waiting room'
-                    : state === 'left'
-                      ? 'You left the room'
-                      : 'Disconnected'}
-            </span>
-          </div>
-          <CallStage
-            peer={peer}
-            state={state}
-            expanded={expanded}
-            media={media}
-            joinButton={joinButton}
-            join={join}
-            remote={call.remote}
-            live={Boolean(connection)}
-          />
-          <CallControls
-            state={state}
-            media={media}
-            leaveButton={leaveButton}
-            leave={leave}
-            live={Boolean(connection)}
-            error={call.error}
-          />
-        </section>
+          <section
+            aria-label="Video call"
+            className={`flex min-w-0 flex-col overflow-hidden rounded-2xl bg-slate-950 text-white shadow-lg ${expanded ? 'min-h-[calc(100dvh-1.5rem)] sm:min-h-[calc(100dvh-2.5rem)] lg:h-full lg:min-h-0' : ''}`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
+              <span className="text-sm font-medium">
+                Consultation · {doctor ? 'Doctor' : 'Patient'} view
+              </span>
+              <span role="status" className="text-sm text-slate-300">
+                {state === 'connected'
+                  ? 'Connected'
+                  : state === 'joining' || state === 'connecting'
+                    ? 'Connecting'
+                    : state === 'waiting'
+                      ? 'Waiting room'
+                      : state === 'left'
+                        ? 'You left the room'
+                        : 'Disconnected'}
+              </span>
+            </div>
+            <CallStage
+              peer={peer}
+              state={state}
+              expanded={expanded}
+              media={media}
+              joinButton={joinButton}
+              join={join}
+              remote={call.remote}
+              live={Boolean(connection)}
+            />
+            <CallControls
+              state={state}
+              media={media}
+              leaveButton={leaveButton}
+              leave={leave}
+              live={Boolean(connection)}
+              error={call.error}
+            />
+          </section>
+          {doctor && (
+            <div
+              role="separator"
+              aria-label="Resize video and notes panels"
+              aria-orientation="vertical"
+              aria-valuemin={35}
+              aria-valuemax={70}
+              aria-valuenow={Math.round(cameraPaneSize)}
+              aria-valuetext={`Video ${Math.round(cameraPaneSize)}%, notes ${Math.round(100 - cameraPaneSize)}%`}
+              tabIndex={0}
+              className="group absolute inset-y-0 left-full hidden w-6 touch-none cursor-col-resize items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 lg:flex"
+              onPointerDown={(event) => {
+                event.currentTarget.setPointerCapture(event.pointerId)
+                resizeCameraPane(event.clientX)
+              }}
+              onPointerMove={(event) => {
+                if (event.currentTarget.hasPointerCapture(event.pointerId))
+                  resizeCameraPane(event.clientX)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                  event.preventDefault()
+                  const { min, max } = cameraPaneLimits()
+                  setCameraPaneSize((size) =>
+                    Math.min(
+                      max,
+                      Math.max(min, size + (event.key === 'ArrowRight' ? 5 : -5)),
+                    ),
+                  )
+                }
+                if (event.key === 'Home') setCameraPaneSize(cameraPaneLimits().min)
+                if (event.key === 'End') setCameraPaneSize(cameraPaneLimits().max)
+              }}
+            >
+              <span className="h-full w-1 rounded-full bg-slate-300 transition-colors group-hover:bg-teal-500" />
+            </div>
+          )}
+        </div>
         {doctor && (
           <aside
             aria-label="Doctor workspace"
-            className={`min-w-0 [&_select]:w-full [&_select]:min-w-0 ${expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}`}
+            className={`min-w-0 lg:col-start-3 [&_select]:w-full [&_select]:min-w-0 ${expanded ? 'min-h-0 lg:h-full lg:overflow-y-auto' : ''}`}
           >
-            {actions}
-            {appointmentId && token && subjectId ? (
-              <RecordWorkspace
-                appointmentId={appointmentId}
-                token={token}
-                subjectId={subjectId}
-              />
-            ) : (
-              <DoctorRecordForm />
+            {actions && <div className="mb-5">{actions}</div>}
+            <fieldset disabled={finishing} className="min-w-0">
+              {appointmentId && token && subjectId ? (
+                <RecordWorkspace
+                  appointmentId={appointmentId}
+                  token={token}
+                  subjectId={subjectId}
+                  onStateChange={setFormState}
+                />
+              ) : (
+                <DoctorRecordForm />
+              )}
+            </fieldset>
+            {endActions && (
+              <div className="mt-6">
+                {endActions(formState.dirty || formState.busy, setFinishing)}
+              </div>
             )}
           </aside>
         )}

@@ -16,6 +16,7 @@ from app.doctors import router as doctors_router
 from app.document_profiles import router as document_profiles_router
 from app.models import Membership, Subject
 from app.notification_context import router as notification_router
+from app.patient_profiles import router as patient_profiles_router
 from app.provisioning import router as provisioning_router
 from app.settings import Settings
 
@@ -68,6 +69,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(provisioning_router)
     app.include_router(doctors_router)
     app.include_router(document_profiles_router)
+    app.include_router(patient_profiles_router)
 
     @app.get("/health/live", tags=["health"])
     def live():
@@ -88,7 +90,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     connection.execute(select(Membership.membership_id).limit(1))
                     available = (
                         connection.scalar(text("SELECT version_num FROM identity.alembic_version"))
-                        == "0002"
+                        == "0003"
                     )
             except SQLAlchemyError:
                 available = False

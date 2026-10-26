@@ -1,5 +1,28 @@
 # R03 prescription issuance and publication
 
+## Consultation completion
+
+The assigned active doctor can POST
+`/api/v1/clinical-records/appointments/{appointment_id}/finalize-prescription`.
+Consultation forwards that doctor's verified access token before completing the
+visit. The endpoint locks the appointment and its existing non-voided prescription,
+validates and issues a saved draft through the ordinary issuance/outbox path, or
+returns `status: none` if no prescription exists. The response contains only the
+four appointment context IDs, `prescription_id` (nullable) and `status` (`none` or
+`issued`). Unrelated doctors, patients and admins are denied.
+
+This action accepts in-progress and completed appointments so a completion retry
+can recover a previously stranded saved draft. It does not create or edit a
+prescription after completion. The original per-prescription issue endpoint still
+requires an in-progress visit. Retries and concurrent calls reuse the same issued
+record and stable metadata event; unavailable/invalid medications leave the draft
+unchanged. Notes and MC decisions follow their existing paths. No migration or
+new configuration is required; deploy records before the updated consultation
+service. The caller receives no success until issuance is confirmed.
+
+Pricing remains a clinic-admin action after issuance. Ending a consultation does
+not supply prices or open a payment or medication order.
+
 POST `/api/v1/clinical-records/prescriptions/{prescription_id}/issue` accepts no body
 or an empty object. It uses the existing Cognito/JWKS and identity checks, then
 locks the prescription row and revalidates all appointment context through

@@ -20,9 +20,11 @@ class Item(BaseModel):
     prescription_item_id: UUID
     medication_id: UUID
     quantity: int
+    display_name: str
 
 
 class Projection(BaseModel):
+    pricing_mode: Literal["catalogue", "prescription"]
     prescription_id: UUID
     appointment_id: UUID
     tenant_id: UUID
@@ -51,6 +53,7 @@ def dispensing_projection(
         .order_by(PrescriptionItem.prescription_item_id)
     ).all()
     result = Projection(
+        pricing_mode=row.pricing_mode,
         prescription_id=row.prescription_id,
         appointment_id=row.appointment_id,
         tenant_id=row.tenant_id,
@@ -61,6 +64,7 @@ def dispensing_projection(
                 prescription_item_id=item.prescription_item_id,
                 medication_id=item.medication_id,
                 quantity=item.quantity,
+                display_name=item.display_name,
             )
             for item in items
         ],

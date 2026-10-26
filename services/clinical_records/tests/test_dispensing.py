@@ -50,9 +50,15 @@ def test_dispensing_is_minimal_context_bound_and_audited(api):
         "tenant_id",
         "patient_id",
         "status",
+        "pricing_mode",
         "items",
     }
-    assert set(result["items"][0]) == {"prescription_item_id", "medication_id", "quantity"}
+    assert set(result["items"][0]) == {
+        "prescription_item_id",
+        "medication_id",
+        "quantity",
+        "display_name",
+    }
     assert "instructions" not in response.text and "doctor_id" not in response.text
     with Session(api[5]) as session:
         audit = session.scalar(

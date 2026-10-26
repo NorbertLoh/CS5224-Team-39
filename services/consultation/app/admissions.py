@@ -69,9 +69,9 @@ def issue(db, sources, settings, appointment_id, identity, request_id):
     token = secrets.token_urlsafe(32)
     lease.token_digest, lease.peer_id = digest(token), uuid4()
     lease.issued_at = instant
-    lease.expires_at = min(
-        instant + timedelta(seconds=settings.admission_ttl_seconds), record.ends_at
-    )
+    lease.expires_at = instant + timedelta(seconds=settings.admission_ttl_seconds)
+    if record.status == "scheduled":
+        lease.expires_at = min(lease.expires_at, record.ends_at)
     lease.consumed_at = lease.released_at = None
     db.flush()
     return {**lease_public(lease, record), "token": token}

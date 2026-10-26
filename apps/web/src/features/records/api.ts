@@ -4,6 +4,7 @@ import type { CursorPage } from '../../lib/api-types'
 import type { Medication, Note, Prescription, PrescriptionInput } from './types'
 import { prescriptionItems } from './types'
 import type { MedicalCertificate } from './medicalCertificate'
+import type { Appointment } from '../scheduling/api'
 
 async function request(path: string, init: RequestInit = {}) {
   return apiFetch(path, {
@@ -16,6 +17,41 @@ async function request(path: string, init: RequestInit = {}) {
 }
 const base = '/clinical-records'
 const id = encodeURIComponent
+export async function previousVisits(
+  appointment: Appointment,
+  cursor: string | null,
+  signal?: AbortSignal,
+): Promise<CursorPage<Appointment>> {
+  const seen = new Set<string>()
+  for (let pageNumber = 0; pageNumber < 100; pageNumber++) {
+    const params = new URLSearchParams({
+      tenant_id: appointment.tenant_id,
+      status: 'completed',
+      to: appointment.starts_at,
+      period: 'past',
+      limit: '100',
+    })
+    if (cursor) params.set('cursor', cursor)
+    const page: CursorPage<Appointment> = await (
+      await request(`/scheduling/appointments?${params}`, { signal })
+    ).json()
+    const items = page.items.filter(
+      (visit) =>
+        visit.patient_id === appointment.patient_id &&
+        visit.doctor_id === appointment.doctor_id &&
+        visit.tenant_id === appointment.tenant_id &&
+        visit.status === 'completed' &&
+        visit.appointment_id !== appointment.appointment_id &&
+        Date.parse(visit.starts_at) < Date.parse(appointment.starts_at),
+    )
+    if (items.length || !page.next_cursor)
+      return { items, next_cursor: page.next_cursor }
+    if (seen.has(page.next_cursor)) break
+    seen.add(page.next_cursor)
+    cursor = page.next_cursor
+  }
+  throw new Error('Could not finish previous visit pagination')
+}
 function json(method: string, body: unknown): RequestInit {
   return {
     method,
@@ -128,15 +164,38 @@ export async function savePrescription(
   appointmentId: string,
   prescriptionId: string | undefined,
   items: PrescriptionInput[],
+  tenantId: string,
 ): Promise<Prescription> {
+  const resolved = []
+  for (const item of prescriptionItems(items)) {
+    const medication = item.medication_id
+      ? null
+      : await registerMedication(tenantId, item.display_name ?? '')
+    resolved.push({
+      medication_id: item.medication_id || medication!.medication_id,
+      quantity: item.quantity,
+      instructions: item.instructions,
+    })
+  }
   return (
     await request(
       prescriptionId
         ? `${base}/prescriptions/${id(prescriptionId)}`
         : `${base}/appointments/${id(appointmentId)}/prescriptions`,
       json(prescriptionId ? 'PATCH' : 'POST', {
-        items: prescriptionItems(items),
+        items: resolved,
       }),
+    )
+  ).json()
+}
+export async function registerMedication(
+  tenantId: string,
+  displayName: string,
+): Promise<Medication> {
+  return (
+    await request(
+      `/fulfilment/clinics/${id(tenantId)}/catalogue`,
+      json('POST', { display_name: displayName.trim() }),
     )
   ).json()
 }
@@ -149,31 +208,6 @@ export async function issuePrescription(
       json('POST', {}),
     )
   ).json()
-}
-export async function catalogue(
-  tenantId: string,
-  signal?: AbortSignal,
-): Promise<Medication[]> {
-  const items: Medication[] = []
-  const seen = new Set<string>()
-  let cursor: string | null = null
-  for (let pageNumber = 0; pageNumber < 100; pageNumber++) {
-    const params = new URLSearchParams({ limit: '100' })
-    if (cursor) params.set('cursor', cursor)
-    const page: CursorPage<Medication> = await (
-      await request(`/fulfilment/clinics/${id(tenantId)}/catalogue?${params}`, {
-        signal,
-      })
-    ).json()
-    if (page.items.some((item) => item.tenant_id !== tenantId))
-      throw new Error('Invalid catalogue context')
-    items.push(...page.items.filter((item) => item.active))
-    cursor = page.next_cursor
-    if (!cursor) return items
-    if (seen.has(cursor)) break
-    seen.add(cursor)
-  }
-  throw new Error('Invalid catalogue pagination')
 }
 export function recordsError(error: unknown) {
   if (error instanceof ApiError) {

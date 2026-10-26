@@ -406,3 +406,80 @@ def test_cursor_scope_pagination_filters_and_tampering(api):
     assert second["next_cursor"] is None
     state.identity = identity(roles=(), clinic_role="doctor")
     assert client.get(path, params={"limit": 2, "cursor": page["next_cursor"]}).status_code == 422
+
+
+def test_typed_medication_registration_replays_and_admin_prices(api):
+    client, state, _ = api
+    path = f"/clinics/{TENANT}/catalogue"
+    assert client.post(path, json={"display_name": "Novel typed medicine"}).status_code == 404
+    state.identity = identity(roles=(), clinic_role="doctor")
+    created = client.post(path, json={"display_name": " Novel typed medicine "})
+    assert created.status_code == 201, created.text
+    item = created.json()
+    assert item["display_name"] == "Novel typed medicine" and item["unit_price"] is None
+    replay = client.post(path, json={"display_name": "novel TYPED medicine"})
+    assert replay.status_code == 200 and replay.json()["medication_id"] == item["medication_id"]
+    assert (
+        client.post(
+            path, json={"display_name": "x", "unit_price": {"amount_minor": 0, "currency": "SGD"}}
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(f"/clinics/{OTHER_TENANT}/catalogue", json={"display_name": "x"}).status_code
+        == 404
+    )
+    assert client.put(path + "/" + item["medication_id"], json=catalogue_body()).status_code == 404
+    state.identity = identity(roles=(), clinic_role="clinic_admin")
+    priced = client.put(
+        path + "/" + item["medication_id"],
+        json=catalogue_body(
+            display_name=item["display_name"], unit_price={"amount_minor": 125, "currency": "SGD"}
+        ),
+    )
+    assert priced.status_code == 200 and priced.json()["unit_price"]["amount_minor"] == 125
+    replay = client.post(path, json={"display_name": item["display_name"]})
+    assert replay.json()["unit_price"]["amount_minor"] == 125
+
+
+def test_unpriced_medicine_blocks_order_until_admin_sets_price(api):
+    client, state, _ = api
+    with state.sessions.begin() as db:
+        db.get(CatalogueItem, (TENANT, MEDICATION)).unit_price_minor = None
+    result = create(client)
+    assert result.status_code == 409 and result.json()["error"]["code"] == "medication_unpriced"
+    with state.sessions() as db:
+        assert db.scalar(select(func.count()).select_from(Order)) == 0
+    state.identity = identity(roles=(), clinic_role="clinic_admin")
+    result = client.put(
+        f"/clinics/{TENANT}/catalogue/{MEDICATION}",
+        json=catalogue_body(unit_price={"amount_minor": 125, "currency": "SGD"}),
+    )
+    assert result.status_code == 200
+    state.identity = identity()
+    result = create(client)
+    assert result.status_code == 201 and result.json()["medication_subtotal"]["amount_minor"] == 250
+
+
+def test_concurrent_typed_registration_reuses_one_reference(api):
+    client, state, _ = api
+    state.identity = identity(roles=(), clinic_role="doctor")
+
+    def register(_):
+        return client.post(
+            f"/clinics/{TENANT}/catalogue", json={"display_name": "Concurrent named medicine"}
+        )
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        responses = list(executor.map(register, range(4)))
+    assert all(response.status_code in (200, 201) for response in responses)
+    assert len({response.json()["medication_id"] for response in responses}) == 1
+
+
+@pytest.mark.parametrize("name", ["", "   ", "x" * 201])
+def test_typed_medication_name_validation(api, name):
+    client, state, _ = api
+    state.identity = identity(roles=(), clinic_role="doctor")
+    assert (
+        client.post(f"/clinics/{TENANT}/catalogue", json={"display_name": name}).status_code == 422
+    )

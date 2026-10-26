@@ -22,7 +22,7 @@ export function MedicalCertificateFields({
       <label className="flex flex-col gap-2">
         MC start date (Singapore)
         <input
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-teal-700"
           type="date"
           min="0001-01-01"
           max="9999-12-31"
@@ -35,7 +35,7 @@ export function MedicalCertificateFields({
       <label className="flex flex-col gap-2">
         Number of days
         <input
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-teal-700"
           type="number"
           min="1"
           step="1"
@@ -53,7 +53,7 @@ export function MedicalCertificateFields({
       <label className="flex flex-col gap-2">
         Additional notes for the MC (optional)
         <textarea
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-teal-700"
           rows={3}
           maxLength={20000}
           disabled={disabled}

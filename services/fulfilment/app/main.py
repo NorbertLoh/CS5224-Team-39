@@ -8,6 +8,7 @@ from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.catalogue import router as catalogue_router
 from app.checkout import router as checkout_router
+from app.clinic_locations import HttpClinicLocations
 from app.database import Database
 from app.deliveries import router as deliveries_router
 from app.delivery_provider import SandboxQuotes
@@ -15,6 +16,8 @@ from app.dispensing import FixtureDispensing, HttpDispensing, UnavailableDispens
 from app.health import router as health_router
 from app.notification_context import router as notification_router
 from app.orders import router as orders_router
+from app.prescription_corrections import router as prescription_corrections_router
+from app.prescription_prices import router as prescription_prices_router
 from app.quotes import router as quotes_router
 from app.settings import Settings
 
@@ -32,6 +35,7 @@ def create_app(settings: Settings | None = None):
             app.state.ready = False
             app.state.identity_client.close()
             app.state.delivery_quotes.close()
+            app.state.clinic_locations.close()
             if isinstance(app.state.dispensing, HttpDispensing):
                 app.state.dispensing.close()
             if app.state.database is not None:
@@ -52,6 +56,7 @@ def create_app(settings: Settings | None = None):
     app.state.identity_client = IdentityClient(config)
     app.state.token_verifier = TokenVerifier(config)
     app.state.delivery_quotes = SandboxQuotes(config)
+    app.state.clinic_locations = HttpClinicLocations(config)
     app.state.dispensing = (
         FixtureDispensing(config.dispensing_fixture_path)
         if config.dispensing_fixture_path
@@ -62,6 +67,8 @@ def create_app(settings: Settings | None = None):
     app.add_middleware(RequestLoggingMiddleware, service=config.name)
     app.include_router(health_router)
     app.include_router(catalogue_router)
+    app.include_router(prescription_prices_router)
+    app.include_router(prescription_corrections_router)
     app.include_router(orders_router)
     app.include_router(quotes_router)
     app.include_router(checkout_router)

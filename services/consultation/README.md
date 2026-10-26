@@ -18,21 +18,20 @@ V02 rejects those actual appointment states before using a session.
 
 | Operation | Rule |
 | --- | --- |
-| Join/rejoin eligibility | `[starts_at - 10 minutes, ends_at)` in scheduled/in_progress state |
+| Join/rejoin eligibility | Scheduled: `[starts_at - 10 minutes, ends_at)`; in progress: from the opening time until doctor completion |
 | Start | Assigned doctor, scheduled state, `starts_at <= server_now < ends_at` |
 | End | Assigned doctor, in_progress state, `server_now >= started_at` |
 | Retry start/end | Same resulting state returns original timestamps; no duplicate transition |
 | Completed | No join, restart or reopening |
 
-For a 10:00–10:30 appointment, the window opens exactly at 09:50 and closes exactly
-at 10:30. Early joining is a waiting-room allowance and does not start the session.
-Disconnect/leave does not end it: participants can rejoin during the window until
-the doctor explicitly ends it. End is allowed after the scheduled end so a delayed
-completion can still be recorded; there is no automatic expiry/completion worker.
-An in-progress session after `ends_at` cannot obtain fresh join eligibility.
-Retrying start after the window only acknowledges an existing transition; it
-does not grant admission. Existing media termination at the deadline is a later
-video integration concern, not something this persistence layer enforces.
+For a 10:00–10:30 appointment, joining opens exactly at 09:50. Early joining is a
+waiting-room allowance and does not start the session. If the doctor has not
+started the consultation, joining closes at 10:30. Once in progress, participants
+can leave and rejoin after 10:30 until the doctor explicitly ends it. End is
+allowed after the scheduled end; there is no automatic expiry/completion worker.
+Every admission still checks current participant access, membership and payment,
+and each lease retains its short expiry. Completing the session blocks further
+admission and lease checks.
 
 `ensure_session` and `transition` use PostgreSQL row locks and caller-owned
 transactions. Rollbacks leave no partial transition. The database enforces
@@ -41,6 +40,16 @@ immutable context and immutable previously recorded lifecycle timestamps.
 Use the service role, not a database superuser. No row-level security is claimed.
 
 ## Integration boundary
+
+End consultation first finalizes any saved prescription through clinical records
+using the assigned doctor's access token. It verifies the returned appointment
+context before persisting the local end and synchronizing scheduling completion.
+It then finalizes the saved MC decision. A prescription failure leaves the
+consultation in progress; a lost response can be retried without duplicate
+issuance. Completed visits can retry the same workflow to recover an existing
+unissued draft and finish the MC handoff. This is a sequence of idempotent service
+operations, not a transaction spanning services. Deploy updated clinical records
+before consultation. No migrations or new settings are required.
 
 The lifecycle functions are internal Python operations. V02 exposes admission
 HTTP endpoints, described separately in ADMISSION.md. The tenant/doctor parameters must come from validated

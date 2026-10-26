@@ -3,15 +3,18 @@ import { readMedicalCertificate, recordsError } from './api'
 import { MedicalCertificateEditor } from './MedicalCertificateEditor'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
+import type { RecordFormStateChange } from './useRecordFormState'
 
 export function MedicalCertificateForm({
   appointmentId,
   token,
   editable,
+  onStateChange,
 }: {
   appointmentId: string
   token: string
   editable: boolean
+  onStateChange?: RecordFormStateChange
 }) {
   const query = useQuery({
     queryKey: ['records', 'mc', token, appointmentId],
@@ -35,6 +38,7 @@ export function MedicalCertificateForm({
       appointmentId={appointmentId}
       draft={query.data}
       editable={editable}
+      onStateChange={onStateChange}
     />
   )
 }

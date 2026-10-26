@@ -8,6 +8,7 @@ const pages = [
   { kind: 'appointments', label: 'Appointments' },
   { kind: 'payments', label: 'Payments' },
   { kind: 'orders', label: 'Medicine & delivery' },
+  { kind: 'settings', label: 'Settings' },
 ]
 
 export function ClinicManagementNavigation({
@@ -43,7 +44,7 @@ export function ClinicManagementNavigation({
           {pages
             .filter(
               (page) =>
-                !['orders', 'appointments'].includes(page.kind) ||
+                !['orders', 'appointments', 'settings'].includes(page.kind) ||
                 hasClinicMembership,
             )
             .map((page) => (

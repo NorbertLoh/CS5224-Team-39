@@ -1,18 +1,12 @@
 import { useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import {
-  fulfilmentError,
-  listOrders,
-  orderSnapshot,
-  ownsOrder,
-  trackingOrder,
-} from './api'
+import { fulfilmentError, listOrders, orderSnapshot, ownsOrder } from './api'
 import type { OrderSnapshot } from './api'
 import type { OrderContext } from './model'
-import { TrackingOrderList } from './TrackingOrderList'
 import { CreateMedicationOrder } from './CreateMedicationOrder'
 import { OrderDetailsPanel } from './OrderDetailsPanel'
 import { PatientOrderAccordion } from './PatientOrderAccordion'
+import { ClinicMedicineCards } from './ClinicMedicineCards'
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -27,24 +21,19 @@ export function OrderWorkspace({
   const params = new URLSearchParams(window.location.search)
   const supplied = params.get('order_id')
   const prescriptionId = params.get('prescription_id')
-  const [selectedId, setSelectedId] = useState<string | null>(
-    () =>
-      supplied ??
-      (patient && !prescriptionId
-        ? sessionStorage.getItem(
-            `telelink.medication-return.${context.patientId}`,
-          )
-        : null),
+  const [selectedId, setSelectedId] = useState<string | null>(() =>
+    !patient
+      ? null
+      : (supplied ??
+        (patient && !prescriptionId
+          ? sessionStorage.getItem(
+              `telelink.medication-return.${context.patientId}`,
+            )
+          : null)),
   )
   const validId = selectedId !== null && uuid.test(selectedId)
   const list = useInfiniteQuery({
-    queryKey: [
-      'fulfilment',
-      'orders',
-      token,
-      context,
-      'newest',
-    ],
+    queryKey: ['fulfilment', 'orders', token, context, 'newest'],
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) =>
       listOrders(
@@ -81,7 +70,6 @@ export function OrderWorkspace({
     return result.data
   }
   const combinedRows =
-    patient &&
     snapshot &&
     !rows.some((order) => order.order_id === snapshot.order.order_id)
       ? [snapshot.order, ...rows]
@@ -106,6 +94,7 @@ export function OrderWorkspace({
       ) : (
         snapshot && (
           <OrderDetailsPanel
+            token={token}
             snapshot={snapshot}
             context={context}
             refresh={refresh}
@@ -146,13 +135,18 @@ export function OrderWorkspace({
             <h1 id="orders-page-heading" className="text-3xl font-semibold">
               {patient
                 ? 'Medication orders and delivery'
-                : 'Medicine readiness and delivery'}
+                : 'Medicine and delivery'}
             </h1>
-            {patient && (
+            {patient ? (
               <p className="mt-1 max-w-2xl text-sm text-slate-600">
                 Expand an order to view medicines, payment and delivery details.
                 Medication and delivery are paid separately from your
                 consultation.
+              </p>
+            ) : (
+              <p className="mt-1 text-sm text-slate-600">
+                Price the medicines, then mark preparation ready within each
+                card.
               </p>
             )}
           </div>
@@ -201,38 +195,27 @@ export function OrderWorkspace({
             )}
           </>
         ) : (
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-            <div className="space-y-3">
-              <TrackingOrderList
-                orders={rows.map((order) =>
-                  trackingOrder(
-                    order,
-                    snapshot?.order.order_id === order.order_id
-                      ? snapshot.delivery
-                      : (order.delivery_snapshot ?? null),
-                  ),
-                )}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-              />
-              {list.hasNextPage && (
-                <button
-                  className="rounded border px-4 py-2"
-                  disabled={list.isFetchingNextPage}
-                  onClick={() => void list.fetchNextPage()}
-                >
-                  Load more orders
-                </button>
-              )}
-            </div>
-            <div className="space-y-5">
-              {orderDetails}
-              {!selectedId && rows.length > 0 && (
-                <p className="text-sm">
-                  Select an order to view its current status.
-                </p>
-              )}
-            </div>
+          <div className="space-y-4">
+            {selectedId &&
+              !combinedRows.some((order) => order.order_id === selectedId) &&
+              orderDetails}
+            <ClinicMedicineCards
+              tenantId={context.role === 'clinic_admin' ? context.tenantId : ''}
+              token={token}
+              orders={combinedRows}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              orderDetails={orderDetails}
+            />
+            {list.hasNextPage && (
+              <button
+                className="rounded border px-4 py-2"
+                disabled={list.isFetchingNextPage}
+                onClick={() => void list.fetchNextPage()}
+              >
+                Load more orders
+              </button>
+            )}
           </div>
         )}
       </section>

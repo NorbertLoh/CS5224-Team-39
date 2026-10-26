@@ -6,8 +6,12 @@ import { joinEarlyMinutes } from './joinWindow'
 
 export function ConsultationActions({
   appointment,
+  disabled = false,
+  onPendingChange,
 }: {
   appointment: Appointment
+  disabled?: boolean
+  onPendingChange?: (pending: boolean) => void
 }) {
   const cache = useQueryClient()
   const [now, setNow] = useState(Date.now)
@@ -31,36 +35,45 @@ export function ConsultationActions({
     },
     retry: false,
   })
+  useEffect(() => {
+    onPendingChange?.(mutation.isPending)
+    return () => onPendingChange?.(false)
+  }, [mutation.isPending, onPendingChange])
   return (
     <section
-      className="mb-6 space-y-3 rounded-xl border bg-white p-6 text-sm"
+      className="space-y-3 rounded-xl border bg-white p-5 text-sm"
       aria-label="Consultation lifecycle"
     >
       <p>
-        Start the consultation to enable clinical writing. Completing it ends
-        room access for both participants. Leaving video alone does not complete
-        the appointment. Save any MC draft first. If completion reports an error
-        after the appointment ends, retry the completion handoff below to
-        finalize the saved MC decision.
+        {action === 'start'
+          ? 'Start the consultation to enable clinical notes, prescriptions and MC drafts.'
+          : disabled
+            ? 'Wait for your draft changes to save before ending the consultation.'
+            : 'Ending issues your saved prescription, completes the consultation and finalises the MC decision. Leaving video alone does not end the consultation.'}
       </p>
       <button
-        className="rounded border px-4 py-2"
-        disabled={mutation.isPending || tooEarly}
+        className={`rounded-lg px-5 py-3 font-medium disabled:opacity-50 ${action === 'start' ? 'bg-teal-800 text-white' : 'bg-red-50 text-red-800 border border-red-200'}`}
+        disabled={disabled || mutation.isPending || tooEarly}
         aria-describedby={tooEarly ? 'clinical-start-time' : undefined}
         onClick={() => mutation.mutate(action)}
       >
         {mutation.isPending
-          ? 'Updating consultation...'
+          ? action === 'complete'
+            ? 'Finishing consultation...'
+            : 'Starting consultation...'
           : action === 'start'
-            ? 'Start clinical consultation'
+            ? 'Start consultation'
             : appointment.status === 'completed'
               ? 'Retry completion handoff'
-              : 'Complete consultation'}
+              : 'End consultation'}
       </button>
       {tooEarly && (
         <p id="clinical-start-time" role="status">
           Clinical start opens at{' '}
-          {new Date(opensAt).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })} SGT.
+          {new Date(opensAt).toLocaleString('en-SG', {
+            timeZone: 'Asia/Singapore',
+          })}{' '}
+          SGT.
         </p>
       )}
       {mutation.isError && (
@@ -72,7 +85,7 @@ export function ConsultationActions({
       {mutation.isSuccess && (
         <p role="status">
           {mutation.variables === 'complete'
-            ? 'Consultation completion and MC decision confirmed. Refresh Documents for PDF status.'
+            ? 'Prescription, consultation completion and MC decision confirmed. Refresh Documents for PDF status.'
             : 'Consultation started.'}
         </p>
       )}

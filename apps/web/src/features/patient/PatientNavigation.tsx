@@ -6,25 +6,28 @@ const pages = [
   { href: '/patient/prescriptions', label: 'Prescriptions' },
   { href: '/patient/medication-orders', label: 'Orders & delivery' },
   { href: '/patient/documents', label: 'Documents' },
+  { href: '/patient/profile', label: 'Profile' },
 ]
 
 export function PatientNavigation({ route }: { route: Route }) {
   const active =
-    route.kind === 'home' ||
-    route.kind === 'storefront' ||
-    route.kind === 'booking'
-      ? '/#clinics'
-      : route.kind === 'prescriptions'
-        ? '/patient/prescriptions'
-        : route.kind === 'documents'
-          ? '/patient/documents'
-          : route.kind === 'medication-orders'
-            ? '/patient/medication-orders'
-            : route.kind === 'role' ||
-                route.kind === 'checkout' ||
-                route.kind === 'consultation'
-              ? '/patient'
-              : undefined
+    route.kind === 'patient-profile'
+      ? '/patient/profile'
+      : route.kind === 'home' ||
+          route.kind === 'storefront' ||
+          route.kind === 'booking'
+        ? '/#clinics'
+        : route.kind === 'prescriptions'
+          ? '/patient/prescriptions'
+          : route.kind === 'documents'
+            ? '/patient/documents'
+            : route.kind === 'medication-orders'
+              ? '/patient/medication-orders'
+              : route.kind === 'role' ||
+                  route.kind === 'checkout' ||
+                  route.kind === 'consultation'
+                ? '/patient'
+                : undefined
 
   return (
     <nav

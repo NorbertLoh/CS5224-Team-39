@@ -40,7 +40,10 @@ export function AppointmentJoinButton({
     )
   ) {
     reason = `Video is unavailable for ${readableStatus(appointment.status)} appointments.`
-  } else if (now >= Date.parse(appointment.ends_at)) {
+  } else if (
+    appointment.status !== 'in_progress' &&
+    now >= Date.parse(appointment.ends_at)
+  ) {
     reason = 'This appointment has ended.'
   } else if (
     !['confirmed', 'in_progress'].includes(appointment.status) ||

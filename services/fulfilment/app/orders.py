@@ -10,8 +10,9 @@ from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.access import can_read_items, order_scope, permission_fingerprint, require_clinic
 from app.catalogue import DB, Identity
-from app.models import CatalogueItem, Order, OrderItem, OrderRequest
+from app.models import CatalogueItem, Order, OrderItem, OrderRequest, PrescriptionCorrectionHold
 from app.pagination import decode, encode
+from app.prescription_prices import saved_prices
 from app.schemas import (
     MAX_MONEY,
     MedicineReady,
@@ -102,12 +103,16 @@ def create_order(
     lock(session, f"orders:key:{identity.subject_id}:{idempotency_key}")
     previous = session.get(OrderRequest, (identity.subject_id, idempotency_key))
     if previous is not None:
+        if session.get(PrescriptionCorrectionHold, body.prescription_id):
+            raise DomainError(409, "prescription_corrected", "Use the corrected prescription.")
         if previous.prescription_id != body.prescription_id:
             raise DomainError(409, "idempotency_conflict", "Key was used for a different request.")
         own_order(session.get(Order, previous.order_id), identity)
         response.status_code = 200
         return OrderPublic.model_validate(previous.response_payload)
     lock(session, f"orders:prescription:{body.prescription_id}")
+    if session.get(PrescriptionCorrectionHold, body.prescription_id):
+        raise DomainError(409, "prescription_corrected", "Use the corrected prescription.")
     order = session.scalar(select(Order).where(Order.prescription_id == body.prescription_id))
     if order is not None:
         own_order(order, identity)
@@ -125,6 +130,11 @@ def create_order(
             raise DomainError(404, "not_found", "Resource not found.")
         if context.status != "issued":
             raise DomainError(409, "prescription_not_issued", "Prescription must be issued.")
+        prescription_prices = {
+            row.prescription_item_id: row
+            for row in saved_prices(session, context.tenant_id, context.prescription_id)
+        }
+        per_prescription = context.pricing_mode == "prescription" or bool(prescription_prices)
         rows = session.scalars(
             select(CatalogueItem)
             .where(
@@ -138,9 +148,25 @@ def create_order(
         items = []
         subtotal = 0
         for position, source in enumerate(context.items):
-            item = catalogue.get(source.medication_id)
-            if item is None or not item.active:
+            item = (
+                prescription_prices.get(source.prescription_item_id)
+                if per_prescription
+                else catalogue.get(source.medication_id)
+            )
+            if per_prescription and (
+                item is None
+                or item.medication_id != source.medication_id
+                or item.quantity != source.quantity
+            ):
+                raise DomainError(
+                    409, "medication_unpriced", "Clinic admin must price this prescription first."
+                )
+            if item is None or (not per_prescription and not item.active):
                 raise DomainError(409, "medication_unavailable", "Medication is unavailable.")
+            if item.unit_price_minor is None:
+                raise DomainError(
+                    409, "medication_unpriced", "Clinic admin must price all medicines first."
+                )
             line_total = source.quantity * item.unit_price_minor
             subtotal += line_total
             if subtotal > MAX_MONEY:
@@ -159,6 +185,7 @@ def create_order(
                 )
             )
         order = Order(
+            pricing_mode="prescription" if per_prescription else "catalogue",
             tenant_id=context.tenant_id,
             patient_id=context.patient_id,
             appointment_id=context.appointment_id,

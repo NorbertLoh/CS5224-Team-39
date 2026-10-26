@@ -113,9 +113,21 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
       token={identity.token}
       subjectId={subject}
       actions={
-        role === 'doctor' && (
+        role === 'doctor' &&
+        appointment.data.status === 'confirmed' && (
           <ConsultationActions appointment={appointment.data} />
         )
+      }
+      endActions={
+        role === 'doctor' && appointment.data.status === 'in_progress'
+          ? (blocked, onPendingChange) => (
+              <ConsultationActions
+                appointment={appointment.data}
+                disabled={blocked}
+                onPendingChange={onPendingChange}
+              />
+            )
+          : undefined
       }
     />
   )

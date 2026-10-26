@@ -74,6 +74,21 @@ class MCCompletion(BaseModel):
     finalized_at: datetime
 
 
+class PrescriptionCompletion(BaseModel):
+    appointment_id: UUID
+    tenant_id: UUID
+    patient_id: UUID
+    doctor_id: UUID
+    prescription_id: UUID | None
+    status: Literal["none", "issued"]
+
+    @model_validator(mode="after")
+    def consistent_status(self):
+        if (self.status == "issued") != (self.prescription_id is not None):
+            raise ValueError("Invalid prescription completion")
+        return self
+
+
 class AdmissionSources:
     def __init__(self, settings, *, transport=None):
         self.settings = settings
@@ -87,7 +102,7 @@ class AdmissionSources:
     def close(self):
         self.client.close()
 
-    def call(self, service, path, model, request_id, body=None):
+    def call(self, service, path, model, request_id, body=None, *, user_token=None):
         base = getattr(self.settings, service + "_url")
         secret = getattr(self.settings, service + "_secret")
         if base is None or secret is None:
@@ -99,7 +114,8 @@ class AdmissionSources:
                 base + path,
                 json=body,
                 headers={
-                    "Authorization": "Bearer " + service_token(secret, "consultation", audience),
+                    "Authorization": "Bearer "
+                    + (user_token or service_token(secret, "consultation", audience)),
                     "X-Request-ID": request_id,
                 },
             )
@@ -108,6 +124,12 @@ class AdmissionSources:
         if response.status_code in {403, 404}:
             raise DomainError(404, "not_found", "Resource not found.")
         if response.status_code == 409:
+            if user_token is not None and service == "records":
+                raise DomainError(
+                    409,
+                    "prescription_not_finalized",
+                    "Check the saved prescription before ending the consultation.",
+                )
             raise DomainError(409, "appointment_changed", "Appointment changed; refresh and retry.")
         if response.status_code == 401 or response.status_code >= 500:
             raise DomainError(503, "unavailable", "Required service is unavailable.")

@@ -63,6 +63,24 @@ class Subject(Base):
     )
 
 
+class PatientProfile(Base):
+    __tablename__ = "patient_profiles"
+    __table_args__ = (
+        CheckConstraint("phone_number ~ '^\\+65[689][0-9]{7}$'", name="ck_patient_profile_phone"),
+        CheckConstraint("btrim(address_line) <> ''", name="ck_patient_profile_address"),
+        CheckConstraint("postal_code ~ '^[0-9]{6}$'", name="ck_patient_profile_postal"),
+        CheckConstraint("country_code = 'SG'", name="ck_patient_profile_country"),
+    )
+    subject_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("identity.subjects.subject_id", ondelete="CASCADE"), primary_key=True
+    )
+    phone_number: Mapped[str] = mapped_column(Text)
+    address_line: Mapped[str] = mapped_column(Text)
+    postal_code: Mapped[str] = mapped_column(Text)
+    country_code: Mapped[str] = mapped_column(Text, default="SG", server_default=text("'SG'"))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Membership(Base):
     __tablename__ = "memberships"
     __table_args__ = (

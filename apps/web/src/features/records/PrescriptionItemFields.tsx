@@ -1,15 +1,13 @@
-﻿import type { Medication, PrescriptionInput } from './types'
+import type { PrescriptionInput } from './types'
 const field = 'rounded border px-3 py-2'
 export function PrescriptionItemFields({
   item,
   index,
-  medications,
   onChange,
   onRemove,
 }: {
   item: PrescriptionInput
   index: number
-  medications: Medication[]
   onChange: (change: Partial<PrescriptionInput>) => void
   onRemove: () => void
 }) {
@@ -18,30 +16,17 @@ export function PrescriptionItemFields({
       <legend className="px-1">Medication {index + 1}</legend>
       <label className="flex flex-col gap-2">
         Medication
-        <select
+        <input
           className={field}
           required
-          value={item.medication_id}
-          onChange={(event) => onChange({ medication_id: event.target.value })}
-        >
-          <option value="">Choose from clinic catalogue</option>
-          {item.medication_id &&
-            !medications.some(
-              (medication) => medication.medication_id === item.medication_id,
-            ) && (
-              <option value={item.medication_id}>
-                Unavailable medication — choose a replacement
-              </option>
-            )}
-          {medications.map((medication) => (
-            <option
-              key={medication.medication_id}
-              value={medication.medication_id}
-            >
-              {medication.display_name} ({medication.unit_label})
-            </option>
-          ))}
-        </select>
+          type="text"
+          maxLength={200}
+          placeholder="Enter medication name"
+          value={item.display_name ?? ''}
+          onChange={(event) =>
+            onChange({ medication_id: '', display_name: event.target.value })
+          }
+        />
       </label>
       <label className="flex flex-col gap-2">
         Quantity (dispensing units)

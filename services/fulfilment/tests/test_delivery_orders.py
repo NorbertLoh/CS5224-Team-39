@@ -190,6 +190,65 @@ def test_prepare_uses_frozen_route_and_current_typed_contacts(adapter):
         client.prepare(order, quote, delivery)
 
 
+def test_prepare_uses_saved_clinic_contact_and_preserves_recipient_requirement(adapter):
+    client, delivery, quote, _ = adapter
+    order = SimpleNamespace(tenant_id=uuid4(), patient_id=uuid4())
+    contact = {"name": "Settings pickup contact", "phone": "+6581234567"}
+    client.clinic_locations = SimpleNamespace(
+        get_contact=lambda tenant_id: contact, close=lambda: None
+    )
+    client.contacts = Contacts(
+        senders={order.tenant_id: {"name": "Old directory contact", "phone": "+6580000000"}},
+        recipients={order.patient_id: {"name": "Synthetic patient", "phone": "+6580000001"}},
+    )
+    client.quotes.quote_route = lambda stops: SimpleNamespace(
+        context={"quotation_id": QUOTE, "stop_ids": ["pickup", "dropoff"]}
+    )
+    _, payload = client.prepare(order, quote, delivery)
+    assert payload["sender"] == {"stopId": "pickup", **contact}
+    assert payload["recipients"][0]["phone"] == "+6580000001"
+    client.contacts = None
+    with pytest.raises(DeliveryUnavailable):
+        client.prepare(order, quote, delivery)
+
+
+def test_invalid_saved_contact_never_falls_back_to_file_contact(adapter):
+    client, delivery, quote, _ = adapter
+    order = SimpleNamespace(tenant_id=uuid4(), patient_id=uuid4())
+    client.clinic_locations = SimpleNamespace(
+        get_contact=lambda tenant_id: {"name": "Bad contact", "phone": "bad"}, close=lambda: None
+    )
+    client.contacts = Contacts(
+        senders={order.tenant_id: {"name": "Old directory contact", "phone": "+6580000000"}},
+        recipients={order.patient_id: {"name": "Synthetic patient", "phone": "+6580000001"}},
+    )
+    with pytest.raises(DeliveryUnavailable, match="Clinic pickup contact is unavailable"):
+        client.prepare(order, quote, delivery)
+
+
+def test_prepare_uses_patient_profile_contact_without_file_directory(adapter):
+    client, delivery, quote, _ = adapter
+    order = SimpleNamespace(tenant_id=uuid4(), patient_id=uuid4())
+    sender = {"name": "Clinic desk", "phone": "+6580000000"}
+    recipient = {"name": "Saved profile name", "phone": "+6581234567"}
+    client.clinic_locations = SimpleNamespace(
+        get_contact=lambda tenant_id: sender, close=lambda: None
+    )
+    client.patient_profiles = SimpleNamespace(
+        get_contact=lambda patient_id: recipient, close=lambda: None
+    )
+    client.contacts = None
+    client.quotes.quote_route = lambda stops: SimpleNamespace(
+        context={"quotation_id": QUOTE, "stop_ids": ["pickup", "dropoff"]}
+    )
+    _, payload = client.prepare(order, quote, delivery)
+    assert payload["sender"] == {"stopId": "pickup", **sender}
+    assert payload["recipients"] == [{"stopId": "dropoff", **recipient}]
+    recipient["phone"] = "invalid"
+    with pytest.raises(DeliveryUnavailable, match="Patient recipient contact is unavailable"):
+        client.prepare(order, quote, delivery)
+
+
 def test_refund_resolution_request_uses_billing_service_scope():
     secret = "d05-synthetic-billing-secret-at-least-32-bytes"
     payment, order, tenant, patient, quote = [uuid4() for _ in range(5)]

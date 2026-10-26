@@ -9,13 +9,14 @@ export type Route =
   | { kind: 'booking'; role: 'patient'; slug: string }
   | { kind: 'checkout'; role: 'patient' }
   | { kind: 'medication-orders'; role: 'patient' }
+  | { kind: 'patient-profile'; role: 'patient' }
   | { kind: 'prescriptions' | 'documents'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
   | { kind: 'doctor-availability'; role: 'doctor'; tenantId?: string }
   | { kind: 'clinic-appointments'; role: 'clinic_admin'; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | {
-      kind: 'profile' | 'staff' | 'payments' | 'orders'
+      kind: 'profile' | 'staff' | 'payments' | 'orders' | 'settings'
       role: 'clinic_admin'
       tenantId: string
     }
@@ -62,7 +63,7 @@ export function hasRole(identity: Identity, role: Role) {
 export function canAccess(identity: Identity, route: Route) {
   if (!('role' in route)) return true
   // Orders and clinic-scoped schedules require active owning-clinic administration.
-  if (route.kind === 'orders')
+  if (route.kind === 'orders' || route.kind === 'settings')
     return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
   if (route.kind === 'clinic-appointments' && route.tenantId)
     return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
@@ -98,6 +99,8 @@ export function parseRoute(path: string): Route {
   if (normalized === '/patient') return { kind: 'role', role: 'patient' }
   if (normalized === '/patient/prescriptions')
     return { kind: 'prescriptions', role: 'patient' }
+  if (normalized === '/patient/profile')
+    return { kind: 'patient-profile', role: 'patient' }
   if (normalized === '/patient/documents')
     return { kind: 'documents', role: 'patient' }
   if (normalized === '/patient/medication-orders')
@@ -130,7 +133,7 @@ export function parseRoute(path: string): Route {
       tenantId: platform[1].toLowerCase(),
     }
   const clinic =
-    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|orders|appointments)$/.exec(
+    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|orders|appointments|settings)$/.exec(
       normalized,
     )
   if (clinic && uuid.test(clinic[1])) {
@@ -141,7 +144,12 @@ export function parseRoute(path: string): Route {
         tenantId: clinic[1].toLowerCase(),
       }
     return {
-      kind: clinic[2] as 'profile' | 'staff' | 'payments' | 'orders',
+      kind: clinic[2] as
+        | 'profile'
+        | 'staff'
+        | 'payments'
+        | 'orders'
+        | 'settings',
       role: 'clinic_admin',
       tenantId: clinic[1].toLowerCase(),
     }

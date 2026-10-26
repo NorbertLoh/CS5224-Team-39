@@ -35,6 +35,8 @@ def test_migration_roundtrip_and_schema_isolation(sessions, database):
         "order_items",
         "order_requests",
         "orders",
+        "prescription_correction_holds",
+        "prescription_prices",
         "quote_requests",
         "quotes",
     ]

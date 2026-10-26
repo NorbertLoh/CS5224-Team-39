@@ -1,26 +1,39 @@
-﻿import { useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useCallback, useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { PrescriptionItemFields } from './PrescriptionItemFields'
 import { PrescriptionDetails } from './PrescriptionDetails'
-import {
-  catalogue,
-  savePrescription,
-  issuePrescription,
-  recordsError,
-} from './api'
+import { savePrescription, issuePrescription, recordsError } from './api'
 import { prescriptionItems, validItems } from './types'
 import type { Prescription, PrescriptionInput } from './types'
 import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
-const button = 'rounded border px-4 py-2 disabled:opacity-50'
+import { Pill, Plus } from 'lucide-react'
+import { Button } from '../../components/ui/button'
+import { useDraftAutosave } from './useDraftAutosave'
+import {
+  useRecordFormState,
+  type RecordFormStateChange,
+} from './useRecordFormState'
+
+function draftKey(items: PrescriptionInput[]) {
+  return JSON.stringify(
+    prescriptionItems(items)
+      .map((item) => ({
+        name:
+          item.medication_id || item.display_name?.trim().toLowerCase() || '',
+        quantity: item.quantity,
+        instructions: item.instructions,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  )
+}
 
 export function PrescriptionEditor({
   appointmentId,
   tenantId,
-  token,
   prescription,
   editable,
   onFailure,
+  onStateChange,
 }: {
   appointmentId: string
   tenantId: string
@@ -28,27 +41,41 @@ export function PrescriptionEditor({
   prescription: Prescription | null
   editable: boolean
   onFailure: () => void
+  onStateChange?: RecordFormStateChange
 }) {
   const [saved, setSaved] = useState(prescription)
   const [items, setItems] = useState<PrescriptionInput[]>(
     prescriptionItems(prescription?.items ?? []),
   )
   const locked = Boolean(saved && saved.status !== 'draft')
-  const medications = useQuery({
-    queryKey: ['records', 'catalogue', token, tenantId],
-    queryFn: ({ signal }) => catalogue(tenantId, signal),
-    enabled: editable && !locked,
-    retry: false,
-    gcTime: 0,
-  })
   const accept = (result: Prescription) => {
     setSaved(result)
     setItems(prescriptionItems(result.items))
   }
   const save = useMutation({
-    mutationFn: () =>
-      savePrescription(appointmentId, saved?.prescription_id, items),
-    onSuccess: accept,
+    mutationFn: (submitted: PrescriptionInput[]) =>
+      savePrescription(
+        appointmentId,
+        saved?.prescription_id,
+        submitted,
+        tenantId,
+      ),
+    onSuccess: (result) => {
+      setSaved(result)
+      // Merge identifiers without reordering rows or replacing visible input text.
+      setItems((current) =>
+        current.map((item) => {
+          const matched = result.items.find(
+            (line) =>
+              line.display_name.trim().toLowerCase() ===
+              item.display_name?.trim().toLowerCase(),
+          )
+          return matched
+            ? { ...item, medication_id: matched.medication_id }
+            : item
+        }),
+      )
+    },
     onError: onFailure,
     retry: false,
     gcTime: 0,
@@ -61,31 +88,49 @@ export function PrescriptionEditor({
     gcTime: 0,
   })
   const busy = save.isPending || issue.isPending
-  const dirty =
-    JSON.stringify(prescriptionItems(items)) !==
-    JSON.stringify(prescriptionItems(saved?.items ?? []))
-  const valid =
-    validItems(items) &&
-    items.every((item) =>
-      medications.data?.some(
-        (medication) => medication.medication_id === item.medication_id,
-      ),
-    )
-  const writable = editable && !locked && medications.isSuccess && !busy
+  const dirty = draftKey(items) !== draftKey(saved?.items ?? [])
+  const valid = validItems(items)
+  useRecordFormState(dirty, busy, onStateChange)
+  const writable = editable && !locked && !issue.isPending
+  const queueSave = useCallback(
+    () => save.mutate(prescriptionItems(items)),
+    [save.mutate, items],
+  )
+  useDraftAutosave(
+    writable &&
+      !save.isPending &&
+      valid &&
+      dirty &&
+      !save.isError &&
+      !issue.isError,
+    JSON.stringify(items),
+    queueSave,
+  )
   const changeItems = (next: PrescriptionInput[]) => {
     setItems(next)
-    save.reset()
     issue.reset()
   }
   return (
     <form
-      className="space-y-4"
+      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       onSubmit={(event) => {
         event.preventDefault()
-        if (writable && valid && dirty) save.mutate()
       }}
     >
-      <h3 className="font-semibold">Prescription · {saved?.status ?? 'new'}</h3>
+      <div className="flex items-center gap-3">
+        <span className="rounded-lg bg-teal-50 p-2 text-teal-800">
+          <Pill aria-hidden="true" size={18} />
+        </span>
+        <h3 className="font-semibold">Prescription</h3>
+        <span className="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs capitalize text-slate-600">
+          {saved?.status ?? 'New'}
+        </span>
+      </div>
+      <p className="text-sm text-slate-600">
+        Complete each medication to autosave the draft. End consultation issues
+        the saved prescription automatically, or you can issue it below. The
+        clinic admin prices each medication before checkout.
+      </p>
       {locked || !editable ? (
         <>
           {saved ? (
@@ -97,41 +142,36 @@ export function PrescriptionEditor({
         </>
       ) : (
         <>
-          {medications.isPending && (
-            <LoadingState message="Loading clinic medications..." />
-          )}
-          {medications.isError && (
-            <ErrorState
-              message={recordsError(medications.error)}
-              onRetry={() => void medications.refetch()}
-            />
-          )}
-          {medications.isSuccess && !medications.data.length && (
-            <p role="status">
-              No active medications in this clinic's catalogue.
-            </p>
-          )}
           <fieldset disabled={!writable} className="space-y-4">
-            <button
-              className={button}
+            <Button
+              variant="outline"
+              className="h-10 px-4"
               type="button"
               disabled={items.length >= 100}
               onClick={() =>
                 changeItems([
                   ...items,
-                  { medication_id: '', quantity: 1, instructions: '' },
+                  {
+                    medication_id: '',
+                    display_name: '',
+                    quantity: 1,
+                    instructions: '',
+                  },
                 ])
               }
             >
-              Add medication
-            </button>
-            {!items.length && <p>No medications added.</p>}
+              <Plus aria-hidden="true" /> Add medication
+            </Button>
+            {!items.length && (
+              <p className="text-sm text-slate-500">
+                No medications added to this visit.
+              </p>
+            )}
             {items.map((item, index) => (
               <PrescriptionItemFields
                 key={index}
                 item={item}
                 index={index}
-                medications={medications.data ?? []}
                 onChange={(change) =>
                   changeItems(
                     items.map((current, position) =>
@@ -145,27 +185,34 @@ export function PrescriptionEditor({
               />
             ))}
             <div className="flex flex-wrap gap-3">
-              <button className={button} disabled={!valid || !dirty}>
-                {save.isPending ? 'Saving draft...' : 'Save draft'}
-              </button>
-              <button
-                className={button}
+              <Button
+                className="h-10 px-4"
                 type="button"
-                disabled={!saved || dirty || !valid}
+                disabled={!saved || dirty || !valid || busy}
                 onClick={() => {
-                  if (writable && saved && !dirty && valid) issue.mutate()
+                  if (writable && !busy && saved && !dirty && valid)
+                    issue.mutate()
                 }}
               >
                 {issue.isPending ? 'Issuing...' : 'Issue prescription'}
-              </button>
+              </Button>
             </div>
           </fieldset>
-          {dirty && (
-            <p className="text-sm">Save draft changes before issuing.</p>
-          )}
+          <p role="status" className="text-xs text-slate-600">
+            {save.isError
+              ? 'Draft not saved. Reload saved records to check the last outcome.'
+              : save.isPending
+                ? 'Saving prescription draft…'
+                : dirty
+                  ? valid
+                    ? 'Waiting to autosave…'
+                    : 'Complete medication, quantity and instructions for every item to autosave. Drafts require at least one item.'
+                  : saved
+                    ? 'Prescription draft saved.'
+                    : 'Valid prescription drafts save automatically.'}
+          </p>
         </>
       )}
-      {save.isSuccess && <p role="status">Prescription draft saved.</p>}
       {issue.isSuccess && (
         <p role="status">Prescription issued. Its content is now locked.</p>
       )}
