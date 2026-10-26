@@ -235,7 +235,7 @@ export async function signInWithPassword(
     })
   } catch {
     throw new Error(
-      'Unable to sign in. Check your email and password, then try again. You can also use more sign-in options below.',
+      'Unable to sign in. Check your email and password, then try again.',
     )
   }
   let result
@@ -246,7 +246,7 @@ export async function signInWithPassword(
   }
   if (result?.ChallengeName) {
     throw new Error(
-      'Your account needs an additional sign-in step. Choose more sign-in options below to continue.',
+      'Your account requires additional verification that is not available on this page yet. Contact your clinic for help signing in.',
     )
   }
   const tokens = result?.AuthenticationResult

@@ -188,9 +188,6 @@ export function AuthControls({
               'Sign-in is not available right now. Please try again later.'
         }
         onSignIn={handlePasswordSignIn}
-        onHostedSignIn={() => {
-          void handleClick()
-        }}
       />
     )
   }

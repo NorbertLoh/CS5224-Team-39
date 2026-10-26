@@ -11,7 +11,6 @@ interface SignInPageProps {
   message: string
   configurationError: string
   onSignIn: (email: string, password: string) => Promise<void>
-  onHostedSignIn: () => void
   config: AuthConfig | null
 }
 
@@ -21,7 +20,6 @@ export function SignInPage({
   message,
   configurationError,
   onSignIn,
-  onHostedSignIn,
   config,
 }: SignInPageProps) {
   const [signingUp, setSigningUp] = useState(false)
@@ -90,7 +88,6 @@ export function SignInPage({
                   setRegistrationMessage('')
                   return onSignIn(email, password)
                 }}
-                onHostedSignIn={onHostedSignIn}
               />
             )}
             {(configurationError ||

@@ -1,5 +1,11 @@
 # RF13 account signup
 
+The user deferred other sign-in options: the page offers email/password sign-in
+and Create an account, with no hosted-login button. Error guidance no longer
+points to that removed option. The existing OAuth callback/session support remains
+available for future provider integration; accounts needing additional verification
+receive an explicit message that the step is not available on this page yet.
+
 At `/sign-in`, choose **Create an account**. The form collects full name, email,
 password and password confirmation, then calls Cognito `SignUp`. Unconfirmed users
 enter their emailed code (`ConfirmSignUp`); **Resend verification code** uses
