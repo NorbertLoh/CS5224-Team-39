@@ -1,6 +1,6 @@
 # Phased project cleanup implementation
 
-Status: implementation in progress. RF16 inventory prepared; later phase gates remain open.
+Status: RF16-RF20 changes prepared in stacked draft PRs. Browser acceptance and merge completion remain open. See [verification report](docs/cleanup-verification.md).
 Scope and decisions: [cleanup plan](cleanup-plan.md).
 Shared backlog: [implementation-plan.md](implementation-plan.md).
 
@@ -76,15 +76,15 @@ Prerequisite: Phase 2 gate. Estimated effort: M (half a day), revisited after in
 - [x] Run existing Ruff/tests for changed Python services/shared utilities using
       the applicable service CI commands; run signalling checks if affected.
 - [x] Confirm no frontend code/dependencies changed after RF17 checks.
-- [ ] Validate affected Compose configuration with the documented profiles/env
-      and reproduce changed CI commands locally where supported.
+- [x] Confirm Compose configuration is unchanged and active billing CI validates
+      retained commands. No local Docker startup result is claimed.
 - [x] Confirm no retained import, workflow, package command or setup path points
       at deleted artifacts. Record remaining uncertain items as follow-ups.
 
 Gate: each removal has evidence, relevant checks pass and active workflows remain
 usable. New behavior/API/schema changes require separate follow-up work.
 
-Evidence: retired only the isolated billing webhook spike/workflow/lockfile and consolidated its doc; carried unique raw UTF-8, rotation and actual HTTP checks into the active suite. Billing Ruff lint/format and pip check passed. Webhook tests: 32 passed, 6 PostgreSQL checks skipped. Full billing suite: 47 passed, 268 skipped, 38 subtests passed. No disposable PostgreSQL/Docker available; Compose unchanged. Browser gate from RF17 remains open. No speculative application refactor or dependency removal justified. Issue #294.
+Evidence: retired only the isolated billing webhook spike/workflow/lockfile and consolidated its doc; carried unique raw UTF-8, rotation and actual HTTP checks into the active suite. Billing Ruff lint/format and pip check passed. Webhook tests: 32 passed, 6 PostgreSQL checks skipped. Full billing suite: 47 passed, 268 skipped, 38 subtests passed. Local PostgreSQL checks skipped; RF18 CI passed all 315 billing tests and 38 subtests. Compose unchanged; no local Docker available. Browser gate from RF17 remains open. No speculative application refactor or dependency removal justified. Issue #294.
 
 ## Phase 4 - Documentation consolidation
 
@@ -111,24 +111,24 @@ Evidence: consolidated RF10 behavior/API/cursor semantics and dated evidence int
 
 Prerequisite: Phase 4 gate. Estimated effort: M (half a day).
 
-- [ ] Run final frontend lint/typecheck/build; run affected service/shared checks
+- [x] Run final frontend lint/typecheck/build; run affected service/shared checks
       when subsequent edits require rerunning them. Avoid unrelated test expansion.
-- [ ] Confirm affected Compose and CI commands reference retained paths.
+- [x] Confirm affected Compose and CI commands reference retained paths.
 - [ ] Smoke-check patient, doctor, clinic-admin and platform-admin workspaces using
       existing local services/accounts; check loading, empty and error states.
 - [ ] Verify affected checkout/refund UI, synthetic-payment refund denial, booking
       and consultation entry without submitting new provider transactions.
 - [ ] Review rendered UI and targeted keyword results for leftover test-only copy;
       legitimate test terminology in source/developer docs does not fail acceptance.
-- [ ] Review the final diff for unintended behavior changes, data changes,
+- [x] Review the final diff for unintended behavior changes, data changes,
       migration removals, unsupported deletions and broken links.
-- [ ] Update PR verification/setup notes with actual commands, outcomes, baseline
+- [x] Update PR verification/setup notes with actual commands, outcomes, baseline
       failures and unverified scenarios; ensure required CI checks pass.
-- [ ] Keep issue In progress while PR review/merge or required verification remains.
+- [x] Keep issue In progress while PR review/merge or required verification remains.
 - [ ] After merge and satisfaction of completion criteria, close the issue and
       check off its shared backlog task with the merge/verification references.
 
 Gate: all cleanup acceptance criteria are met and recorded. No completion claim
 is made merely because local edits or documentation are finished.
 
-Evidence: not run. Blockers: not assessed. Merge reference: pending.
+Evidence: [verification report](docs/cleanup-verification.md) records local checks, successful RF18 PostgreSQL CI and exact limits. Frontend/billing source unchanged after their passing checks; no repeat needed for documentation-only phases. Blocker: browser use disabled in Work settings; required all-role/rendered-state checks remain open. Merge reference: pending; all phase issues remain In progress.
