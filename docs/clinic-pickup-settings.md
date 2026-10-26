@@ -18,8 +18,10 @@ pickup contact through the same authenticated tenant projection. If the tenant
 connection is configured, missing/invalid clinic contacts block preparation;
 the worker does not silently substitute a sender from the old file directory.
 An already-prepared request keeps its recorded contact details. Patient recipient
-contacts remain separately required through `SERVICE_DELIVERY_CONTACTS_PATH`;
-adding clinic contact fields alone does not supply a patient's name or phone.
+contacts remain separately required. The [patient Profile page](patient-profile.md)
+supplies recipient name and phone when its identity connection is configured;
+legacy deployments can use `SERVICE_DELIVERY_CONTACTS_PATH`. Adding clinic contact
+fields alone does not supply a patient's name or phone.
 Restart the delivery worker when deploying this integration.
 
 Only active admins of that clinic can read/write

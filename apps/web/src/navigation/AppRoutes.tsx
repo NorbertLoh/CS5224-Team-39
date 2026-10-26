@@ -14,6 +14,7 @@ import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
 import { LiveOrders } from '../features/fulfilment/LiveOrders'
 import { ClinicPayments } from '../features/payments/ClinicPayments'
 import { ClinicSettings } from '../features/clinics/ClinicSettings'
+import { PatientProfilePage } from '../features/patient/PatientProfilePage'
 import { roleLabels } from './access'
 import type { Route } from './access'
 import type { Session } from '../auth/session'
@@ -36,6 +37,8 @@ export function AppRoutes({
       return <LiveCheckoutPage />
     case 'medication-orders':
       return <LiveOrders role="patient" />
+    case 'patient-profile':
+      return <PatientProfilePage />
     case 'prescriptions':
     case 'documents':
       return <PatientRecordsPage page={route.kind} />

@@ -8,6 +8,7 @@ export type Route =
   | { kind: 'booking'; role: 'patient'; slug: string }
   | { kind: 'checkout'; role: 'patient' }
   | { kind: 'medication-orders'; role: 'patient' }
+  | { kind: 'patient-profile'; role: 'patient' }
   | { kind: 'prescriptions' | 'documents'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
   | { kind: 'clinic-appointments'; role: 'clinic_admin'; tenantId?: string }
@@ -88,6 +89,8 @@ export function parseRoute(path: string): Route {
   if (normalized === '/patient') return { kind: 'role', role: 'patient' }
   if (normalized === '/patient/prescriptions')
     return { kind: 'prescriptions', role: 'patient' }
+  if (normalized === '/patient/profile')
+    return { kind: 'patient-profile', role: 'patient' }
   if (normalized === '/patient/documents')
     return { kind: 'documents', role: 'patient' }
   if (normalized === '/patient/medication-orders')

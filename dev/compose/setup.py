@@ -133,6 +133,7 @@ def configure():
     )
     pair("fulfilment", "SERVICE_BILLING_SECRET", "billing", "SERVICE_FULFILMENT_SECRET")
     pair("fulfilment", "SERVICE_TENANT_SECRET", "tenant", "SERVICE_FULFILMENT_SECRET")
+    pair("fulfilment", "SERVICE_PROFILE_SECRET", "identity", "SERVICE_FULFILMENT_SECRET")
     for peer, setting in [
         ("identity", "IDENTITY"),
         ("scheduling", "SCHEDULING"),

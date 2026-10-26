@@ -15,6 +15,7 @@ class Settings(ServiceSettings):
     records_secret: SecretStr | None = None
     tenant_url: str | None = None
     tenant_secret: SecretStr | None = None
+    profile_secret: SecretStr | None = None
     lalamove_api_key: SecretStr | None = None
     lalamove_api_secret: SecretStr | None = None
     delivery_locations_path: Path | None = None
@@ -49,6 +50,7 @@ class Settings(ServiceSettings):
                 self.records_secret,
                 self.notification_secret,
                 self.tenant_secret,
+                self.profile_secret,
             )
             if value is not None
         ]

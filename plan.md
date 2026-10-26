@@ -11,6 +11,12 @@ verification evidence. This does not complete W11, Q04 or the AWS integration ga
 
 ## 1. Decisions and scope
 
+RF12 patient profile extension: identity owns patients' self-edited contact/address
+details and current display name. Fulfilment reads only recipient name/phone
+through an authenticated service projection. Checkout offers the saved address
+as an editable default; existing quote/delivery route snapshots stay authoritative.
+See [patient profile](docs/patient-profile.md).
+
 RF12 scope extension (26 October 2026): selected-clinic Settings owns a saved
 medicine pickup location in tenant storage, with clinic-admin authorization and
 audited updates. Fulfilment fetches the minimal active-clinic location through

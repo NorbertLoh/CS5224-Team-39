@@ -1,21 +1,40 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { createQuote, deliveryQuoteError } from './api'
 import { stableKey } from './checkout'
+import { readSession } from '../../auth/session'
+import { readPatientProfile } from '../patient/profileApi'
+import type { PatientProfile } from '../patient/profileApi'
 
-export function LiveDestinationForm({
-  orderId,
-  subject,
-  onRefresh,
-  onEditingChange,
-}: {
+type Props = {
   orderId: string
   subject: string
   onRefresh: () => void
   onEditingChange: (value: boolean) => void
-}) {
-  const [address, setAddress] = useState('')
-  const [postcode, setPostcode] = useState('')
+}
+
+export function LiveDestinationForm(props: Props) {
+  const profile = useQuery({
+    queryKey: ['patient-profile', readSession()?.accessToken],
+    queryFn: ({ signal }) => readPatientProfile(signal),
+    retry: false,
+    gcTime: 0,
+  })
+  if (profile.isPending) return <p role="status">Loading delivery address...</p>
+  const initial =
+    profile.data?.subject_id === props.subject ? profile.data : undefined
+  return <DestinationForm {...props} initial={initial} />
+}
+
+function DestinationForm({
+  orderId,
+  subject,
+  onRefresh,
+  onEditingChange,
+  initial,
+}: Props & { initial?: PatientProfile }) {
+  const [address, setAddress] = useState(initial?.address_line ?? '')
+  const [postcode, setPostcode] = useState(initial?.postal_code ?? '')
   const quote = useMutation({
     mutationFn: async () => {
       const destination = {

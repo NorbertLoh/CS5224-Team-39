@@ -21,7 +21,9 @@ Set `SERVICE_DELIVERY_CONTACTS_PATH` to a private JSON file with trusted contact
 
 With the Clinic Settings tenant connection configured, the worker obtains the
 clinic sender's name and phone from the saved pickup contact instead of the file's
-`senders` section. The file still supplies patient `recipients`. Missing saved
+`senders` section. With `SERVICE_PROFILE_SECRET` configured, the worker reads
+patient recipient names/phones from [saved patient profiles](../../docs/patient-profile.md);
+otherwise the file supplies patient `recipients`. Missing saved
 clinic contact blocks preparation without falling back to a file sender.
 See [clinic pickup settings](../../docs/clinic-pickup-settings.md).
 

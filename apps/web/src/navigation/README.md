@@ -40,6 +40,9 @@ orders retain their existing direct links and highlight Manage clinic. Both entr
 pages use the existing sign-in and identity gates; backend permissions remain the
 source of access to appointments and clinic data. No configuration or migrations.
 
+Patient navigation includes Profile (`/patient/profile`) for the signed-in
+patient's name, contact number and address. See [patient profile setup](../../../../docs/patient-profile.md).
+
 Selecting a clinic opens its profile as the management landing page. A persistent
 Clinic management navbar shows the selected clinic's name and Profile, Staff,
 Appointments, Payments, Medicine & delivery and Settings links, preserving that clinic in
