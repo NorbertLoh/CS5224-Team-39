@@ -41,6 +41,12 @@ and browser checks must remain explicit pending items unless a later phase can
 provide those runtimes. No persistent database or provider operation is authorized
 by this inventory.
 
+Later evidence: an ignored isolated Python environment was installed for RF18.
+Billing lint/format/dependency checks passed locally; 47 tests and 38 subtests
+passed, while 268 database-dependent tests were skipped. The RF18 PostgreSQL CI
+job then passed all 315 tests and 38 subtests. See
+[final verification](cleanup-verification.md) for exact limits and remaining UI acceptance.
+
 ## Review sequence
 
 RF16 #292 -> RF17 #293 -> RF18 #294 -> RF19 #295 -> RF20 #296.

@@ -1,6 +1,7 @@
 # Project cleanup plan
 
-Status: planned; no cleanup implementation or runtime verification is recorded here.
+Status: changes prepared in five stacked draft phase PRs; browser acceptance and
+merge completion remain pending. Actual results: [verification report](docs/cleanup-verification.md).
 Prepared: 26 October 2026.
 
 Execution checklist: [phased implementation](cleanup-implementation.md).
