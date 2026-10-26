@@ -29,8 +29,13 @@ for payment.
 Shared quote responses add only `contact_confirmed`; they continue to omit all
 addresses and recipient details. Authenticated
 `GET /orders/{order_id}/delivery-details` returns the current quote's destination
-and recipient to the owning patient only, with `Cache-Control: no-store`. Clinic,
-doctor and platform roles alone do not grant access; other patients cannot read it.
+and recipient to the owning patient or an active owning-clinic administrator,
+with `Cache-Control: no-store`. Foreign/revoked clinic memberships, doctor and
+platform-only roles do not grant access; other patients cannot read it.
+Clinic order details display the booking-time patient name from the authorized
+scheduling appointment separately from the saved delivery recipient, phone and
+address/postcode. The appointment must match the order's clinic and patient.
+Missing legacy contacts show Not confirmed, without substituting a current Profile.
 Billing reservation responses and application events carry no new private data.
 
 First checkout of an old unpaid quote requires confirmed contact. The API returns
@@ -43,8 +48,14 @@ fail closed rather than falling back to a different recipient.
 
 ## Verification and setup
 
+Clinic-details refinement: all 378 fulfilment tests and frontend lint/typecheck/
+build passed. Read-only shared-HTTPS checks verified owning-clinic access to the
+matching appointment patient name and saved order contact/address, plus doctor
+and platform-only denial. Browser automation was disabled in Work settings, so
+the clinic-details visual layout was not checked. No order/Profile mutations.
+
 - All 378 fulfilment tests passed in a separate RF14 disposable PostgreSQL database.
-  Checks cover recipient normalization/validation, private owner-only readback,
+  Checks cover recipient normalization/validation, private patient/owning-clinic readback,
   replay/conflict behavior, quote immutability, legacy first-payment blocking,
   existing-payment replay and courier use of saved contact after Profile changes.
 - Frontend lint/typecheck/production build and backend Ruff/format passed.

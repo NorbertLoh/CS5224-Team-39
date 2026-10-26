@@ -68,7 +68,7 @@ lookup. Ingress strips `/api/v1/fulfilment` as for D01.
 | --- | --- |
 | POST `/orders/{order_id}/quotes` | Owning patient only; `Idempotency-Key` required; 201 new / 200 original replay |
 | GET `/quotes/{quote_id}` | Owning patient or active owning-clinic admin; concealed 404 otherwise |
-| GET `/orders/{order_id}/delivery-details` | Owning patient only; private destination/recipient for the current quote, no-store |
+| GET `/orders/{order_id}/delivery-details` | Owning patient or active owning-clinic admin; private destination/recipient for the current quote, no-store |
 
 POST body:
 
@@ -100,7 +100,7 @@ RF14 requires a recipient on new quote requests. Names must be nonblank plain
 text; Singapore phone numbers are normalized to +65 followed by eight digits
 starting with 6, 8 or 9. Recipient details are stored in the existing private
 destination JSON and included in the request fingerprint. They are returned only
-through the owning-patient delivery-details route, never the shared quote or
+through the owning-patient/owning-clinic delivery-details route, never the shared quote or
 billing reservation projections. First payment of a legacy quote without contact
 requires a new confirmed quote (`delivery_contact_required`); existing payment
 replays remain valid. No migration is required. Delivery preparation prefers this

@@ -220,11 +220,12 @@ def get_quote(quote_id: UUID, identity: Identity, session: DB):
 
 
 @router.get("/orders/{order_id}/delivery-details", response_model=DeliveryDetails)
-def delivery_details(order_id: UUID, response: Response, identity: Patient, session: DB):
+def delivery_details(order_id: UUID, response: Response, identity: Identity, session: DB):
     order = session.get(Order, order_id)
     if order is None:
         raise DomainError(404, "not_found", "Resource not found.")
-    own_order(order, identity)
+    if not can_read_items(identity, order):
+        raise DomainError(404, "not_found", "Resource not found.")
     response.headers["Cache-Control"] = "no-store"
     quote = session.get(Quote, order.quote_id) if order.quote_id else None
     if quote is None:

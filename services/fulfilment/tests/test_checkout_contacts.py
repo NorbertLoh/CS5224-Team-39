@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from app.models import Order, Quote
-from tests.test_api import OTHER_PATIENT, identity
+from tests.test_api import OTHER_PATIENT, OTHER_TENANT, identity
 from tests.test_api import api as api
 from tests.test_checkout_reservation import prepare, reservation
 from tests.test_quotes import DESTINATION, RECIPIENT, quote
@@ -54,14 +54,18 @@ def test_missing_or_invalid_contact_never_requests_quote(quotes, recipient):
     assert state.provider.calls == 0
 
 
-def test_delivery_details_are_patient_only_and_owner_scoped(quotes):
+def test_delivery_details_are_owner_and_owning_clinic_scoped(quotes):
     client, state = quotes
     path = f"/orders/{state.order_id}/delivery-details"
     assert client.get(path).json()["quote_id"] is None
     quote(client, state)
+    state.identity = identity(subject=OTHER_PATIENT, roles=(), clinic_role="clinic_admin")
+    assert client.get(path).json()["recipient"] == RECIPIENT
     for caller in [
         identity(subject=OTHER_PATIENT),
-        identity(subject=OTHER_PATIENT, roles=(), clinic_role="clinic_admin"),
+        identity(subject=OTHER_PATIENT, roles=(), clinic_role="clinic_admin", tenant=OTHER_TENANT),
+        identity(subject=OTHER_PATIENT, roles=(), clinic_role="clinic_admin", active=False),
+        identity(subject=OTHER_PATIENT, roles=(), clinic_role="doctor"),
         identity(subject=OTHER_PATIENT, roles=("platform_admin",)),
     ]:
         state.identity = caller
