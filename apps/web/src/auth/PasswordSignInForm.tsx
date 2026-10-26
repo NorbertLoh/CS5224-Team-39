@@ -5,8 +5,7 @@ interface PasswordSignInFormProps {
   busy: boolean
   disabled: boolean
   noticeId?: string
-  onSignIn: (email: string, password: string) => Promise<void>
-  onHostedSignIn: () => void
+  onSignIn: (email: string, password: string) => Promise<boolean>
 }
 
 export function PasswordSignInForm({
@@ -14,7 +13,6 @@ export function PasswordSignInForm({
   disabled,
   noticeId,
   onSignIn,
-  onHostedSignIn,
 }: PasswordSignInFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -88,14 +86,6 @@ export function PasswordSignInForm({
         <LockKeyhole size={15} aria-hidden="true" /> Secure sign-in to your
         TeleLink account.
       </p>
-      <button
-        type="button"
-        className="sign-in-hosted"
-        onClick={onHostedSignIn}
-        disabled={busy || disabled}
-      >
-        More sign-in options <ArrowRight size={14} aria-hidden="true" />
-      </button>
     </form>
   )
 }

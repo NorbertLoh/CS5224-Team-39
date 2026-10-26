@@ -1,5 +1,10 @@
 # Web frontend
 
+Account creation is available from **Create an account** on `/sign-in`, with email
+verification and automatic patient provisioning on first sign-in. See
+[RF13 setup and verification](../../docs/RF13-account-signup.md), including local
+Floci email capture and the required Cognito hosted-login self-service scope.
+
 React + TypeScript + Vite frontend. Use Node 22.12+ or Node 24+ and npm.
 
 From `apps/web`:

@@ -8,12 +8,18 @@ count=$(aws_local cognito-idp list-user-pools --max-results 60 \
   --query "length(UserPools[?Name=='$pool_name'])" --output json)
 case "$count" in
   0) pool_id=$(aws_local cognito-idp create-user-pool --pool-name "$pool_name" \
-       --admin-create-user-config AllowAdminCreateUserOnly=true \
+       --admin-create-user-config AllowAdminCreateUserOnly=false \
+       --auto-verified-attributes email \
        --mfa-configuration OFF --query UserPool.Id --output text) ;;
   1) pool_id=$(aws_local cognito-idp list-user-pools --max-results 60 \
        --query "UserPools[?Name=='$pool_name'].Id" --output text) ;;
   *) printf 'Multiple pools named %s; resolve before bootstrap.\n' "$pool_name" >&2; exit 1 ;;
 esac
+
+# Enable registration on existing synthetic local pools as well.
+aws_local cognito-idp update-user-pool --user-pool-id "$pool_id" \
+  --admin-create-user-config AllowAdminCreateUserOnly=false \
+  --auto-verified-attributes email > /dev/null
 
 client_name=telelink-web
 count=$(aws_local cognito-idp list-user-pool-clients --user-pool-id "$pool_id" \
@@ -37,7 +43,7 @@ aws_local cognito-idp update-user-pool-client --user-pool-id "$pool_id" \
   --client-id "$client_id" --client-name "$client_name" \
   --supported-identity-providers COGNITO \
   --allowed-o-auth-flows-user-pool-client --allowed-o-auth-flows code \
-  --allowed-o-auth-scopes openid email profile \
+  --allowed-o-auth-scopes openid email profile aws.cognito.signin.user.admin \
   --callback-urls "$COGNITO_CALLBACK_URL" http://127.0.0.1:5173/auth/callback \
   --logout-urls "$COGNITO_LOGOUT_URL" http://127.0.0.1:5173/ \
   --explicit-auth-flows ALLOW_USER_PASSWORD_AUTH ALLOW_REFRESH_TOKEN_AUTH \

@@ -230,6 +230,7 @@
   color: #61736a;
 }
 .sign-in-content h1 {
+  outline: none;
   font-size: clamp(2rem, 3vw, 2.8rem);
   line-height: 1.18;
   letter-spacing: -0.055em;
@@ -401,12 +402,29 @@
   font-size: 0.7rem;
   margin-top: 2rem;
 }
-.sign-in-browse a {
+.sign-in-browse a,
+.sign-up-entry button {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   color: #215c4d;
   font-weight: 600;
+}
+.sign-up-entry button {
+  cursor: pointer;
+}
+.sign-up-entry button:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.sign-up-entry button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.sign-up-hint {
+  color: #667970;
+  font-size: 0.72rem;
+  line-height: 1.6;
 }
 .sign-in-footer {
   display: flex;
