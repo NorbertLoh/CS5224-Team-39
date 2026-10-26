@@ -1,5 +1,11 @@
 # Guarded delivery submission (D05)
 
+RF14 checkout now saves a confirmed recipient on each new quote. Delivery
+preparation uses that saved contact instead of a later Profile lookup. The Profile
+and directory lookups below apply to legacy quotes without a recipient. Prepared
+delivery requests retain their original payload. See
+[checkout contacts](../../docs/RF14-checkout-contacts.md).
+
 The separate delivery worker submits an order only when fulfilment has
 `status=paid`, `payment_status=succeeded`, and `medicine_status=ready`.
 Submission remains independent of the API and payment consumer, so either arrival

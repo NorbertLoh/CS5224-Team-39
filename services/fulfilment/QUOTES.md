@@ -68,6 +68,7 @@ lookup. Ingress strips `/api/v1/fulfilment` as for D01.
 | --- | --- |
 | POST `/orders/{order_id}/quotes` | Owning patient only; `Idempotency-Key` required; 201 new / 200 original replay |
 | GET `/quotes/{quote_id}` | Owning patient or active owning-clinic admin; concealed 404 otherwise |
+| GET `/orders/{order_id}/delivery-details` | Owning patient only; private destination/recipient for the current quote, no-store |
 
 POST body:
 
@@ -77,18 +78,34 @@ POST body:
     "address_line": "3 Temasek Boulevard",
     "postal_code": "038983",
     "country_code": "SG"
+  },
+  "recipient": {
+    "name": "Synthetic recipient",
+    "phone_number": "+6581234567"
   }
 }
 ```
 
 The public quote shape follows C04: IDs, tenant, status, medication subtotal,
-delivery fee, total, expiry and creation time. Responses contain neither addresses,
+delivery fee, total, expiry and creation time, plus the non-sensitive
+`contact_confirmed` flag. Shared quote responses contain neither addresses,
 medication items nor provider references. Doctors and platform-only administrators
 cannot read quotes. General request logging uses route templates and omits bodies.
 Private quote rows retain destination, route/provider references and item/price
 snapshots for future reservation/delivery consumers. Do not log or emit those
 columns. Configure database storage/backups with the deployment's private-data
 controls.
+
+RF14 requires a recipient on new quote requests. Names must be nonblank plain
+text; Singapore phone numbers are normalized to +65 followed by eight digits
+starting with 6, 8 or 9. Recipient details are stored in the existing private
+destination JSON and included in the request fingerprint. They are returned only
+through the owning-patient delivery-details route, never the shared quote or
+billing reservation projections. First payment of a legacy quote without contact
+requires a new confirmed quote (`delivery_contact_required`); existing payment
+replays remain valid. No migration is required. Delivery preparation prefers this
+saved recipient over the current Profile, while legacy paid/prepared deliveries
+retain their existing behavior. See [RF14 checkout details](../../docs/RF14-checkout-contacts.md).
 
 New keys refresh active catalogue names/prices using the order's frozen issued
 quantities. Missing/inactive medicines return 409 `medication_unavailable`; unsafe

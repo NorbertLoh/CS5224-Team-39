@@ -20,6 +20,7 @@ export function canPay(snapshot: OrderSnapshot, now = Date.now()) {
       order.payment_status,
     ) &&
     quote !== null &&
+    (quote.contact_confirmed || Boolean(order.payment_id)) &&
     ['active', 'accepted'].includes(quote.status) &&
     Date.parse(quote.expires_at) > now &&
     (!payment || ['pending', 'failed'].includes(payment.status)) &&
@@ -102,5 +103,5 @@ export function paymentMessage({ order, payment }: OrderSnapshot) {
     return 'The previous payment failure is verified. Obtain a fresh quote or retry before the quote deadline.'
   if (order.payment_id)
     return 'Payment pending or awaiting reconciliation. Returning from Stripe does not confirm success or failure. Check this attempt before starting another payment.'
-  return 'Confirm your delivery address, review the full total, then pay securely.'
+  return 'Confirm your delivery contact and address, review the full total, then pay securely.'
 }

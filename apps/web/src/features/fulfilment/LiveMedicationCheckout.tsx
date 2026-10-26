@@ -78,13 +78,13 @@ export function LiveMedicationCheckout({
         now={now}
         compact={compact}
       />
-      {canQuote(snapshot) && (
+      {(canQuote(snapshot) || quote?.contact_confirmed) && (
         <LiveDestinationForm
+          editable={canQuote(snapshot)}
           orderId={order.order_id}
+          quoteId={order.quote_id}
           subject={subject}
-          onRefresh={() => {
-            void refresh().catch(() => undefined)
-          }}
+          onRefresh={refresh}
           onEditingChange={setEditing}
         />
       )}
@@ -95,8 +95,8 @@ export function LiveMedicationCheckout({
       )}
       {editing && (
         <p className="text-sm">
-          Request a new quote to use the edited address before continuing to
-          payment.
+          Confirm the edited contact and address with a new quote before
+          continuing to payment.
         </p>
       )}
       {!compact && order.payment_id && (

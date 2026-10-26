@@ -91,7 +91,15 @@ class SandboxDeliveries:
                 raise DeliveryUnavailable("Clinic pickup contact is unavailable") from None
         else:
             sender = self.contacts.senders.get(order.tenant_id) if self.contacts else None
-        if self.patient_profiles is not None:
+        saved_recipient = quote.destination.get("recipient_contact")
+        if saved_recipient is not None:
+            try:
+                recipient = Contact(
+                    name=saved_recipient["name"], phone=saved_recipient["phone_number"]
+                )
+            except (ValidationError, KeyError, TypeError):
+                raise DeliveryUnavailable("Saved recipient contact is unavailable") from None
+        elif self.patient_profiles is not None:
             try:
                 recipient = Contact.model_validate(
                     self.patient_profiles.get_contact(order.patient_id)

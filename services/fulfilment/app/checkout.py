@@ -91,6 +91,10 @@ def reserve(
     if quote is None or quote.order_id != order_id or quote.tenant_id != order.tenant_id:
         raise DomainError(404, "not_found", "Resource not found.")
     replay = order.payment_id == body.payment_id and order.quote_id == body.quote_id
+    if not replay and not quote.destination.get("recipient_contact"):
+        raise DomainError(
+            409, "delivery_contact_required", "Confirm delivery contact details before payment."
+        )
     if order.payment_id is not None and not replay:
         raise DomainError(409, "payment_attempt_pending", "Order has a pending checkout.")
     if order.quote_id != body.quote_id or quote.status not in {"active", "accepted"}:
