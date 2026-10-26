@@ -12,11 +12,11 @@ UI work can start against the agreed API fixtures after its listed contract depe
 
 Coordinate changes to shared Compose, routing, contracts and infrastructure files before editing them. Claiming one task does not reserve the entire service. Use feature route modules and service-local migrations to reduce conflicts. Appoint a rotating integration coordinator each week to track blockers; this person does not implement everything.
 
-Completion audit, updated 22 October 2026: reconciled the backlog with open/closed
-GitHub issues, open/merged PRs and the current implementation. **97 tasks are complete,
-F01 is skipped by user decision, and 32 tasks remain unfinished.** The 98 checked
-rows include that skipped task. Completed work comprises F02-F16, C01-C05,
-A01-A11, U01-U17, S01-S08, R01-R04, P01-P03, M01-M04, D01-D07, B01-B07, V01-V04, N01-N02, I01-I04, Q02 and X01-X05.
+Completion audit, updated 26 October 2026: recounted task-ID entries after Q03
+merged in PR #279, retaining the recorded verification below. **107 tasks are complete,
+F01 is skipped by team decision, and 31 tasks remain unfinished.** The 108 checked
+entries include that skipped task. Completed work comprises F02-F17, C01-C05,
+A01-A11, U01-U17, S01-S08, R01-R04, P01-P03, M01-M04, D01-D07, B01-B07, V01-V04, N01-N02, I01-I04, Q02-Q03, X01-X05 and RF03-RF10.
 D01 is recorded after merged PR #131 and closed issue #130; B01 after merged
 PR #138 and closed issue #137; P02 after merged PR #144 and closed issue #128;
 P03 after merged PR #148 and closed issue #147; U14 after merged PR #151 and
@@ -24,9 +24,11 @@ closed issue #150; X01 after merged PR #57 and closed issue #56; X02 after merge
 partial previews do not count as completed tasks. Verification below records the
 evidence reported for each implementation; this documentation audit did not rerun
 runtime checks or establish new integration/AWS evidence.
-The backlog now has 130 tasks including scheduling readiness follow-up S08 (#239),
+The backlog now has 139 tasks including scheduling readiness follow-up S08 (#239),
 refinement RF01 (#155) and the requested U17 MC issuance flow
 (issue #152); U17 completed in merged PR #204 and issue #152 is closed.
+The count includes task-ID checkboxes in both tables and refinement lists,
+including F17 and RF03-RF10.
 
 Current claims and remaining blockers:
 
@@ -37,10 +39,10 @@ Current claims and remaining blockers:
 | Documents | P02 completed in merged PR #144; issue #128 closed. The authenticated/audited records projection, trusted current-name lookups and stored-PDF worker passed local transport/replay/recovery checks and CI. P03 completed in merged PR #148; issue #147 closed. Authorised/audited lists and signed downloads passed 89 document tests, local HTTP verification and CI. U14 completed in merged PR #151; issue #150 closed. Patient/doctor lists and downloads passed 82 frontend tests, live adapter/Vite checks, Prettier and CI. Address/registration fields remain optional prototype omissions. Browser interaction and AWS privacy/download verification remain unfinished. |
 | Records / fulfilment | R01-R04 and D01-D07 are complete. I02 completed the actual booked consultation-to-prescription-to-private-PDF journey in merged PR #238; issue #237 closed. I03 subsequently verified actual doctor issuance through separate medication payment and one sandbox delivery in merged PR #249; issue #247 closed. Setup and limits: `docs/I02-local-journey.md` and `docs/I03-local-journey.md`. |
 | Delivery | D01-D07, U15-U16 and X05 are complete. I03 (merged PR #249) verified an actual doctor-issued prescription, trusted quote, separate Stripe test payment and one paid-and-ready Lalamove sandbox submission, then verified cancellation for cleanup. Evidence: `docs/I03-local-journey.md`. Arbitrary-address geocoding, physical delivery, refunds and deployed AWS remain unfinished. |
-| AWS / integration | AWS implementation is deferred until the local application and checks are ready. W01-W21 remain unchecked; W01 has draft PR #233. Issue #54 tracks real Cognito revocation/private-document checks. I01-I04 and Q02 are complete; I04 merged in PR #250 and issue #248 is closed. Notification evidence and limits: `docs/I04-local-journey.md`. I05, Q01, Q03-Q06 and E01-E04 remain unchecked. Local emulator evidence does not establish deployed AWS behavior. |
+| AWS / integration | AWS implementation is deferred until the local application and checks are ready. W01-W21 remain unchecked; W01 has draft PR #233. Issue #54 tracks real Cognito revocation/private-document checks. I01-I04 and Q02-Q03 are complete; Q03 merged in PR #279 and issue #278 is closed. Notification and replay evidence: `docs/I04-local-journey.md` and `docs/Q03-replay-verification.md`. I05, Q01, Q04-Q06 and E01-E04 remain unchecked. Local emulator evidence does not establish deployed AWS behavior. |
 
 Unclaimed tasks with complete listed dependencies:
-Q03 is available after merged I03. W01 is already covered by draft PR #233; AWS implementation is deferred.
+None currently. Q03 completed in merged PR #279. W01 is already covered by draft PR #233; AWS implementation is deferred.
 N02 completed in merged PR #230; issue #228 is closed. W01 additionally needs the AWS decisions above. P02/P03 are complete;
 U14 document UI is complete in merged PR #151; browser/AWS verification remains open.
 For every other unchecked task, the Depends on column identifies unfinished
@@ -215,7 +217,7 @@ Each deployment task includes that service's Dockerfile/commands, environment va
 | [ ] | I05 | Run complete patient journey on AWS without DB edits or fabricated success states. Target end of Week 3. | I04, W11, W20 | M |
 | [ ] | Q01 | Reject clinic A access to clinic B appointment, record and file; reject wrong roles/tokens. | I05 | M |
 | [x] | Q02 | Verify two competing slot requests cannot both confirm; expired hold releases slot. Completed in merged PR #242; issue #240 closed. All ten real local contention/deadline/natural-expiry checks and API cleanup passed. Final combined S08/Q02 CI passed 242 scheduling tests with two optional Floci checks skipped, including cleanup regressions and existing confirmation races using explicit billing-response fixtures. Setup/evidence and provider limits: `docs/Q02-booking-verification.md`; use the I01 local services and allow about ten minutes. No new application configuration. | S06 | S |
-| [ ] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. Assignee: cyhni; status: in progress. Issue #278. | I03, M04 | S |
+| [x] | Q03 | Replay payment webhook/delivery job; confirm one effect and demonstrate DLQ replay. Completed in merged PR #279; issue #278 closed. All 37 local replay/recovery checks passed against retained I03 records; final CI passed 312 billing tests plus 38 subtests and 327 fulfilment tests. The operator replay uses locally re-signed genuine Stripe content and injected post-commit acknowledgment failure; no new payment/courier operation or AWS evidence is claimed. Setup/evidence: `docs/Q03-replay-verification.md`. | I03, M04 | S |
 | [ ] | Q04 | Verify AWS video across networks and reject unrelated participant/file access. | I05 | S |
 | [ ] | Q05 | Walk through all four roles; record blockers and create small fix tasks. | I05 | M |
 | [ ] | Q06 | Have a different teammate follow fresh local setup/seed/reset instructions. | F14, F16, W21 | M |
