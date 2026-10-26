@@ -64,27 +64,27 @@ Evidence: only rendered strings changed in three components; frontend lint/typec
 
 Prerequisite: Phase 2 gate. Estimated effort: M (half a day), revisited after inventory.
 
-- [ ] Recheck runtime/configuration/CI/documentation consumers before each deletion.
-- [ ] Remove confirmed superseded spikes and obsolete fixtures/scripts, preserving
+- [x] Recheck runtime/configuration/CI/documentation consumers before each deletion.
+- [x] Remove confirmed superseded spikes and obsolete fixtures/scripts, preserving
       unique useful verification capability in the active workflow first.
-- [ ] Update/remove associated dedicated workflows and repair retained commands.
-- [ ] Remove demonstrated unused components, imports and package dependencies;
+- [x] Update/remove associated dedicated workflows and repair retained commands.
+- [x] Remove demonstrated unused components, imports and package dependencies;
       update lockfiles through the owning package manager.
-- [ ] Simplify directly affected duplication/responsibilities without broad rewrites.
-- [ ] Retain useful local setup, seed/reset, refund and slot tools, active tests,
+- [x] Simplify directly affected duplication/responsibilities without broad rewrites.
+- [x] Retain useful local setup, seed/reset, refund and slot tools, active tests,
       CI, migration history and consultation-window controls.
-- [ ] Run existing Ruff/tests for changed Python services/shared utilities using
+- [x] Run existing Ruff/tests for changed Python services/shared utilities using
       the applicable service CI commands; run signalling checks if affected.
-- [ ] Repeat frontend checks if application code or dependencies changed.
+- [x] Confirm no frontend code/dependencies changed after RF17 checks.
 - [ ] Validate affected Compose configuration with the documented profiles/env
       and reproduce changed CI commands locally where supported.
-- [ ] Confirm no retained import, workflow, package command or setup path points
+- [x] Confirm no retained import, workflow, package command or setup path points
       at deleted artifacts. Record remaining uncertain items as follow-ups.
 
 Gate: each removal has evidence, relevant checks pass and active workflows remain
 usable. New behavior/API/schema changes require separate follow-up work.
 
-Evidence: not run. Blockers: not assessed.
+Evidence: retired only the isolated billing webhook spike/workflow/lockfile and consolidated its doc; carried unique raw UTF-8, rotation and actual HTTP checks into the active suite. Billing Ruff lint/format and pip check passed. Webhook tests: 32 passed, 6 PostgreSQL checks skipped. Full billing suite: 47 passed, 268 skipped, 38 subtests passed. No disposable PostgreSQL/Docker available; Compose unchanged. Browser gate from RF17 remains open. No speculative application refactor or dependency removal justified. Issue #294.
 
 ## Phase 4 - Documentation consolidation
 
@@ -132,5 +132,3 @@ Gate: all cleanup acceptance criteria are met and recorded. No completion claim
 is made merely because local edits or documentation are finished.
 
 Evidence: not run. Blockers: not assessed. Merge reference: pending.
-
-

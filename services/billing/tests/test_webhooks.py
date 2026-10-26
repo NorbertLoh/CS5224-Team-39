@@ -1,12 +1,16 @@
 import hashlib
 import hmac
 import json
+import socket
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 from uuid import uuid4
 
+import httpx
 import pytest
+import uvicorn
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
@@ -253,3 +257,75 @@ def test_secret_is_validated_and_redacted():
     with pytest.raises(ValueError):
         Settings(_env_file=None, stripe_webhook_secret="sk_test_not_a_signing_secret")
     assert SECRET not in repr(Settings(_env_file=None, stripe_webhook_secret=SECRET))
+
+
+@pytest.mark.parametrize("old_first", [True, False])
+def test_utf8_raw_bytes_and_rotating_signatures(client, monkeypatch, old_first):
+    receipts = []
+    monkeypatch.setattr(
+        "app.webhooks.persist_receipt", lambda engine, values: receipts.append(values)
+    )
+    event = snapshot()
+    event["data"]["object"]["description"] = "café"
+    body = json.dumps(event, ensure_ascii=False, indent=2).encode()
+    signature = signed(body)
+    signature = (
+        signature.replace(",v1=", ",v1=old_signature,v1=")
+        if old_first
+        else signature + ",v1=old_signature"
+    )
+    assert send(client, body=body, signature=signature).status_code == 200
+    assert len(receipts) == 1
+    assert receipts[0]["event_id"] == event["id"]
+    assert "description" not in receipts[0]["object_data"]
+    # Re-encoding equivalent JSON must not authenticate using the original signature.
+    changed = json.dumps(json.loads(body)).encode()
+    assert changed != body
+    assert send(client, body=changed, signature=signature).status_code == 400
+    assert len(receipts) == 1
+
+
+def test_loopback_http_signature_boundary(monkeypatch):
+    """Retain X04 socket coverage against the real route; storage is an explicit spy."""
+    receipts = []
+    monkeypatch.setattr(
+        "app.webhooks.persist_receipt", lambda engine, values: receipts.append(values)
+    )
+    app = create_app(Settings(_env_file=None, environment="test", stripe_webhook_secret=SECRET))
+    event = snapshot()
+    event["data"]["object"]["description"] = "café"
+    body = json.dumps(event, ensure_ascii=False).encode()
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        port = listener.getsockname()[1]
+        server = uvicorn.Server(uvicorn.Config(app, log_level="error"))
+        thread = threading.Thread(target=server.run, kwargs={"sockets": [listener]}, daemon=True)
+        thread.start()
+        try:
+            deadline = time.monotonic() + 5
+            while not server.started and thread.is_alive() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            assert server.started
+            app.state.database_engine = object()
+            with httpx.Client(timeout=5, trust_env=False) as transport:
+                for payload, signature, expected in (
+                    (body, signed(body), 200),
+                    (body + b"\n", signed(body), 400),
+                    (body, signed(body, timestamp=int(time.time()) - 601), 400),
+                ):
+                    response = transport.post(
+                        f"http://127.0.0.1:{port}{PATH}",
+                        content=payload,
+                        headers={"Stripe-Signature": signature},
+                    )
+                    assert response.status_code == expected
+                    if expected == 200:
+                        assert response.json() == {"received": True}
+            assert len(receipts) == 1
+            assert receipts[0]["event_id"] == event["id"]
+        finally:
+            app.state.database_engine = None
+            server.should_exit = True
+            thread.join(timeout=5)
+            assert not thread.is_alive()
