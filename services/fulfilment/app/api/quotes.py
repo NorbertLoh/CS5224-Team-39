@@ -11,8 +11,8 @@ from app.access import can_read_items
 from app.api.dependencies import DB, IdempotencyKey, Identity, Patient
 from app.models import MAX_MONEY, Order, Quote, QuoteRequest
 from app.schemas import DeliveryDetails, Destination, QuoteCreate, QuotePublic
+from app.services import quotes as quote_operations
 from app.services.orders import lock, own_order
-from app.services.quotes import public_quote, refresh_items, utcnow
 
 router = APIRouter(
     tags=["quotes"],
@@ -73,7 +73,7 @@ def create_quote(
         previous_quote = session.get(Quote, order.quote_id)
         if previous_quote is not None and previous_quote.status == "accepted":
             raise DomainError(409, "payment_pending", "Accepted quote cannot be replaced.")
-    subtotal = refresh_items(session, order)
+    subtotal = quote_operations.refresh_items(session, order)
     # Bounded provider I/O while holding order/catalogue locks serializes repricing
     # and future checkout reservation. Quote creation never submits a delivery.
     if request.app.state.settings.tenant_url:
@@ -83,7 +83,7 @@ def create_quote(
         )
     else:
         price = request.app.state.delivery_quotes.quote(order.tenant_id, body.destination)
-    now = utcnow()
+    now = quote_operations.utcnow()
     expires_at = min(price.expires_at, now + timedelta(minutes=10))
     if expires_at <= now:
         raise DomainError(409, "quote_expired", "Provider quotation has expired.")
@@ -127,7 +127,7 @@ def create_quote(
     order.delivery_fee_minor = price.amount_minor
     order.total_minor = total
     order.updated_at = now
-    result = public_quote(quote, now)
+    result = quote_operations.public_quote(quote, now)
     session.add(
         QuoteRequest(
             subject_id=identity.subject_id,
@@ -146,7 +146,7 @@ def get_quote(quote_id: UUID, identity: Identity, session: DB):
     quote = session.get(Quote, quote_id)
     if quote is None or not can_read_items(identity, session.get(Order, quote.order_id)):
         raise DomainError(404, "not_found", "Resource not found.")
-    return public_quote(quote, utcnow())
+    return quote_operations.public_quote(quote, quote_operations.utcnow())
 
 
 @router.get("/orders/{order_id}/delivery-details", response_model=DeliveryDetails)

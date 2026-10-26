@@ -82,7 +82,7 @@ def test_reservation_rejects_browser_foreign_tampered_and_expired_context(quotes
 def test_only_authoritative_failed_attempt_releases_old_binding(quotes, monkeypatch, status):
     client, state = prepare(quotes)
     assert reservation(client, state).status_code == 200
-    from app.api import checkout
+    from app.services import checkout
 
     class Billing:
         def __init__(self, settings):
@@ -112,7 +112,7 @@ def test_patient_reconciliation_requires_own_order_and_authoritative_failure(
 ):
     client, state = prepare(quotes)
     assert reservation(client, state).status_code == 200
-    from app.api import checkout
+    from app.services import checkout
 
     class Billing:
         def __init__(self, settings):
