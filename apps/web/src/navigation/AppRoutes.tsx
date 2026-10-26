@@ -1,24 +1,26 @@
-import { HomePage } from '../features/clinics/HomePage'
-import { ClinicRegistration } from '../features/clinics/ClinicRegistration'
-import { ClinicBooking } from '../features/booking/ClinicBooking'
-import { AvailabilityEditor } from '../features/availability/AvailabilityEditor'
-import { AppointmentSchedule } from '../features/appointments/AppointmentSchedule'
-import { ClinicStorefront } from '../features/storefront/ClinicStorefront'
-import { ClinicProfileEditor } from '../features/clinic-profile/ClinicProfileEditor'
-import { StaffManagement } from '../features/staff/StaffManagement'
-import { PlatformClinics } from '../features/platform-clinics/PlatformClinics'
-import { ManagedClinics } from '../features/clinics/ManagedClinics'
-import { ErrorState } from '../components/ErrorState'
-import { PatientRecordsPage } from '../features/patient/PatientRecordsPage'
-import { BookedConsultation } from '../features/video/BookedConsultation'
-import { LiveCheckoutPage } from '../features/checkout/LiveCheckoutPage'
-import { LiveOrders } from '../features/fulfilment/LiveOrders'
-import { ClinicPayments } from '../features/payments/ClinicPayments'
-import { ClinicSettings } from '../features/clinics/ClinicSettings'
-import { PatientProfilePage } from '../features/patient/PatientProfilePage'
-import { roleLabels } from './access'
-import type { Route } from './access'
-import type { Session } from '../auth/session'
+import type { Session } from '@/auth/session'
+import { ErrorState } from '@/components/ErrorState'
+import { AppointmentSchedule } from '@/features/appointments/AppointmentSchedule'
+import { AvailabilityEditor } from '@/features/availability/AvailabilityEditor'
+import { ClinicBooking } from '@/features/booking/ClinicBooking'
+import { LiveCheckoutPage } from '@/features/checkout/LiveCheckoutPage'
+import { ClinicProfileEditor } from '@/features/clinic-profile/ClinicProfileEditor'
+import {
+  ClinicRegistration,
+  ClinicSettings,
+  HomePage,
+  ManagedClinics,
+} from '@/features/clinics'
+import { LiveOrders } from '@/features/fulfilment'
+import { PatientProfilePage, PatientRecordsPage } from '@/features/patient'
+import { ClinicPayments } from '@/features/payments/ClinicPayments'
+import { PlatformClinics } from '@/features/platform-clinics/PlatformClinics'
+import { StaffManagement } from '@/features/staff/StaffManagement'
+import { ClinicStorefront } from '@/features/storefront/ClinicStorefront'
+import { BookedConsultation } from '@/features/video'
+import type { Route } from '@/navigation/access'
+import { roleLabels } from '@/navigation/access'
+import { WorkspacePage } from '@/navigation/WorkspacePage'
 
 export function AppRoutes({
   route,
@@ -32,10 +34,9 @@ export function AppRoutes({
       return <ClinicRegistration />
     case 'doctor-availability':
       return (
-        <main className="mx-auto max-w-6xl px-6 py-10">
-          <h1 className="text-3xl font-semibold">Doctor availability</h1>
+        <WorkspacePage title="Doctor availability">
           <AvailabilityEditor key={route.tenantId} tenantId={route.tenantId} />
-        </main>
+        </WorkspacePage>
       )
     case 'home':
       return <HomePage />
@@ -72,14 +73,13 @@ export function AppRoutes({
       return <ClinicPayments key={route.tenantId} tenantId={route.tenantId} />
     case 'clinic-appointments':
       return (
-        <main className="mx-auto max-w-6xl px-6 py-10">
-          <h1 className="text-3xl font-semibold">Clinic appointments</h1>
+        <WorkspacePage title="Clinic appointments">
           <AppointmentSchedule
             key={route.tenantId}
             role="clinic_admin"
             tenantId={route.tenantId}
           />
-        </main>
+        </WorkspacePage>
       )
     case 'platform':
       return (
@@ -92,8 +92,7 @@ export function AppRoutes({
       )
     case 'role':
       return (
-        <main className="mx-auto max-w-6xl px-6 py-10">
-          <h1 className="text-3xl font-semibold">{roleLabels[route.role]}</h1>
+        <WorkspacePage title={roleLabels[route.role]}>
           {route.role === 'clinic_admin' && session && (
             <ManagedClinics session={session} />
           )}
@@ -104,7 +103,7 @@ export function AppRoutes({
               tenantId={route.tenantId}
             />
           )}
-        </main>
+        </WorkspacePage>
       )
     case 'missing':
       return <ErrorState message="Page not found." />

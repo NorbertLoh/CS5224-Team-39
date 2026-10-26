@@ -10,6 +10,7 @@
     "lint": "eslint . --max-warnings 0",
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
+    "typecheck:probes": "tsc --noEmit --project ../../dev/tsconfig.frontend-probes.json",
     "build": "npm run typecheck && vite build"
   },
   "dependencies": {

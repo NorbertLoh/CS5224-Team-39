@@ -1,7 +1,7 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'node:url'
+import { defineConfig, loadEnv } from 'vite'
 
 function blockInternal(request: { url?: string }) {
   try {

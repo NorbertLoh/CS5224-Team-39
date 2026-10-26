@@ -9,7 +9,7 @@ import {
   appointmentDetail,
   cancelAppointment,
 } from '../apps/web/src/features/scheduling/api'
-import { currentIdentity } from '../apps/web/src/features/clinics/api'
+import { currentIdentity } from '../apps/web/src/auth/identity'
 import { ApiError } from '../apps/web/src/lib/api'
 
 const run = JSON.parse(process.env.S07_CONTEXT ?? '{}')
@@ -24,7 +24,7 @@ globalThis.fetch = (input, init) => {
   return nativeFetch(`http://127.0.0.1:5173${input}`, init)
 }
 const values = new Map<string, string>()
-Object.defineProperty(globalThis, 'sessionStorage', {
+Object.defineProperty(globalThis, 'localStorage', {
   value: {
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => {

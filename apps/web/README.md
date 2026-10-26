@@ -58,6 +58,10 @@ const appointments: CursorPage<Appointment> = await response.json()
 ```
 
 Feature APIs live in their owning feature folders.
+Large fulfilment/records APIs expose focused endpoint modules through `api/index.ts`;
+wire types and request transport are separate from endpoint operations. Authentication
+token refresh/access is owned by `auth/access-token.ts`, and the minimal `/me`
+projection is in `auth/identity.ts`, rather than the clinic-directory feature.
 Pass ordinary fetch options for writes (`method`, JSON.stringify(body), and a
 Content-Type header). Skip response.json() for a 204 response. Construct query
 strings with URLSearchParams and encode dynamic IDs with encodeURIComponent.
@@ -99,6 +103,29 @@ no backend, database or Floci instance. Backend Ruff checks are documented in
 the [service template](../../services/template/README.md).
 TypeScript uses 6.0.x to match the ESLint parser's supported compiler versions.
 Configuration follows the [typescript-eslint quickstart](https://typescript-eslint.io/getting-started/).
+
+`npm run typecheck:probes` checks the existing records/scheduling adapter probes.
+Their Python drivers now invoke `dev/run_frontend_probe.mjs`, which uses the already
+installed Vite runtime; no `tsx` dependency is required. The probes use localStorage
+for the shared RF15 session and remain explicitly mutating local integration tools.
+CI typechecks them and runs the existing seven simulated-tab session checks, without
+creating accounts, bookings or provider transactions.
+
+## Feature structure
+
+Navigation imports public page entry points for clinics, patient, fulfilment and
+video. `WorkspacePage` owns the shared workspace heading/frame. Larger features
+group files by workflow:
+
+- Fulfilment: `api`, `checkout`, `orders`, `pricing`, `readiness`, `tracking`, `pages`, `domain`.
+- Clinical records: `api`, `notes`, `prescriptions`, `certificates`, `patient`, `workspace`, `hooks`, `domain`.
+- Video: `api`, `pages`, `room`, `components`, `hooks`, `media`, `domain`.
+- Clinics and patient: pages, reusable components and focused API/hooks as needed.
+
+Smaller cohesive features keep their existing simple structure. Use the configured
+`@/` alias for application imports; API barrels expose endpoint functions without
+pulling UI components into API modules. Runtime record validators live in `domain`,
+separate from type-only wire definitions.
 
 ## UI components and styling
 

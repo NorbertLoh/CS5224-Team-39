@@ -1,9 +1,9 @@
+import { PasswordSignInForm } from '@/auth/PasswordSignInForm'
+import { SignInStory } from '@/auth/SignInStory'
+import { SignUpForm } from '@/auth/SignUpForm'
+import type { AuthConfig } from '@/auth/session'
 import { ArrowLeft, ArrowRight, HeartPulse } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { PasswordSignInForm } from './PasswordSignInForm'
-import { SignInStory } from './SignInStory'
-import { SignUpForm } from './SignUpForm'
-import type { AuthConfig } from './session'
 
 interface SignInPageProps {
   signedIn: boolean

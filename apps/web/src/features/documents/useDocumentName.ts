@@ -1,7 +1,7 @@
+import type { DocumentMetadata } from '@/features/documents/types'
+import { documentNames } from '@/features/documents/types'
+import { paymentDetail } from '@/features/payments/api'
 import { useQuery } from '@tanstack/react-query'
-import { paymentDetail } from '../payments/api'
-import { documentNames } from './types'
-import type { DocumentMetadata } from './types'
 
 export function useDocumentName(item: DocumentMetadata, token: string) {
   const payment = useQuery({

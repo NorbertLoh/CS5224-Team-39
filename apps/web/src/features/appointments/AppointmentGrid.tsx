@@ -1,8 +1,8 @@
-import { AppointmentCell } from './AppointmentCell'
-import { dayCells } from './display'
-import type { Appointment } from '../scheduling/api'
-import type { AppointmentRole } from './types'
-import { useAppointmentNames } from './useAppointmentNames'
+import { AppointmentCell } from '@/features/appointments/AppointmentCell'
+import { dayCells } from '@/features/appointments/display'
+import type { AppointmentRole } from '@/features/appointments/types'
+import { useAppointmentNames } from '@/features/appointments/useAppointmentNames'
+import type { Appointment } from '@/features/scheduling/api'
 
 export function AppointmentGrid({
   appointments,

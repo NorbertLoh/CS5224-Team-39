@@ -1,9 +1,9 @@
+import type { Selection } from '@/features/availability/timetable'
+import { isSelected, times } from '@/features/availability/timetable'
+import { TimetableCell } from '@/features/availability/TimetableCell'
+import { useTimetableSelection } from '@/features/availability/useTimetableSelection'
+import type { Slot } from '@/features/scheduling/api'
 import { useEffect, useRef } from 'react'
-import type { Slot } from '../scheduling/api'
-import { isSelected, times } from './timetable'
-import type { Selection } from './timetable'
-import { TimetableCell } from './TimetableCell'
-import { useTimetableSelection } from './useTimetableSelection'
 
 const dayFormatter = new Intl.DateTimeFormat('en-SG', {
   weekday: 'short',

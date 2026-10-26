@@ -1,8 +1,8 @@
-import type { Appointment } from '../scheduling/api'
-import type { Payment } from '../payments/api'
-import { createCheckout, stripeCheckoutUrl } from '../payments/api'
-import { checkoutState } from './status'
-import type { CheckoutSnapshot } from './status'
+import type { CheckoutSnapshot } from '@/features/checkout/status'
+import { checkoutState } from '@/features/checkout/status'
+import type { Payment } from '@/features/payments/api'
+import { createCheckout, stripeCheckoutUrl } from '@/features/payments/api'
+import type { Appointment } from '@/features/scheduling/api'
 
 export const billingError =
   'Could not verify billing. Check your connection and session, then refresh the status. Do not start another payment while the outcome is unknown.'

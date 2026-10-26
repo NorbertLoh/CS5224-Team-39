@@ -1,6 +1,6 @@
-import { Button } from '../../components/ui/button'
-import { shiftDate, weekStart } from './timetable'
-import { singaporeDate } from '../scheduling/time'
+import { Button } from '@/components/ui/button'
+import { shiftDate, weekStart } from '@/features/availability/timetable'
+import { singaporeDate } from '@/features/scheduling/time'
 
 type TimetableToolbarProps = {
   week: string

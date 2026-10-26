@@ -1,6 +1,6 @@
+import { currentIdentity } from '@/auth/identity'
+import { readSession } from '@/auth/session'
 import { useQuery } from '@tanstack/react-query'
-import { readSession } from '../../auth/session'
-import { currentIdentity } from '../clinics/api'
 
 export function useSchedulingIdentity() {
   const token = readSession()?.accessToken

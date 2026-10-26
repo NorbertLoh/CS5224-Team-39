@@ -1,14 +1,14 @@
-import { apiFetch, ApiError } from '../../lib/api'
-import { accessToken } from '../clinics/api'
-import type { CursorPage } from '../../lib/api-types'
+import { accessToken } from '@/auth/access-token'
 import type {
-  SlotPublic as Slot,
   AppointmentPublic as Appointment,
-} from './types.generated'
+  SlotPublic as Slot,
+} from '@/features/scheduling/types.generated'
+import { ApiError, apiFetch } from '@/lib/api'
+import type { CursorPage } from '@/lib/api-types'
 export type {
-  SlotPublic as Slot,
   AppointmentPublic as Appointment,
-} from './types.generated'
+  SlotPublic as Slot,
+} from '@/features/scheduling/types.generated'
 export type AppointmentPeriod = 'upcoming' | 'past'
 
 async function request(
@@ -137,7 +137,7 @@ export function canCancel(appointment: Appointment, now = Date.now()) {
   if (appointment.status === 'held' || appointment.status === 'pending_payment')
     return Boolean(
       appointment.hold_expires_at &&
-      Date.parse(appointment.hold_expires_at) > now,
+        Date.parse(appointment.hold_expires_at) > now,
     )
   return (
     appointment.status === 'confirmed' &&

@@ -1,4 +1,4 @@
-import type { AuthConfig } from './session'
+import type { AuthConfig } from '@/auth/session'
 
 const errors: Record<string, string> = {
   UsernameExistsException:

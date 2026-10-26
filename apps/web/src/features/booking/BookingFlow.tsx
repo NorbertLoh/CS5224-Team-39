@@ -1,14 +1,18 @@
-import { useState } from 'react'
+import { readSession } from '@/auth/session'
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { LiveCheckout } from '@/features/booking/LiveCheckout'
+import { SlotPicker } from '@/features/booking/SlotPicker'
+import type { Clinic, Doctor } from '@/features/clinics/api'
+import type { Appointment } from '@/features/scheduling/api'
+import {
+  createHold,
+  listSlots,
+  schedulingError,
+} from '@/features/scheduling/api'
+import { dayStart, shiftDate, singaporeDate } from '@/features/scheduling/time'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { Clinic, Doctor } from '../clinics/api'
-import { readSession } from '../../auth/session'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
-import { createHold, listSlots, schedulingError } from '../scheduling/api'
-import type { Appointment } from '../scheduling/api'
-import { dayStart, shiftDate, singaporeDate } from '../scheduling/time'
-import { SlotPicker } from './SlotPicker'
-import { LiveCheckout } from './LiveCheckout'
+import { useState } from 'react'
 
 export function BookingFlow({
   clinic,

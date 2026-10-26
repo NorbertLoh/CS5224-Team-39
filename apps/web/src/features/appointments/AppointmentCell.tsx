@@ -1,12 +1,12 @@
+import type { dayCells } from '@/features/appointments/display'
 import {
   dateInSingapore,
   formatDate,
   formatTime,
   nameOrId,
   readableStatus,
-} from './display'
-import type { AppointmentRole } from './types'
-import type { dayCells } from './display'
+} from '@/features/appointments/display'
+import type { AppointmentRole } from '@/features/appointments/types'
 
 export function AppointmentCell({
   cell,

@@ -1,19 +1,23 @@
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { SelectionActions } from '@/features/availability/SelectionActions'
+import type { Selection } from '@/features/availability/timetable'
+import {
+  cellsInSelections,
+  shiftDate,
+  weekStart,
+} from '@/features/availability/timetable'
+import { TimetableToolbar } from '@/features/availability/TimetableToolbar'
+import { WeeklyTimetable } from '@/features/availability/WeeklyTimetable'
 import {
   createSlot,
   listSlots,
   removeSlot,
   schedulingError,
-} from '../scheduling/api'
-import { dayStart, singaporeDate } from '../scheduling/time'
-import { SelectionActions } from './SelectionActions'
-import { TimetableToolbar } from './TimetableToolbar'
-import { cellsInSelections, shiftDate, weekStart } from './timetable'
-import type { Selection } from './timetable'
-import { WeeklyTimetable } from './WeeklyTimetable'
+} from '@/features/scheduling/api'
+import { dayStart, singaporeDate } from '@/features/scheduling/time'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 export function DoctorTimetable({
   tenantId,

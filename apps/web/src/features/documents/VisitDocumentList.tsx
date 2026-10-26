@@ -1,16 +1,16 @@
-import { useState } from 'react'
-import { useQueries } from '@tanstack/react-query'
-import { PatientAccordionItem } from '../patient/PatientAccordionItem'
-import { appointmentDetail } from '../scheduling/api'
-import { useAppointmentNames } from '../appointments/useAppointmentNames'
 import {
   dateInSingapore,
   formatDate,
   formatTime,
-} from '../appointments/display'
-import { DocumentRow } from './DocumentRow'
-import { documentNames } from './types'
-import type { DocumentMetadata } from './types'
+} from '@/features/appointments/display'
+import { useAppointmentNames } from '@/features/appointments/useAppointmentNames'
+import { DocumentRow } from '@/features/documents/DocumentRow'
+import type { DocumentMetadata } from '@/features/documents/types'
+import { documentNames } from '@/features/documents/types'
+import { PatientAccordionItem } from '@/features/patient/components/PatientAccordionItem'
+import { appointmentDetail } from '@/features/scheduling/api'
+import { useQueries } from '@tanstack/react-query'
+import { useState } from 'react'
 
 const documentOrder = [
   'prescription_pdf',

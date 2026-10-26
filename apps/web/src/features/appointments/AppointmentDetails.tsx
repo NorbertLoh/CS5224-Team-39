@@ -1,14 +1,14 @@
-import { useEffect, useRef } from 'react'
-import { consultationPrice } from '../../lib/money'
 import {
   dateInSingapore,
   formatDate,
   formatTime,
   nameOrId,
   readableStatus,
-} from './display'
-import type { Appointment } from '../scheduling/api'
-import { useAppointmentNames } from './useAppointmentNames'
+} from '@/features/appointments/display'
+import { useAppointmentNames } from '@/features/appointments/useAppointmentNames'
+import type { Appointment } from '@/features/scheduling/api'
+import { consultationPrice } from '@/lib/money'
+import { useEffect, useRef } from 'react'
 
 export function AppointmentDetails({
   appointment: booking,

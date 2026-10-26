@@ -1,4 +1,4 @@
-import type { Route } from './access'
+import type { Route } from '@/navigation/access'
 
 export function DoctorNavigation({ route }: { route: Route }) {
   const tenantId = 'tenantId' in route ? route.tenantId : undefined
@@ -6,7 +6,11 @@ export function DoctorNavigation({ route }: { route: Route }) {
   const availability = route.kind === 'doctor-availability'
   const pages = [
     { href: base, label: 'Appointments', active: !availability },
-    { href: `${base}/availability`, label: 'Availability', active: availability },
+    {
+      href: `${base}/availability`,
+      label: 'Availability',
+      active: availability,
+    },
   ]
 
   return (

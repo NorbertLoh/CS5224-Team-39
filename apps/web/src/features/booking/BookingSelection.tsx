@@ -1,7 +1,10 @@
-import { consultationPrice } from '../../lib/money'
-import { formatBookingDate, formatBookingTime } from './display'
-import { singaporeDate } from '../scheduling/time'
-import type { BookingSlot } from './types'
+import {
+  formatBookingDate,
+  formatBookingTime,
+} from '@/features/booking/display'
+import type { BookingSlot } from '@/features/booking/types'
+import { singaporeDate } from '@/features/scheduling/time'
+import { consultationPrice } from '@/lib/money'
 
 export function BookingSelection({
   selected,

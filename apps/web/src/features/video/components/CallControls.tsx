@@ -1,0 +1,98 @@
+import type { LocalMedia } from '@/features/video/hooks/useLocalMedia'
+import type { CallState } from '@/features/video/media/connection'
+import { Camera, CameraOff, Mic, MicOff, PhoneOff } from 'lucide-react'
+import type { Ref } from 'react'
+
+const control =
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-slate-600 px-4 py-3 text-sm font-medium transition hover:bg-slate-700 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-300'
+
+type CallControlsProps = {
+  state: CallState
+  media: LocalMedia
+  leaveButton: Ref<HTMLButtonElement>
+  leave: () => void
+  live: boolean
+  error: string
+}
+
+export function CallControls({
+  state,
+  media,
+  leaveButton,
+  leave,
+  live,
+  error,
+}: CallControlsProps) {
+  const waiting = state === 'waiting'
+  return (
+    <div className="space-y-4 border-t border-slate-800 p-5">
+      {(media.error || error) && (
+        <p
+          role="alert"
+          className="rounded-lg bg-amber-100 p-3 text-sm text-amber-950"
+        >
+          {media.error || error}
+        </p>
+      )}
+      {!live && waiting && !media.stream && (
+        <div className="text-center">
+          <button
+            type="button"
+            disabled={media.pending}
+            className="rounded-lg bg-teal-400 px-5 py-3 text-sm font-medium text-slate-950 disabled:opacity-50"
+            onClick={() => void media.start()}
+          >
+            {media.pending
+              ? 'Waiting for device permission…'
+              : media.error
+                ? 'Retry camera and microphone'
+                : 'Enable camera and microphone'}
+          </button>
+        </div>
+      )}
+      <div className="flex flex-wrap justify-center gap-3">
+        <button
+          type="button"
+          className={control}
+          disabled={!media.stream}
+          aria-label={
+            media.microphone ? 'Mute microphone' : 'Unmute microphone'
+          }
+          aria-pressed={!media.microphone}
+          onClick={media.toggleMicrophone}
+        >
+          {media.microphone ? <Mic size={18} /> : <MicOff size={18} />}
+          {media.microphone ? 'Mute' : 'Unmute'}
+        </button>
+        <button
+          type="button"
+          className={control}
+          disabled={!media.stream}
+          aria-label={media.camera ? 'Turn camera off' : 'Turn camera on'}
+          aria-pressed={!media.camera}
+          onClick={media.toggleCamera}
+        >
+          {media.camera ? <Camera size={18} /> : <CameraOff size={18} />}
+          {media.camera ? 'Camera off' : 'Camera on'}
+        </button>
+        <button
+          ref={leaveButton}
+          type="button"
+          className={`${control} border-red-600 bg-red-600 hover:bg-red-700`}
+          disabled={state === 'left'}
+          onClick={leave}
+        >
+          <PhoneOff size={18} />
+          {live ? 'Leave call' : 'Close camera check'}
+        </button>
+      </div>
+      <p className="text-center text-xs text-slate-400">
+        {media.stream
+          ? live && state === 'connected'
+            ? 'Your live audio and video are connected.'
+            : 'Your camera and microphone are ready.'
+          : 'Your camera and microphone are off.'}
+      </p>
+    </div>
+  )
+}

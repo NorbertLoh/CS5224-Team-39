@@ -1,6 +1,6 @@
-import { apiFetch } from '../../lib/api'
-import { accessToken } from '../clinics/api'
-import type { CursorPage } from '../../lib/api-types'
+import { accessToken } from '@/auth/access-token'
+import { apiFetch } from '@/lib/api'
+import type { CursorPage } from '@/lib/api-types'
 type Money = { amount_minor: number; currency: string }
 
 export type Payment = {

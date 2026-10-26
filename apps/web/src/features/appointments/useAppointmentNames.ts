@@ -1,6 +1,6 @@
+import { clinicDoctors, listClinics } from '@/features/clinics/api'
+import type { Appointment } from '@/features/scheduling/api'
 import { useQueries, useQuery } from '@tanstack/react-query'
-import { clinicDoctors, listClinics } from '../clinics/api'
-import type { Appointment } from '../scheduling/api'
 
 async function clinicNames() {
   const names = new Map<string, string>()

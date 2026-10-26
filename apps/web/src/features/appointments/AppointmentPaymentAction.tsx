@@ -1,6 +1,6 @@
+import { canCheckout } from '@/features/checkout/live'
+import type { Appointment } from '@/features/scheduling/api'
 import { useEffect, useState } from 'react'
-import type { Appointment } from '../scheduling/api'
-import { canCheckout } from '../checkout/live'
 
 export function AppointmentPaymentAction({
   appointment,

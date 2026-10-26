@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { confirmSignUp, resendSignUpCode, signUp } from '@/auth/registration'
+import type { AuthConfig } from '@/auth/session'
 import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole } from 'lucide-react'
-import type { AuthConfig } from './session'
-import { confirmSignUp, resendSignUpCode, signUp } from './registration'
+import { useEffect, useRef, useState } from 'react'
 
 export function SignUpForm({
   config,

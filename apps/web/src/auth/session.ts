@@ -344,8 +344,7 @@ export function refreshSession(
     const current = readSession(storage)
     if (!current || current.refreshToken !== session.refreshToken)
       throw new Error('Session changed during refresh.')
-    if (current.expiresAt - Date.now() > 60000)
-      return Promise.resolve(current)
+    if (current.expiresAt - Date.now() > 60000) return Promise.resolve(current)
     return performRefresh(config, current, storage)
   }
   // Web Locks serialize refreshes across same-origin tabs on secure origins.
