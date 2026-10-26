@@ -47,6 +47,20 @@ sets local pool defaults; do not use it against a customised or AWS pool. For an
 existing customised pool, preserve all current pool settings when enabling signup.
 Rebuild/recreate only web and identity for the new application code.
 
+When the existing local deployment uses `.local/compose/tailscale.yaml`, include
+that overlay whenever recreating web. It sets the browser's Cognito API URL to
+the shared HTTPS `/auth-api/` proxy. Omitting it restores `localhost:4566`, which
+points to the visitor's own device and causes signup connection errors remotely.
+For that deployment, refresh web with:
+
+```powershell
+docker compose --env-file .local/compose/compose.env -f compose.yaml -f compose.app.yaml -f .local/compose/tailscale.yaml up -d --no-deps web
+```
+
+Visitors must refresh the page after endpoint configuration changes. Signup
+through the shared HTTPS address was verified to reach the verification-code form
+after restoring this overlay.
+
 Floci 2.2.0 captures confirmation emails at
 `http://localhost:4566/_aws/ses` instead of delivering them to a real inbox. Find
 the message for your synthetic signup address and enter its code in the app.
