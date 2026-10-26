@@ -23,6 +23,17 @@ def test_database_url_is_required_and_validated(monkeypatch):
             create_database_engine(url)
 
 
+def clear_disposable_rows(engine):
+    # Isolate the migration roundtrip from API fixtures in the same disposable
+    # database, including protected corrections and prescription pricing modes.
+    tables = inspect(engine).get_table_names(schema="clinical_records")
+    quote = engine.dialect.identifier_preparer.quote
+    names = [f"clinical_records.{quote(name)}" for name in tables if name != "alembic_version"]
+    if names:
+        with engine.begin() as connection:
+            connection.execute(text("TRUNCATE TABLE " + ", ".join(names)))
+
+
 @pytest.fixture(scope="module")
 def database():
     url = os.environ.get("TEST_DATABASE_URL")
@@ -38,7 +49,9 @@ def database():
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         command.check(config)
+        clear_disposable_rows(engine)
         yield engine
+        clear_disposable_rows(engine)
         command.downgrade(config, "base")
         assert inspect(engine).get_table_names(schema="clinical_records") == ["alembic_version"]
         with engine.connect() as connection:

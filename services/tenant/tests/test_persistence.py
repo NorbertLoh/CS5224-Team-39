@@ -20,6 +20,17 @@ def test_database_url_validation(monkeypatch):
             create_database_engine(url)
 
 
+def clear_disposable_rows(engine):
+    # API checks share this explicitly resettable database. Clear their fixtures
+    # before testing downgrade; production audit/history guards remain enabled.
+    tables = inspect(engine).get_table_names(schema="tenant")
+    quote = engine.dialect.identifier_preparer.quote
+    names = [f"tenant.{quote(name)}" for name in tables if name != "alembic_version"]
+    if names:
+        with engine.begin() as connection:
+            connection.execute(text("TRUNCATE TABLE " + ", ".join(names)))
+
+
 @pytest.fixture(scope="module")
 def database():
     url = os.environ.get("TEST_DATABASE_URL")
@@ -36,6 +47,7 @@ def database():
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         command.check(config)
+        clear_disposable_rows(engine)
         # A08 is additive: rolling back just 0002 preserves the A07 clinic rows.
         clinic_id = create_clinic(engine)
         command.downgrade(config, "0002")
@@ -70,6 +82,7 @@ def database():
             "clinics",
         ]
         yield engine
+        clear_disposable_rows(engine)
         command.downgrade(config, "base")
         assert inspect(engine).get_table_names(schema="tenant") == ["alembic_version"]
         assert inspect(engine).get_table_names(schema="public") == public_tables

@@ -133,7 +133,9 @@ def configure():
     )
     pair("fulfilment", "SERVICE_BILLING_SECRET", "billing", "SERVICE_FULFILMENT_SECRET")
     pair("fulfilment", "SERVICE_TENANT_SECRET", "tenant", "SERVICE_FULFILMENT_SECRET")
-    pair("fulfilment", "SERVICE_PROFILE_SECRET", "identity", "SERVICE_FULFILMENT_SECRET")
+    pair(
+        "fulfilment", "SERVICE_PROFILE_SECRET", "identity", "SERVICE_FULFILMENT_SECRET"
+    )
     for peer, setting in [
         ("identity", "IDENTITY"),
         ("scheduling", "SCHEDULING"),
@@ -229,7 +231,9 @@ def configure():
         "SERVICE_DELIVERY_LOCATIONS_PATH",
         "SERVICE_DELIVERY_CONTACTS_PATH",
     ]:
-        filename = "locations.json" if setting.endswith("LOCATIONS_PATH") else "contacts.json"
+        filename = (
+            "locations.json" if setting.endswith("LOCATIONS_PATH") else "contacts.json"
+        )
         value = source["fulfilment"].get(setting)
         if value:
             # Host Windows paths must never leak into container settings.
@@ -246,7 +250,10 @@ def configure():
                     )
                     shutil.copy2(ROOT / relative, delivery / filename)
                     configs["fulfilment"][setting] = "/delivery/" + filename
-        if setting not in configs["fulfilment"] and (STATE / "delivery" / filename).is_file():
+        if (
+            setting not in configs["fulfilment"]
+            and (STATE / "delivery" / filename).is_file()
+        ):
             configs["fulfilment"][setting] = "/delivery/" + filename
     with psycopg.connect(
         host="postgres",
