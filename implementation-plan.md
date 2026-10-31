@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## Serverless workers and edge controls (31 October 2026)
+
+| Done | ID | Deliverable | Dependencies | Effort | Claim |
+| --- | --- | --- | --- | --- | --- |
+| [ ] | RF26 | Add application Lambda adapters, bounded notification dispatch, NullPool connections, outbox metrics and public cache headers; preserve local workers and inbox/outbox. Terraform modules, deployment concurrency, CloudFront rules and alarms are split into RF27 (#316). Verify application tests and Lambda images. | N01/N02, P02/P03, M01-M04 complete; AWS deployment needs W01/W02/W04/W06/W08-W10/W12 and reachable owning-service APIs. Independent module/adapter implementation only until these gates complete. W01 PR #233 owns environment scaffolding. | L | NorbertLoh; In progress; #314; draft PR #315 |
+
+Setup and verification: [RF26](docs/RF26-serverless-workers.md). No AWS deployment
+or backlog deployment gate is completed by this implementation.
+
 ## Structural refactor requested after RF21
 
 Target responsibilities and verification: [project structure](docs/project-structure.md).
