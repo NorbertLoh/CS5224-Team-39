@@ -1,0 +1,36 @@
+{
+  "region": "ap-southeast-1",
+  "currency": "USD",
+  "checked_on": "2026-11-01",
+  "hours_per_month": 730,
+  "rates": {
+    "fargate_arm_vcpu_hour": 0.04045,
+    "fargate_arm_gib_hour": 0.00442,
+    "rds_t4g_micro_hour": 0.025,
+    "rds_gp3_gib_month": 0.138,
+    "alb_hour": 0.0252,
+    "alb_lcu_hour": 0.008,
+    "utility_t4g_nano_hour": 0.0053,
+    "public_ipv4_hour": 0.005,
+    "optional_redis_t4g_micro_hour": 0.024
+  },
+  "sources": {
+    "fargate": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECS/current/ap-southeast-1/index.json",
+    "rds": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/ap-southeast-1/index.json",
+    "alb": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/ap-southeast-1/index.json",
+    "redis": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/ap-southeast-1/index.json",
+    "utility": "https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/ec2/USD/current/ec2-ondemand-without-sec-sel/Asia%20Pacific%20(Singapore)/Linux/index.json",
+    "public_ipv4": "https://aws.amazon.com/vpc/pricing/"
+  },
+  "skus": {
+    "fargate_arm_vcpu": "SFSC5A7DP37FRTNX",
+    "fargate_arm_memory": "U4BJMTG9K96ZW3HA",
+    "rds_instance": "BQ5T85JXP99J9D2J",
+    "rds_storage": "FXXDJWB23UZKQHCN",
+    "alb": "UXD3JNG6UAM79CW6",
+    "alb_lcu": "45KY3J5YX2QM6KS7",
+    "optional_redis": "2EWBNSK2RMEHF7K3"
+  },
+  "excludes": ["utility EBS", "S3/ECR storage and requests", "Secrets Manager", "CloudWatch logs and alarms", "Lambda and event requests", "SES", "API Gateway", "data transfer and TURN traffic", "extra ALB capacity/addresses", "RDS surplus CPU credits", "Route53/domain", "taxes"],
+  "notes": "List-price planning snapshot, not a quote, hard spending cap or free-tier claim. Refresh before applying. The full platform has nine Fargate tasks, not one task total."
+}

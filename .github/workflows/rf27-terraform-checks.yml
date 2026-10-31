@@ -1,0 +1,44 @@
+name: RF27 AWS runtime configuration
+on:
+  push:
+    paths: ['infra/modules/**', 'infra/examples/sg-demo/**', '.github/workflows/rf27-terraform-checks.yml']
+  pull_request:
+    paths: ['infra/modules/**', 'infra/examples/sg-demo/**', '.github/workflows/rf27-terraform-checks.yml']
+permissions:
+  contents: read
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [background-jobs, public-edge, demo-platform]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.11.4'
+      - run: terraform fmt -check -recursive
+        working-directory: infra/modules/${{ matrix.module }}
+      - run: terraform init -backend=false -input=false -lockfile=readonly
+        working-directory: infra/modules/${{ matrix.module }}
+      - run: terraform validate
+        working-directory: infra/modules/${{ matrix.module }}
+      - run: terraform test
+        working-directory: infra/modules/${{ matrix.module }}
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.11.4'
+      - run: terraform fmt -check
+        working-directory: infra/examples/sg-demo
+      - run: terraform init -backend=false -input=false -lockfile=readonly
+        working-directory: infra/examples/sg-demo
+      - run: terraform validate
+        working-directory: infra/examples/sg-demo
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: python -m py_compile infra/modules/demo-platform/bootstrap_database.py infra/modules/demo-platform/config_files.py
