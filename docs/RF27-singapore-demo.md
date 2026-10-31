@@ -1,6 +1,6 @@
 # RF27: Singapore demo deployment, cost and scalability
 
-Issue #316 / draft PR #317. Requested 1 November 2026. These files configure AWS;
+Issue #316 / merged PR #317. Requested 1 November 2026. These files configure AWS;
 they have not been applied and do not prove the AWS patient journey works.
 
 ## What is configured
