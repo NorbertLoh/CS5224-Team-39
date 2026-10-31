@@ -180,7 +180,7 @@ For the initial design, use a dedicated internet-facing signalling ALB with orig
 Disable caching for authenticated API, webhook and signalling paths. Forward necessary authorisation and WebSocket headers. Allow webhook routes without Cognito only when provider signature verification is enforced. Use an explicit CORS allowlist where cross-origin access is required.
 
 RF26 public-read exception: only successful public clinic listing and by-slug
-profiles opt into shared caching for at most 60 seconds. The reusable CloudFront
+profiles opt into shared caching for at most 60 seconds. RF27 (#316) separately owns the reusable CloudFront
 module places these exceptions before the uncached API behavior; mutations are
 never cached. These responses must remain viewer-independent. Booking/payment
 decisions and private/internal projections continue to read authoritative state.

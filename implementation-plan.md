@@ -4,7 +4,7 @@
 
 | Done | ID | Deliverable | Dependencies | Effort | Claim |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | RF26 | Add SQS Lambda adapters for document generation/notification intake, scheduled durable email dispatch, concurrency caps, queue/DLQ/outbox monitoring and opt-in CloudFront caching for public clinic reads. Preserve local workers, inbox/outbox and access rules. Verify focused tests, Terraform modules and image builds; document AWS cutover/integration gates separately. | N01/N02, P02/P03, M01-M04 complete; AWS deployment needs W01/W02/W04/W06/W08-W10/W12 and reachable owning-service APIs. Independent module/adapter implementation only until these gates complete. W01 PR #233 owns environment scaffolding. | L | NorbertLoh; In progress; #314; draft PR #315 |
+| [ ] | RF26 | Add application Lambda adapters, bounded notification dispatch, NullPool connections, outbox metrics and public cache headers; preserve local workers and inbox/outbox. Terraform modules, deployment concurrency, CloudFront rules and alarms are split into RF27 (#316). Verify application tests and Lambda images. | N01/N02, P02/P03, M01-M04 complete; AWS deployment needs W01/W02/W04/W06/W08-W10/W12 and reachable owning-service APIs. Independent module/adapter implementation only until these gates complete. W01 PR #233 owns environment scaffolding. | L | NorbertLoh; In progress; #314; draft PR #315 |
 
 Setup and verification: [RF26](docs/RF26-serverless-workers.md). No AWS deployment
 or backlog deployment gate is completed by this implementation.
