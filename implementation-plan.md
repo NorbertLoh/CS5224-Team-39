@@ -4,7 +4,9 @@
 
 | Done | ID | Deliverable | Dependencies | Effort | Claim |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | RF26 | Add application Lambda adapters, bounded notification dispatch, NullPool connections, outbox metrics and public cache headers; preserve local workers and inbox/outbox. Terraform modules, deployment concurrency, CloudFront rules and alarms are split into RF27 (#316). Verify application tests and Lambda images. | N01/N02, P02/P03, M01-M04 complete; AWS deployment needs W01/W02/W04/W06/W08-W10/W12 and reachable owning-service APIs. Independent module/adapter implementation only until these gates complete. W01 PR #233 owns environment scaffolding. | L | NorbertLoh; In progress; #314; draft PR #315 |
+| [x] | RF26 | Add application Lambda adapters, bounded notification dispatch, NullPool connections, outbox metrics and public cache headers; preserve local workers and inbox/outbox. Terraform modules, deployment concurrency, CloudFront rules and alarms are split into RF27 (#316). Verify application tests and Lambda images. | N01/N02, P02/P03, M01-M04 complete; AWS deployment needs W01/W02/W04/W06/W08-W10/W12 and reachable owning-service APIs. Independent module/adapter implementation only until these gates complete. W01 PR #233 owns environment scaffolding. | L | NorbertLoh; complete; #314 closed; merged PR #315 (f78c767) |
+
+| [ ] | RF27 | Review the separately split AWS worker/edge Terraform modules, provider locks, four mocked plan tests and deployment notes. No AWS apply; W01 scaffolding remains separate. | RF26 merged; AWS activation requires planned infrastructure/service deployments. | S | NorbertLoh; In progress; #316; draft PR #317 |
 
 Setup and verification: [RF26](docs/RF26-serverless-workers.md). No AWS deployment
 or backlog deployment gate is completed by this implementation.
