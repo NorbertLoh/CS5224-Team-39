@@ -85,6 +85,7 @@ def create_clinic(
 @router.get("/clinics", response_model=ClinicPage)
 def clinics(
     request: Request,
+    response: Response,
     session: DB,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     cursor: Annotated[str | None, Query(max_length=4096)] = None,
@@ -97,11 +98,12 @@ def clinics(
         query = query.where(tuple_(Clinic.name, Clinic.tenant_id) > tuple_(name, tenant_id))
     rows = session.scalars(query.order_by(Clinic.name, Clinic.tenant_id).limit(limit + 1)).all()
     next_cursor = encode_cursor(settings, rows[limit - 1]) if len(rows) > limit else None
+    response.headers["Cache-Control"] = "public, max-age=0, s-maxage=60, must-revalidate"
     return ClinicPage(items=[profile(row) for row in rows[:limit]], next_cursor=next_cursor)
 
 
 @router.get("/clinics/by-slug/{slug}", response_model=ClinicPublic)
-def public_clinic(slug: str, session: DB):
+def public_clinic(slug: str, response: Response, session: DB):
     clinic = session.scalar(
         select(Clinic).where(
             Clinic.slug == slug, Clinic.status == "active", Clinic.membership_provisioned.is_(True)
@@ -109,6 +111,7 @@ def public_clinic(slug: str, session: DB):
     )
     if clinic is None:
         raise DomainError(404, "not_found", "Resource not found.")
+    response.headers["Cache-Control"] = "public, max-age=0, s-maxage=60, must-revalidate"
     return profile(clinic)
 
 

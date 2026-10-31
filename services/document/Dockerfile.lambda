@@ -1,0 +1,8 @@
+# Build from repository root with --build-context python_common=packages/python_common
+FROM public.ecr.aws/lambda/python:3.12
+COPY services/document/requirements.lock.txt ${LAMBDA_TASK_ROOT}/requirements.lock.txt
+RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.lock.txt
+COPY --from=python_common . /tmp/python_common
+RUN pip install --no-cache-dir --no-deps /tmp/python_common
+COPY services/document/app ${LAMBDA_TASK_ROOT}/app
+CMD ["app.lambda_handler.handler"]

@@ -1,0 +1,45 @@
+name: RF26 worker and edge infrastructure
+on:
+  push:
+    paths: ['infra/modules/background-jobs/**', 'infra/modules/public-edge/**', 'services/document/**', 'services/notification/**', 'packages/python_common/**', '.github/workflows/rf26-checks.yml']
+  pull_request:
+    paths: ['infra/modules/background-jobs/**', 'infra/modules/public-edge/**', 'services/document/**', 'services/notification/**', 'packages/python_common/**', '.github/workflows/rf26-checks.yml']
+permissions:
+  contents: read
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [background-jobs, public-edge]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.11.4'
+      - run: terraform fmt -check -recursive
+        working-directory: infra/modules/${{ matrix.module }}
+      - run: terraform init -backend=false -input=false -lockfile=readonly
+        working-directory: infra/modules/${{ matrix.module }}
+      - run: terraform validate
+        working-directory: infra/modules/${{ matrix.module }}
+      - run: terraform test
+        working-directory: infra/modules/${{ matrix.module }}
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [document, notification]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile.lambda
+          build-contexts: python_common=packages/python_common
+          platforms: linux/amd64
+          provenance: false
+          push: false
+          cache-from: type=gha,scope=rf26-${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=rf26-${{ matrix.service }}

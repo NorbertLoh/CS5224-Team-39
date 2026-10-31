@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## Serverless workers and edge controls (31 October 2026)
+
+| Done | ID | Deliverable | Dependencies | Effort | Claim |
+| --- | --- | --- | --- | --- | --- |
+| [ ] | RF26 | Add SQS Lambda adapters for document generation/notification intake, scheduled durable email dispatch, concurrency caps, queue/DLQ/outbox monitoring and opt-in CloudFront caching for public clinic reads. Preserve local workers, inbox/outbox and access rules. Verify focused tests, Terraform modules and image builds; document AWS cutover/integration gates separately. | N01/N02, P02/P03, M01-M04 complete; AWS deployment needs W01/W02/W04/W06/W08-W10/W12 and reachable owning-service APIs. Independent module/adapter implementation only until these gates complete. W01 PR #233 owns environment scaffolding. | L | NorbertLoh; In progress; #314; draft PR #315 |
+
+Setup and verification: [RF26](docs/RF26-serverless-workers.md). No AWS deployment
+or backlog deployment gate is completed by this implementation.
+
 ## Structural refactor requested after RF21
 
 Target responsibilities and verification: [project structure](docs/project-structure.md).

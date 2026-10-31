@@ -100,7 +100,14 @@ Each business service exposes its own FastAPI app and owns its PostgreSQL schema
 | Notification | Notification jobs, templates, send status and deduplication | Event consumers and SES |
 | PeerJS signalling | WebRTC signalling connections | Separate Node.js PeerServer container; authorised by consultation service |
 
-Worker processes use the owning service's image with a separate command and ECS service, where needed. HTTP and worker workloads can scale independently. Start one instance of each needed workload for the demo and increase only based on evidence and budget.
+Worker processes normally use the owning service's image with a separate command
+and ECS service. RF26 adds separate Lambda images for SQS-triggered document
+generation and notification intake, with scheduled bounded notification dispatch.
+Local Compose retains its existing workers; AWS deployments select one consumer
+runtime per queue. Outbox publishers and other existing workers remain on ECS.
+HTTP and worker workloads scale independently, with bounded concurrency and
+database connection budgets. Setup and pending AWS verification:
+[RF26](docs/RF26-serverless-workers.md).
 
 ## 4. Local-to-AWS mapping
 
@@ -171,6 +178,12 @@ Signalling path: browser -> CloudFront `/peerjs/*` -> a dedicated reachable ALB 
 For the initial design, use a dedicated internet-facing signalling ALB with origin restrictions and application admission checks; the HTTP ALB remains internal. Review cost before provisioning two ALBs. A consolidated ingress is a possible later change only after validating authorisation and reachability for both paths.
 
 Disable caching for authenticated API, webhook and signalling paths. Forward necessary authorisation and WebSocket headers. Allow webhook routes without Cognito only when provider signature verification is enforced. Use an explicit CORS allowlist where cross-origin access is required.
+
+RF26 public-read exception: only successful public clinic listing and by-slug
+profiles opt into shared caching for at most 60 seconds. The reusable CloudFront
+module places these exceptions before the uncached API behavior; mutations are
+never cached. These responses must remain viewer-independent. Booking/payment
+decisions and private/internal projections continue to read authoritative state.
 
 ECS tasks, RDS and Redis run in private subnets. Restrict traffic with security groups. Account for outbound access to Stripe/Lalamove and AWS services through NAT and/or endpoints. Database access is service-only. Use TLS in transit, encryption at rest and private file access through short-lived authorised URLs.
 
