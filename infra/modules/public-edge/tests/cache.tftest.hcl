@@ -11,7 +11,7 @@ variables {
 run "cache_only_public_reads" {
   command = plan
   assert {
-    condition     = tolist([for b in aws_cloudfront_distribution.app.ordered_cache_behavior : b.path_pattern]) == tolist(["/api/v1/tenant/clinics", "/api/v1/tenant/clinics/by-slug/*", "/api/*", "/peerjs/*"])
+    condition     = tolist([for b in aws_cloudfront_distribution.app.ordered_cache_behavior : b.path_pattern]) == tolist(["/api/v1/tenant/clinics", "/api/v1/tenant/clinics/by-slug/*", "/api/*", "/clinic-logos/*", "/peerjs/*"])
     error_message = "Public exceptions must precede the uncached API behavior."
   }
   assert {

@@ -45,6 +45,22 @@ resource "aws_cloudfront_function" "spa" {
     }
   JS
 }
+resource "aws_cloudfront_function" "logo" {
+  name    = "${var.name_prefix}-public-logo"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-JS
+    function handler(event) {
+      var request = event.request;
+      var match = request.uri.match(/^\/clinic-logos\/([0-9a-fA-F-]{36})\/logo\.png$/);
+      if (!match || (request.method !== 'GET' && request.method !== 'HEAD')) {
+        return {statusCode: 404, statusDescription: 'Not Found', headers: {'cache-control': {value: 'no-store'}}};
+      }
+      request.uri = '/api/v1/tenant/clinics/' + match[1] + '/public-logo';
+      return request;
+    }
+  JS
+}
 
 resource "aws_cloudfront_distribution" "app" {
   enabled             = true
@@ -90,7 +106,7 @@ resource "aws_cloudfront_distribution" "app" {
     }
   }
   dynamic "ordered_cache_behavior" {
-    for_each = { "/api/*" = "api", "/peerjs/*" = "signalling" }
+    for_each = { "/api/*" = "api", "/clinic-logos/*" = "api", "/peerjs/*" = "signalling" }
     content {
       path_pattern             = ordered_cache_behavior.key
       target_origin_id         = ordered_cache_behavior.value
@@ -100,6 +116,13 @@ resource "aws_cloudfront_distribution" "app" {
       cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api.id
       compress                 = true
+      dynamic "function_association" {
+        for_each = ordered_cache_behavior.key == "/clinic-logos/*" ? [1] : []
+        content {
+          event_type   = "viewer-request"
+          function_arn = aws_cloudfront_function.logo.arn
+        }
+      }
     }
   }
   default_cache_behavior {

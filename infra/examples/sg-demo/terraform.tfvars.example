@@ -1,0 +1,16 @@
+aws_account_id         = "123456789012"
+name_prefix            = "telelink-demo"
+origin_hostname        = "origin.demo.example.org"
+hosted_zone_id         = "Z_REPLACE_WITH_YOUR_ZONE"
+# Optional existing Singapore certificate; null requests/validates one in your zone.
+origin_certificate_arn = null
+ses_sender             = "demo@example.org"
+budget_email           = "owner@example.org"
+monthly_budget_usd     = 100
+enable_workloads       = false
+# Populate all digest-pinned images after foundation creation/build/push.
+# Regular service/signalling/redis images: linux/arm64. Lambda images: linux/amd64.
+images = {}
+# For checkout, set billing SERVICE_STRIPE_DESTINATIONS to the real test account map.
+service_environment = {}
+service_secret_keys = {}

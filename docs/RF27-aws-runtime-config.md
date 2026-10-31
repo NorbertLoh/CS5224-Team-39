@@ -1,5 +1,10 @@
 # RF27: AWS worker and public-edge Terraform configuration
 
+Expanded Singapore demo composition, single-replica defaults, one-concurrent FIFO
+workers, dated costs and the current runbook are in
+[RF27 Singapore demo](RF27-singapore-demo.md). The lower-level module notes below
+also describe larger example concurrency values; they are not the demo defaults.
+
 Tracks issue #316. Split from RF26 / PR #315 at the user's request. Application handlers, images, cache headers and metrics belong to RF26; this PR supplies their infrastructure configuration. No AWS resources have been deployed.
 
 Scope: SQS-triggered document generation and notification intake, scheduled durable

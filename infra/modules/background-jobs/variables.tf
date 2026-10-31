@@ -1,6 +1,10 @@
 variable "name_prefix" {
   type = string
 }
+variable "log_retention_days" {
+  type    = number
+  default = 3
+}
 variable "environment" {
   type = string
   validation {
@@ -34,18 +38,18 @@ variable "workers" {
       toset(keys(var.workers)) == toset(["document", "notification-intake", "notification-dispatch"]) &&
       alltrue([for w in values(var.workers) :
         can(regex("@sha256:[a-f0-9]{64}$", w.image_uri)) &&
-        w.concurrency >= 2 && w.concurrency <= 20 && floor(w.concurrency) == w.concurrency &&
+        w.concurrency >= 1 && w.concurrency <= 20 && floor(w.concurrency) == w.concurrency &&
         w.timeout_seconds >= 30 && w.timeout_seconds <= 120 &&
         !contains(keys(w.environment), "SERVICE_ENVIRONMENT") &&
         !contains(keys(w.environment), "SERVICE_CONFIG_SECRET_ARN") &&
         !contains(keys(w.environment), "SERVICE_AWS_ENDPOINT_URL")
       ])
     )
-    error_message = "Supply all three workers, digest-pinned images, integer concurrency 2-20 and timeouts 30-120s; reserved configuration keys cannot be overridden."
+    error_message = "Supply all three workers, digest-pinned images, integer concurrency 1-20 and timeouts 30-120s; reserved configuration keys cannot be overridden."
   }
 }
 variable "consumer_queues" {
-  description = "Existing standard queues for document and notification-intake. The queue owner must configure the DLQ redrive policy and visibility timeout >= 6x Lambda timeout."
+  description = "Consumer queues with real visibility/redrive outputs. Concurrency one requires FIFO with exactly one producer message group; batch size is always one."
   type = map(object({
     arn                        = string
     dlq_arn                    = string
@@ -55,9 +59,9 @@ variable "consumer_queues" {
   validation {
     condition = (
       toset(keys(var.consumer_queues)) == toset(["document", "notification-intake"]) &&
-      alltrue([for q in values(var.consumer_queues) : !endswith(q.arn, ".fifo")])
+      alltrue([for k, q in var.consumer_queues : var.workers[k].concurrency > 1 || endswith(q.arn, ".fifo")])
     )
-    error_message = "Provide document and notification-intake standard queues."
+    error_message = "Provide both consumer queues; a concurrency-one consumer requires a FIFO queue with a single producer message group."
   }
 }
 variable "document_bucket_arn" {

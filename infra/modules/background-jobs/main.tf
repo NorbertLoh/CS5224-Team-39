@@ -13,7 +13,7 @@ locals {
 resource "aws_cloudwatch_log_group" "worker" {
   for_each          = var.workers
   name              = "/aws/lambda/${var.name_prefix}-${each.key}"
-  retention_in_days = 14
+  retention_in_days = var.log_retention_days
 }
 
 resource "aws_iam_role" "worker" {
@@ -98,8 +98,11 @@ resource "aws_lambda_event_source_mapping" "consumer" {
   function_name           = aws_lambda_function.worker[each.key].arn
   batch_size              = 1
   function_response_types = ["ReportBatchItemFailures"]
-  scaling_config {
-    maximum_concurrency = var.workers[each.key].concurrency
+  dynamic "scaling_config" {
+    for_each = var.workers[each.key].concurrency > 1 ? [1] : []
+    content {
+      maximum_concurrency = var.workers[each.key].concurrency
+    }
   }
   lifecycle {
     precondition {
