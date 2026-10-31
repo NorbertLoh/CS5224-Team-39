@@ -51,6 +51,9 @@ Push to the existing ECR repositories with the environment's deployment tooling,
 then supply immutable `repository@sha256:...` URIs. Both notification functions use
 the same image with different command overrides. The Lambda images use Python 3.12
 and existing dependency locks; the API/local worker images remain unchanged.
+The ECR repository policy must permit Lambda image retrieval; its owner/deployment
+role must configure this before creation. This module does not replace W03's
+repository policies.
 
 ## Worker module wiring
 

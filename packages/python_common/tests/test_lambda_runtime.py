@@ -1,4 +1,6 @@
 import json
+import os
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -62,8 +64,6 @@ def test_near_timeout_leaves_messages_unhandled(store):
 
 
 def test_secrets_loaded_without_changing_process_environment(monkeypatch):
-    import boto3
-
     class Client:
         def __enter__(self):
             return self
@@ -76,9 +76,11 @@ def test_secrets_loaded_without_changing_process_environment(monkeypatch):
             return {"SecretString": json.dumps({"database_url": "private-value"})}
 
     monkeypatch.setenv("SERVICE_CONFIG_SECRET_ARN", "test-secret")
-    monkeypatch.setattr(boto3, "client", lambda name: Client())
+    monkeypatch.delenv("SERVICE_DATABASE_URL", raising=False)
+    monkeypatch.setitem(sys.modules, "boto3", SimpleNamespace(client=lambda name: Client()))
     settings = load_settings(lambda **kwargs: SimpleNamespace(log_level="INFO", **kwargs))
     assert settings.database_url == "private-value"
+    assert "SERVICE_DATABASE_URL" not in os.environ
 
 
 def test_database_connections_are_not_retained_between_invocations():
