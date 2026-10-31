@@ -1,6 +1,6 @@
 # Singapore demo platform
 
-Complete reusable demo composition for RF27 / #316 / draft PR #317. Defaults are
+Complete reusable demo composition for RF27 / #316 / merged PR #317. Defaults are
 single-replica, single-AZ compute, small ARM Fargate tasks, Redis sidecar and one
 shared NAT/TURN host. The root region must be `ap-southeast-1`.
 
