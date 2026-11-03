@@ -9,9 +9,9 @@ import { PatientNavigation } from '@/features/patient/components/PatientNavigati
 import type { Route } from '@/navigation/access'
 import { canAccess, hasRole } from '@/navigation/access'
 import { DoctorNavigation } from '@/navigation/DoctorNavigation'
-import { RoleNavigation } from '@/navigation/RoleNavigation'
+import { PlatformNavigation } from '@/navigation/PlatformNavigation'
 import { WorkspaceSwitcher } from '@/navigation/WorkspaceSwitcher'
-import { isDoctorRoute } from '@/navigation/doctor-navigation'
+
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
@@ -24,7 +24,7 @@ export function AppShell({
   children: (session: Session | null) => ReactNode
 }) {
   const [session, setSession] = useState(readSession)
-  const doctorRoute = isDoctorRoute(route)
+
   const identity = useQuery({
     queryKey: ['identity', session?.accessToken],
     queryFn: currentIdentity,
@@ -65,26 +65,23 @@ export function AppShell({
       )
     else if (!canAccess(identity.data, route))
       content = (
-        <ErrorState message="You do not have access to this role or clinic. Choose an available role above to return to its workspace." />
+        <ErrorState message="You do not have access to this role or clinic. Use the workspace switcher above to return to a workspace you can access." />
       )
   }
   return (
     <>
       <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <a href="/" className="text-xl font-semibold">
             TeleLink Health
           </a>
           <div className="flex flex-wrap items-center gap-3">
-            {doctorRoute && session && identity.isSuccess && (
+            {session && identity.isSuccess && (
               <WorkspaceSwitcher identity={identity.data} route={route} />
             )}
-            <AuthControls onSessionChange={setSession} compact={doctorRoute} />
+            <AuthControls onSessionChange={setSession} compact />
           </div>
         </div>
-        {session && identity.isSuccess && !doctorRoute && (
-          <RoleNavigation identity={identity.data} route={route} />
-        )}
         {session &&
           identity.isSuccess &&
           hasRole(identity.data, 'patient') &&
@@ -94,7 +91,7 @@ export function AppShell({
             route.kind === 'home' ||
             route.kind === 'storefront') && <PatientNavigation route={route} />}
         {session && !('role' in route) && identity.isPending && (
-          <LoadingState message="Loading your roles..." />
+          <LoadingState message="Loading your workspaces..." />
         )}
         {session &&
           identity.isSuccess &&
@@ -113,10 +110,17 @@ export function AppShell({
           )}
         {session && !('role' in route) && identity.isError && (
           <ErrorState
-            message="Could not load your roles. Check your session and connection."
+            message="Could not load your workspaces. Check your session and connection."
             onRetry={() => void identity.refetch()}
           />
         )}
+        {session &&
+          identity.isSuccess &&
+          'role' in route &&
+          route.role === 'platform_admin' &&
+          canAccess(identity.data, route) && (
+            <PlatformNavigation route={route} />
+          )}
       </header>
       {content}
     </>

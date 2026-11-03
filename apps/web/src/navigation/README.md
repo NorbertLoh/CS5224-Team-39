@@ -1,96 +1,65 @@
-# U05 navigation
+# Workspace navigation
 
-- `access.ts`: exact route parsing, role rules and active membership selection.
-- `AppShell.tsx`: one shared login/logout control and identity access gate.
-- `RoleNavigation.tsx`: granted role links.
-- `AppRoutes.tsx`: route-to-feature mapping; forms and API calls stay in their features.
+`AppShell.tsx` owns the shared header, sign-in/out controls, identity checks and
+one contextual section bar. `WorkspaceSwitcher.tsx` replaces the separate role
+links on every signed-in page. `workspaces.ts` derives available workspaces and
+the selected workspace from the current identity and route. Roles come from
+`/identity/me`, never browser role storage or Cognito groups. Identity refreshes
+on page load, focus and every 30 seconds; API checks remain authoritative.
 
-Patient navigation starts with Find a clinic (`/#clinics`, the existing public
-directory), followed by Appointments, Prescriptions, Orders & delivery and Documents.
-The four protected pages are `/patient` (appointments, default),
-`/patient/prescriptions` (prescriptions and medicines), the existing
-`/patient/medication-orders` (orders and delivery), and `/patient/documents`.
-The patient feature owns the shared page navigation and records-page composition.
-Direct links retain the normal authentication/identity gates. Checkout and video
-remain appointment actions, and medication order query links keep their existing URLs.
+Accounts with multiple roles get one workspace dropdown with the current role's
+name, icon and checkmark. Accounts with one role get a direct workspace link
+without a dropdown. Doctor application is a separate onboarding destination,
+not a granted clinical role. Before doctor approval and active clinic membership,
+accounts can open application status but have no doctor schedule links. Join as
+doctor remains accessible from the single-workspace header or multi-workspace
+menu. Clinic registration remains available from the homepage and clinic list.
 
-Roles come from `/identity/me`, never Cognito groups or browser role storage.
-Identity is refreshed on page load, window focus and every 30 seconds. Protected
-features wait for a successful identity lookup; a failed refresh or revoked
-membership blocks them. Backend checks still enforce every protected API operation.
-Signed-out protected-page visits replace the current browser history entry with
-`/sign-in` before rendering feature content. Public pages remain accessible, and
-successful patient sign-in opens `/patient` after checking the backend identity.
-Other roles retain the home-page destination. Signed-in patients also keep their
-workspace navigation on the public directory and clinic storefronts.
+`WorkspaceNavigation.tsx` provides consistent section bars, horizontally scrollable
+links on narrow screens, and a single bottom-border active/focus indicator.
 
-The clinic choice is the URL, checked against current active memberships for the
-route's role. Clinic administrators choose a named clinic from the Manage clinics
-cards in their workspace. The role navigation has no duplicate clinic dropdown.
-There is no persisted clinic choice to carry between
-users. Platform administrators
-select clinics from the existing paginated platform list and retain the tenant
-APIs' explicit clinic administration access without a membership.
+- Patient: Find a clinic, Appointments, Prescriptions, Orders & delivery,
+  Documents and My profile. The directory and public storefronts retain patient
+  navigation for signed-in patients. Checkout is an appointment action.
+- Doctor: Appointments, Availability and Verification. Clinic selection lives in
+  the bar; availability defaults to the first active doctor clinic. Verification
+  is account-wide, preserving validated clinic context through `?clinic=<UUID>`.
+  Consultation pages do not mark a list link current or show a clinic picker.
+- Clinic admin: My clinics and Appointments at the workspace entry. Selecting a
+  clinic shows one management bar: Clinic profile, Staff, Appointments, Payments,
+  Medicine & delivery and Settings. The named clinic selector retains the section
+  when changing clinics; All my clinics returns to the list. The unscoped
+  appointment page retains its existing per-clinic schedule selector.
+- Platform admin: Clinics and Doctor applications. Platform administrators retain
+  explicit tenant API access to clinic profile, staff and payments without clinic
+  membership. Their management bar links back to platform clinics and hides the
+  membership-only appointment, medicine/delivery and settings pages.
 
-Clinic administration has a shared workspace navigation matching the patient
-navigation: Manage clinic (`/clinic-admin`) contains the existing management
-clinic cards, while Appointments (`/clinic-admin/appointments`) contains the real
-schedule and its membership-scoped clinic selector. Profile, staff, payments and
-orders retain their existing direct links and highlight Manage clinic. Both entry
-pages use the existing sign-in and identity gates; backend permissions remain the
-source of access to appointments and clinic data. No configuration or migrations.
+Switching directly between doctor and clinic-admin workspaces preserves the URL's
+clinic only if the destination role has active membership there. Otherwise it
+opens that workspace's entry page. No clinic/role selection is persisted across
+users in browser storage. Revoked memberships never enter the selector. Route
+access checks block unauthorized direct URLs before feature content mounts.
 
-Patient navigation includes Profile (`/patient/profile`) for the signed-in
-patient's name, contact number and address. See [patient profile setup](../../../../docs/patient-profile.md).
+`access.ts` owns exact route parsing and access rules. `AppRoutes.tsx` maps routes
+to features. Patient and doctor consultations remain appointment actions with
+existing admission checks. All existing page URLs and API behavior are retained.
+No new configuration, dependencies or migrations.
 
-Selecting a clinic opens its profile as the management landing page. A persistent
-Clinic management navbar shows the selected clinic's name and Profile, Staff,
-Appointments, Payments, Medicine & delivery and Settings links, preserving that clinic in
-every URL. Appointments opens `/clinic-admin/clinics/<UUID>/appointments` with the
-schedule fixed to that clinic and no clinic selector. Both the scoped schedule
-and Medicine & delivery require active administration of the selected clinic;
-platform access to profile/staff/payments does not grant those clinical views.
-Settings also requires active owning-clinic administration and saves the pickup
-location used for new delivery quotations. See [pickup settings](../../../../docs/clinic-pickup-settings.md).
-Change clinic returns to the list;
-Manage clinic stays within the selected clinic. The clinic choice is never stored
-in browser storage, and the shared identity gate blocks revoked/other-clinic links.
+Verification:
 
-Routes: `/patient`, `/doctor`, `/doctor/clinics/<UUID>`, `/clinic-admin`, existing
-clinic profile/staff routes, and existing platform clinic routes. Unknown paths
-show Page not found. Patient entry uses the real public clinic directory. Doctor
-entry validates clinic membership and states that future availability/consultation
-features are pending; U05 does not implement those workflows.
+- Frontend lint, typecheck, probe typecheck and production build.
+- `node dev/run_frontend_probe.mjs check_navigation_frontend.mts`: role/route
+  selection, multi-role headers, single-role direct link, doctor onboarding,
+  single section bars, scoped links, revoked membership exclusion, platform
+  exceptions, consultation and signed-out/denied rendering. It renders React on
+  the server with synthetic identity fixtures and makes no API calls.
+- `node dev/check_auth_session.mjs`: existing session checks.
+- Tailscale web rollout and HTTP source verification. Visual/mobile browser
+  acceptance stays with the user at their request.
 
-No new configuration or dependencies. Use the existing
-[local backend setup](../../../../docs/clinic-backend.md) and
-[authentication setup](../../../../docs/authentication.md).
-
-Verification (14 October 2026): frontend tests, lint and production build passed.
-Tests cover role restrictions, arbitrary/revoked/multiple clinic choices, protected
-feature mounting, logout state and failed identity refresh. Live local checks used
-four Floci PKCE logins, real identity/tenant APIs, allowed clinic/profile reads,
-denied patient/doctor platform reads and hosted logout/token revocation. Access
-rules were also run against the four live identity responses. Browser interaction,
-visual/mobile layout and AWS integration were not verified: no browser surface was
-available through the session's UI tool.
-
-Doctor workspace navigation separates Appointments at /doctor from Availability at /doctor/availability. Clinic-scoped /doctor/clinics/<tenant UUID> URLs support the /availability suffix and preserve clinic scope across tabs. Both pages retain authentication and doctor membership checks.
-
-RF28 doctor navigation refinement: doctor routes use a compact workspace menu in
-the main header and one doctor bar with Appointments, Availability and
-Verification. The clinic selector lives in that bar; availability defaults to the
-first active doctor clinic and the duplicate body picker is removed. Clinic
-context is preserved in clinical links and through Verification using a
-`?clinic=<UUID>` hint validated against current active doctor memberships.
-Verification remains account-wide and has no clinic selector. Unverified accounts
-see registration/verification navigation only; consultation pages do not mark the
-appointment list as the current page or show a clinic picker. Workspace choices
-are limited to current roles. On other pages, the original role bar shows one
-Doctor entry for accounts with doctor access; Verification lives inside that
-workspace. The Join as a doctor link remains available only without doctor access.
-Frontend
-lint/typecheck/probe typecheck/build, focused rendered navigation/context checks
-and seven session checks passed; browser acceptance remains with the user.
-
-The public homepage links to /register-clinic and /join-as-doctor. Both routes require a session but no pre-existing clinic role. Fixed, allowlisted session-storage destinations return applicants after sign-in/signup. Clinic registration POSTs the tenant /clinics API, which provisions creator administration; success opens the clinic profile showing approval status. Existing accounts are assigned by email under Manage clinic > Staff. Doctor assignments can precede verification; effective doctor access requires platform approval and active membership. /platform-admin/doctors is restricted to platform admins. See docs/RF28-doctor-verification.md for private evidence, review and migration behavior. Default sign-in destinations prefer platform administration, active clinic administration, approved active doctor membership, then patient appointments; accounts without a role retain the public homepage.
+Setup: [local backend](../../../../docs/clinic-backend.md),
+[authentication](../../../../docs/authentication.md),
+[doctor verification](../../../../docs/RF28-doctor-verification.md),
+[patient profile](../../../../docs/patient-profile.md),
+[clinic pickup settings](../../../../docs/clinic-pickup-settings.md).

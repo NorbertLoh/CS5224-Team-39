@@ -1,6 +1,12 @@
 import type { Identity } from '@/auth/identity'
-import type { Route, Role } from '@/navigation/access'
-import { hasRole, rolePaths } from '@/navigation/access'
+import type { Route } from '@/navigation/access'
+import { hasRole } from '@/navigation/access'
+import {
+  availableWorkspaces,
+  currentWorkspace,
+  workspaceHref,
+  workspaceLabels,
+} from '@/navigation/workspaces'
 import {
   Building2,
   Check,
@@ -8,19 +14,20 @@ import {
   ShieldCheck,
   Stethoscope,
   UserRound,
+  LayoutGrid,
 } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
 
-const workspaces = [
-  { role: 'patient', label: 'Patient care', icon: UserRound },
-  { role: 'doctor', label: 'Doctor workspace', icon: Stethoscope },
-  { role: 'clinic_admin', label: 'Clinic administration', icon: Building2 },
-  {
-    role: 'platform_admin',
-    label: 'Platform administration',
-    icon: ShieldCheck,
-  },
-] satisfies { role: Role; label: string; icon: typeof Stethoscope }[]
+const icons = {
+  patient: UserRound,
+  doctor: Stethoscope,
+  clinic_admin: Building2,
+  platform_admin: ShieldCheck,
+}
+const itemClass =
+  'flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-slate-700 outline-none data-[highlighted]:bg-teal-50 data-[highlighted]:text-teal-900'
+const triggerClass =
+  'inline-flex min-h-10 max-w-full items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600'
 
 export function WorkspaceSwitcher({
   identity,
@@ -29,46 +36,83 @@ export function WorkspaceSwitcher({
   identity: Identity
   route: Route
 }) {
-  const doctor = hasRole(identity, 'doctor')
-  const registration = route.kind === 'doctor-application' && !doctor
-  const current = doctor
-    ? 'Doctor workspace'
-    : registration
-      ? 'Doctor registration'
-      : 'Choose workspace'
+  const roles = availableWorkspaces(identity)
+  const current = currentWorkspace(identity, route)
+  const registration = current === 'registration'
+  const selected = current && current !== 'registration' ? current : undefined
+  const label = registration
+    ? 'Doctor application'
+    : selected
+      ? workspaceLabels[selected]
+      : roles.length === 1
+        ? workspaceLabels[roles[0]]
+        : 'Choose workspace'
+  const Icon = registration
+    ? Stethoscope
+    : selected
+      ? icons[selected]
+      : roles.length === 1
+        ? icons[roles[0]]
+        : LayoutGrid
+  const applicationClinic =
+    typeof window === 'undefined'
+      ? null
+      : new URLSearchParams(window.location.search).get('clinic')
+  const href = (role: (typeof roles)[number]) =>
+    workspaceHref(identity, role, route, applicationClinic)
+  // Registration is a destination, not a granted clinical role.
+  if (roles.length === 0 || (roles.length === 1 && !registration)) {
+    return (
+      <div className="flex flex-wrap items-center gap-3">
+        <a
+          href={roles.length ? href(roles[0]) : '/join-as-doctor'}
+          className={triggerClass}
+        >
+          <Icon size={17} className="text-teal-700" aria-hidden="true" />
+          {roles.length ? label : 'Doctor application'}
+        </a>
+        {roles.length === 1 && !hasRole(identity, 'doctor') && (
+          <a
+            href="/join-as-doctor"
+            className="text-sm font-medium text-teal-800 underline-offset-4 hover:underline"
+          >
+            Join as doctor
+          </a>
+        )}
+      </div>
+    )
+  }
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
-        className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
-        aria-label={`Switch workspace. Current: ${current}`}
+        className={triggerClass}
+        aria-label={`Switch workspace. Current: ${label}`}
       >
-        <Stethoscope size={17} className="text-teal-700" aria-hidden="true" />
-        {current}
+        <Icon size={17} className="text-teal-700" aria-hidden="true" />
+        {label}
         <ChevronDown size={15} className="text-slate-500" aria-hidden="true" />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="z-50 w-72 rounded-xl border border-slate-200 bg-white p-2 shadow-xl"
+          className="z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-2 shadow-xl"
         >
           <DropdownMenu.Label className="px-3 py-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-            Switch workspace
+            Your workspaces
           </DropdownMenu.Label>
-          {workspaces
-            .filter((workspace) => hasRole(identity, workspace.role))
-            .map(({ role, label, icon: Icon }) => (
+          {roles.map((role) => {
+            const RoleIcon = icons[role]
+            return (
               <DropdownMenu.Item key={role} asChild>
                 <a
-                  href={rolePaths[role]}
-                  aria-current={
-                    role === 'doctor' && doctor ? 'location' : undefined
-                  }
-                  className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-slate-700 outline-none data-[highlighted]:bg-teal-50 data-[highlighted]:text-teal-900"
+                  href={href(role)}
+                  aria-current={selected === role ? 'location' : undefined}
+                  className={itemClass}
                 >
-                  <Icon size={17} aria-hidden="true" />
-                  <span className="flex-1">{label}</span>
-                  {role === 'doctor' && doctor && (
+                  <RoleIcon size={17} aria-hidden="true" />
+                  <span className="flex-1">{workspaceLabels[role]}</span>
+                  {selected === role && (
                     <Check
                       size={16}
                       className="text-teal-700"
@@ -77,36 +121,32 @@ export function WorkspaceSwitcher({
                   )}
                 </a>
               </DropdownMenu.Item>
-            ))}
-          {!doctor && (
-            <DropdownMenu.Item asChild>
-              <a
-                href="/join-as-doctor"
-                aria-current={registration ? 'location' : undefined}
-                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-slate-700 outline-none data-[highlighted]:bg-teal-50 data-[highlighted]:text-teal-900"
-              >
-                <Stethoscope size={17} aria-hidden="true" />
-                <span className="flex-1">Doctor registration</span>
-                {registration && (
-                  <Check
-                    size={16}
-                    className="text-teal-700"
-                    aria-hidden="true"
-                  />
-                )}
-              </a>
-            </DropdownMenu.Item>
+            )
+          })}
+          {!hasRole(identity, 'doctor') && (
+            <>
+              <DropdownMenu.Separator className="my-2 h-px bg-slate-100" />
+              <DropdownMenu.Item asChild>
+                <a
+                  href="/join-as-doctor"
+                  aria-current={registration ? 'location' : undefined}
+                  className={itemClass}
+                >
+                  <Stethoscope size={17} aria-hidden="true" />
+                  <span className="flex-1">
+                    {registration ? 'Doctor application' : 'Join as doctor'}
+                  </span>
+                  {registration && (
+                    <Check
+                      size={16}
+                      className="text-teal-700"
+                      aria-hidden="true"
+                    />
+                  )}
+                </a>
+              </DropdownMenu.Item>
+            </>
           )}
-          <DropdownMenu.Separator className="my-2 h-px bg-slate-100" />
-          <DropdownMenu.Item asChild>
-            <a
-              href="/#clinics"
-              className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-slate-600 outline-none data-[highlighted]:bg-slate-100"
-            >
-              <Building2 size={17} aria-hidden="true" />
-              Browse clinics
-            </a>
-          </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
