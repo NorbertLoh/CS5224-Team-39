@@ -9,16 +9,30 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Tabs } from 'radix-ui'
 import type { DoctorApplication } from './api'
 import {
   applicationHistory,
+  applicationCounts,
   downloadEvidence,
   listApplications,
   reviewApplication,
 } from './api'
 
+const statuses: { value: DoctorApplication['status']; label: string }[] = [
+  { value: 'pending', label: 'Pending review' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'revoked', label: 'Resubmission required' },
+]
+
 export function DoctorApplicationsReview() {
   const [status, setStatus] = useState<DoctorApplication['status']>('pending')
+  const counts = useQuery({
+    queryKey: ['doctor-applications', 'counts', readSession()?.accessToken],
+    queryFn: ({ signal }) => applicationCounts(signal),
+    refetchInterval: 30000,
+  })
   const applications = useInfiniteQuery({
     queryKey: ['doctor-applications', readSession()?.accessToken, status],
     initialPageParam: null as string | null,
@@ -26,6 +40,7 @@ export function DoctorApplicationsReview() {
       listApplications(status, pageParam, signal),
     getNextPageParam: (page) =>
       page.length === 25 ? page.at(-1)?.subject_id : undefined,
+    refetchInterval: 30000,
   })
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
@@ -37,54 +52,83 @@ export function DoctorApplicationsReview() {
         Review the licence and supporting evidence before granting doctor
         eligibility. Clinic access still requires an active membership.
       </p>
-      <label className="mt-6 flex items-center gap-3 text-sm">
-        Status
-        <select
-          className="rounded-md border p-2"
-          value={status}
-          onChange={(event) =>
-            setStatus(event.target.value as DoctorApplication['status'])
-          }
-        >
-          <option value="pending">Pending review</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="revoked">Revoked</option>
-        </select>
-      </label>
-      {applications.isPending ? (
-        <LoadingState message="Loading applications..." />
-      ) : applications.isError ? (
+      <p className="mt-4 text-sm text-slate-500" aria-live="polite">
+        Total applications:{' '}
+        <span className="font-semibold text-slate-900">
+          {counts.data?.total ?? '—'}
+        </span>
+      </p>
+      {counts.isError && (
         <ErrorState
-          message="Could not load applications."
-          onRetry={() => void applications.refetch()}
+          message="Could not refresh application totals."
+          onRetry={() => void counts.refetch()}
         />
-      ) : (
-        <>
-          {!applications.data.pages.some((page) => page.length) && (
-            <p className="mt-6 text-slate-600">
-              No applications with this status.
-            </p>
-          )}
-          <div className="mt-6 grid gap-5">
-            {applications.data.pages.flat().map((application) => (
-              <ReviewCard
-                key={`${application.subject_id}:${application.revision}:${application.status}`}
-                application={application}
-              />
-            ))}
-          </div>
-          {applications.hasNextPage && (
-            <Button
-              className="mt-5"
-              disabled={applications.isFetching}
-              onClick={() => void applications.fetchNextPage()}
-            >
-              Load more applications
-            </Button>
-          )}
-        </>
       )}
+      <Tabs.Root
+        value={status}
+        onValueChange={(value) =>
+          setStatus(value as DoctorApplication['status'])
+        }
+        className="mt-6"
+      >
+        <div className="overflow-x-auto">
+          <Tabs.List
+            aria-label="Application status"
+            className="flex min-w-max gap-2 border-b border-slate-200"
+          >
+            {statuses.map((item) => (
+              <Tabs.Trigger
+                key={item.value}
+                value={item.value}
+                className="flex shrink-0 cursor-pointer items-center gap-2 border-b-2 border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:rounded-t-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 data-[state=active]:border-teal-700 data-[state=active]:text-teal-800"
+              >
+                {item.label}
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs tabular-nums text-slate-700">
+                  {counts.data?.[item.value] ?? '—'}
+                </span>
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+        </div>
+        <Tabs.Content
+          value={status}
+          className="outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+        >
+          {applications.isPending ? (
+            <LoadingState message="Loading applications..." />
+          ) : applications.isError ? (
+            <ErrorState
+              message="Could not load applications."
+              onRetry={() => void applications.refetch()}
+            />
+          ) : (
+            <>
+              {!applications.data.pages.some((page) => page.length) && (
+                <p className="mt-6 text-slate-600">
+                  No applications with this status.
+                </p>
+              )}
+              <div className="mt-6 grid gap-5">
+                {applications.data.pages.flat().map((application) => (
+                  <ReviewCard
+                    key={`${application.subject_id}:${application.revision}:${application.status}`}
+                    application={application}
+                  />
+                ))}
+              </div>
+              {applications.hasNextPage && (
+                <Button
+                  className="mt-5"
+                  disabled={applications.isFetching}
+                  onClick={() => void applications.fetchNextPage()}
+                >
+                  Load more applications
+                </Button>
+              )}
+            </>
+          )}
+        </Tabs.Content>
+      </Tabs.Root>
     </main>
   )
 }

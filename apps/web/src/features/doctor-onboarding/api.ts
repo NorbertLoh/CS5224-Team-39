@@ -18,6 +18,18 @@ export type ApplicationFields = Pick<
   DoctorApplication,
   'legal_name' | 'licence_number' | 'licensing_authority' | 'specialty'
 >
+export type ApplicationCounts = Record<
+  DoctorApplication['status'] | 'total',
+  number
+>
+
+export async function applicationCounts(
+  signal?: AbortSignal,
+): Promise<ApplicationCounts> {
+  return (
+    await request('/platform/doctor-applications/counts', { signal })
+  ).json()
+}
 export type ReviewEvent = {
   event_id: string
   action: string

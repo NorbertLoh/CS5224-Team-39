@@ -10,6 +10,8 @@ RF28 filename refinement: store doctor-name-based licence filenames in identity 
 
 RF28 revocation refinement: platform admins can revoke approved doctor applications with a required reason, disabling doctor eligibility until resubmission and reapproval. Preserve memberships, independent roles and review history; show Revoked status, reason and resubmit form. Migration 0006 allows revoked status with downgrade protection. All 188 identity tests and frontend lint/typecheck/build pass. Remains in issue #320 and draft PR #321; no live approvals are changed during deployment.
 
+RF28 application status tabs: replace the dropdown with keyboard-accessible tabs and database totals for Pending review, Approved, Rejected and Resubmission required, plus an overall count. Counts include all pages and refresh after actions; expose only to platform admins. All 195 identity tests and frontend lint/typecheck/build pass. No new migration/configuration. Remains in issue #320/draft PR #321, with browser acceptance delegated to the user.
+
 ## Serverless workers and edge controls (31 October 2026)
 
 | Done | ID | Deliverable | Dependencies | Effort | Claim |

@@ -6,11 +6,17 @@ from urllib.parse import quote
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request, Response
-from sqlalchemy import select
+from sqlalchemy import func, select
 from telelink_common.errors import DomainError
 
 from app.api.dependencies import DB, User
-from app.doctor_schemas import ApplicationRead, ApplicationWrite, EventRead, ReviewWrite
+from app.doctor_schemas import (
+    ApplicationCounts,
+    ApplicationRead,
+    ApplicationWrite,
+    EventRead,
+    ReviewWrite,
+)
 from app.document_names import licence_filename
 from app.models import DoctorApplication, DoctorApplicationEvent, DoctorDocument, Subject
 from app.services.doctor_verification import platform_reviewer
@@ -155,6 +161,17 @@ def applications(
     if after is not None:
         query = query.where(DoctorApplication.subject_id > after)
     return session.scalars(query.order_by(DoctorApplication.subject_id).limit(limit)).all()
+
+
+@router.get("/platform/doctor-applications/counts", response_model=ApplicationCounts)
+def application_counts(principal: User, session: DB):
+    platform_reviewer(session, principal)
+    counts = dict(
+        session.execute(
+            select(DoctorApplication.status, func.count()).group_by(DoctorApplication.status)
+        ).all()
+    )
+    return ApplicationCounts(**counts, total=sum(counts.values()))
 
 
 @router.get("/platform/doctor-applications/{subject_id}/history", response_model=list[EventRead])

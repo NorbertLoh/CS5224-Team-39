@@ -64,6 +64,37 @@
         "title": "AccessRequest",
         "type": "object"
       },
+      "ApplicationCounts": {
+        "properties": {
+          "approved": {
+            "default": 0,
+            "title": "Approved",
+            "type": "integer"
+          },
+          "pending": {
+            "default": 0,
+            "title": "Pending",
+            "type": "integer"
+          },
+          "rejected": {
+            "default": 0,
+            "title": "Rejected",
+            "type": "integer"
+          },
+          "revoked": {
+            "default": 0,
+            "title": "Revoked",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "title": "ApplicationCounts",
+        "type": "object"
+      },
       "ApplicationRead": {
         "properties": {
           "document_id": {
@@ -2341,6 +2372,32 @@
           }
         ],
         "summary": "Applications",
+        "tags": [
+          "doctor verification"
+        ]
+      }
+    },
+    "/platform/doctor-applications/counts": {
+      "get": {
+        "operationId": "application_counts_platform_doctor_applications_counts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationCounts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Application Counts",
         "tags": [
           "doctor verification"
         ]

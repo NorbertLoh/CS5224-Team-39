@@ -10,7 +10,12 @@ permissions remain available independently.
 Platform administrators use `/platform-admin/doctors`, also linked in role
 navigation, to filter applications, download evidence, approve/reject with a review
 note and read submission/review history. Rejection reasons are shown to applicants.
-In the Approved filter, **Revoke approval for resubmission** requires a reason
+Status tabs show Pending review, Approved, Rejected and Resubmission required,
+with a count per status and an overall application total. Counts come from the
+platform-only `/platform/doctor-applications/counts` database aggregation, include
+all pages and count applications rather than clinic memberships. Tabs support
+keyboard navigation; totals refresh after review actions and every 30 seconds.
+In the Approved tab, **Revoke approval for resubmission** requires a reason
 and moves the application to Revoked. The applicant sees the reason and can
 correct/resubmit, returning to Pending review. Approval cannot be restored until
 that new submission is reviewed. Revocation is platform-only, audited, serialized
@@ -107,3 +112,7 @@ Revocation refinement: all 188 identity tests and frontend lint/typecheck/build
 passed, including revoke/resubmit/reapprove, permissions with existing tokens,
 preserved independent roles and revoked clinic memberships, directory exclusion,
 mandatory reasons, concurrent/stale revocations and migration downgrade protection.
+
+Status-tab refinement: all 195 identity tests and frontend lint/typecheck/build
+passed, including counts authorization, lifecycle changes, empty statuses and
+totals beyond the first 25-row page. No new migration or configuration is required.

@@ -37,6 +37,14 @@ class ReviewWrite(BaseModel):
     expected_revision: int = Field(ge=1)
 
 
+class ApplicationCounts(BaseModel):
+    pending: int = 0
+    approved: int = 0
+    rejected: int = 0
+    revoked: int = 0
+    total: int = 0
+
+
 class EventRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     event_id: UUID
