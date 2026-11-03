@@ -12,7 +12,8 @@ export type Membership = {
   subject: {
     display_name: string
     email: string | null
-    doctor_verification: 'not_applied' | 'pending' | 'approved' | 'rejected'
+    doctor_verification:
+      'not_applied' | 'pending' | 'approved' | 'rejected' | 'revoked'
   }
 }
 

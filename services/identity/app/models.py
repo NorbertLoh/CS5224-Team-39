@@ -131,7 +131,9 @@ class DoctorDocument(Base):
 class DoctorApplication(Base):
     __tablename__ = "doctor_applications"
     __table_args__ = (
-        CheckConstraint("status IN ('pending','approved','rejected')", name="ck_doctor_status"),
+        CheckConstraint(
+            "status IN ('pending','approved','rejected','revoked')", name="ck_doctor_status"
+        ),
         CheckConstraint("revision > 0", name="ck_doctor_revision"),
     )
     subject_id: Mapped[UUID] = mapped_column(

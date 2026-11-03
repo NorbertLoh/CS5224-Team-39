@@ -50,7 +50,10 @@ def submit(body: ApplicationWrite, principal: User, session: DB):
     )
     application = session.get(DoctorApplication, subject.subject_id)
     if application is not None:
-        if application.status != "rejected" or application.revision != body.expected_revision:
+        if (
+            application.status not in {"rejected", "revoked"}
+            or application.revision != body.expected_revision
+        ):
             raise conflict()
     elif body.expected_revision != 0:
         raise conflict()
@@ -143,7 +146,7 @@ def download(document_id: UUID, principal: User, session: DB):
 def applications(
     principal: User,
     session: DB,
-    status: Literal["pending", "approved", "rejected"] = "pending",
+    status: Literal["pending", "approved", "rejected", "revoked"] = "pending",
     after: UUID | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
 ):
@@ -175,10 +178,11 @@ def review(subject_id: UUID, body: ReviewWrite, principal: User, session: DB):
     application = session.get(DoctorApplication, subject_id)
     if application is None:
         raise DomainError(404, "not_found", "Application not found.")
-    if application.status != "pending" or application.revision != body.expected_revision:
+    required_status = "approved" if body.decision == "revoked" else "pending"
+    if application.status != required_status or application.revision != body.expected_revision:
         raise conflict()
     application.status = body.decision
-    application.rejection_reason = body.reason if body.decision == "rejected" else None
+    application.rejection_reason = body.reason if body.decision in {"rejected", "revoked"} else None
     application.reviewer_id = reviewer.subject_id
     application.reviewed_at = datetime.now(timezone.utc)
     session.flush()

@@ -4,12 +4,19 @@ Accounts remain shared. `/join-as-doctor` requires sign-in and preserves that
 destination through signup/sign-in. The form collects name on licence, registration
 number, licensing authority, specialty and one supporting PDF/PNG/JPEG (maximum
 5 MiB; combine multiple pages into a PDF). Applicants see pending, approved or
-rejected status; rejected applications can be corrected and resubmitted. Patient
+rejected/revoked status; rejected or revoked applications can be corrected and resubmitted. Patient
 permissions remain available independently.
 
 Platform administrators use `/platform-admin/doctors`, also linked in role
 navigation, to filter applications, download evidence, approve/reject with a review
 note and read submission/review history. Rejection reasons are shown to applicants.
+In the Approved filter, **Revoke approval for resubmission** requires a reason
+and moves the application to Revoked. The applicant sees the reason and can
+correct/resubmit, returning to Pending review. Approval cannot be restored until
+that new submission is reviewed. Revocation is platform-only, audited, serialized
+and revision-checked; duplicate/stale revocations are rejected. It removes doctor
+eligibility across clinics on subsequent authorization checks while retaining
+clinic assignments, separate clinic-admin/patient rights and evidence/history.
 Self-review is denied. Submissions and decisions serialize on the applicant's
 subject row; revision checks reject stale decisions and concurrent submissions.
 Pending and approved applications cannot be edited by the applicant.
@@ -34,9 +41,12 @@ performed; the platform reviewer must check the evidence.
 
 ## Persistence and deployment
 
-Back up identity before deploying, then run identity Alembic **0005** before
+Back up identity before deploying, then run identity Alembic **0006** before
 starting the updated identity API. No new environment variables or other service
-migrations are required. Deploy identity and web together. Readiness requires 0005.
+migrations are required. Deploy identity and web together. Readiness requires 0006.
+
+Migration 0006 permits the explicit Revoked application status; it does not change
+existing approvals. Downgrade refuses while any revoked application exists.
 
 Migration 0005 adds a stored `doctor_documents.filename`, using the doctor's name
 and file type, for example `Jane Tan - licence.pdf`. New submissions use the name
@@ -92,3 +102,8 @@ both new frontend routes return successfully. The disposable test PostgreSQL
 container was stopped afterward. Browser interaction/layout acceptance is left
 to the user at their request. AWS deployment and external licence validation
 were not performed.
+
+Revocation refinement: all 188 identity tests and frontend lint/typecheck/build
+passed, including revoke/resubmit/reapprove, permissions with existing tokens,
+preserved independent roles and revoked clinic memberships, directory exclusion,
+mandatory reasons, concurrent/stale revocations and migration downgrade protection.

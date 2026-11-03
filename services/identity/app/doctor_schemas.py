@@ -23,7 +23,7 @@ class ApplicationRead(BaseModel):
     licensing_authority: str
     specialty: str
     document_id: UUID
-    status: Literal["pending", "approved", "rejected"]
+    status: Literal["pending", "approved", "rejected", "revoked"]
     revision: int
     rejection_reason: str | None
     submitted_at: datetime
@@ -32,7 +32,7 @@ class ApplicationRead(BaseModel):
 
 class ReviewWrite(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    decision: Literal["approved", "rejected"]
+    decision: Literal["approved", "rejected", "revoked"]
     reason: str = Field(min_length=1, max_length=2000)
     expected_revision: int = Field(ge=1)
 

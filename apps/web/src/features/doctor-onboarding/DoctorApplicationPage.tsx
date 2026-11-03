@@ -64,7 +64,10 @@ function ApplicationForm({
   const [documentId, setDocumentId] = useState(application?.document_id ?? '')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
-  const editable = !application || application.status === 'rejected'
+  const editable =
+    !application ||
+    application.status === 'rejected' ||
+    application.status === 'revoked'
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -109,14 +112,18 @@ function ApplicationForm({
               ? 'Pending review'
               : application.status === 'approved'
                 ? 'Doctor application approved'
-                : 'Changes required'}
+                : application.status === 'revoked'
+                  ? 'Approval revoked — resubmission required'
+                  : 'Changes required'}
           </h2>
           <p className="mt-2 text-sm text-slate-600">
             {application.status === 'pending'
               ? 'A platform administrator will review your details and supporting document. You can continue using your patient account while you wait.'
               : application.status === 'approved'
                 ? 'Your verification is complete. Ask your clinic administrator to add or activate your clinic membership if you do not see the doctor workspace.'
-                : application.rejection_reason}
+                : application.status === 'revoked'
+                  ? `Your doctor access has been disabled. Update your details and resubmit for review. Reason: ${application.rejection_reason}`
+                  : application.rejection_reason}
           </p>
         </section>
       )}

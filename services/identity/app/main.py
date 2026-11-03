@@ -102,7 +102,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     connection.execute(select(Membership.membership_id).limit(1))
                     available = (
                         connection.scalar(text("SELECT version_num FROM identity.alembic_version"))
-                        == "0005"
+                        == "0006"
                     )
             except SQLAlchemyError:
                 available = False

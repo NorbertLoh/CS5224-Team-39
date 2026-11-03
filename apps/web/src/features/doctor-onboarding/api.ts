@@ -8,7 +8,7 @@ export type DoctorApplication = {
   licensing_authority: string
   specialty: string
   document_id: string
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'revoked'
   revision: number
   rejection_reason: string | null
   submitted_at: string
@@ -101,7 +101,7 @@ export async function listApplications(
 
 export async function reviewApplication(
   application: DoctorApplication,
-  decision: 'approved' | 'rejected',
+  decision: 'approved' | 'rejected' | 'revoked',
   reason: string,
 ): Promise<DoctorApplication> {
   return (

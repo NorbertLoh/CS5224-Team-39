@@ -232,7 +232,9 @@ function StaffPage({ tenantId }: { tenantId: string }) {
                           <p className="mt-2 text-sm font-medium text-teal-700">
                             {item.subject.doctor_verification === 'approved'
                               ? 'Doctor verification approved'
-                              : 'Pending verification — doctor access disabled'}
+                              : item.subject.doctor_verification === 'revoked'
+                                ? 'Approval revoked — doctor access disabled'
+                                : 'Pending verification — doctor access disabled'}
                           </p>
                         )}
                         {item.subject.email && (

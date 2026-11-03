@@ -43,7 +43,9 @@ class StaffSubjectRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     display_name: str
     email: str | None
-    doctor_verification: Literal["not_applied", "pending", "approved", "rejected"] = "not_applied"
+    doctor_verification: Literal["not_applied", "pending", "approved", "rejected", "revoked"] = (
+        "not_applied"
+    )
 
 
 class StaffMembershipRead(MembershipRead):
