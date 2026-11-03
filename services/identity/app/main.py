@@ -63,7 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_origins=config.cors_origins,
         allow_methods=["GET", "PUT", "DELETE", "POST"],
         allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-        expose_headers=["X-Request-ID", "Retry-After"],
+        expose_headers=["X-Request-ID", "Retry-After", "Content-Disposition"],
     )
     app.add_middleware(RequestLoggingMiddleware, service="identity")
     app.include_router(notification_router)
@@ -102,7 +102,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     connection.execute(select(Membership.membership_id).limit(1))
                     available = (
                         connection.scalar(text("SELECT version_num FROM identity.alembic_version"))
-                        == "0004"
+                        == "0005"
                     )
             except SQLAlchemyError:
                 available = False

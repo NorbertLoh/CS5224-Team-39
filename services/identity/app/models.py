@@ -123,6 +123,7 @@ class DoctorDocument(Base):
         Uuid, ForeignKey("identity.subjects.subject_id", ondelete="CASCADE"), index=True
     )
     content_type: Mapped[str] = mapped_column(Text)
+    filename: Mapped[str | None] = mapped_column(Text)
     content: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

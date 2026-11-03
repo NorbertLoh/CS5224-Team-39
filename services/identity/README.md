@@ -150,7 +150,7 @@ runtime `sub`. A10 additionally verifies live tenant membership validation;
 scheduling integration remains future work.
 
 RF28 adds private doctor applications, manual platform review and verification-gated
-doctor permissions. Deploy migration 0004 before the updated API. Existing/seeded
+doctor permissions. Deploy migration 0005 before the updated API. Existing/seeded
 doctor memberships require application approval; clinic-admin/patient access stays
 independent. See [doctor verification](../../docs/RF28-doctor-verification.md) for
 the access rules, evidence storage, review history and verification notes.

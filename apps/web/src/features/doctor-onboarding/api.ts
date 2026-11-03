@@ -78,7 +78,11 @@ export async function downloadEvidence(documentId: string) {
     { 'application/pdf': 'pdf', 'image/png': 'png', 'image/jpeg': 'jpg' }[
       blob.type
     ] ?? 'bin'
-  link.download = `doctor-evidence.${extension}`
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const encodedName = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1]
+  link.download = encodedName
+    ? decodeURIComponent(encodedName)
+    : `Doctor - licence.${extension}`
   link.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

@@ -1,5 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from urllib.parse import quote
+from uuid import UUID
 
 import pytest
 from alembic import command
@@ -21,7 +23,8 @@ from test_api import (
     tenant_token,
 )
 
-from app.models import Membership, Subject
+from app.document_names import licence_filename
+from app.models import DoctorDocument, Membership, Subject
 
 # Reuse the real PostgreSQL/JWT fixtures from the identity API suite.
 __all__ = ["api", "api_database", "signing_key"]
@@ -341,3 +344,55 @@ def test_review_queue_filters_status_and_paginates(api):
             endpoint, params={"status": "approved"}, headers=credential
         ).json()
     }
+
+
+def test_doctor_licence_filename_is_persisted_and_used_for_download(api):
+    document = evidence(api).json()["document_id"]
+    body = application_body(document) | {"legal_name": 'Dr. Tan / Wei "明"'}
+    response = api.client.post("/me/doctor-application", json=body, headers=headers(api, "target"))
+    assert response.status_code == 200
+    expected = "Dr. Tan Wei 明 - licence.pdf"
+    with Session(api.engine) as session:
+        assert session.get(DoctorDocument, UUID(document)).filename == expected
+    for actor in ("target", "platform"):
+        result = api.client.get(f"/doctor-documents/{document}", headers=headers(api, actor))
+        assert result.headers["Content-Disposition"] == "attachment; filename*=UTF-8''" + quote(
+            expected, safe=""
+        )
+
+
+@pytest.mark.parametrize(
+    "name,media_type,expected",
+    [
+        ("Jane Tan", "application/pdf", "Jane Tan - licence.pdf"),
+        ("../../Jane\r\nTan", "image/png", "JaneTan - licence.png"),
+        ("Dr Lee", "image/jpeg", "Dr Lee - licence.jpg"),
+        ("/\\\r\n", "application/pdf", "Doctor - licence.pdf"),
+    ],
+)
+def test_licence_filename_sanitization(name, media_type, expected):
+    assert licence_filename(name, media_type) == expected
+
+
+def test_existing_document_names_are_backfilled_and_reused_evidence_keeps_name(api):
+    application, body = apply(api)
+    config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    command.downgrade(config, "0004")
+    command.upgrade(config, "head")
+    document_id = UUID(application["document_id"])
+    with Session(api.engine) as session:
+        assert (
+            session.get(DoctorDocument, document_id).filename == "Synthetic applicant - licence.pdf"
+        )
+    assert review(api, decision="rejected").status_code == 200
+    body.update(legal_name="Corrected applicant name", expected_revision=1)
+    assert (
+        api.client.post(
+            "/me/doctor-application", json=body, headers=headers(api, "target")
+        ).status_code
+        == 200
+    )
+    with Session(api.engine) as session:
+        assert (
+            session.get(DoctorDocument, document_id).filename == "Synthetic applicant - licence.pdf"
+        )

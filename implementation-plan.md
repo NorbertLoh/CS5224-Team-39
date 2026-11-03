@@ -6,6 +6,8 @@
 
 RF28 implementation is in draft PR #321. Verification: 174 identity tests on disposable PostgreSQL, Ruff/format, architecture guard, frontend lint/typecheck/build, probe typecheck and seven session checks passed. Identity/web images built; local identity backed up, migration 0004 applied, API readiness and both new frontend routes verified. Existing/seeded doctor assignments require manual application approval; no automatic verification or membership reactivation. Browser acceptance is deferred to the user at their request. Setup and limits: `docs/RF28-doctor-verification.md`. Issue stays In progress until merge and completion acceptance.
 
+RF28 filename refinement: store doctor-name-based licence filenames in identity and use them for downloads, including Unicode names; backfill existing and preserve historical evidence names. Migration 0005 required. All 180 identity tests and frontend lint/typecheck/build pass. Upload picker also has a visible teal button and focus styling, as requested during manual review.
+
 ## Serverless workers and edge controls (31 October 2026)
 
 | Done | ID | Deliverable | Dependencies | Effort | Claim |

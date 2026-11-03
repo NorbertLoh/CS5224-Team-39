@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 from typing import Annotated, Literal
+from urllib.parse import quote
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request, Response
@@ -10,6 +11,7 @@ from telelink_common.errors import DomainError
 
 from app.api.dependencies import DB, User
 from app.doctor_schemas import ApplicationRead, ApplicationWrite, EventRead, ReviewWrite
+from app.document_names import licence_filename
 from app.models import DoctorApplication, DoctorApplicationEvent, DoctorDocument, Subject
 from app.services.doctor_verification import platform_reviewer
 from app.services.identity import current_subject
@@ -55,6 +57,18 @@ def submit(body: ApplicationWrite, principal: User, session: DB):
     document = session.get(DoctorDocument, body.document_id)
     if document is None or document.subject_id != subject.subject_id:
         raise DomainError(404, "not_found", "Supporting document not found.")
+    # Preserve the original name when reusing evidence from an earlier submission.
+    previously_submitted = session.scalar(
+        select(DoctorApplicationEvent.event_id)
+        .where(
+            DoctorApplicationEvent.subject_id == subject.subject_id,
+            DoctorApplicationEvent.action == "submitted",
+            DoctorApplicationEvent.snapshot["document_id"].astext == str(document.document_id),
+        )
+        .limit(1)
+    )
+    if previously_submitted is None:
+        document.filename = licence_filename(body.legal_name, document.content_type)
     values = body.model_dump(exclude={"expected_revision"})
     if application is None:
         application = DoctorApplication(subject_id=subject.subject_id, **values)
@@ -93,7 +107,10 @@ async def upload(request: Request, principal: User, session: DB):
     if not content.startswith(signatures[content_type]):
         raise DomainError(422, "invalid_document", "The file does not match its format.")
     document = DoctorDocument(
-        subject_id=subject.subject_id, content_type=content_type, content=bytes(content)
+        subject_id=subject.subject_id,
+        content_type=content_type,
+        filename=licence_filename(subject.display_name, content_type),
+        content=bytes(content),
     )
     session.add(document)
     session.flush()
@@ -109,16 +126,14 @@ def download(document_id: UUID, principal: User, session: DB):
         document.subject_id != subject.subject_id and "platform_admin" not in subject.global_roles
     ):
         raise DomainError(404, "not_found", "Document not found.")
-    extension = {"application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg"}[
-        document.content_type
-    ]
+    filename = document.filename or licence_filename("Doctor", document.content_type)
     return Response(
         document.content,
         media_type=document.content_type,
         headers={
             "Cache-Control": "no-store",
             "X-Content-Type-Options": "nosniff",
-            "Content-Disposition": f'attachment; filename="doctor-evidence.{extension}"',
+            "Content-Disposition": "attachment; filename*=UTF-8''" + quote(filename, safe=""),
             "Content-Security-Policy": "sandbox",
         },
     )

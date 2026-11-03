@@ -34,9 +34,16 @@ performed; the platform reviewer must check the evidence.
 
 ## Persistence and deployment
 
-Back up identity before deploying, then run identity Alembic **0004** before
+Back up identity before deploying, then run identity Alembic **0005** before
 starting the updated identity API. No new environment variables or other service
-migrations are required. Deploy identity and web together. Readiness requires 0004.
+migrations are required. Deploy identity and web together. Readiness requires 0005.
+
+Migration 0005 adds a stored `doctor_documents.filename`, using the doctor's name
+and file type, for example `Jane Tan - licence.pdf`. New submissions use the name
+on the licence; existing files are backfilled from their original submission or
+account name. Downloads use that filename, including Unicode names. Historical
+evidence retains its original name when reused on a resubmission. File names are
+sanitized to remove path separators and control characters.
 
 **Existing doctor assignments are unverified after deployment.** The migration
 does not fabricate verification for existing or seeded accounts. Those accounts
