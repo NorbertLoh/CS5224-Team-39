@@ -295,6 +295,7 @@ const patientAttention = render('/patient', patient, (client) => {
 assert(patientAttention.includes('Payment due'))
 assert(patientAttention.includes('Needs attention'))
 assert(patientAttention.includes('text-red-700'))
+assert(patientAttention.includes('aria-hidden="true">1</span>'))
 const platformAttention = render('/platform-admin/clinics', all, (client) => {
   const filters = { q: '', from: '', to: '', status: 'all' }
   client.setQueryData(
@@ -321,6 +322,7 @@ const inReview = render('/join-as-doctor', patient, (client) =>
   }),
 )
 assert(inReview.includes('In review'))
+assert(inReview.includes('aria-hidden="true">1</span>'))
 assert(!inReview.includes('Action needed'))
 const approved = render('/doctor', all, (client) =>
   client.setQueryData(['doctor-application', session.accessToken], {

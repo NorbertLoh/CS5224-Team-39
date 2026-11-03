@@ -92,3 +92,5 @@ for patient badges; a dedicated server aggregate can reduce cost at larger scale
 Loading/failed checks omit their badges and do not claim zero outstanding items.
 Independent queries let one service's failure leave other indicators available.
 No new endpoints, data writes, migrations, settings or dependencies.
+
+Attention badges display coloured numbers only (one for a single verification application). Status labels and descriptions remain in tooltips and screen-reader text.
