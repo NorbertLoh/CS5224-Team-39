@@ -153,17 +153,21 @@ function ApplicationForm({
             </label>
           ))}
           {editable && (
-            <label className="grid gap-2 text-sm sm:col-span-2">
-              Licence and supporting evidence
+            <label className="grid min-w-0 gap-3 rounded-xl border border-dashed border-teal-300 bg-teal-50/40 p-5 text-sm sm:col-span-2">
+              <span className="font-medium text-slate-900">
+                Licence and supporting evidence
+              </span>
               <input
                 type="file"
                 accept="application/pdf,image/png,image/jpeg"
                 required={!documentId}
+                aria-describedby="doctor-evidence-help"
+                className="w-full min-w-0 cursor-pointer rounded-lg text-sm text-slate-600 outline-none file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-teal-700 file:px-5 file:py-3 file:text-sm file:font-semibold file:text-white file:transition-colors hover:file:bg-teal-800 focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:file:cursor-not-allowed"
                 onChange={(event) => {
                   setFile(event.target.files?.[0] ?? null)
                 }}
               />
-              <span className="text-slate-600">
+              <span id="doctor-evidence-help" className="text-slate-600">
                 Upload a PDF, PNG or JPEG, up to 5 MB. Combine multiple pages
                 into one PDF. Only you and platform reviewers can download it.{' '}
                 {documentId &&
