@@ -133,10 +133,10 @@ function render(path: string, identity = all) {
   return html
 }
 for (const [path, label] of [
-  ['/patient', 'Patient'],
-  ['/doctor', 'Doctor'],
-  ['/clinic-admin', 'Clinic admin'],
-  ['/platform-admin/clinics', 'Platform admin'],
+  ['/patient', 'Patient care'],
+  ['/doctor', 'Doctor workspace'],
+  ['/clinic-admin', 'Clinic administration'],
+  ['/platform-admin/clinics', 'Platform administration'],
 ] as const) {
   const html = render(path)
   assert(html.includes(`Switch workspace. Current: ${label}`))
@@ -145,10 +145,10 @@ for (const [path, label] of [
   assert(!html.includes('Your roles'))
 }
 const single = render('/patient', patient)
-assert(!single.includes('aria-haspopup="menu"'))
-assert(single.includes('Join as doctor'))
+assert(single.includes('aria-haspopup="menu"'))
+assert(single.includes('Switch workspace. Current: Patient care'))
 const registration = render('/join-as-doctor', patient)
-assert(registration.includes('Switch workspace. Current: Doctor application'))
+assert(registration.includes('Switch workspace. Current: Doctor registration'))
 assert(registration.includes('Application status'))
 assert(!registration.includes('>Availability<'))
 assert(!registration.includes('>Appointments<'))
@@ -178,5 +178,5 @@ const signedOut = render('/')
 assert(!signedOut.includes('Switch workspace'))
 assert(!signedOut.includes('<nav '))
 console.log(
-  'PASS: all-role workspace selection, single-role link, application-only access, one section bar, clinic context, revoked membership, platform exceptions, consultations and signed-out/denied navigation.',
+  'PASS: all-role workspace selection, single-role dropdown, application-only access, one section bar, clinic context, revoked membership, platform exceptions, consultations and signed-out/denied navigation.',
 )

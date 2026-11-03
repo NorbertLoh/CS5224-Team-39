@@ -8,10 +8,10 @@ import {
 } from '@/navigation/access'
 
 export const workspaceLabels: Record<Role, string> = {
-  patient: 'Patient',
-  doctor: 'Doctor',
-  clinic_admin: 'Clinic admin',
-  platform_admin: 'Platform admin',
+  patient: 'Patient care',
+  doctor: 'Doctor workspace',
+  clinic_admin: 'Clinic administration',
+  platform_admin: 'Platform administration',
 }
 
 export function availableWorkspaces(identity: Identity) {

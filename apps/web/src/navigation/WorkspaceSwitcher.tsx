@@ -41,7 +41,7 @@ export function WorkspaceSwitcher({
   const registration = current === 'registration'
   const selected = current && current !== 'registration' ? current : undefined
   const label = registration
-    ? 'Doctor application'
+    ? 'Doctor registration'
     : selected
       ? workspaceLabels[selected]
       : roles.length === 1
@@ -60,28 +60,6 @@ export function WorkspaceSwitcher({
       : new URLSearchParams(window.location.search).get('clinic')
   const href = (role: (typeof roles)[number]) =>
     workspaceHref(identity, role, route, applicationClinic)
-  // Registration is a destination, not a granted clinical role.
-  if (roles.length === 0 || (roles.length === 1 && !registration)) {
-    return (
-      <div className="flex flex-wrap items-center gap-3">
-        <a
-          href={roles.length ? href(roles[0]) : '/join-as-doctor'}
-          className={triggerClass}
-        >
-          <Icon size={17} className="text-teal-700" aria-hidden="true" />
-          {roles.length ? label : 'Doctor application'}
-        </a>
-        {roles.length === 1 && !hasRole(identity, 'doctor') && (
-          <a
-            href="/join-as-doctor"
-            className="text-sm font-medium text-teal-800 underline-offset-4 hover:underline"
-          >
-            Join as doctor
-          </a>
-        )}
-      </div>
-    )
-  }
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
@@ -99,7 +77,7 @@ export function WorkspaceSwitcher({
           className="z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-2 shadow-xl"
         >
           <DropdownMenu.Label className="px-3 py-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-            Your workspaces
+            Switch workspace
           </DropdownMenu.Label>
           {roles.map((role) => {
             const RoleIcon = icons[role]
@@ -125,7 +103,6 @@ export function WorkspaceSwitcher({
           })}
           {!hasRole(identity, 'doctor') && (
             <>
-              <DropdownMenu.Separator className="my-2 h-px bg-slate-100" />
               <DropdownMenu.Item asChild>
                 <a
                   href="/join-as-doctor"
@@ -134,7 +111,7 @@ export function WorkspaceSwitcher({
                 >
                   <Stethoscope size={17} aria-hidden="true" />
                   <span className="flex-1">
-                    {registration ? 'Doctor application' : 'Join as doctor'}
+                    Doctor registration
                   </span>
                   {registration && (
                     <Check
@@ -147,6 +124,16 @@ export function WorkspaceSwitcher({
               </DropdownMenu.Item>
             </>
           )}
+          <DropdownMenu.Separator className="my-2 h-px bg-slate-100" />
+          <DropdownMenu.Item asChild>
+            <a
+              href="/#clinics"
+              className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-slate-600 outline-none data-[highlighted]:bg-slate-100"
+            >
+              <Building2 size={17} aria-hidden="true" />
+              Browse clinics
+            </a>
+          </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
