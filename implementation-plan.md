@@ -516,3 +516,5 @@ RF28 all-workspace verification: frontend lint/typecheck/probe typecheck and Doc
 RF28 workspace-switcher correction: user requests the previous workspace dropdown. Restore dropdown for single-role accounts, full workspace names, Doctor registration and Browse clinics inside the menu. Retain the new role-aware selection and improved section navbars. Covered by existing issue #320/draft PR #321; frontend-only.
 
 RF28 registration entry correction: keep clinic/doctor registration on the clinics homepage and remove Doctor registration from the workspace dropdown. Dropdown retains granted workspaces and Browse clinics. Existing #320/PR #321, frontend-only; registration routes and doctor application navigation unchanged.
+
+RF28 patient navigation correction: hide the workspace dropdown when Patient is the only available role, retaining patient section navigation and clinics-page registration. Multi-role accounts retain the dropdown. Existing #320/PR #321; focused navigation probe and web checks/rollout required.

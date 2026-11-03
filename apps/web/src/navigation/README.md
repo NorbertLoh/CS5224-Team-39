@@ -7,7 +7,8 @@ the selected workspace from the current identity and route. Roles come from
 `/identity/me`, never browser role storage or Cognito groups. Identity refreshes
 on page load, focus and every 30 seconds; API checks remain authoritative.
 
-Accounts get one workspace dropdown with the current role's name, icon and
+Patient-only accounts hide the workspace dropdown and retain patient navigation.
+Other accounts get one workspace dropdown with the current role's name, icon and
 checkmark. It contains granted workspaces and Browse clinics. Doctor and clinic
 registration links stay on the clinics homepage, outside the dropdown. Doctor
 application is a separate onboarding destination, not a granted clinical role.
@@ -49,7 +50,7 @@ Verification:
 
 - Frontend lint, typecheck, probe typecheck and production build.
 - `node dev/run_frontend_probe.mjs check_navigation_frontend.mts`: role/route
-  selection, multi-role headers, single-role dropdown, doctor onboarding,
+  selection, multi-role headers, hidden patient-only switcher, doctor onboarding,
   single section bars, scoped links, revoked membership exclusion, platform
   exceptions, consultation and signed-out/denied rendering. It renders React on
   the server with synthetic identity fixtures and makes no API calls.

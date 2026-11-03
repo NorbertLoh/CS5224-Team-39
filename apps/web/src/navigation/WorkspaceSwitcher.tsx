@@ -36,6 +36,7 @@ export function WorkspaceSwitcher({
   route: Route
 }) {
   const roles = availableWorkspaces(identity)
+  if (roles.length === 1 && roles[0] === 'patient') return null
   const current = currentWorkspace(identity, route)
   const registration = current === 'registration'
   const selected = current && current !== 'registration' ? current : undefined
