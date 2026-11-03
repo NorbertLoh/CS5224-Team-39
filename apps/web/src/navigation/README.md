@@ -86,7 +86,10 @@ context is preserved in clinical links and through Verification using a
 Verification remains account-wide and has no clinic selector. Unverified accounts
 see registration/verification navigation only; consultation pages do not mark the
 appointment list as the current page or show a clinic picker. Workspace choices
-are limited to current roles. Other workspace navigation is unchanged. Frontend
+are limited to current roles. On other pages, the original role bar shows one
+Doctor entry for accounts with doctor access; Verification lives inside that
+workspace. The Join as a doctor link remains available only without doctor access.
+Frontend
 lint/typecheck/probe typecheck/build, focused rendered navigation/context checks
 and seven session checks passed; browser acceptance remains with the user.
 

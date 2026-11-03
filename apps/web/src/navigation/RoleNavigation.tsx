@@ -27,17 +27,17 @@ export function RoleNavigation({
               {roleLabels[item]}
             </a>
           ))}
-        <a
-          href="/join-as-doctor"
-          aria-current={
-            route.kind === 'doctor-application' ? 'page' : undefined
-          }
-          className="underline underline-offset-4"
-        >
-          {hasRole(identity, 'doctor')
-            ? 'Doctor verification'
-            : 'Join as a doctor'}
-        </a>
+        {!hasRole(identity, 'doctor') && (
+          <a
+            href="/join-as-doctor"
+            aria-current={
+              route.kind === 'doctor-application' ? 'page' : undefined
+            }
+            className="underline underline-offset-4"
+          >
+            Join as a doctor
+          </a>
+        )}
         {hasRole(identity, 'platform_admin') && (
           <a
             href="/platform-admin/doctors"
