@@ -89,7 +89,9 @@ export function AppShell({
             route.role === 'patient' &&
             canAccess(identity.data, route)) ||
             route.kind === 'home' ||
-            route.kind === 'storefront') && <PatientNavigation route={route} />}
+            route.kind === 'storefront') && (
+            <PatientNavigation route={route} identity={identity.data} />
+          )}
         {session && !('role' in route) && identity.isPending && (
           <LoadingState message="Loading your workspaces..." />
         )}

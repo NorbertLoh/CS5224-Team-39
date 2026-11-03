@@ -63,3 +63,32 @@ Setup: [local backend](../../../../docs/clinic-backend.md),
 [doctor verification](../../../../docs/RF28-doctor-verification.md),
 [patient profile](../../../../docs/patient-profile.md),
 [clinic pickup settings](../../../../docs/clinic-pickup-settings.md).
+
+Navigation attention indicators use red text/badges for work needing action and
+amber for waiting or progress. They retain one bottom active underline, without
+a second focus line. Badges include text and accessible descriptions, so their
+meaning does not depend on color.
+
+- Doctor verification: Action needed for no application, rejection or revocation;
+  In review for pending; no badge for approved.
+- Patient Appointments: Payment due counts only this patient's live held or
+  pending-payment bookings with a future hold deadline and appointment end.
+  Refunded/refund-required, cancelled and expired bookings are excluded.
+- Patient Orders & delivery: Needs attention for unpaid orders, exceptions or
+  refund review; In progress for pending payment confirmation, paid/preparing,
+  submitting or dispatched orders. Completed/refunded and ordinary cancelled
+  orders do not retain highlights. Red action takes precedence over amber progress.
+- Platform Clinics and Doctor applications: Pending badges use the existing
+  unfiltered aggregate review counts, independent of page search/filter state.
+
+Queries are scoped to the mounted workspace and session, refresh on focus and
+every 30 seconds, and share existing application/review cache keys and invalidation.
+Patient list aggregation follows every cursor, uses explicit patient appointment
+view and checks patient ownership for orders on mixed-role accounts. The existing
+fulfilment list may include other records authorized by an admin role; only the
+current patient's records contribute. Navigation reads the lightweight order list
+without delivery-detail fan-out. This prototype uses paginated list aggregation
+for patient badges; a dedicated server aggregate can reduce cost at larger scale.
+Loading/failed checks omit their badges and do not claim zero outstanding items.
+Independent queries let one service's failure leave other indicators available.
+No new endpoints, data writes, migrations, settings or dependencies.

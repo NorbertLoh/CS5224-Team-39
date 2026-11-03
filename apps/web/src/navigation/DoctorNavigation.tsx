@@ -1,4 +1,5 @@
 import type { Identity } from '@/auth/identity'
+import { useVerificationAttention } from '@/navigation/useNavigationAttention'
 import { useClinicNames } from '@/features/clinics/hooks/useClinicNames'
 import type { Route } from '@/navigation/access'
 import { doctorNavigationState } from '@/navigation/doctor-navigation'
@@ -18,6 +19,7 @@ export function DoctorNavigation({
   route: Route
   identity: Identity
 }) {
+  const attention = useVerificationAttention()
   const applicationClinic =
     typeof window === 'undefined'
       ? null
@@ -62,6 +64,7 @@ export function DoctorNavigation({
       links={pages.map(({ section, ...page }) => ({
         ...page,
         active: section === state.section,
+        attention: section === 'verification' ? attention : undefined,
       }))}
     >
       {state.canPractise && state.section === 'verification' && (

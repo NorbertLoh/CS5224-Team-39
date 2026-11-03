@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { tabClassName } from '@/lib/tab-styles'
+import type { NavigationAttention } from '@/navigation/attention'
 
 export type WorkspaceLink = {
   href: string
   label: string
   active: boolean
   icon?: LucideIcon
+  attention?: NavigationAttention
 }
 
 export function WorkspaceNavigation({
@@ -41,12 +43,12 @@ export function WorkspaceNavigation({
           aria-label={title}
           className="mt-3 flex gap-1 overflow-x-auto border-b border-slate-200"
         >
-          {links.map(({ href, label, active, icon: LinkIcon }) => (
+          {links.map(({ href, label, active, attention, icon: LinkIcon }) => (
             <a
               key={href}
               href={href}
               aria-current={active ? 'page' : undefined}
-              className={tabClassName(active)}
+              className={tabClassName(active, attention?.tone)}
             >
               {LinkIcon && (
                 <LinkIcon
@@ -56,6 +58,16 @@ export function WorkspaceNavigation({
                 />
               )}
               {label}
+              {attention && (
+                <span
+                  title={attention.description}
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${attention.tone === 'danger' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-900'}`}
+                >
+                  {attention.label}
+                  {attention.count !== undefined && <> · {attention.count}</>}
+                  <span className="sr-only">. {attention.description}</span>
+                </span>
+              )}
             </a>
           ))}
         </nav>

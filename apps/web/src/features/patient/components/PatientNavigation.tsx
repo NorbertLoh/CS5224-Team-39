@@ -1,4 +1,6 @@
 import type { Route } from '@/navigation/access'
+import type { Identity } from '@/auth/identity'
+import { usePatientAttention } from '@/navigation/useNavigationAttention'
 import { WorkspaceNavigation } from '@/navigation/WorkspaceNavigation'
 import { UserRound } from 'lucide-react'
 
@@ -23,7 +25,14 @@ const pages = [
   { href: '/patient/profile', label: 'My profile', kinds: ['patient-profile'] },
 ]
 
-export function PatientNavigation({ route }: { route: Route }) {
+export function PatientNavigation({
+  route,
+  identity,
+}: {
+  route: Route
+  identity: Identity
+}) {
+  const attention = usePatientAttention(identity)
   return (
     <WorkspaceNavigation
       title="Patient workspace"
@@ -37,6 +46,12 @@ export function PatientNavigation({ route }: { route: Route }) {
         href,
         label,
         active: kinds.includes(route.kind),
+        attention:
+          href === '/patient'
+            ? attention.appointments
+            : href === '/patient/medication-orders'
+              ? attention.orders
+              : undefined,
       }))}
     />
   )

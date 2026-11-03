@@ -10,6 +10,14 @@ import {
   workspaceHref,
 } from '../src/navigation/workspaces'
 
+import {
+  appointmentPaymentAttention,
+  orderAttention,
+  pendingAttention,
+  verificationAttention,
+} from '../src/navigation/attention'
+import { navigationItems } from '../src/navigation/useNavigationAttention'
+
 const a = '00000000-0000-4000-8000-000000000001'
 const b = '00000000-0000-4000-8000-000000000002'
 const revoked = '00000000-0000-4000-8000-000000000003'
@@ -102,7 +110,11 @@ Object.assign(globalThis, {
 })
 // Import after installing storage/location: the auth module reads callback state on load.
 const { AppShell } = await import('../src/navigation/AppShell')
-function render(path: string, identity = all) {
+function render(
+  path: string,
+  identity = all,
+  seed?: (client: QueryClient) => void,
+) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   })
@@ -119,6 +131,7 @@ function render(path: string, identity = all) {
       new Map(ids.map((id) => [id, id === a ? 'Alpha Clinic' : 'Beta Clinic'])),
     )
   }
+  seed?.(client)
   const html = renderToStaticMarkup(
     createElement(
       QueryClientProvider,
@@ -174,10 +187,151 @@ assert(!platformStaff.includes(`href="/clinic-admin/clinics/${a}/settings"`))
 const denied = render('/doctor', patient)
 assert(!denied.includes('FEATURE CONTENT'))
 assert(denied.includes('You do not have access'))
+// Attention follows current actionable states, never terminal history or another patient.
+assert.equal(verificationAttention(null)?.tone, 'danger')
+for (const status of ['rejected', 'revoked'] as const)
+  assert.equal(verificationAttention({ status })?.label, 'Action needed')
+assert.equal(verificationAttention({ status: 'pending' })?.tone, 'waiting')
+assert.equal(verificationAttention({ status: 'approved' }), undefined)
+assert.equal(pendingAttention(0, 'Reviews'), undefined)
+assert.equal(pendingAttention(undefined, 'Reviews'), undefined)
+assert.equal(pendingAttention(27, 'Reviews')?.count, 27)
+const payable = {
+  patient_id: a,
+  status: 'pending_payment',
+  payment_resolution: 'awaiting_payment',
+  hold_expires_at: '2030-01-01T01:00:00Z',
+  ends_at: '2030-01-01T02:00:00Z',
+} as const
+const now = Date.parse('2030-01-01T00:00:00Z')
+assert.equal(
+  appointmentPaymentAttention(
+    [
+      payable,
+      { ...payable, patient_id: b },
+      { ...payable, status: 'cancelled' },
+      { ...payable, payment_resolution: 'refund_required' },
+      { ...payable, hold_expires_at: '2029-01-01T00:00:00Z' },
+    ],
+    a,
+    now,
+  )?.count,
+  1,
+)
+assert.equal(
+  appointmentPaymentAttention([payable], a, Date.parse('2030-01-02T00:00:00Z')),
+  undefined,
+)
+const unpaid = {
+  patient_id: a,
+  status: 'awaiting_payment',
+  payment_status: 'unpaid',
+} as const
+const active = {
+  ...unpaid,
+  status: 'dispatched',
+  payment_status: 'succeeded',
+} as const
+assert.equal(
+  orderAttention([unpaid, { ...unpaid, patient_id: b }], a)?.count,
+  1,
+)
+assert.equal(orderAttention([active], a)?.tone, 'waiting')
+assert.equal(
+  orderAttention([{ ...unpaid, payment_status: 'pending' }], a)?.tone,
+  'waiting',
+)
+assert.equal(
+  orderAttention(
+    [
+      { ...active, status: 'delivered' },
+      { ...unpaid, payment_status: 'refunded' },
+      { ...unpaid, status: 'cancelled' },
+    ],
+    a,
+  ),
+  undefined,
+)
+assert.equal(
+  orderAttention([{ ...active, status: 'exception' }], a)?.tone,
+  'danger',
+)
+assert.equal(
+  orderAttention(
+    [{ ...active, status: 'cancelled', payment_status: 'refund_required' }],
+    a,
+  )?.tone,
+  'danger',
+)
+const pages: Array<string | null> = []
+const paged = await navigationItems(async (cursor) => {
+  pages.push(cursor)
+  return cursor
+    ? { items: [2], next_cursor: null }
+    : { items: [1], next_cursor: 'page-2' }
+})
+assert.deepEqual(pages, [null, 'page-2'])
+assert.deepEqual(paged, [1, 2])
+await assert.rejects(
+  navigationItems(async () => ({ items: [], next_cursor: 'repeated' })),
+  /did not advance/,
+)
+const patientAttention = render('/patient', patient, (client) => {
+  client.setQueryData(
+    ['scheduling', 'navigation-attention', session.accessToken, a],
+    [
+      {
+        ...payable,
+        hold_expires_at: '2099-01-01T00:00:00Z',
+        ends_at: '2099-01-01T01:00:00Z',
+      },
+    ],
+  )
+  client.setQueryData(
+    ['fulfilment', 'navigation-attention', session.accessToken, a],
+    [unpaid, active],
+  )
+})
+assert(patientAttention.includes('Payment due'))
+assert(patientAttention.includes('Needs attention'))
+assert(patientAttention.includes('text-red-700'))
+const platformAttention = render('/platform-admin/clinics', all, (client) => {
+  const filters = { q: '', from: '', to: '', status: 'all' }
+  client.setQueryData(
+    ['platform-clinics', 'counts', session.accessToken, filters],
+    { pending_review: 28 },
+  )
+  client.setQueryData(
+    ['doctor-applications', 'counts', session.accessToken, filters],
+    { pending: 13 },
+  )
+})
+assert(platformAttention.includes('28'))
+assert(platformAttention.includes('13'))
+assert(platformAttention.includes('Pending'))
+const needsVerification = render('/join-as-doctor', patient, (client) =>
+  client.setQueryData(['doctor-application', session.accessToken], {
+    status: 'revoked',
+  }),
+)
+assert(needsVerification.includes('Action needed'))
+const inReview = render('/join-as-doctor', patient, (client) =>
+  client.setQueryData(['doctor-application', session.accessToken], {
+    status: 'pending',
+  }),
+)
+assert(inReview.includes('In review'))
+assert(!inReview.includes('Action needed'))
+const approved = render('/doctor', all, (client) =>
+  client.setQueryData(['doctor-application', session.accessToken], {
+    status: 'approved',
+  }),
+)
+assert(!approved.includes('Action needed'))
 values.delete('telelink.session')
 const signedOut = render('/')
 assert(!signedOut.includes('Switch workspace'))
 assert(!signedOut.includes('<nav '))
 console.log(
-  'PASS: all-role workspace selection, patient-only switcher hidden, application-only access, one section bar, clinic context, revoked membership, platform exceptions, consultations and signed-out/denied navigation.',
+  'PASS: all-role workspace selection, patient-only switcher hidden, application-only access, one section bar, clinic context, revoked membership, platform exceptions, consultations signed-out/denied navigation, attention statuses, full pagination, patient scope and rendered badges.',
 )
