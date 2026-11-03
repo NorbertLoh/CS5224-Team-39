@@ -6,12 +6,12 @@ to clinic reviews, payments and appointments. The implementation stays in issue
 
 ## Screens
 
-| Screen | Tabs | Search | Date range |
-| --- | --- | --- | --- |
-| Platform doctor applications | Pending review, Approved, Rejected, Resubmission required | Licence name/number, authority, specialty or subject ID | Submission date |
-| Platform clinics | All, Pending review, Active, Rejected, Suspended | Clinic name, slug or clinic ID | Registration date |
-| Clinic payments | All/consultation/medication purpose; all six payment statuses | Payment, patient, appointment, order or quote ID | Payment creation date |
-| Patient/doctor/clinic appointments | Upcoming, Past | Stored patient/doctor/clinic name or participant/appointment ID | Appointment start date |
+| Screen                             | Tabs                                                          | Search                                                          | Date range             |
+| ---------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------- | ---------------------- |
+| Platform doctor applications       | Pending review, Approved, Rejected, Resubmission required     | Licence name/number, authority, specialty or subject ID         | Submission date        |
+| Platform clinics                   | All, Pending review, Active, Rejected, Suspended              | Clinic name, slug or clinic ID                                  | Registration date      |
+| Clinic payments                    | All/consultation/medication purpose; all six payment statuses | Payment, patient, appointment, order or quote ID                | Payment creation date  |
+| Patient/doctor/clinic appointments | Upcoming, Past                                                | Stored patient/doctor/clinic name or participant/appointment ID | Appointment start date |
 
 Appointments additionally have a status filter. Clinic/appointment selectors and
 staff-role inputs remain ordinary selection controls. Every screen provides

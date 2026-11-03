@@ -11,7 +11,6 @@ import { canAccess, hasRole } from '@/navigation/access'
 import { DoctorNavigation } from '@/navigation/DoctorNavigation'
 import { PlatformNavigation } from '@/navigation/PlatformNavigation'
 import { WorkspaceSwitcher } from '@/navigation/WorkspaceSwitcher'
-
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
@@ -24,7 +23,6 @@ export function AppShell({
   children: (session: Session | null) => ReactNode
 }) {
   const [session, setSession] = useState(readSession)
-
   const identity = useQuery({
     queryKey: ['identity', session?.accessToken],
     queryFn: currentIdentity,

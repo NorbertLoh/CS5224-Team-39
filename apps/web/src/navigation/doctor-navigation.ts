@@ -2,13 +2,6 @@ import type { Identity } from '@/auth/identity'
 import type { Route } from '@/navigation/access'
 import { clinicIds } from '@/navigation/access'
 
-export function isDoctorRoute(route: Route) {
-  return (
-    route.kind === 'doctor-application' ||
-    ('role' in route && route.role === 'doctor')
-  )
-}
-
 export function doctorNavigationState(
   identity: Identity,
   route: Route,
