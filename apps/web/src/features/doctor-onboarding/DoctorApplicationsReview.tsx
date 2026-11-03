@@ -9,7 +9,9 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Tabs } from 'radix-ui'
+import { CountTabs } from '@/components/CountTabs'
+import { ListFilters } from '@/components/ListFilters'
+import { emptyFilters } from '@/lib/list-filters'
 import type { DoctorApplication } from './api'
 import {
   applicationHistory,
@@ -28,16 +30,27 @@ const statuses: { value: DoctorApplication['status']; label: string }[] = [
 
 export function DoctorApplicationsReview() {
   const [status, setStatus] = useState<DoctorApplication['status']>('pending')
+  const [filters, setFilters] = useState(emptyFilters)
   const counts = useQuery({
-    queryKey: ['doctor-applications', 'counts', readSession()?.accessToken],
-    queryFn: ({ signal }) => applicationCounts(signal),
+    queryKey: [
+      'doctor-applications',
+      'counts',
+      readSession()?.accessToken,
+      filters,
+    ],
+    queryFn: ({ signal }) => applicationCounts(signal, filters),
     refetchInterval: 30000,
   })
   const applications = useInfiniteQuery({
-    queryKey: ['doctor-applications', readSession()?.accessToken, status],
+    queryKey: [
+      'doctor-applications',
+      readSession()?.accessToken,
+      status,
+      filters,
+    ],
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) =>
-      listApplications(status, pageParam, signal),
+      listApplications(status, pageParam, signal, filters),
     getNextPageParam: (page) =>
       page.length === 25 ? page.at(-1)?.subject_id : undefined,
     refetchInterval: 30000,
@@ -52,6 +65,12 @@ export function DoctorApplicationsReview() {
         Review the licence and supporting evidence before granting doctor
         eligibility. Clinic access still requires an active membership.
       </p>
+      <ListFilters
+        value={filters}
+        onApply={setFilters}
+        dateLabel="Submitted"
+        placeholder="Doctor name, licence, authority, specialty or ID"
+      />
       <p className="mt-4 text-sm text-slate-500" aria-live="polite">
         Total applications:{' '}
         <span className="font-semibold text-slate-900">
@@ -64,71 +83,47 @@ export function DoctorApplicationsReview() {
           onRetry={() => void counts.refetch()}
         />
       )}
-      <Tabs.Root
+      <CountTabs
         value={status}
-        onValueChange={(value) =>
-          setStatus(value as DoctorApplication['status'])
-        }
-        className="mt-6"
+        onChange={(value) => setStatus(value as DoctorApplication['status'])}
+        items={statuses}
+        counts={counts.data}
+        label="Application status"
       >
-        <div className="overflow-x-auto">
-          <Tabs.List
-            aria-label="Application status"
-            className="flex min-w-max gap-2 border-b border-slate-200"
-          >
-            {statuses.map((item) => (
-              <Tabs.Trigger
-                key={item.value}
-                value={item.value}
-                className="flex shrink-0 cursor-pointer items-center gap-2 border-b-2 border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:rounded-t-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 data-[state=active]:border-teal-700 data-[state=active]:text-teal-800"
+        {applications.isPending ? (
+          <LoadingState message="Loading applications..." />
+        ) : applications.isError ? (
+          <ErrorState
+            message="Could not load applications."
+            onRetry={() => void applications.refetch()}
+          />
+        ) : (
+          <>
+            {!applications.data.pages.some((page) => page.length) && (
+              <p className="mt-6 text-slate-600">
+                No applications with this status.
+              </p>
+            )}
+            <div className="mt-6 grid gap-5">
+              {applications.data.pages.flat().map((application) => (
+                <ReviewCard
+                  key={`${application.subject_id}:${application.revision}:${application.status}`}
+                  application={application}
+                />
+              ))}
+            </div>
+            {applications.hasNextPage && (
+              <Button
+                className="mt-5"
+                disabled={applications.isFetching}
+                onClick={() => void applications.fetchNextPage()}
               >
-                {item.label}
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs tabular-nums text-slate-700">
-                  {counts.data?.[item.value] ?? '—'}
-                </span>
-              </Tabs.Trigger>
-            ))}
-          </Tabs.List>
-        </div>
-        <Tabs.Content
-          value={status}
-          className="outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
-        >
-          {applications.isPending ? (
-            <LoadingState message="Loading applications..." />
-          ) : applications.isError ? (
-            <ErrorState
-              message="Could not load applications."
-              onRetry={() => void applications.refetch()}
-            />
-          ) : (
-            <>
-              {!applications.data.pages.some((page) => page.length) && (
-                <p className="mt-6 text-slate-600">
-                  No applications with this status.
-                </p>
-              )}
-              <div className="mt-6 grid gap-5">
-                {applications.data.pages.flat().map((application) => (
-                  <ReviewCard
-                    key={`${application.subject_id}:${application.revision}:${application.status}`}
-                    application={application}
-                  />
-                ))}
-              </div>
-              {applications.hasNextPage && (
-                <Button
-                  className="mt-5"
-                  disabled={applications.isFetching}
-                  onClick={() => void applications.fetchNextPage()}
-                >
-                  Load more applications
-                </Button>
-              )}
-            </>
-          )}
-        </Tabs.Content>
-      </Tabs.Root>
+                Load more applications
+              </Button>
+            )}
+          </>
+        )}
+      </CountTabs>
     </main>
   )
 }

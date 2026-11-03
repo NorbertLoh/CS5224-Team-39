@@ -1,5 +1,7 @@
 import { accessToken } from '@/auth/access-token'
 import { apiFetch } from '@/lib/api'
+import { appendFilters, emptyFilters } from '@/lib/list-filters'
+import type { ListFilterValues } from '@/lib/list-filters'
 
 export type DoctorApplication = {
   subject_id: string
@@ -25,9 +27,11 @@ export type ApplicationCounts = Record<
 
 export async function applicationCounts(
   signal?: AbortSignal,
+  filters: ListFilterValues = emptyFilters,
 ): Promise<ApplicationCounts> {
+  const params = appendFilters(new URLSearchParams(), filters)
   return (
-    await request('/platform/doctor-applications/counts', { signal })
+    await request(`/platform/doctor-applications/counts?${params}`, { signal })
   ).json()
 }
 export type ReviewEvent = {
@@ -103,9 +107,11 @@ export async function listApplications(
   status: DoctorApplication['status'],
   after: string | null,
   signal?: AbortSignal,
+  filters: ListFilterValues = emptyFilters,
 ): Promise<DoctorApplication[]> {
   const params = new URLSearchParams({ status, limit: '25' })
   if (after) params.set('after', after)
+  appendFilters(params, filters)
   return (
     await request(`/platform/doctor-applications?${params}`, { signal })
   ).json()

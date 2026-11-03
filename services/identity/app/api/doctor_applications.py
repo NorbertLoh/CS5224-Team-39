@@ -8,6 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import func, select
 from telelink_common.errors import DomainError
+from telelink_common.list_filters import Filters, filter_query
 
 from app.api.dependencies import DB, User
 from app.doctor_schemas import (
@@ -152,23 +153,43 @@ def download(document_id: UUID, principal: User, session: DB):
 def applications(
     principal: User,
     session: DB,
+    filters: Filters,
     status: Literal["pending", "approved", "rejected", "revoked"] = "pending",
     after: UUID | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
 ):
     platform_reviewer(session, principal)
-    query = select(DoctorApplication).where(DoctorApplication.status == status)
+    query = filtered_applications(select(DoctorApplication), filters).where(
+        DoctorApplication.status == status
+    )
     if after is not None:
         query = query.where(DoctorApplication.subject_id > after)
     return session.scalars(query.order_by(DoctorApplication.subject_id).limit(limit)).all()
 
 
+def filtered_applications(query, filters):
+    return filter_query(
+        query,
+        filters,
+        DoctorApplication.submitted_at,
+        (
+            DoctorApplication.legal_name,
+            DoctorApplication.licence_number,
+            DoctorApplication.licensing_authority,
+            DoctorApplication.specialty,
+            DoctorApplication.subject_id,
+        ),
+    )
+
+
 @router.get("/platform/doctor-applications/counts", response_model=ApplicationCounts)
-def application_counts(principal: User, session: DB):
+def application_counts(principal: User, session: DB, filters: Filters):
     platform_reviewer(session, principal)
     counts = dict(
         session.execute(
-            select(DoctorApplication.status, func.count()).group_by(DoctorApplication.status)
+            filtered_applications(select(DoctorApplication.status, func.count()), filters).group_by(
+                DoctorApplication.status
+            )
         ).all()
     )
     return ApplicationCounts(**counts, total=sum(counts.values()))

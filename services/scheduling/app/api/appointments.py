@@ -3,8 +3,11 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
+from pydantic import BaseModel
 from sqlalchemy import and_, case, func, select, tuple_
+from telelink_common.access import has_tenant_role
 from telelink_common.errors import DomainError, ErrorEnvelope
+from telelink_common.list_filters import Filters, ListFilters, filter_query
 
 from app.api.booking import appointment_public
 from app.api.dependencies import DB, Identity
@@ -53,6 +56,77 @@ def effective_status():
     )
 
 
+def upcoming_appointments(current_status):
+    return and_(
+        current_status.in_(("held", "pending_payment", "confirmed", "in_progress")),
+        Appointment.ends_at > func.statement_timestamp(),
+    )
+
+
+def filtered_appointments(identity, tenant_id, status, filters, view_role=None):
+    predicate = appointment_scope(identity)
+    require_collection_tenant(identity, tenant_id)
+    current_status = effective_status()
+    query = select(Appointment, current_status).where(predicate)
+    if view_role == "patient":
+        if "patient" not in identity.global_roles:
+            raise DomainError(403, "forbidden", "Patient access is not permitted.")
+        query = query.where(Appointment.patient_id == identity.subject_id)
+    elif view_role is not None:
+        clinics = [
+            m.tenant_id for m in identity.memberships if has_tenant_role(m, m.tenant_id, view_role)
+        ]
+        if not clinics:
+            raise DomainError(403, "forbidden", "This workspace is not permitted.")
+        if tenant_id is not None and tenant_id not in clinics:
+            raise DomainError(404, "not_found", "Resource not found.")
+        query = query.where(Appointment.tenant_id.in_(clinics))
+        if view_role == "doctor":
+            query = query.where(Appointment.doctor_id == identity.subject_id)
+    if tenant_id is not None:
+        query = query.where(Appointment.tenant_id == tenant_id)
+    if status is not None:
+        query = query.where(current_status == status)
+    query = filter_query(
+        query,
+        filters,
+        Appointment.starts_at,
+        (
+            Appointment.appointment_id,
+            Appointment.patient_id,
+            Appointment.doctor_id,
+            Appointment.patient_name,
+            Appointment.doctor_name,
+            Appointment.clinic_name,
+        ),
+    )
+    return query, current_status
+
+
+class AppointmentCounts(BaseModel):
+    upcoming: int
+    past: int
+    total: int
+
+
+@router.get("/appointment-counts", response_model=AppointmentCounts)
+def appointment_counts(
+    identity: Identity,
+    session: DB,
+    filters: Filters,
+    tenant_id: UUID | None = None,
+    status: AppointmentStatus | None = None,
+    view_role: Literal["patient", "doctor", "clinic_admin"] | None = None,
+):
+    query, current_status = filtered_appointments(identity, tenant_id, status, filters, view_role)
+    total, upcoming = session.execute(
+        query.with_only_columns(
+            func.count(), func.count().filter(upcoming_appointments(current_status))
+        )
+    ).one()
+    return AppointmentCounts(total=total, upcoming=upcoming, past=total - upcoming)
+
+
 def date_filter(value):
     if value is None:
         return None
@@ -83,9 +157,9 @@ def list_appointments(
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     cursor: Annotated[str | None, Query(max_length=4096)] = None,
     period: Literal["upcoming", "past"] | None = None,
+    q: Annotated[str, Query(max_length=200)] = "",
+    view_role: Literal["patient", "doctor", "clinic_admin"] | None = None,
 ):
-    scope_predicate = appointment_scope(identity)
-    require_collection_tenant(identity, tenant_id)
     start, end = date_filter(from_at), date_filter(to_at)
     if start is not None and end is not None and start >= end:
         raise DomainError(422, "validation_error", "from must precede to.")
@@ -100,23 +174,16 @@ def list_appointments(
     ]
     if period is not None:
         scope.extend([period, "desc" if period == "past" else "asc"])
+    filters = ListFilters(q, start, end)
+    if filters.q:
+        scope.append({"q": filters.q})
+    if view_role is not None:
+        scope.append({"view_role": view_role})
     position = decode_appointment_cursor(settings, scope, cursor) if cursor is not None else None
-    current_status = effective_status()
-    query = select(Appointment, current_status).where(scope_predicate)
+    query, current_status = filtered_appointments(identity, tenant_id, status, filters, view_role)
     if period is not None:
-        upcoming = and_(
-            current_status.in_(("held", "pending_payment", "confirmed", "in_progress")),
-            Appointment.ends_at > func.statement_timestamp(),
-        )
+        upcoming = upcoming_appointments(current_status)
         query = query.where(upcoming if period == "upcoming" else ~upcoming)
-    if tenant_id is not None:
-        query = query.where(Appointment.tenant_id == tenant_id)
-    if status is not None:
-        query = query.where(current_status == status)
-    if start is not None:
-        query = query.where(Appointment.starts_at >= start)
-    if end is not None:
-        query = query.where(Appointment.starts_at < end)
     if position is not None:
         position_key = tuple_(Appointment.starts_at, Appointment.appointment_id)
         query = query.where(
