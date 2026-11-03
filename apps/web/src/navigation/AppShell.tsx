@@ -31,11 +31,16 @@ export function AppShell({
     refetchInterval: 30000,
   })
   const requiresSignIn =
-    ('role' in route || route.kind === 'clinic-registration') && !session
+    ('role' in route ||
+      route.kind === 'clinic-registration' ||
+      route.kind === 'doctor-application') &&
+    !session
   useEffect(() => {
     if (requiresSignIn) {
       if (route.kind === 'clinic-registration')
         sessionStorage.setItem('telelink.after-sign-in', '/register-clinic')
+      if (route.kind === 'doctor-application')
+        sessionStorage.setItem('telelink.after-sign-in', '/join-as-doctor')
       window.location.replace('/sign-in')
     }
   }, [requiresSignIn, route.kind])

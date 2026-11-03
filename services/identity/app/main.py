@@ -9,6 +9,7 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
+from app.api.doctor_applications import router as doctor_applications_router
 from app.api.doctors import router as doctors_router
 from app.api.document_profiles import router as document_profiles_router
 from app.api.memberships import router
@@ -74,6 +75,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(document_profiles_router)
     app.include_router(patient_profiles_router)
     app.include_router(registration_router)
+    app.include_router(doctor_applications_router)
+
+    @app.middleware("http")
+    async def private_identity_responses(request, call_next):
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-store"
+        return response
 
     @app.get("/health/live", tags=["health"])
     def live():
@@ -94,7 +102,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     connection.execute(select(Membership.membership_id).limit(1))
                     available = (
                         connection.scalar(text("SELECT version_num FROM identity.alembic_version"))
-                        == "0003"
+                        == "0004"
                     )
             except SQLAlchemyError:
                 available = False

@@ -59,7 +59,8 @@ async function signInDestination() {
     }
     const destination = sessionStorage.getItem('telelink.after-sign-in')
     sessionStorage.removeItem('telelink.after-sign-in')
-    return destination === '/register-clinic'
+    return destination === '/register-clinic' ||
+      destination === '/join-as-doctor'
       ? destination
       : defaultWorkspace(identity)
   } catch (error) {

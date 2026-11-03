@@ -20,6 +20,12 @@ export function HomePage() {
           >
             Register your clinic
           </a>
+          <a
+            href="/join-as-doctor"
+            className="mb-6 ml-3 inline-block rounded-md border px-4 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            Join as a doctor
+          </a>
           <h2 className="text-2xl font-semibold">Explore clinics</h2>
           <ClinicDirectory />
         </section>

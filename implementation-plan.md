@@ -4,6 +4,8 @@
 
 - [ ] RF28: Add authenticated Join as a doctor application with professional/licence details and private supporting documents, pending/rejected/approved status and rejected-application resubmission. Add platform-admin review with approve/reject reason and audit history. Allow clinic doctor assignment before approval, display Pending verification, and enforce approved verification plus active clinic membership across identity, directory and clinical access; preserve independent clinic-admin/patient rights and revoked memberships. Dependencies: RF13, A06, A09-A11 and RF11 merged. Effort: L. Completion: real persisted application/review flow, private document access, denied pre-approval/direct API access, approved/revoked/mixed-role cases and frontend checks documented. Assignee: NorbertLoh; status: In progress; issue #320. Existing seeded doctors need an explicit migration compatibility policy; no automatic licence verification.
 
+RF28 implementation is in draft PR #321. Verification: 174 identity tests on disposable PostgreSQL, Ruff/format, architecture guard, frontend lint/typecheck/build, probe typecheck and seven session checks passed. Identity/web images built; local identity backed up, migration 0004 applied, API readiness and both new frontend routes verified. Existing/seeded doctor assignments require manual application approval; no automatic verification or membership reactivation. Browser acceptance is deferred to the user at their request. Setup and limits: `docs/RF28-doctor-verification.md`. Issue stays In progress until merge and completion acceptance.
+
 ## Serverless workers and edge controls (31 October 2026)
 
 | Done | ID | Deliverable | Dependencies | Effort | Claim |

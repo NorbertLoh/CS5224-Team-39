@@ -44,7 +44,7 @@ The four-week delivery scope below takes priority over advanced capabilities els
 
 Deliver a complete journey: clinic approval -> booking -> consultation payment -> authorised video consultation -> prescription/documents -> medication and delivery payment -> medicine readiness -> delivery tracking. Include a working view for each of the four roles.
 
-Premium subscriptions, promoted placement, extensive analytics, custom clinic domains, video recording, and production onboarding are later work.
+Premium subscriptions, promoted placement, extensive analytics, custom clinic domains, video recording, and production onboarding beyond RF28's manual doctor review are later work.
 
 RF08 scope override (23 October 2026): user-requested, clinic-admin full consultation
 refunds are now in scope. No platform approval queue or medication/delivery refund
@@ -266,6 +266,12 @@ Use a rotating integration coordinator to track blockers and shared-file changes
 | 4 | First half: fix integration bugs and run essential checks. Second half: freeze features, rehearse demo, prepare screenshots/video/report and reset instructions. | Four role walkthroughs work with synthetic data on AWS; fresh seed/reset and backup demo recording ready |
 
 Build a prototype with two seeded clinics, a few doctors, fixed slots, basic branding, simple dashboards, a fixed medication catalogue and template documents. Keep clinic review as a manual approve/reject action; do not build automated licence verification.
+
+RF28 adds manual doctor applications and platform approval. Doctor clinic assignments
+may exist before verification, but clinical access requires both an approved doctor
+application and active clinic membership. Patient and clinic-admin rights remain
+independent. Existing/seeded doctors must use the same approval flow; see
+[doctor verification](docs/RF28-doctor-verification.md).
 
 Do not postpone all integration until week four. Use short-lived branches, merge working increments frequently, hold a brief daily blocker check, and run one shared integrated walkthrough each week. Agree OpenAPI and event contracts before dependent work; fixtures must follow those contracts.
 
