@@ -10,6 +10,8 @@ import type { Route } from '@/navigation/access'
 import { canAccess, hasRole } from '@/navigation/access'
 import { DoctorNavigation } from '@/navigation/DoctorNavigation'
 import { RoleNavigation } from '@/navigation/RoleNavigation'
+import { WorkspaceSwitcher } from '@/navigation/WorkspaceSwitcher'
+import { isDoctorRoute } from '@/navigation/doctor-navigation'
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
@@ -22,6 +24,7 @@ export function AppShell({
   children: (session: Session | null) => ReactNode
 }) {
   const [session, setSession] = useState(readSession)
+  const doctorRoute = isDoctorRoute(route)
   const identity = useQuery({
     queryKey: ['identity', session?.accessToken],
     queryFn: currentIdentity,
@@ -72,9 +75,14 @@ export function AppShell({
           <a href="/" className="text-xl font-semibold">
             TeleLink Health
           </a>
-          <AuthControls onSessionChange={setSession} />
+          <div className="flex flex-wrap items-center gap-3">
+            {doctorRoute && session && identity.isSuccess && (
+              <WorkspaceSwitcher identity={identity.data} route={route} />
+            )}
+            <AuthControls onSessionChange={setSession} compact={doctorRoute} />
+          </div>
         </div>
-        {session && identity.isSuccess && (
+        {session && identity.isSuccess && !doctorRoute && (
           <RoleNavigation identity={identity.data} route={route} />
         )}
         {session &&
@@ -90,9 +98,12 @@ export function AppShell({
         )}
         {session &&
           identity.isSuccess &&
-          'role' in route &&
-          route.role === 'doctor' &&
-          canAccess(identity.data, route) && <DoctorNavigation route={route} />}
+          (route.kind === 'doctor-application' ||
+            ('role' in route &&
+              route.role === 'doctor' &&
+              canAccess(identity.data, route))) && (
+            <DoctorNavigation route={route} identity={identity.data} />
+          )}
         {session &&
           identity.isSuccess &&
           'role' in route &&

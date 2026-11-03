@@ -77,4 +77,17 @@ available through the session's UI tool.
 
 Doctor workspace navigation separates Appointments at /doctor from Availability at /doctor/availability. Clinic-scoped /doctor/clinics/<tenant UUID> URLs support the /availability suffix and preserve clinic scope across tabs. Both pages retain authentication and doctor membership checks.
 
+RF28 doctor navigation refinement: doctor routes use a compact workspace menu in
+the main header and one doctor bar with Appointments, Availability and
+Verification. The clinic selector lives in that bar; availability defaults to the
+first active doctor clinic and the duplicate body picker is removed. Clinic
+context is preserved in clinical links and through Verification using a
+`?clinic=<UUID>` hint validated against current active doctor memberships.
+Verification remains account-wide and has no clinic selector. Unverified accounts
+see registration/verification navigation only; consultation pages do not mark the
+appointment list as the current page or show a clinic picker. Workspace choices
+are limited to current roles. Other workspace navigation is unchanged. Frontend
+lint/typecheck/probe typecheck/build, focused rendered navigation/context checks
+and seven session checks passed; browser acceptance remains with the user.
+
 The public homepage links to /register-clinic and /join-as-doctor. Both routes require a session but no pre-existing clinic role. Fixed, allowlisted session-storage destinations return applicants after sign-in/signup. Clinic registration POSTs the tenant /clinics API, which provisions creator administration; success opens the clinic profile showing approval status. Existing accounts are assigned by email under Manage clinic > Staff. Doctor assignments can precede verification; effective doctor access requires platform approval and active membership. /platform-admin/doctors is restricted to platform admins. See docs/RF28-doctor-verification.md for private evidence, review and migration behavior. Default sign-in destinations prefer platform administration, active clinic administration, approved active doctor membership, then patient appointments; accounts without a role retain the public homepage.

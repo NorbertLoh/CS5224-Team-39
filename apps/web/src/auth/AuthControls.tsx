@@ -72,9 +72,11 @@ async function signInDestination() {
 export function AuthControls({
   onSessionChange,
   presentation = 'inline',
+  compact = false,
 }: {
   onSessionChange?: (session: Session | null) => void
   presentation?: 'inline' | 'page'
+  compact?: boolean
 }) {
   const queryClient = useQueryClient()
   const [session, setSession] = useState(readSession)
@@ -227,9 +229,11 @@ export function AuthControls({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <span role="status" className="text-sm">
-        {message || (session ? 'Signed in' : 'Signed out')}
-      </span>
+      {(!compact || message || !session) && (
+        <span role="status" className="text-sm">
+          {message || (session ? 'Signed in' : 'Signed out')}
+        </span>
+      )}
       {!session ? (
         <a
           href="/sign-in"
@@ -239,6 +243,7 @@ export function AuthControls({
         </a>
       ) : (
         <Button
+          variant={compact ? 'outline' : 'default'}
           disabled={busy}
           onClick={() => {
             void handleClick()
