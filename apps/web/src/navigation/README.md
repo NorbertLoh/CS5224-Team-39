@@ -7,10 +7,12 @@ the selected workspace from the current identity and route. Roles come from
 `/identity/me`, never browser role storage or Cognito groups. Identity refreshes
 on page load, focus and every 30 seconds; API checks remain authoritative.
 
-Accounts with multiple roles get one workspace dropdown with the current role's
-name, icon and checkmark. The dropdown remains available with one role, retaining Doctor registration and Browse clinics in the menu. Doctor application is a separate onboarding destination,
-not a granted clinical role. Before doctor approval and active clinic membership,
-accounts can open application status but have no doctor schedule links. Doctor registration remains accessible from the workspace menu. Clinic registration remains available from the homepage and clinic list.
+Accounts get one workspace dropdown with the current role's name, icon and
+checkmark. It contains granted workspaces and Browse clinics. Doctor and clinic
+registration links stay on the clinics homepage, outside the dropdown. Doctor
+application is a separate onboarding destination, not a granted clinical role.
+Before approval and active clinic membership, accounts can open application
+status but have no doctor schedule links.
 
 `WorkspaceNavigation.tsx` provides consistent section bars, horizontally scrollable
 links on narrow screens, and a single bottom-border active/focus indicator.

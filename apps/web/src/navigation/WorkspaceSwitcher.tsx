@@ -1,6 +1,5 @@
 import type { Identity } from '@/auth/identity'
 import type { Route } from '@/navigation/access'
-import { hasRole } from '@/navigation/access'
 import {
   availableWorkspaces,
   currentWorkspace,
@@ -101,29 +100,6 @@ export function WorkspaceSwitcher({
               </DropdownMenu.Item>
             )
           })}
-          {!hasRole(identity, 'doctor') && (
-            <>
-              <DropdownMenu.Item asChild>
-                <a
-                  href="/join-as-doctor"
-                  aria-current={registration ? 'location' : undefined}
-                  className={itemClass}
-                >
-                  <Stethoscope size={17} aria-hidden="true" />
-                  <span className="flex-1">
-                    Doctor registration
-                  </span>
-                  {registration && (
-                    <Check
-                      size={16}
-                      className="text-teal-700"
-                      aria-hidden="true"
-                    />
-                  )}
-                </a>
-              </DropdownMenu.Item>
-            </>
-          )}
           <DropdownMenu.Separator className="my-2 h-px bg-slate-100" />
           <DropdownMenu.Item asChild>
             <a
