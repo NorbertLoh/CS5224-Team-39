@@ -1,5 +1,6 @@
 import { Tabs } from 'radix-ui'
 import type { ReactNode } from 'react'
+import { tabClassName } from '@/lib/tab-styles'
 
 export function CountTabs({
   value,
@@ -27,7 +28,7 @@ export function CountTabs({
             <Tabs.Trigger
               key={item.value}
               value={item.value}
-              className="flex shrink-0 cursor-pointer items-center gap-2 border-b-2 border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:rounded-t-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 data-[state=active]:border-teal-700 data-[state=active]:text-teal-800"
+              className={tabClassName(item.value === value)}
             >
               {item.label}
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs tabular-nums text-slate-700">

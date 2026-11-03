@@ -1,6 +1,7 @@
 import { readSession } from '@/auth/session'
 import { readClinic } from '@/features/clinic-profile/logo-api'
 import { useQuery } from '@tanstack/react-query'
+import { tabClassName } from '@/lib/tab-styles'
 
 const pages = [
   { kind: 'profile', label: 'Profile' },
@@ -52,7 +53,7 @@ export function ClinicManagementNavigation({
                 key={page.kind}
                 href={`/clinic-admin/clinics/${tenantId}/${page.kind}`}
                 aria-current={active === page.kind ? 'page' : undefined}
-                className={`rounded-md px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 ${active === page.kind ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                className={tabClassName(active === page.kind)}
               >
                 {page.label}
               </a>

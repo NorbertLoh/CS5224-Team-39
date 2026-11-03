@@ -2,6 +2,7 @@ import type { Identity } from '@/auth/identity'
 import { ClinicManagementNavigation } from '@/features/clinics/components/ClinicManagementNavigation'
 import type { Route } from '@/navigation/access'
 import { clinicIds } from '@/navigation/access'
+import { tabClassName } from '@/lib/tab-styles'
 
 const pages = [
   { href: '/clinic-admin', label: 'Manage clinic' },
@@ -35,7 +36,7 @@ export function ClinicAdminNavigation({
             key={page.href}
             href={page.href === '/clinic-admin' ? managementHref : page.href}
             aria-current={active === page.href ? 'page' : undefined}
-            className={`rounded-md px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 ${active === page.href ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+            className={tabClassName(active === page.href)}
           >
             {page.label}
           </a>

@@ -2,6 +2,7 @@ import type { Identity } from '@/auth/identity'
 import { useClinicNames } from '@/features/clinics/hooks/useClinicNames'
 import type { Route } from '@/navigation/access'
 import { doctorNavigationState } from '@/navigation/doctor-navigation'
+import { tabClassName } from '@/lib/tab-styles'
 import {
   Building2,
   CalendarDays,
@@ -71,7 +72,7 @@ export function DoctorNavigation({
         </div>
         <nav
           aria-label="Doctor workspace"
-          className="flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-white p-1"
+          className="flex flex-wrap gap-1 border-b border-slate-200"
         >
           {pages.map(({ href, label, section, icon: Icon }) => {
             const active = section === state.section
@@ -80,7 +81,7 @@ export function DoctorNavigation({
                 key={href}
                 href={href}
                 aria-current={active ? 'page' : undefined}
-                className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 ${active ? 'bg-teal-700 text-white shadow-sm' : 'text-slate-600 hover:bg-teal-50 hover:text-teal-900'}`}
+                className={tabClassName(active)}
               >
                 <Icon
                   size={17}

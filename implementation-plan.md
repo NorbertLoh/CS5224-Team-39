@@ -2,6 +2,8 @@
 
 ## Doctor verification (3 November 2026)
 
+RF28 tab styling refinement (4 November 2026): user requests underline-only active indicators across tab bars. Remove rounded focus/highlight boxes and filled active section tabs; share bottom-border styling across data tabs and doctor/patient/clinic section navigation, retaining a bottom-edge keyboard-focus cue. Existing issue #320 remains assigned NorbertLoh/In progress; draft PR #321. No behavior/API changes; verify frontend checks and Tailscale rollout.
+
 RF28 doctor navigation refinement (4 November 2026): replace stacked role/verification links on doctor pages with one workspace switcher and one doctor bar (Appointments, Availability, Verification). Centralize clinic selection and preserve authorized clinic context; unverified accounts retain registration-only navigation. Remove the duplicate availability clinic picker; preserve consultation and access behavior. Issue #320 remains assigned NorbertLoh/In progress, draft PR #321. Effort S. Completion: focused navigation/role/context verification, frontend checks and Tailscale rollout; user handles browser acceptance.
 
 RF28 doctor navigation verification: frontend lint/typecheck/probe typecheck/build and seven session checks passed. Focused route/render checks covered scoped links, verification context, revoked-clinic exclusion, default availability clinic, registration-only navigation, consultation active state and workspace switcher markup. Web refreshed with the Tailscale overlay; no backend/configuration/migration changes. Browser acceptance remains with the user.
