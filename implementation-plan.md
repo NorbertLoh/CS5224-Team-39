@@ -75,6 +75,12 @@
   and existing document status, refresh and download controls in PR #342.
   RF37 subsequently refined the document card and removed its manual refresh UI.
 
+## Completed consultation documents (RF41)
+
+- [ ] RF41: Update completed consultation documents automatically while PDFs are
+  generated. Preserve completion handoff recovery and document access.
+  Dependencies RF35/RF37 merged. Effort S. NorbertLoh; In progress; issue #353.
+
 ## Clinic registration pickup details (RF34)
 
 - [x] RF34: Require all Clinic Settings pickup fields during clinic registration:
