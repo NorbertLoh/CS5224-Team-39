@@ -2,11 +2,11 @@
 
 ## Clinic medicine workspaces (RF39)
 
-- [ ] RF39: Split clinic Medicine Pricing and Medicine Delivery, with red
+- [x] RF39: Split clinic Medicine Pricing and Medicine Delivery, with red
   counters for prescriptions that need pricing and paid orders that need
   preparation. Remove the redundant prescription refresh button. Preserve
   clinic access and order links. Dependencies RF06/RF12 merged. Effort M.
-  NorbertLoh; In progress; issue #349. Verify frontend checks and clinic navigation.
+  NorbertLoh; Completed in merged PR #350; issue #349 closed. Verify frontend checks and clinic navigation.
 
 
 ## Booking hold action spacing (RF38)
@@ -48,9 +48,8 @@
 
 ## Doctor Upcoming documents (RF40)
 
-- [ ] RF40: Hide Past documents in doctor Upcoming appointment details and retain
-  it in Past details. Dependency RF37 merged. Effort S. NorbertLoh; In progress;
-  issue #351. Verify both doctor appointment periods and frontend checks.
+- [x] RF40: Hide Past documents in doctor Upcoming appointment details and retain
+  it in Past details. Dependency RF37 merged. Effort S. NorbertLoh; Completed in merged PR #352; issue #351 closed. Verify both doctor appointment periods and frontend checks.
 
 ## Anytime consultation access (RF36)
 
@@ -92,9 +91,9 @@
 
 ## Completed consultation documents (RF41)
 
-- [ ] RF41: Update completed consultation documents automatically while PDFs are
+- [x] RF41: Update completed consultation documents automatically while PDFs are
   generated. Preserve completion handoff recovery and document access.
-  Dependencies RF35/RF37 merged. Effort S. NorbertLoh; In progress; issue #353.
+  Dependencies RF35/RF37 merged. Effort S. NorbertLoh; Completed in merged PR #354; issue #353 closed.
 
 ## Clinic registration pickup details (RF34)
 
@@ -117,8 +116,8 @@
 
 ## Patient prescription payment badge (RF42)
 
-- [ ] RF42: Show a red count for patient prescriptions awaiting payment.
-  Dependency RF24 merged. Effort S. NorbertLoh; In progress; issue #355.
+- [x] RF42: Show a red count for patient prescriptions awaiting payment.
+  Dependency RF24 merged. Effort S. NorbertLoh; Completed in merged PR #356; issue #355 closed.
 
 ## Production release preparation (RF31)
 
@@ -131,9 +130,9 @@
 
 ## Button feedback (RF43)
 
-- [ ] RF43: Add consistent hover and pointer feedback for buttons. Highlight
+- [x] RF43: Add consistent hover and pointer feedback for buttons. Highlight
   payment and price calculation actions. Dependency RF24 merged. Effort S.
-  NorbertLoh; In progress; issue #357.
+  NorbertLoh; Completed in merged PR #358; issue #357 closed.
 
 ## Renewable active video leases (RF30)
 
