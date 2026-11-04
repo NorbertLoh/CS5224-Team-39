@@ -123,16 +123,16 @@ def test_renewal_respects_call_limit_and_scheduled_end(api):
         assert lease.expires_at <= lease.issued_at + timedelta(seconds=300)
 
 
-def test_renewal_cannot_cross_scheduled_end(api):
+def test_renewal_crosses_scheduled_end_without_start(api):
     api.state["clock"] = datetime.fromisoformat(api.state["appointment"]["ends_at"]) - timedelta(
         seconds=20
     )
     grant = issue(api).json()
     assert internal(api, "consume", grant).status_code == 200
     api.state["clock"] += timedelta(seconds=10)
-    assert renew(api, grant).json()["expires_at"] == grant["expires_at"]
+    assert renew(api, grant).status_code == 200
     api.state["clock"] += timedelta(seconds=10)
-    assert renew(api, grant).status_code == 403
+    assert renew(api, grant).status_code == 200
 
 
 def test_started_consultation_keeps_renewing_after_scheduled_end(api):
