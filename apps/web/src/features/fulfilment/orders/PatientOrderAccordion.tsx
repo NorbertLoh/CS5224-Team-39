@@ -3,6 +3,7 @@ import { trackingOrder } from '@/features/fulfilment/domain/tracking'
 import { orderLabels, trackingTime } from '@/features/fulfilment/domain/model'
 import { orderAppearance } from '@/features/fulfilment/domain/orderAppearance'
 import { PatientAccordionItem } from '@/features/patient/components/PatientAccordionItem'
+import { PatientStatusBadge } from '@/features/patient/components/PatientStatusBadge'
 import type { ReactNode } from 'react'
 
 export function PatientOrderAccordion({
@@ -37,9 +38,10 @@ export function PatientOrderAccordion({
               title={
                 <span className="flex flex-wrap items-center gap-2">
                   Medication order{' '}
-                  <span className={`text-xs ${appearance.text}`}>
-                    {appearance.label}
-                  </span>
+                  <PatientStatusBadge
+                    label={appearance.label}
+                    colour={appearance.badge}
+                  />
                 </span>
               }
               summary={

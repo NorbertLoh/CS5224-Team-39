@@ -20,7 +20,7 @@ export function PrescriptionDetails({
         <dt className="font-medium">Appointment</dt>
         <dd className="break-all">{prescription.appointment_id}</dd>
       </div>
-      <div>
+      <div hidden={compact}>
         <dt className="font-medium">Status</dt>
         <dd>{prescription.status}</dd>
       </div>

@@ -117,7 +117,8 @@
 ## Patient status badges (RF44)
 
 - [ ] RF44: Use matching status badges for patient prescriptions and medicine
-  orders. Dependency RF24 merged. Effort S. NorbertLoh; In progress; issue #359.
+  orders. Remove duplicate status from expanded patient prescription details.
+  Dependency RF24 merged. Effort S. NorbertLoh; In progress; issue #359.
 
 ## Architecture reference (27 October 2026)
 
