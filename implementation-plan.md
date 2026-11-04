@@ -103,11 +103,6 @@
   gates; W12 remains separate. Effort M. NorbertLoh, #332 In progress.
   Scope and commands: [release preparation](docs/RF31-production-release.md).
 
-## Patient delivery tracker (RF45)
-
-- [ ] RF45: Show a colored progress tracker in patient delivery details.
-  Dependency D06 merged. Effort S. NorbertLoh; In progress; issue #361.
-
 ## Renewable active video leases (RF30)
 
 - [x] RF30: Separate single-use join expiry from a renewable active-call lease.
@@ -175,6 +170,11 @@ refresh every 30 seconds/on focus; server aggregates can reduce cost at scale.
 Setup and limits: [doctor verification](docs/RF28-doctor-verification.md),
 [workspace filters](docs/RF28-workspace-filters.md),
 [navigation](apps/web/src/navigation/README.md).
+
+## Patient delivery tracker (RF45)
+
+- [ ] RF45: Show a colored progress tracker in patient delivery details.
+  Dependency D06 merged. Effort S. NorbertLoh; In progress; issue #361.
 
 ## Serverless workers and edge controls (31 October 2026)
 
