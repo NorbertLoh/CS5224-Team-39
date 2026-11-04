@@ -103,6 +103,12 @@
   gates; W12 remains separate. Effort M. NorbertLoh, #332 In progress.
   Scope and commands: [release preparation](docs/RF31-production-release.md).
 
+## Button feedback (RF43)
+
+- [ ] RF43: Add consistent hover and pointer feedback for buttons. Highlight
+  payment and price calculation actions. Dependency RF24 merged. Effort S.
+  NorbertLoh; In progress; issue #357.
+
 ## Renewable active video leases (RF30)
 
 - [x] RF30: Separate single-use join expiry from a renewable active-call lease.
