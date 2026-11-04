@@ -12,6 +12,7 @@ from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.api.checkout import router
 from app.api.queries import router as query_router
+from app.api.receipts import router as receipt_router
 from app.api.refunds import router as refund_router
 from app.api.webhooks import router as webhook_router
 from app.database import create_database_engine
@@ -75,6 +76,7 @@ def create_app(settings: Settings | None = None):
     install_error_handlers(app)
     app.include_router(router)
     app.include_router(query_router)
+    app.include_router(receipt_router)
     app.include_router(refund_router)
     app.include_router(webhook_router)
 

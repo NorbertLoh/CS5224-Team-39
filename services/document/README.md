@@ -81,7 +81,9 @@ U17 connects MC source persistence, authoritative consultation completion and
 the document worker/download path. MC additional notes are supported; unavailable
 clinic address/doctor registration fields are omitted. See
 [MC setup, contracts and verification](../../docs/medical-certificates.md).
-Receipt issuance and live source integration remain separate work.
+The worker also consumes verified consultation and medication payment events.
+It reads the paid snapshot from Billing and stores one receipt per payment in
+the private bucket. Receipt downloads are scoped to the owning patient.
 
 ## Verification
 

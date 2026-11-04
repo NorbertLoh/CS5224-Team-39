@@ -15,7 +15,7 @@ class StoredPDF:
     size_bytes: int
     sha256: str
     patient_id: UUID
-    doctor_id: UUID
+    doctor_id: UUID | None
 
 
 class PrivatePDFStore:
@@ -51,8 +51,12 @@ class PrivatePDFStore:
             or any(metadata.get(key) != value for key, value in expected.items())
         ):
             raise RuntimeError("Stored document integrity/context check failed")
+        doctor = metadata.get("doctor-id")
         return StoredPDF(
-            len(data), metadata["sha256"], UUID(metadata["patient-id"]), UUID(metadata["doctor-id"])
+            len(data),
+            metadata["sha256"],
+            UUID(metadata["patient-id"]),
+            UUID(doctor) if doctor else None,
         )
 
     def put(self, key, data, expected, patient_id, doctor_id):
@@ -63,8 +67,9 @@ class PrivatePDFStore:
             **expected,
             "sha256": digest,
             "patient-id": str(patient_id),
-            "doctor-id": str(doctor_id),
         }
+        if doctor_id is not None:
+            metadata["doctor-id"] = str(doctor_id)
         try:
             self.client.put_object(
                 Bucket=self.bucket,

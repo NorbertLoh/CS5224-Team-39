@@ -18,6 +18,7 @@ class Settings(ServiceSettings):
     records_secret: SecretStr | None = None
     fulfilment_secret: SecretStr | None = None
     consultation_secret: SecretStr | None = None
+    billing_secret: SecretStr | None = None
     tenant_url: str | None = None
     tenant_timeout_seconds: int = Field(default=3, ge=1, le=30)
     scheduling_actions: str = ""
@@ -55,6 +56,7 @@ class Settings(ServiceSettings):
             self.fulfilment_secret,
             self.notification_secret,
             self.consultation_secret,
+            self.billing_secret,
         )
         for secret in secrets:
             if secret is not None and len(secret.get_secret_value().encode()) < 32:

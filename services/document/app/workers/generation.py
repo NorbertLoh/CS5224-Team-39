@@ -2,6 +2,7 @@
 
 import argparse
 
+import httpx
 from sqlalchemy.orm import sessionmaker
 from telelink_common.aws import create_client
 from telelink_common.inbox import consume_batch
@@ -12,6 +13,7 @@ from app.integrations.storage import PrivatePDFStore
 from app.models import event_inbox
 from app.services.generation import GeneratePrescription
 from app.services.mc_generation import GenerateMedicalCertificate
+from app.services.receipt_generation import PAYMENT_EVENTS, GenerateReceipt
 from app.settings import Settings
 
 
@@ -24,6 +26,7 @@ def main():
         config.database_url.get_secret_value() if config.database_url else None
     )
     records = RecordsClient(config)
+    billing = httpx.Client(timeout=10, trust_env=False)
     sqs, s3 = create_client("sqs", config), create_client("s3", config)
     try:
         store = PrivatePDFStore(s3, config.document_bucket)
@@ -32,10 +35,13 @@ def main():
         sessions = sessionmaker(engine, expire_on_commit=False)
         prescriptions = GeneratePrescription(records, store)
         certificates = GenerateMedicalCertificate(records, store)
+        receipts = GenerateReceipt(config, billing, store)
 
         def handler(session, event):
             if event.detail_type == "medical_certificate_issued.v1":
                 certificates(session, event)
+            elif event.detail_type in PAYMENT_EVENTS:
+                receipts(session, event)
             else:
                 prescriptions(session, event)
 
@@ -58,6 +64,7 @@ def main():
                 return
     finally:
         records.close()
+        billing.close()
         sqs.close()
         s3.close()
         engine.dispose()

@@ -129,6 +129,14 @@
 - [x] RF42: Show a red count for patient prescriptions awaiting payment.
   Dependency RF24 merged. Effort S. NorbertLoh; Completed in merged PR #356; issue #355 closed.
 
+## Production payment receipts (RF33)
+
+- [ ] RF33: Generate one private PDF receipt per verified consultation or
+  medication and delivery payment. Reuse the RF02 renderer and the existing
+  Documents authorization. Verify both paid flows, safe replay, and no
+  generation for unpaid attempts. Dependencies: B02–B06, P01–P03, RF02,
+  RF26, and RF32 for AWS verification. Effort L. NorbertLoh, #337 In progress.
+
 ## Domain-free AWS demo rollout (RF32)
 
 - [x] RF32: Deploy the managed AMD64 demo through W01 shared state, using

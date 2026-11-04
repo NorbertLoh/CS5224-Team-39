@@ -44,6 +44,7 @@ class ReceiptItem(Snapshot):
 
 
 class Receipt(Header):
+    clinic_address: str | None = Field(default=None, min_length=1, max_length=500)
     payment_reference: str = Field(min_length=1, max_length=200)
     paid_at: AwareDatetime
     currency: str = Field(default="SGD", pattern="^SGD$")

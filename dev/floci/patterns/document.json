@@ -1,4 +1,12 @@
 {
-  "source": ["telelink.clinical-records"],
-  "detail-type": ["prescription_issued.v1", "medical_certificate_issued.v1"]
+  "$or": [
+    {
+      "source": ["telelink.clinical-records"],
+      "detail-type": ["prescription_issued.v1", "medical_certificate_issued.v1"]
+    },
+    {
+      "source": ["telelink.billing"],
+      "detail-type": ["consultation_payment_succeeded.v1", "medication_payment_succeeded.v1"]
+    }
+  ]
 }

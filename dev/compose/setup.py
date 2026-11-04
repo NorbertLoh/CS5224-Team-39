@@ -95,6 +95,8 @@ def configure():
     )
     pair("scheduling", "SERVICE_BILLING_SECRET", "billing", "SERVICE_SCHEDULING_SECRET")
     pair("billing", "SERVICE_TENANT_SECRET", "tenant", "SERVICE_BILLING_SECRET")
+    pair("billing", "SERVICE_IDENTITY_SECRET", "identity", "SERVICE_BILLING_SECRET")
+    pair("billing", "SERVICE_DOCUMENT_SECRET", "document", "SERVICE_BILLING_SECRET")
     for peer, setting in [
         ("identity", "IDENTITY"),
         ("scheduling", "SCHEDULING"),
@@ -182,7 +184,7 @@ def configure():
         "notification",
     ]:
         configs[name]["SERVICE_SCHEDULING_URL"] = "http://scheduling:8000"
-    for name in ["scheduling", "consultation", "fulfilment"]:
+    for name in ["scheduling", "consultation", "fulfilment", "document"]:
         configs[name]["SERVICE_BILLING_URL"] = "http://billing:8000"
     for name in ["consultation", "document", "fulfilment"]:
         configs[name]["SERVICE_RECORDS_URL"] = (

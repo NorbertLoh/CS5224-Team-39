@@ -31,13 +31,13 @@ EVENT_TYPES = {
             "consultation_payment_succeeded.v1",
             "telelink.billing",
             ConsultationPaymentSucceeded,
-            frozenset({"scheduling"}),
+            frozenset({"scheduling", "document"}),
         ),
         EventType(
             "medication_payment_succeeded.v1",
             "telelink.billing",
             MedicationPaymentSucceeded,
-            frozenset({"fulfilment"}),
+            frozenset({"fulfilment", "document"}),
         ),
         EventType(
             "appointment_confirmed.v1",

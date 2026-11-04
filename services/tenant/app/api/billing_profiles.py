@@ -19,6 +19,13 @@ class BillingProfile(BaseModel):
     commission_bps: int
 
 
+@router.get("/internal/clinics/{tenant_id}/receipt-profile")
+def receipt_profile(tenant_id: UUID, caller: Billing, session: DB, response: Response):
+    clinic = clinic_or_404(session, tenant_id)
+    response.headers["Cache-Control"] = "no-store"
+    return {"tenant_id": clinic.tenant_id, "clinic_name": clinic.name}
+
+
 @router.get("/internal/clinics/{tenant_id}/billing-profile", response_model=BillingProfile)
 def billing_profile(tenant_id: UUID, caller: Billing, session: DB, response: Response):
     clinic = clinic_or_404(session, tenant_id)
