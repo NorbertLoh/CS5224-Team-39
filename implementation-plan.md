@@ -8,6 +8,11 @@
   preserve safe retries and later Settings edits. Dependencies: A08/A11 and RF12
   merged. Effort M. NorbertLoh; In progress; issue #339. Completion: required-field,
   validation, persistence/retry checks and frontend lint/typecheck/build pass.
+  Draft PR #340. Tenant PostgreSQL CI: 152 tests passed, including registration
+  validation, saved pickup/audit, provisioning failure/retry and later Settings
+  edits. Frontend lint/typecheck/build and tenant Ruff passed. Existing API probes
+  now provide required pickup fixtures. No new migration/configuration; deploy
+  matching web/tenant builds. Browser acceptance and deployment remain unverified.
 
 ## Production release preparation (RF31)
 
