@@ -15,7 +15,9 @@ export async function previousVisitDocuments(
       const seen = new Set<string>()
       let next: string | null = null
       do {
-        const page = await listDocuments(visit.appointment_id, next, signal)
+        const page = await listDocuments(
+          visit.appointment_id, next, signal, appointment.appointment_id,
+        )
         if (page.items.some((item) => item.tenant_id !== visit.tenant_id))
           throw new Error('Invalid previous visit document context')
         items.push(...page.items)

@@ -8,19 +8,25 @@ from app.integrations.upstream import not_found
 from app.models import Prescription
 
 
-def assigned_doctor(identity, appointment):
+def clinic_doctor(identity, appointment):
     membership = next(
         (item for item in identity.memberships if item.tenant_id == appointment.tenant_id), None
     )
-    return identity.subject_id == appointment.doctor_id and has_tenant_role(
-        membership, appointment.tenant_id, "doctor"
-    )
+    return has_tenant_role(membership, appointment.tenant_id, "doctor")
 
 
-def authorize(identity, appointment, *, write=False, record=None):
+def assigned_doctor(identity, appointment):
+    return identity.subject_id == appointment.doctor_id and clinic_doctor(identity, appointment)
+
+
+def authorize(identity, appointment, *, write=False, record=None, history=False):
     own = "patient" in identity.global_roles and identity.subject_id == appointment.patient_id
     doctor = assigned_doctor(identity, appointment)
-    if not (doctor if write else own or doctor):
+    # Scheduling validates the current doctor, clinic, patient and visit chronology.
+    historical_read = (
+        history and appointment.status == "completed" and clinic_doctor(identity, appointment)
+    )
+    if not (doctor if write else own or doctor or historical_read):
         not_found()
     if record is not None and any(
         getattr(record, field) != getattr(appointment, field)

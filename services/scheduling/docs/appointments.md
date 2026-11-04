@@ -21,6 +21,13 @@ Staff-only selection of an unrelated clinic returns 404. A patient clinic filter
 no own appointments returns an empty page. Subjects without an applicable role cannot
 list appointments (403). Resource detail/cancel conceal unauthorized IDs with 404.
 
+The two GET routes accept `history_for` with the current appointment ID for
+Consult history. The caller must be its assigned doctor with an active clinic
+membership, and the current appointment must be confirmed, in progress or
+completed. History includes earlier completed visits for the same patient and
+clinic, newest first. Its cursor is bound to the current appointment. Clinical
+records and document services use the detail route to authorize history reads.
+
 No clinical content, patient contact/address data or cancellation free text is returned.
 Responses remain C03 metadata, including frozen price/payment linkage. Revocation removes
 staff access on the next request; owning-patient access persists where their current

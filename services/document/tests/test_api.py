@@ -139,6 +139,8 @@ def api(database, monkeypatch):
     def upstream(request):
         assert request.headers["authorization"] == "Bearer synthetic"
         assert request.headers["x-request-id"]
+        if "history_for" in request.url.params:
+            assert request.url.params["history_for"] == state["history_for"]
         data = state["appointment"].model_dump(mode="json")
         if not state.get("wrong_id"):
             data["appointment_id"] = request.url.path.rsplit("/", 1)[1]
@@ -160,6 +162,24 @@ def api(database, monkeypatch):
 def download(api):
     client, _, row, *_ = api
     return client.get(f"{PREFIX}/{row.document_id}/download")
+
+
+def test_same_clinic_history_lists_and_downloads_after_scheduling_authorizes(api):
+    client, state, row, *_ = api
+    state["user"] = "other_doctor"
+    state["history_for"] = str(uuid4())
+    params = {"history_for": state["history_for"]}
+    list_params = params | {"appointment_id": str(row.appointment_id)}
+    download_path = f"{PREFIX}/{row.document_id}/download"
+
+    assert client.get(download_path).status_code == 404
+    response = client.get(PREFIX, params=list_params)
+    assert response.status_code == 200
+    assert [item["document_id"] for item in response.json()["items"]] == [str(row.document_id)]
+    assert client.get(download_path, params=params).status_code == 200
+    state["upstream_status"] = 404
+    assert client.get(PREFIX, params=list_params).status_code == 404
+    assert client.get(download_path, params=params).status_code == 404
 
 
 @pytest.mark.parametrize("user", ["patient", "doctor"])

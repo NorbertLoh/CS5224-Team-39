@@ -5,10 +5,14 @@ import { base, id, json, request } from './client'
 export async function readNote(
   appointmentId: string,
   signal?: AbortSignal,
+  historyFor?: string,
 ): Promise<Note | null> {
+  const query = historyFor
+    ? `?${new URLSearchParams({ history_for: historyFor })}`
+    : ''
   try {
     return await (
-      await request(`${base}/appointments/${id(appointmentId)}/note`, {
+      await request(`${base}/appointments/${id(appointmentId)}/note${query}`, {
         signal,
       })
     ).json()

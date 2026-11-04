@@ -6,12 +6,14 @@ import { useDocumentName } from '@/features/documents/useDocumentName'
 export function DocumentRow({
   document: item,
   token,
+  historyFor,
 }: {
   document: DocumentMetadata
   token: string
+  historyFor?: string
 }) {
   const name = useDocumentName(item, token)
-  const { busy, error, requested, download } = useDocumentDownload(item)
+  const { busy, error, requested, download } = useDocumentDownload(item, historyFor)
 
   return (
     <article className="space-y-3 py-4">

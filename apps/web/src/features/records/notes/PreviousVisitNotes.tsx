@@ -43,7 +43,7 @@ export function PreviousVisitNotes({
         <h3 className="font-semibold">Previous visit notes</h3>
       </div>
       <p className="text-sm text-slate-600">
-        Earlier completed visits for this patient with you at this clinic,
+        Earlier completed visits for this patient at this clinic,
         newest first. Open a visit to read its saved note.
       </p>
       {history.isPending ? (
@@ -51,7 +51,12 @@ export function PreviousVisitNotes({
       ) : (
         <>
           {visits.map((visit) => (
-            <VisitNote key={visit.appointment_id} visit={visit} token={token} />
+            <VisitNote
+              key={visit.appointment_id}
+              visit={visit}
+              token={token}
+              historyFor={appointment.appointment_id}
+            />
           ))}
           {history.isError ? (
             <ErrorState
@@ -85,12 +90,16 @@ export function PreviousVisitNotes({
   )
 }
 
-function VisitNote({ visit, token }: { visit: Appointment; token: string }) {
+function VisitNote({
+  visit,
+  token,
+  historyFor,
+}: { visit: Appointment; token: string; historyFor: string }) {
   const [open, setOpen] = useState(false)
   const note = useQuery({
-    queryKey: ['records', 'previous-note', token, visit.appointment_id],
+    queryKey: ['records', 'previous-note', token, visit.appointment_id, historyFor],
     queryFn: async ({ signal }) => {
-      const saved = await readNote(visit.appointment_id, signal)
+      const saved = await readNote(visit.appointment_id, signal, historyFor)
       if (
         saved &&
         ['appointment_id', 'patient_id', 'tenant_id', 'doctor_id'].some(

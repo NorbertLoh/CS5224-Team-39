@@ -2,11 +2,12 @@
 
 ## Previous visit PDFs in doctor Consult (RF46)
 
-- [ ] RF46: Show expandable PDFs from earlier completed visits for the same
-  patient, clinic and assigned doctor in the doctor records workspace. Keep
-  older visits reachable and preserve the current visit's document list on
+- [ ] RF46: Show notes and expandable PDFs from earlier completed visits for
+  the same patient and clinic in the doctor records workspace. Require an active
+  clinic doctor assigned to the current visit and keep earlier visits read-only.
+  Keep older visits reachable and preserve the current visit's document list on
   consultation completion. Dependencies RF12, RF37, RF41 and P03 merged.
-  Effort S. Issue #363 assigned to NorbertLoh and in progress.
+  Effort M. Issue #363 assigned to NorbertLoh and in progress.
 
 ## Clinic medicine workspaces (RF39)
 

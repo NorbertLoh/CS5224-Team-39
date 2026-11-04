@@ -176,6 +176,7 @@ export function DocumentResults({
                     key={item.document_id}
                     document={item}
                     token={token}
+                    historyFor={previousVisitsFor?.appointment_id}
                   />
                 ))}
               </div>

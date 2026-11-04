@@ -29,10 +29,11 @@ Reload saved records fetches fresh note, prescription and MC snapshots. It asks
 before discarding unsaved edits, and is disabled during saves/issuance. Keep editing
 preserves the draft and restores focus to Reload. Each form still saves separately.
 
-Previous visit notes lists earlier completed visits for the same patient, clinic
-and assigned doctor, newest first with older-page loading. Expand a visit with
+Previous visit notes lists earlier completed visits for the same patient and
+clinic, newest first with older-page loading. Expand a visit with
 mouse or keyboard to fetch its saved note through the existing audited API.
-History does not reset current edits or broaden access to other doctors' notes.
+The doctor assigned to the current visit can read history from other doctors
+at that clinic. History does not reset current edits.
 Missing notes and failed requests have explicit empty/retry states.
 
 ## Setup and verification
@@ -87,8 +88,8 @@ End after Documents, disabled End for unsaved text and re-enabled End after savi
 The visit was not ended. Frontend lint, TypeScript and production build passed.
 
 Past documents uses the same icon and heading styling as Previous visit notes,
-and shows PDFs from earlier completed visits for the same patient, clinic and
-assigned doctor. The completed consultation screen shows PDFs for that visit.
+and shows PDFs from earlier completed visits for the same patient and clinic.
+The completed consultation screen shows PDFs for that visit.
 The card has no subtitle, refresh button or empty message. Its body is blank when
 there are no documents. Available documents appear in collapsed, dated rows like
 previous notes; expand a row for status and PDF download actions. The list refreshes
