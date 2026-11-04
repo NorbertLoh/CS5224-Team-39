@@ -5,7 +5,7 @@ Direct routes below have no prefix. Ingress strips `/api/v1/tenant`; set
 
 | Route | Behavior |
 | --- | --- |
-| POST `/clinics` | Verified, provisioned subject. C02 slug/name/branding/SGD price only. New clinic returns 201, pending review, commission 0. Assigns creator admin membership through identity HTTP API. |
+| POST `/clinics` | Verified, provisioned subject. Slug/name/branding/SGD price and required pickup location/contact. New clinic returns 201, pending review, commission 0. Assigns creator admin membership through identity HTTP API. |
 | GET `/clinics` | Public active, provisioned profiles; `limit=1..100`, signed cursor, ordered name/tenant ID. |
 | GET `/clinics/by-slug/{slug}` | Public active, provisioned profile; otherwise concealed 404. |
 | GET `/clinics/{tenant_id}` | Current active owning-clinic admin or platform admin; includes commission/review reason. |
@@ -18,7 +18,12 @@ Direct routes below have no prefix. Ingress strips `/api/v1/tenant`; set
 Public profiles omit commission, review reason and internal provisioning fields.
 Creation validates lowercase hyphenated slugs (100 chars), nonblank names (200),
 branding color, HTTPS logo URLs without credentials (2048), plain-text description
-(2000), and nonnegative safe-integer SGD amounts. Unknown input fields are rejected.
+(2000), and nonnegative safe-integer SGD amounts. Unknown input fields are rejected. Registration also requires `location` with
+address_line, six-digit postal_code, Singapore coordinates (lat/lng strings), and
+a nonblank pickup_contact name and valid Singapore phone. Clinic and pickup
+settings/audit are committed together before identity provisioning; 503 retries
+retain the saved location. Existing Settings edits are not overwritten by a later
+registration retry. No new migration or configuration is required.
 Authentication verifies access-token signature/issuer/expiry/token use/client
 before querying identity `/me`; roles are current server-controlled memberships.
 Unrelated and revoked admins get 404. No permission cache is used.

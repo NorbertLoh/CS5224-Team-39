@@ -45,6 +45,13 @@ def main():
                 admin,
                 status=201,
                 json={
+                    "location": {
+                        "address_line": "1 Raffles Place",
+                        "postal_code": "048616",
+                        "country_code": "SG",
+                        "coordinates": {"lat": "1.2844", "lng": "103.8511"},
+                        "pickup_contact": {"name": "Pickup desk", "phone": "+6581234567"},
+                    },
                     "slug": "s03-" + str(uuid4()),
                     "name": "S03 synthetic clinic",
                     "branding": {

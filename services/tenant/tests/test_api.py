@@ -52,10 +52,20 @@ def configuration(**changes):
     )
 
 
+PICKUP_LOCATION = {
+    "address_line": "1 Raffles Place",
+    "postal_code": "048616",
+    "country_code": "SG",
+    "coordinates": {"lat": "1.2844", "lng": "103.8511"},
+    "pickup_contact": {"name": "Clinic pickup desk", "phone": "+6581234567"},
+}
+
+
 def body(**changes):
     return {
         "slug": f"demo-{uuid4()}",
         "name": "Synthetic clinic",
+        "location": PICKUP_LOCATION,
         "branding": {"primary_color": "#156B63", "logo_url": None, "description": "Demo"},
         "consultation_price": {"amount_minor": 2500, "currency": "SGD"},
     } | changes
@@ -379,7 +389,10 @@ def audit_events(api, tenant_id):
     with Session(api.engine) as session:
         return session.scalars(
             select(AuditEvent)
-            .where(AuditEvent.tenant_id == tenant_id)
+            .where(
+                AuditEvent.tenant_id == tenant_id,
+                AuditEvent.action != "clinic.location_changed",
+            )
             .order_by(AuditEvent.occurred_at, AuditEvent.event_id)
         ).all()
 

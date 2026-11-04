@@ -12,6 +12,8 @@ from pydantic import (
     model_validator,
 )
 
+from app.location_schemas import RegistrationLocation
+
 Nonblank = Annotated[str, Field(min_length=1, max_length=200)]
 ClinicStatus = Literal["pending_review", "active", "rejected", "suspended"]
 
@@ -61,6 +63,7 @@ class ClinicCreate(BaseModel):
     name: Nonblank
     branding: Branding
     consultation_price: Money
+    location: RegistrationLocation
 
     @field_validator("name")
     @classmethod

@@ -82,3 +82,16 @@ location/dispatch checks passed on isolated PostgreSQL, plus Ruff and frontend
 lint/typecheck/build. Browser verification confirmed the two contact fields and
 preserved saved location. No real contact data was saved and no courier request
 was submitted during verification.
+
+## Registration (RF34)
+
+New clinic registrations must supply all six pickup fields from Settings: contact
+name, Singapore phone, address, six-digit postal code, latitude and longitude.
+Registration and Settings share the same form fields and server validation. The
+clinic reservation, location and initial actor audit are saved together before
+creator membership provisioning; retrying a failed provisioning request retains
+the pickup details. Later registration retries never overwrite Settings edits.
+Existing clinics can continue maintaining their pickup details through Settings.
+Deploy the matching web and tenant builds together; API clients posting clinics
+must now include `location` with a required `pickup_contact`. No new migration or
+environment variables are required.
