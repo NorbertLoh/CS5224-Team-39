@@ -9,7 +9,7 @@ test('release inventory covers every Terraform workload and migration image', ()
   const services = catalog.match(/services\s+= toset\(\[(.*?)\]\)/)[1].match(/"([a-z_]+)"/g).map(value => JSON.parse(value))
   assert.deepEqual(images.map(image => image.name).sort(), [...services, 'notification', 'signalling', 'document-lambda', 'notification-lambda'].sort())
   for (const image of images) {
-    assert.equal(image.platform, image.name.endsWith('-lambda') ? 'linux/amd64' : 'linux/arm64')
+    assert.equal(image.platform, 'linux/amd64')
     const dockerfile = readFileSync(resolve(root, image.context, image.file), 'utf8')
     assert.ok(dockerfile.includes('FROM '))
     const args = buildArgs(image, 'telelink-release/check:revision')
@@ -18,6 +18,8 @@ test('release inventory covers every Terraform workload and migration image', ()
     assert.ok(!args.includes('--push'))
     assert.equal(args.includes('--build-context'), !!image.shared)
   }
+  const managed = readFileSync(resolve(root, 'infra/examples/sg-managed/main.tf'), 'utf8')
+  assert.match(managed, /cpu_architecture\s*=\s*"X86_64"/)
 })
 
 test('frontend rejects missing settings, local endpoints and accidental secrets', () => {

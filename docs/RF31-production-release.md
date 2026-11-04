@@ -7,8 +7,8 @@ AWS deployment/verification tasks remain open. W01 PR #233 owns shared state.
 
 ## Local preparation
 
-Requires Node 24+, Git, Docker Desktop/Engine with Buildx, and ARM64 build support
-(native ARM64 or emulation). No AWS CLI or credentials are needed for local builds.
+Requires Node 24+, Git and Docker Desktop/Engine with Buildx and AMD64 build support.
+No AWS CLI or credentials are needed for local builds.
 If Docker is not on PATH, set `RELEASE_DOCKER` to its executable path. Run from the
 repository root, on a clean committed revision:
 
@@ -24,7 +24,8 @@ The build creates twelve local images tagged
 `.local/releases/<revision>/`. Supply names after `build` to retry selected images.
 Nine Python service images include the notification migration image. Eight run
 APIs; the same images run their owning workers and one-off migrations. Signalling
-is the tenth ARM64 image. Document and notification Lambda images are AMD64 and
+is the tenth regular image. All twelve images use Linux AMD64, matching the
+managed example's ECS `X86_64` setting. Document and notification Lambda images
 omit provenance attestations for Lambda compatibility. Notification intake and
 dispatch share the notification Lambda image with Terraform selecting commands.
 Managed ElastiCache and the EC2 coturn bootstrap need no application Redis/TURN
@@ -35,6 +36,11 @@ Terraform. Git tags identify source; existing floating base tags mean rebuilding
 later may change bytes. Retain the built images and use their published digests
 for deployment and rollback. Docker cache and local images consume disk; no local
 stack is restarted or pruned by this tooling.
+
+The separate cheaper sg-demo example retains its earlier ARM64 ECS choice and is
+not compatible with this AMD64 image bundle. The digest handoff rejects outputs
+whose `cpu_architecture` is not `X86_64`. EC2 TURN and managed database/cache instance
+families are separate from the container architecture and remain unchanged.
 
 The frontend is a static S3 artifact, not the development Vite container.
 `Dockerfile.release` runs lint, TypeScript and Vite build, exports only `dist/`,

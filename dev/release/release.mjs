@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url'
 export const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const services = ['identity', 'tenant', 'scheduling', 'consultation', 'clinical_records', 'billing', 'document', 'fulfilment', 'notification']
 export const images = [
-  ...services.map(name => ({ name, platform: 'linux/arm64', context: `services/${name}`, file: 'Dockerfile', shared: true })),
-  { name: 'signalling', platform: 'linux/arm64', context: 'services/signalling', file: 'Dockerfile' },
+  ...services.map(name => ({ name, platform: 'linux/amd64', context: `services/${name}`, file: 'Dockerfile', shared: true })),
+  { name: 'signalling', platform: 'linux/amd64', context: 'services/signalling', file: 'Dockerfile' },
   ...['document', 'notification'].map(name => ({ name: `${name}-lambda`, platform: 'linux/amd64', context: '.', file: `services/${name}/Dockerfile.lambda`, shared: true })),
 ]
 export const frontendKeys = ['VITE_USE_AWS', 'VITE_AWS_API_BASE_URL', 'VITE_AWS_COGNITO_CLIENT_ID', 'VITE_AWS_COGNITO_ISSUER', 'VITE_AWS_COGNITO_OAUTH_BASE_URL', 'VITE_AWS_COGNITO_API_URL']
@@ -84,6 +84,7 @@ export function main(args) {
   } else {
     if (rest.length !== 1) throw new Error('Provide Terraform output JSON from the selected environment')
     const platform = platformOutput(json(rest[0]))
+    if (platform.cpu_architecture !== 'X86_64') throw new Error('This AMD64 release requires Terraform cpu_architecture=X86_64; refresh the selected environment outputs')
     const pinned = {}
     for (const image of images) {
       const repository = platform.repositories[image.name]

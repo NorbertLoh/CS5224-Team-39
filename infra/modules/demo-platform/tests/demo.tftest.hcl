@@ -173,10 +173,15 @@ run "managed_single_replica_layout" {
   command = apply
   variables {
     deployment_profile       = "managed"
+    cpu_architecture         = "X86_64"
     internal_origin_hostname = "api.internal.demo.example.org"
     egress_mode              = "gateway"
     enable_workloads         = true
     images                   = { for name in keys(run.bounded_running_demo.repositories) : name => "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/${name}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" if name != "redis" }
+  }
+  assert {
+    condition     = alltrue([for task in concat(values(aws_ecs_task_definition.api), values(aws_ecs_task_definition.worker), values(aws_ecs_task_definition.migration)) : task.runtime_platform[0].cpu_architecture == "X86_64"]) && aws_ecs_task_definition.signalling[0].runtime_platform[0].cpu_architecture == "X86_64" && aws_ecs_task_definition.bootstrap[0].runtime_platform[0].cpu_architecture == "X86_64" && output.cpu_architecture == "X86_64"
+    error_message = "The managed AMD64 release must use X86_64 for APIs, workers, migrations, bootstrap and signalling."
   }
   assert {
     condition     = length(aws_nat_gateway.demo) == 1 && length(aws_instance.utility) == 0 && length(aws_autoscaling_group.turn) == 1 && aws_autoscaling_group.turn[0].min_size == 1 && aws_autoscaling_group.turn[0].desired_capacity == 1 && aws_autoscaling_group.turn[0].max_size == 1 && !strcontains(base64decode(aws_launch_template.turn[0].user_data), "iptables -t nat -A")

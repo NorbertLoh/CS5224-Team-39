@@ -2,7 +2,7 @@
 
 ## Production release preparation (RF31)
 
-- [ ] RF31: Prepare all ARM64 API/worker/migration and signalling images, AMD64
+- [ ] RF31: Prepare all AMD64 API/worker/migration and signalling images, AMD64
   Lambda images, static frontend build and digest-pinned Terraform image handoff.
   Preparation only; no AWS uploads/apply or Route53 setup. Dependencies: RF26/RF27
   merged. Deployment still needs W01/W03/W06, real configuration and acceptance
