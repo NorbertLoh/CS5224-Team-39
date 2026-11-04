@@ -103,6 +103,11 @@
   gates; W12 remains separate. Effort M. NorbertLoh, #332 In progress.
   Scope and commands: [release preparation](docs/RF31-production-release.md).
 
+## Patient delivery tracker (RF45)
+
+- [ ] RF45: Show a colored progress tracker in patient delivery details.
+  Dependency D06 merged. Effort S. NorbertLoh; In progress; issue #361.
+
 ## Renewable active video leases (RF30)
 
 - [x] RF30: Separate single-use join expiry from a renewable active-call lease.
