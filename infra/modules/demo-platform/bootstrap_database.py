@@ -60,11 +60,26 @@ def main():
                     sql.Identifier(owner), sql.Literal(unquote(url.password))
                 )
             )
-            connection.execute(
-                sql.SQL("CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {}").format(
-                    sql.Identifier(owner), sql.Identifier(owner)
+            role = sql.Identifier(owner)
+            # PostgreSQL 17 grants CREATEROLE users ADMIN without SET on new roles.
+            # Keep the temporary SET grant and schema creation in one transaction.
+            with connection.transaction():
+                connection.execute(
+                    sql.SQL(
+                        "GRANT {} TO CURRENT_USER WITH SET TRUE, INHERIT FALSE "
+                        "GRANTED BY CURRENT_USER"
+                    ).format(role)
                 )
-            )
+                connection.execute(
+                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {}").format(
+                        role, role
+                    )
+                )
+                connection.execute(
+                    sql.SQL(
+                        "REVOKE {} FROM CURRENT_USER GRANTED BY CURRENT_USER"
+                    ).format(role)
+                )
             connection.execute(
                 sql.SQL("GRANT CONNECT ON DATABASE telelink TO {}").format(
                     sql.Identifier(owner)
