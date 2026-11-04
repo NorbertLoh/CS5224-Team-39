@@ -1,13 +1,13 @@
 # TeleLink Health: shared implementation backlog
 
-## Patient upcoming appointment documents (RF37)
+## Appointment and consultation document views (RF37)
 
-- [ ] RF37: Hide Documents in patient Upcoming appointment details, retaining
+- [x] RF37: Hide Documents in patient Upcoming appointment details, retaining
   Past details and doctor document behavior. Pass the selected period to details
   and avoid mounting/querying documents for patient Upcoming. Dependencies RF10
-  and S07 merged. Effort S. NorbertLoh; In progress; issue #345, draft PR #346.
-  Completion: visibility rules and frontend lint/typecheck/build pass. Stacked
-  above RF36.
+  and S07 merged. Effort S. NorbertLoh; complete; issue #345 closed after PR #346
+  merged (`c4ca02a`) on 4 November 2026. All final PR checks passed. Merged after
+  RF35 and RF36; frontend lint/typecheck/build and focused browser checks passed.
   Frontend lint/typecheck/build passed. Web rebuilt and healthy on Tailscale.
   Demo-patient browser check confirmed Upcoming details omit Documents and Past
   completed details retain the prescription download. No appointment data changed.
@@ -22,18 +22,21 @@
   User refinement: simplify the completed consultation screen to documents,
   removing the read-only medical certificate card and duplicate prescription
   content. Retain retry recovery when completion handoff is unfinished.
+  Browser verified the blank Past card and dated expandable rows with downloads.
+  Completed-page MC removal and retained documents/recovery verified from the
+  running Tailscale-served application source; no clinical records were changed.
 
 ## Anytime consultation access (RF36)
 
-- [ ] RF36: Allow assigned doctors to start paid confirmed consultations at any
+- [x] RF36: Allow assigned doctors to start paid confirmed consultations at any
   time, and booked participants to open/rejoin confirmed/in-progress video before
   or after scheduled times until explicit completion. Align frontend, consultation
   and scheduling gates; migrate actual start-time constraints. Preserve current
   participant, tenant, role, payment and terminal-state checks and bounded renewable
   credentials. Dependencies RF12/RF29/RF30, U11/R04 merged. Effort M. NorbertLoh;
-  In progress; issue #343. Completion: timing, renewal, denial, retry, migration
-  tests and frontend checks pass. Stacked above RF35 to retain its UI refinements.
-  Draft PR #344. All code checks passed: consultation 157, scheduling 272 (2 skips),
+  complete; issue #343 closed after PR #344 merged (`7f60eed`) on 4 November 2026.
+  Timing, renewal, denial, retry, migration and frontend checks passed. RF35 merged
+  first; all final PR checks passed. Consultation 157, scheduling 272 (2 skips),
   Ruff and frontend lint/typecheck/build. Verified early/late start/join, renewal
   across slot end, completion/revocation, retry and guarded migration behavior on
   isolated PostgreSQL/Redis. Local consultation schema backed up before applying
@@ -43,13 +46,13 @@
 
 ## Prescription issuance on consultation end (RF35)
 
-- [ ] RF35: Remove the standalone Issue prescription action from the doctor
+- [x] RF35: Remove the standalone Issue prescription action from the doctor
   prescription editor; End consultation issues the valid saved draft. Preserve
   autosave, validation, completion error/retry handling and issued-content locks.
-  Dependencies: RF12, U11 and R04 merged. Effort S. NorbertLoh; In progress;
-  issue #341. Completion: standalone action/copy removed, completion behavior
-  verified and frontend lint/typecheck/build pass.
-  Draft PR #342 removes the editor's issuance mutation/button and misleading copy;
+  Dependencies: RF12, U11 and R04 merged. Effort S. NorbertLoh; complete;
+  issue #341 closed after PR #342 merged (`1e50b5a`) on 4 November 2026.
+  Standalone action/copy removed; all final PR checks and frontend checks passed.
+  PR #342 removes the editor's issuance mutation/button and misleading copy;
   draft autosave and the existing End consultation completion API remain in place.
   Frontend lint/typecheck/build passed. Web rebuilt and healthy; Tailscale served
   the updated editor without Issue prescription and retained End consultation.
@@ -58,7 +61,8 @@
   No new configuration or migration.
   User refinement: rename Visit documents to Past documents, remove the heading
   subline and match Previous visit notes heading styling. Preserve its disclosure
-  and existing document status, refresh and download controls in draft PR #342.
+  and existing document status, refresh and download controls in PR #342.
+  RF37 subsequently refined the document card and removed its manual refresh UI.
 
 ## Clinic registration pickup details (RF34)
 
