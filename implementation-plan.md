@@ -14,6 +14,11 @@
   No migration or configuration changes.
   User refinement: add a small gap below the appointment count and above selected
   appointment details in both Upcoming and Past, scoped to appointment components.
+  Further clarification: Past documents has a blank body when empty and expandable
+  dated document rows like Previous visit notes when populated. Remove its subtitle,
+  manual refresh control and empty placeholder in patient Past details and doctor
+  records. Preserve standalone document pages and authorized downloads; refresh
+  embedded document status automatically.
 
 ## Anytime consultation access (RF36)
 

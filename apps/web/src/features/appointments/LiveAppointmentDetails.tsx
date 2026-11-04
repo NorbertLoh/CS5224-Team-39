@@ -116,6 +116,7 @@ export function LiveAppointmentDetails({
         (role === 'doctor' && appointment.doctor_id === subjectId)) && (
         <DocumentList
           key={appointment.appointment_id}
+          variant="past"
           role={role as 'patient' | 'doctor'}
           appointmentId={appointment.appointment_id}
           tenantId={appointment.tenant_id}

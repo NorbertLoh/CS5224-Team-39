@@ -16,6 +16,9 @@ and `AppointmentCell` display each booking once with its full date/time range.
 and handles eligible cancellations; `AppointmentDetails` renders server metadata.
 Patient Upcoming details omit the Documents section and its document query.
 Patient Past details retain documents; visibility follows the selected tab.
+The Past documents card has an empty body when no documents exist. Available
+documents use expandable dated rows matching Previous visit notes, with no
+subtitle, manual refresh button or empty placeholder.
 Patient, doctor and clinic-admin bookings appear across dates in Upcoming/Past
 tabs, with Singapore dates and times on each card; there is no date filter.
 The overall clinic-admin workspace retains its clinic selector; clinic-specific
