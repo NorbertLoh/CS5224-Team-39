@@ -1,0 +1,16 @@
+{
+  "name": "@telelink/deployment-e2e",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "test": "node --env-file-if-exists=.env node_modules/playwright/cli.js test --project=smoke",
+    "test:booking": "node --env-file-if-exists=.env node_modules/playwright/cli.js test --project=booking",
+    "test:stripe": "node --env-file-if-exists=.env node_modules/playwright/cli.js test --project=stripe --headed",
+    "test:evidence": "node --env-file-if-exists=.env node_modules/playwright/cli.js test --project=evidence",
+    "test:unit": "node --test unit/*.test.mjs",
+    "report": "playwright show-report",
+    "install:browser": "playwright install chromium"
+  },
+  "devDependencies": { "playwright": "1.64.1" }
+}

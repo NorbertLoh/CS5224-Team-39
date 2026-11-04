@@ -1,0 +1,96 @@
+name: Deployment E2E
+
+on:
+  pull_request:
+    paths: ['tests/e2e/browser/**', '.github/workflows/deployment-e2e.yml']
+  push:
+    paths: ['tests/e2e/browser/**', '.github/workflows/deployment-e2e.yml']
+  workflow_dispatch:
+    inputs:
+      booking:
+        description: Also create and release one synthetic unpaid booking
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deployment-e2e-staging
+  cancel-in-progress: false
+
+jobs:
+  suite-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: tests/e2e/browser
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: npm install --global pnpm@11.25.0
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm test:unit
+      - run: pnpm exec playwright test --list
+        env:
+          E2E_TARGET: local
+          E2E_BASE_URL: http://localhost:5173
+
+  acceptance:
+    if: github.event_name == 'workflow_dispatch'
+    needs: suite-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: e2e-staging
+    defaults:
+      run:
+        working-directory: tests/e2e/browser
+    env:
+      E2E_TARGET: aws-staging
+      E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+      E2E_CLINIC_SLUG: ${{ vars.E2E_CLINIC_SLUG }}
+      E2E_PATIENT_EMAIL: ${{ secrets.E2E_PATIENT_EMAIL }}
+      E2E_PATIENT_PASSWORD: ${{ secrets.E2E_PATIENT_PASSWORD }}
+      E2E_DOCTOR_EMAIL: ${{ secrets.E2E_DOCTOR_EMAIL }}
+      E2E_DOCTOR_PASSWORD: ${{ secrets.E2E_DOCTOR_PASSWORD }}
+      E2E_CLINIC_ADMIN_EMAIL: ${{ secrets.E2E_CLINIC_ADMIN_EMAIL }}
+      E2E_CLINIC_ADMIN_PASSWORD: ${{ secrets.E2E_CLINIC_ADMIN_PASSWORD }}
+      E2E_PLATFORM_ADMIN_EMAIL: ${{ secrets.E2E_PLATFORM_ADMIN_EMAIL }}
+      E2E_PLATFORM_ADMIN_PASSWORD: ${{ secrets.E2E_PLATFORM_ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: npm install --global pnpm@11.25.0
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm test:unit
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test
+      - name: Retain smoke report before optional booking run
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: deployment-e2e-smoke-${{ github.run_id }}
+          path: |
+            tests/e2e/browser/playwright-report/
+            tests/e2e/browser/test-results/
+          if-no-files-found: ignore
+          retention-days: 3
+      - if: ${{ success() && inputs.booking }}
+        run: pnpm test:booking
+        env:
+          E2E_ALLOW_WRITES: 'true'
+      - name: Retain booking report
+        if: ${{ always() && inputs.booking }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: deployment-e2e-booking-${{ github.run_id }}
+          path: |
+            tests/e2e/browser/playwright-report/
+            tests/e2e/browser/test-results/
+          if-no-files-found: ignore
+          retention-days: 3
