@@ -19,6 +19,9 @@
   manual refresh control and empty placeholder in patient Past details and doctor
   records. Preserve standalone document pages and authorized downloads; refresh
   embedded document status automatically.
+  User refinement: simplify the completed consultation screen to documents,
+  removing the read-only medical certificate card and duplicate prescription
+  content. Retain retry recovery when completion handoff is unfinished.
 
 ## Anytime consultation access (RF36)
 
