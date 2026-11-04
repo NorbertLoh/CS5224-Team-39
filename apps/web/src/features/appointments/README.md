@@ -14,6 +14,8 @@ See [setup, boundaries and verification](../../../../../docs/scheduling-frontend
 and `AppointmentCell` display each booking once with its full date/time range.
 `LiveAppointmentDetails` fetches detail
 and handles eligible cancellations; `AppointmentDetails` renders server metadata.
+Patient Upcoming details omit the Documents section and its document query.
+Patient Past details retain documents; visibility follows the selected tab.
 Patient, doctor and clinic-admin bookings appear across dates in Upcoming/Past
 tabs, with Singapore dates and times on each card; there is no date filter.
 The overall clinic-admin workspace retains its clinic selector; clinic-specific

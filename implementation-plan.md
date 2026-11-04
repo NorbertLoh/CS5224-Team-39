@@ -5,8 +5,13 @@
 - [ ] RF37: Hide Documents in patient Upcoming appointment details, retaining
   Past details and doctor document behavior. Pass the selected period to details
   and avoid mounting/querying documents for patient Upcoming. Dependencies RF10
-  and S07 merged. Effort S. NorbertLoh; In progress. Completion: visibility rules
-  and frontend lint/typecheck/build pass. Stacked above RF36.
+  and S07 merged. Effort S. NorbertLoh; In progress; issue #345, draft PR #346.
+  Completion: visibility rules and frontend lint/typecheck/build pass. Stacked
+  above RF36.
+  Frontend lint/typecheck/build passed. Web rebuilt and healthy on Tailscale.
+  Demo-patient browser check confirmed Upcoming details omit Documents and Past
+  completed details retain the prescription download. No appointment data changed.
+  No migration or configuration changes.
 
 ## Anytime consultation access (RF36)
 

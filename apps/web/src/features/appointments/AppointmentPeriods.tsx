@@ -177,6 +177,7 @@ export function AppointmentPeriods({
                   token={token}
                   subjectId={subjectId}
                   role={role}
+                  period={period}
                   onClose={() => setSelectedId(null)}
                 />
               )}
