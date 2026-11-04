@@ -29,3 +29,13 @@ Migration `0006` retains finite actual-start validation and ordered end timestam
 while permitting starts outside the booked slot. It preserves existing timestamps
 and the immutable appointment snapshot. Downgrade refuses when an actual start
 would violate the old interval constraint; it never rewrites clinical history.
+
+## Verification
+
+All 157 consultation tests and 272 scheduling tests (2 skips) passed, including
+early/late start and admission, renewal across scheduled end, participant/payment
+denials, completed-session closure, retries and guarded migration downgrade.
+Backend Ruff and frontend lint/typecheck/build passed. The local consultation
+schema was backed up before applying `0006`; consultation, scheduling and web are
+healthy and the existing Tailscale endpoint serves the updated controls. No real
+consultation was started or completed during verification. AWS remains unverified.
