@@ -23,6 +23,12 @@ roles and run each owner's migrations before enabling workloads. Rebuild the
 static frontend with emitted public settings. Do not invent sandbox provider
 credentials, delivery coverage, mail verification or acceptance evidence.
 
+The selected deployment root is `infra/envs/demo`, with W01's
+`demo/terraform.tfstate` key. The standalone examples remain review/reference
+compositions; do not apply them against the same resources. Copy its tfvars and
+backend examples into ignored operator files and initialize the shared backend.
+The dev root remains a separate unprovisioned skeleton.
+
 Actual apply/health outcomes and remaining acceptance gates are recorded in the
 PR. Operator account settings, secrets, plans/state and release metadata remain
 in ignored local files. W01 bootstrap state is backed up privately in the shared
