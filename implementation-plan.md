@@ -2,17 +2,22 @@
 
 ## Clinic registration pickup details (RF34)
 
-- [ ] RF34: Require all Clinic Settings pickup fields during clinic registration:
+- [x] RF34: Require all Clinic Settings pickup fields during clinic registration:
   contact name, Singapore phone, address, postal code and Singapore coordinates.
   Share fields/validation, save audited settings with the clinic reservation and
   preserve safe retries and later Settings edits. Dependencies: A08/A11 and RF12
-  merged. Effort M. NorbertLoh; In progress; issue #339. Completion: required-field,
+  merged. Effort M. NorbertLoh; complete; issue #339 closed. Completion: required-field,
   validation, persistence/retry checks and frontend lint/typecheck/build pass.
-  Draft PR #340. Tenant PostgreSQL CI: 152 tests passed, including registration
+  PR #340 merged (`fa9e4c4`) on 4 November 2026; all final checks passed.
+  Tenant PostgreSQL CI: 152 tests passed, including registration
   validation, saved pickup/audit, provisioning failure/retry and later Settings
   edits. Frontend lint/typecheck/build and tenant Ruff passed. Existing API probes
   now provide required pickup fixtures. No new migration/configuration; deploy
-  matching web/tenant builds. Browser acceptance and deployment remain unverified.
+  matching web/tenant builds. Updated web and tenant containers are running locally
+  and through the existing Tailscale endpoint. Browser verified all six pickup
+  fields on registration; tenant readiness and the updated Tailscale source passed.
+  No clinic application was submitted during browser verification; AWS deployment
+  remains unverified.
 
 ## Production release preparation (RF31)
 
