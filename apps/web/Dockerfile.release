@@ -7,6 +7,7 @@ COPY . .
 COPY --from=contracts . /workspace/contracts
 # These values are public and embedded in the JavaScript bundle, never secrets.
 ARG VITE_USE_AWS=true
+ARG VITE_DOCUMENT_DOWNLOAD_VIA_API=false
 ARG VITE_AWS_API_BASE_URL
 ARG VITE_AWS_COGNITO_CLIENT_ID
 ARG VITE_AWS_COGNITO_ISSUER

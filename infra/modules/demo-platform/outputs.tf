@@ -27,6 +27,7 @@ output "service_settings" {
 output "frontend_environment" {
   value = {
     VITE_USE_AWS                    = "true"
+    VITE_DOCUMENT_DOWNLOAD_VIA_API  = "true"
     VITE_AWS_API_BASE_URL           = "https://${module.edge.domain_name}/api/v1"
     VITE_AWS_COGNITO_CLIENT_ID      = aws_cognito_user_pool_client.spa.id
     VITE_AWS_COGNITO_ISSUER         = local.issuer

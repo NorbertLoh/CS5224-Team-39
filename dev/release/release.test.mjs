@@ -25,6 +25,10 @@ test('release inventory covers every Terraform workload and migration image', ()
 test('frontend rejects missing settings, local endpoints and accidental secrets', () => {
   const config = JSON.parse(readFileSync(resolve(root, 'dev/release/frontend.check.json'), 'utf8'))
   assert.deepEqual(frontendConfig(config), config)
+  const { VITE_DOCUMENT_DOWNLOAD_VIA_API, ...legacyConfig } = config
+  assert.equal(VITE_DOCUMENT_DOWNLOAD_VIA_API, 'true')
+  assert.deepEqual(frontendConfig(legacyConfig), legacyConfig)
+  assert.throws(() => frontendConfig({ ...config, VITE_DOCUMENT_DOWNLOAD_VIA_API: 'invalid' }))
   assert.throws(() => frontendConfig({ ...config, VITE_USE_AWS: 'false' }))
   assert.throws(() => frontendConfig({ ...config, SERVICE_SECRET: 'private' }))
   assert.throws(() => frontendConfig({ ...config, VITE_AWS_COGNITO_CLIENT_ID: '' }))

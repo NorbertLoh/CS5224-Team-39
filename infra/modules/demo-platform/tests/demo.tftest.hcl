@@ -98,6 +98,15 @@ run "bounded_running_demo" {
     error_message = "Every API must remain single-task, including during deployment."
   }
   assert {
+    condition = (
+      output.frontend_environment.VITE_DOCUMENT_DOWNLOAD_VIA_API == "true" &&
+      alltrue([for c in jsondecode(aws_ecs_task_definition.api["document"].container_definitions) :
+        contains(c.environment, { name = "SERVICE_DOWNLOAD_VIA_API", value = "true" })
+      ])
+    )
+    error_message = "Frontend and document API must enable authenticated PDF downloads together."
+  }
+  assert {
     condition     = alltrue([for t in aws_ecs_task_definition.api : t.cpu == "256" && t.runtime_platform[0].cpu_architecture == "ARM64"]) && aws_ecs_service.signalling[0].desired_count == 1
     error_message = "Use small Graviton tasks and one signalling replica."
   }

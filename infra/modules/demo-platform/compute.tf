@@ -81,7 +81,8 @@ locals {
       } : {}, s == "fulfilment" ? {
       SERVICE_PAYMENT_QUEUE_NAME = aws_sqs_queue.consumer["fulfilment"].name
       } : {}, s == "document" ? {
-      SERVICE_DOCUMENT_BUCKET = aws_s3_bucket.storage["documents"].id
+      SERVICE_DOCUMENT_BUCKET  = aws_s3_bucket.storage["documents"].id
+      SERVICE_DOWNLOAD_VIA_API = "true"
       } : {}, s == "tenant" ? {
       SERVICE_LOGO_BUCKET          = aws_s3_bucket.storage["logos"].id
       SERVICE_LOGO_PUBLIC_BASE_URL = "https://${module.edge.domain_name}"

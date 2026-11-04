@@ -39,3 +39,11 @@ export function apiBaseUrl(env: Environment = import.meta.env ?? {}) {
   }
   return value.replace(/\/+$/, '')
 }
+
+export function downloadsViaApi(env: Environment = import.meta.env ?? {}) {
+  const flag = env.VITE_DOCUMENT_DOWNLOAD_VIA_API
+  if (flag === 'true') return true
+  if (flag === 'false') return false
+  if (flag === undefined || flag === '') return !usesAws(env)
+  throw new Error('VITE_DOCUMENT_DOWNLOAD_VIA_API must be true or false.')
+}

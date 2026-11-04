@@ -115,7 +115,11 @@ def download_document(
     content: bool = False,
 ):
     settings = request.app.state.settings
-    if content and (settings.environment not in {"local", "test"} or not settings.aws_endpoint_url):
+    if (
+        content
+        and not settings.download_via_api
+        and (settings.environment not in {"local", "test"} or not settings.aws_endpoint_url)
+    ):
         not_found()
     query = select(Document).where(Document.document_id == document_id)
     if history_for is None:
