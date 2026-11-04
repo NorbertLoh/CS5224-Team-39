@@ -2,11 +2,14 @@
 
 ## Renewable active video leases (RF30)
 
-- [ ] RF30: Separate single-use join expiry from a renewable active-call lease.
+- [x] RF30: Separate single-use join expiry from a renewable active-call lease.
   Preserve authorization, payment, completion and assigned-node checks on renewal.
   Keep healthy sockets/media connected and bound TURN credentials to the call
   deadline. Verify expiry, revocation, concurrency and browser recovery.
-  Dependencies RF29 and V01-V04 merged. Effort L. NorbertLoh, #330 In progress.
+  Dependencies RF29 and V01-V04 merged. Effort L. NorbertLoh. PR #331 merged
+  (`bfe035f`), issue #330 closed. All CI checks passed, including direct and
+  forced-TURN media beyond the original join deadline. Deployment requires
+  consultation migration `0005` and matching application builds.
 
 ## Architecture reference (27 October 2026)
 
