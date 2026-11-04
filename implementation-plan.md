@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## Domain-free AWS demo rollout (RF32)
+
+- [ ] RF32: Deploy the managed AMD64 demo through W01 shared state, using
+  CloudFront private VPC origins and a NAT-restricted HTTPS service path instead
+  of custom domains/Route53. Verify source, plans, staged deployment and actual
+  health; retain explicit integration gates. Independent module preparation:
+  RF27 merged. Live rollout consumes W01/RF31. Effort L. NorbertLoh, #335 In progress.
+  Details: [domain-free demo](docs/RF32-domain-free-demo.md).
+
 ## Production release preparation (RF31)
 
 - [ ] RF31: Prepare all AMD64 API/worker/migration and signalling images, AMD64
