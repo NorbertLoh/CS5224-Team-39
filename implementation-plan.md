@@ -1,5 +1,12 @@
 # TeleLink Health: shared implementation backlog
 
+## Doctor Upcoming documents (RF40)
+
+- [ ] RF40: Hide Past documents in doctor Upcoming appointment details and retain
+  it in Past details. Dependency RF37 merged. Effort S. NorbertLoh; In progress;
+  issue #351. Verify both doctor appointment periods and frontend checks.
+
+
 ## Booking hold action spacing (RF38)
 
 - [x] RF38: Add a small gap between Booking hold actions, including when buttons
