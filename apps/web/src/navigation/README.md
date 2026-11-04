@@ -27,7 +27,9 @@ links on narrow screens, and a single bottom-border active/focus indicator.
   Consultation pages do not mark a list link current or show a clinic picker.
 - Clinic admin: My clinics and Appointments at the workspace entry. Selecting a
   clinic shows one management bar: Clinic profile, Staff, Appointments, Payments,
-  Medicine & delivery and Settings. The named clinic selector retains the section
+  Medicine Pricing, Medicine Delivery and Settings. The medicine tabs show red
+  counts for prescriptions with missing prices and paid orders awaiting preparation.
+  The named clinic selector retains the section
   when changing clinics; All my clinics returns to the list. The unscoped
   appointment page retains its existing per-clinic schedule selector.
 - Platform admin: Clinics and Doctor applications. Platform administrators retain
