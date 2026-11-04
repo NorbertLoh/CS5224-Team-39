@@ -3,7 +3,6 @@
 import io
 import json
 import os
-import secrets
 from contextlib import closing
 from uuid import NAMESPACE_URL, uuid5
 
@@ -11,7 +10,12 @@ import boto3
 import psycopg
 from reportlab.pdfgen import canvas
 
-ROLES = ("patient", "doctor", "clinic_admin", "platform_admin")
+EMAILS = {
+    "patient": "patient@example.test",
+    "doctor": "doctor@example.test",
+    "clinic_admin": "clinic@example.test",
+    "platform_admin": "platform@example.test",
+}
 DEMO_PASSWORD = "LocalDemo123!"
 
 
@@ -31,10 +35,10 @@ def logins(client, pool):
             "pool": pool,
             "accounts": {
                 role: {
-                    "email": f"{role.replace('_', '-')}-{secrets.token_hex(8)}@example.test",
+                    "email": email,
                     "password": DEMO_PASSWORD,
                 }
-                for role in ROLES
+                for role, email in EMAILS.items()
             },
         }
         client.put_secret_value(
@@ -45,14 +49,15 @@ def logins(client, pool):
     return data
 
 
-def ensure_user(client, pool, role, login, password_changed):
+def ensure_user(client, pool, role, login, password_changed, existing_sub=None):
     name = "Demo " + role.replace("_", " ").title()
-    email = login["email"]
-    if not email.endswith("@example.test"):
-        raise ValueError("Demo login must use a reserved synthetic address")
+    email = EMAILS[role]
+    previous_email = login["email"]
     try:
-        user = client.admin_get_user(UserPoolId=pool, Username=email)
+        user = client.admin_get_user(UserPoolId=pool, Username=existing_sub or email)
     except client.exceptions.UserNotFoundException:
+        if existing_sub:
+            raise ValueError("Existing demo account is missing") from None
         user = client.admin_create_user(
             UserPoolId=pool,
             Username=email,
@@ -68,17 +73,28 @@ def ensure_user(client, pool, role, login, password_changed):
         attr["Name"]: attr["Value"]
         for attr in user.get("UserAttributes", user.get("Attributes", []))
     }
-    if (attrs.get("email"), attrs.get("name"), attrs.get("email_verified")) != (
-        email,
-        name,
-        "true",
-    ) or not user["Enabled"]:
+    if (
+        attrs.get("email") not in (previous_email, email)
+        or attrs.get("name") != name
+        or attrs.get("email_verified") != "true"
+        or (existing_sub is not None and attrs.get("sub") != existing_sub)
+        or not user["Enabled"]
+    ):
         raise ValueError("Refusing to adopt a non-seeded or disabled user")
     if user["UserStatus"] not in ("CONFIRMED", "FORCE_CHANGE_PASSWORD"):
         raise ValueError("Unexpected demo account status")
+    if attrs["email"] != email:
+        client.admin_update_user_attributes(
+            UserPoolId=pool,
+            Username=user["Username"],
+            UserAttributes=[
+                {"Name": "email", "Value": email},
+                {"Name": "email_verified", "Value": "true"},
+            ],
+        )
     if password_changed or user["UserStatus"] == "FORCE_CHANGE_PASSWORD":
         client.admin_set_user_password(
-            UserPoolId=pool, Username=email, Password=login["password"], Permanent=True
+            UserPoolId=pool, Username=user["Username"], Password=login["password"], Permanent=True
         )
     return attrs["sub"], name
 
@@ -95,20 +111,38 @@ def seed():
         closing(boto3.client("cognito-idp")) as cognito,
         connect(read_secret(secrets_client, "IDENTITY_SECRET")) as identity,
     ):
-        identity.execute("SELECT pg_advisory_xact_lock(57389041)")
+        identity.execute("SELECT pg_advisory_lock(57389041)")
         identity.execute("SELECT 1 FROM identity.doctor_applications LIMIT 1")
         with connect(read_secret(secrets_client, "TENANT_SECRET")) as tenant:
             tenant.execute("SELECT membership_provisioned FROM tenant.clinics LIMIT 1")
             login_data = logins(secrets_client, pool)
             accounts = login_data["accounts"]
             subjects = {}
-            updated_password = False
-            for role in ROLES:
+            roster_changed = False
+            for role, email in EMAILS.items():
                 login = accounts[role]
+                previous_email = login["email"]
+                existing_sub = None
+                if previous_email != email:
+                    rows = identity.execute(
+                        "SELECT subject_id, cognito_sub FROM identity.subjects "
+                        "WHERE email IN (%s, %s)",
+                        (previous_email, email),
+                    ).fetchall()
+                    if len(rows) != 1 or rows[0][0] != demo_id(rows[0][1]):
+                        raise ValueError("Cannot safely identify the existing seeded account")
+                    existing_sub = rows[0][1]
                 password_changed = login["password"] != DEMO_PASSWORD
                 login["password"] = DEMO_PASSWORD
-                sub, name = ensure_user(cognito, pool, role, login, password_changed)
-                updated_password |= password_changed
+                sub, name = ensure_user(cognito, pool, role, login, password_changed, existing_sub)
+                login["email"] = email
+                roster_changed |= password_changed or previous_email != email
+                if existing_sub:
+                    identity.execute(
+                        "UPDATE identity.subjects SET email = %s "
+                        "WHERE cognito_sub = %s AND email = %s",
+                        (email, sub, previous_email),
+                    )
                 roles = [role] if role in ("patient", "platform_admin") else []
                 subjects[role] = identity.execute(
                     """INSERT INTO identity.subjects
@@ -120,11 +154,6 @@ def seed():
                 ).fetchone() or identity.execute(
                     "SELECT subject_id FROM identity.subjects WHERE cognito_sub = %s", (sub,)
                 ).fetchone()
-            if updated_password:
-                secrets_client.put_secret_value(
-                    SecretId=os.environ["LOGIN_SECRET"], SecretString=json.dumps(login_data)
-                )
-
             clinic = demo_id("clinic")
             tenant.execute(
                 """INSERT INTO tenant.clinics
@@ -164,6 +193,11 @@ def seed():
                            'General practice', %s, 'approved', 1, now(), %s)
                    ON CONFLICT (subject_id) DO NOTHING""",
                 (doctor, document, subjects["platform_admin"][0]),
+            )
+        identity.commit()
+        if roster_changed:
+            secrets_client.put_secret_value(
+                SecretId=os.environ["LOGIN_SECRET"], SecretString=json.dumps(login_data)
             )
     print("Verified four synthetic demo accounts and their application fixtures.")
 

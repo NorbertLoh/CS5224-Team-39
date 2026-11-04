@@ -55,9 +55,8 @@ and pass its roles.
 
 The seed provisions a patient, doctor, clinic admin and platform admin, with
 one synthetic clinic. It preserves existing accounts and application records.
-The AWS demo uses the same shared password as the local demo. Use the Terraform
-`platform.demo_login_secret` output to locate the generated usernames in Secrets
-Manager and share them privately with authorized demo operators.
+The AWS demo uses the same logins as the local demo. The Terraform
+`platform.demo_login_secret` output locates the login roster in Secrets Manager.
 
 To rerun the seed independently, save the demo root's `terraform output -json`
 to an ignored local file and run

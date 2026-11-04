@@ -29,6 +29,7 @@ resource "aws_iam_role_policy" "demo_seed" {
       { Effect = "Allow", Action = ["secretsmanager:PutSecretValue"], Resource = aws_secretsmanager_secret.demo_logins[0].arn },
       { Effect = "Allow", Action = [
         "cognito-idp:AdminGetUser", "cognito-idp:AdminCreateUser", "cognito-idp:AdminSetUserPassword",
+        "cognito-idp:AdminUpdateUserAttributes",
       ], Resource = aws_cognito_user_pool.users.arn },
     ]
   })
