@@ -2,10 +2,12 @@ import { ErrorState } from '@/components/ErrorState'
 import { LoadingState } from '@/components/LoadingState'
 import { documentsError, listDocuments } from '@/features/documents/api'
 import { PastDocumentRow } from '@/features/documents/PastDocumentRow'
+import { previousVisitDocuments } from '@/features/documents/previousVisitDocuments'
 import { FileText } from 'lucide-react'
 import { DocumentRow } from '@/features/documents/DocumentRow'
 import { VisitDocumentList } from '@/features/documents/VisitDocumentList'
 import { useSchedulingIdentity } from '@/features/scheduling/useSchedulingIdentity'
+import type { Appointment } from '@/features/scheduling/api'
 import { hasRole } from '@/navigation/access'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useId } from 'react'
@@ -14,6 +16,7 @@ type Props = {
   role: 'patient' | 'doctor'
   appointmentId?: string
   tenantId?: string
+  previousVisitsFor?: Appointment
   headingLevel?: 1 | 2
   variant?: 'default' | 'past'
   autoRefresh?: boolean
@@ -50,6 +53,7 @@ export function DocumentResults({
   role,
   appointmentId,
   tenantId,
+  previousVisitsFor,
   token,
   scope,
   headingLevel = 2,
@@ -67,10 +71,15 @@ export function DocumentResults({
       scope,
       appointmentId ?? null,
       tenantId ?? null,
+      previousVisitsFor?.appointment_id ?? null,
+      previousVisitsFor?.patient_id ?? null,
+      previousVisitsFor?.starts_at ?? null,
     ],
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) =>
-      listDocuments(appointmentId, pageParam, signal),
+      previousVisitsFor
+        ? previousVisitDocuments(previousVisitsFor, pageParam, signal)
+        : listDocuments(appointmentId, pageParam, signal),
     getNextPageParam: (page) => page.next_cursor ?? undefined,
     retry: false,
     gcTime: 0,
@@ -144,7 +153,11 @@ export function DocumentResults({
       ) : query.isError ? (
         <ErrorState
           message={documentsError(query.error)}
-          onRetry={() => void query.refetch()}
+          onRetry={() =>
+            void (query.isFetchNextPageError
+              ? query.fetchNextPage()
+              : query.refetch())
+          }
         />
       ) : (
         <>
@@ -186,7 +199,9 @@ export function DocumentResults({
             >
               {query.isFetchingNextPage
                 ? 'Loading more...'
-                : 'Load more documents'}
+                : previousVisitsFor
+                  ? 'Load documents from older visits'
+                  : 'Load more documents'}
             </button>
           )}
         </>

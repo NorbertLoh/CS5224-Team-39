@@ -87,7 +87,9 @@ End after Documents, disabled End for unsaved text and re-enabled End after savi
 The visit was not ended. Frontend lint, TypeScript and production build passed.
 
 Past documents uses the same icon and heading styling as Previous visit notes,
-without a subtitle, refresh button or empty message. The card body is blank when
+and shows PDFs from earlier completed visits for the same patient, clinic and
+assigned doctor. The completed consultation screen shows PDFs for that visit.
+The card has no subtitle, refresh button or empty message. Its body is blank when
 there are no documents. Available documents appear in collapsed, dated rows like
 previous notes; expand a row for status and PDF download actions. The list refreshes
 automatically every ten seconds and on window focus. End consultation remains

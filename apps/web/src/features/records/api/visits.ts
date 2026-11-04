@@ -6,15 +6,16 @@ export async function previousVisits(
   appointment: Appointment,
   cursor: string | null,
   signal?: AbortSignal,
+  limit = 100,
 ): Promise<CursorPage<Appointment>> {
   const seen = new Set<string>()
-  for (let pageNumber = 0; pageNumber < 100; pageNumber++) {
+  for (let pageNumber = 0; pageNumber * limit < 10000; pageNumber++) {
     const params = new URLSearchParams({
       tenant_id: appointment.tenant_id,
       status: 'completed',
       to: appointment.starts_at,
       period: 'past',
-      limit: '100',
+      limit: String(limit),
     })
     if (cursor) params.set('cursor', cursor)
     const page: CursorPage<Appointment> = await (

@@ -114,8 +114,8 @@ export function RecordWorkspace({
       <DocumentList
         variant="past"
         role="doctor"
-        appointmentId={appointmentId}
         tenantId={context.tenant_id}
+        previousVisitsFor={context}
       />
     </div>
   )
