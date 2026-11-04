@@ -1,5 +1,12 @@
 # TeleLink Health: shared implementation backlog
 
+## Booking hold action spacing (RF38)
+
+- [ ] RF38: Add a small gap between Booking hold actions, including when buttons
+  wrap on narrow screens. Preserve payment/release behavior. Dependencies S07/B07
+  merged. Effort S. NorbertLoh; In progress; issue #347. Completion: local spacing,
+  frontend lint/typecheck/build and updated Tailscale web verified.
+
 ## Appointment and consultation document views (RF37)
 
 - [x] RF37: Hide Documents in patient Upcoming appointment details, retaining
