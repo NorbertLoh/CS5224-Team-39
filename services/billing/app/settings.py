@@ -16,6 +16,9 @@ class Settings(ServiceSettings):
     fulfilment_url: str | None = None
     fulfilment_secret: SecretStr | None = None
     consultation_secret: SecretStr | None = None
+    document_secret: SecretStr | None = None
+    identity_url: str | None = None
+    identity_secret: SecretStr | None = None
     stripe_secret_key: SecretStr | None = None
     stripe_webhook_secret: SecretStr | None = None
     stripe_destinations: dict[UUID, str] = {}
@@ -36,6 +39,7 @@ class Settings(ServiceSettings):
             "scheduling_url",
             "tenant_url",
             "fulfilment_url",
+            "identity_url",
             "checkout_success_url",
             "checkout_cancel_url",
             "medication_checkout_success_url",
@@ -76,6 +80,8 @@ class Settings(ServiceSettings):
                 self.tenant_secret,
                 self.fulfilment_secret,
                 self.consultation_secret,
+                self.document_secret,
+                self.identity_secret,
             )
             if s
         ]

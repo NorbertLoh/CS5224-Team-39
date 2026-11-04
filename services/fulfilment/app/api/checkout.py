@@ -25,6 +25,19 @@ class ReservationCreate(StrictModel):
     payment_id: UUID
 
 
+@router.get("/internal/orders/{order_id}/receipt-context")
+def receipt_context(order_id: UUID, caller: Annotated[str, Depends(billing)], session: DB):
+    order = session.get(Order, order_id)
+    if order is None:
+        raise DomainError(404, "not_found", "Resource not found.")
+    return {
+        "order_id": order.order_id,
+        "tenant_id": order.tenant_id,
+        "patient_id": order.patient_id,
+        "appointment_id": order.appointment_id,
+    }
+
+
 @router.post("/orders/{order_id}/reconcile-payment", response_model=OrderPublic)
 def reconcile_payment(
     order_id: UUID,

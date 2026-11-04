@@ -163,7 +163,10 @@ def check_messages():
     routes = {
         "scheduling": {"consultation_payment_succeeded.v1"},
         "fulfilment": {"medication_payment_succeeded.v1"},
-        "document": {"prescription_issued.v1", "medical_certificate_issued.v1"},
+        "document": {
+            "prescription_issued.v1", "medical_certificate_issued.v1",
+            "consultation_payment_succeeded.v1", "medication_payment_succeeded.v1",
+        },
         "notification": {
             "appointment_confirmed.v1", "document_ready.v1", "delivery_status_changed.v1"
         },

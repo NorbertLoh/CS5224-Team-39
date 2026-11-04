@@ -64,6 +64,13 @@ secret's `stripe_destinations` JSON map with the verified Stripe sandbox Connect
 destination. Preserve the other settings and start fresh billing API and worker
 tasks so they load the new secret version.
 
+For RF33 receipts, provision two distinct random service secrets before enabling
+the updated workloads. Match billing's `document_secret` to document's
+`billing_secret`, and match billing's `identity_secret` to identity's
+`billing_secret`. Keep all existing service secret values. Deploy the updated
+Identity, Tenant, Fulfilment and Billing APIs and the document Lambda before
+replaying any historical verified payment events.
+
 To rerun the seed independently, save the demo root's `terraform output -json`
 to an ignored local file and run
 `node dev/release/seed-demo.mjs <demo-output.json>` from the repository root.

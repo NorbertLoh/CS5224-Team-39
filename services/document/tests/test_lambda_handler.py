@@ -32,11 +32,16 @@ def test_lambda_routes_existing_document_types_and_releases_clients(monkeypatch)
     monkeypatch.setattr(
         lambda_handler, "GenerateMedicalCertificate", lambda *args: lambda *args: calls.append("mc")
     )
+    monkeypatch.setattr(
+        lambda_handler, "GenerateReceipt", lambda *args: lambda *args: calls.append("receipt")
+    )
 
     def consume(event, context, sessions, inbox, consumer, generate):
         assert sessions == "sessions" and consumer == "document"
         generate(None, SimpleNamespace(detail_type="prescription_issued.v1"))
         generate(None, SimpleNamespace(detail_type="medical_certificate_issued.v1"))
+        generate(None, SimpleNamespace(detail_type="consultation_payment_succeeded.v1"))
+        generate(None, SimpleNamespace(detail_type="medication_payment_succeeded.v1"))
         return {"batchItemFailures": []}
 
     monkeypatch.setattr(lambda_handler, "consume_records", consume)
@@ -45,6 +50,8 @@ def test_lambda_routes_existing_document_types_and_releases_clients(monkeypatch)
         "verified",
         "prescription",
         "mc",
+        "receipt",
+        "receipt",
         "s3-closed",
         "records-closed",
         "database-closed",

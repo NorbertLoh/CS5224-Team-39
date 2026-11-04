@@ -14,6 +14,8 @@ class Settings(ServiceSettings):
     download_ttl_seconds: int = Field(default=120, ge=30, le=300)
     records_url: str | None = None
     records_secret: SecretStr | None = None
+    billing_url: str | None = None
+    billing_secret: SecretStr | None = None
     document_bucket: str = Field(default="telelink-local-documents", min_length=3, max_length=63)
     document_queue_name: str = Field(default="telelink-local-document", pattern=r"^[\w-]{1,80}$")
     records_timeout_seconds: float = Field(default=5, ge=0.1, le=30)
@@ -24,7 +26,7 @@ class Settings(ServiceSettings):
             value = self.notification_secret.get_secret_value()
             if len(value.encode()) < 32 or any(
                 key and key.get_secret_value() == value
-                for key in (self.records_secret, self.cursor_secret)
+                for key in (self.records_secret, self.cursor_secret, self.billing_secret)
             ):
                 raise ValueError("Notification secret needs distinct 32+ bytes")
         if self.cursor_secret:
@@ -76,4 +78,24 @@ class Settings(ServiceSettings):
             self.records_url = self.records_url.rstrip("/")
         if self.records_secret and len(self.records_secret.get_secret_value().encode()) < 32:
             raise ValueError("records_secret requires at least 32 bytes")
+        if self.billing_url:
+            url = urlsplit(self.billing_url)
+            if (
+                url.scheme not in {"http", "https"}
+                or not url.hostname
+                or url.username
+                or url.password
+                or url.query
+                or url.fragment
+                or (url.scheme != "https" and self.environment not in {"local", "test"})
+            ):
+                raise ValueError("billing_url requires HTTPS outside local/test and no credentials")
+            self.billing_url = self.billing_url.rstrip("/")
+        if self.billing_secret:
+            value = self.billing_secret.get_secret_value()
+            if len(value.encode()) < 32 or any(
+                secret and value == secret.get_secret_value()
+                for secret in (self.records_secret, self.cursor_secret)
+            ):
+                raise ValueError("billing_secret requires a distinct 32+ bytes")
         return self

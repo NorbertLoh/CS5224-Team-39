@@ -40,3 +40,17 @@ def document_participants(patient_id: UUID, doctor_id: UUID, session: DB, respon
         doctor_id=doctor_id,
         doctor_name=doctor.display_name,
     )
+
+
+@router.get(
+    "/internal/receipt-patients/{patient_id}",
+    dependencies=[
+        Depends(require_service("billing", "telelink-identity-receipt", "billing_secret"))
+    ],
+)
+def receipt_patient(patient_id: UUID, session: DB, response: Response):
+    patient = session.get(Subject, patient_id)
+    if patient is None:
+        raise DomainError(404, "not_found", "Resource not found.")
+    response.headers["Cache-Control"] = "no-store"
+    return {"patient_id": patient_id, "patient_name": patient.display_name}

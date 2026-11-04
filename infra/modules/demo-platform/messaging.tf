@@ -8,7 +8,10 @@ locals {
   event_patterns = {
     scheduling = { source = ["telelink.billing"], "detail-type" = ["consultation_payment_succeeded.v1"] }
     fulfilment = { source = ["telelink.billing"], "detail-type" = ["medication_payment_succeeded.v1"] }
-    document   = { source = ["telelink.clinical-records"], "detail-type" = ["prescription_issued.v1", "medical_certificate_issued.v1"] }
+    document = { "$or" = [
+      { source = ["telelink.clinical-records"], "detail-type" = ["prescription_issued.v1", "medical_certificate_issued.v1"] },
+      { source = ["telelink.billing"], "detail-type" = ["consultation_payment_succeeded.v1", "medication_payment_succeeded.v1"] }
+    ] }
     notification = { "$or" = [
       { source = ["telelink.scheduling"], "detail-type" = ["appointment_confirmed.v1"] },
       { source = ["telelink.document"], "detail-type" = ["document_ready.v1"] },

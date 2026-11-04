@@ -2,6 +2,7 @@
 
 from contextlib import ExitStack
 
+import httpx
 from telelink_common.aws import create_client
 from telelink_common.lambda_runtime import consume_records, database_sessions, load_settings
 
@@ -11,6 +12,7 @@ from app.integrations.storage import PrivatePDFStore
 from app.models import event_inbox
 from app.services.generation import GeneratePrescription
 from app.services.mc_generation import GenerateMedicalCertificate
+from app.services.receipt_generation import PAYMENT_EVENTS, GenerateReceipt
 from app.settings import Settings
 
 
@@ -26,10 +28,14 @@ def handler(event, context):
         store.verify_private()
         prescriptions = GeneratePrescription(records, store)
         certificates = GenerateMedicalCertificate(records, store)
+        billing = stack.enter_context(httpx.Client(timeout=10, trust_env=False))
+        receipts = GenerateReceipt(settings, billing, store)
 
         def generate(session, workflow):
             if workflow.detail_type == "medical_certificate_issued.v1":
                 certificates(session, workflow)
+            elif workflow.detail_type in PAYMENT_EVENTS:
+                receipts(session, workflow)
             else:
                 prescriptions(session, workflow)
 
