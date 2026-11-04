@@ -11,7 +11,7 @@ const deliverySteps = [
   { status: 'delivered', label: 'Delivered' },
 ] as const
 
-function PatientDeliveryProgress({ order }: { order: TrackingOrder }) {
+function DeliveryProgress({ order }: { order: TrackingOrder }) {
   const status = order.delivery?.status
   const current = deliverySteps.findIndex((step) => step.status === status)
   const hasIssue =
@@ -77,18 +77,7 @@ export function DeliveryTracking({
       <h3 id="delivery-tracking-heading" className="font-semibold">
         Delivery tracking
       </h3>
-      {compact ? (
-        <PatientDeliveryProgress order={order} />
-      ) : (
-        <div role="status" className="space-y-2">
-          <p className="font-medium">
-            {order.delivery
-              ? deliveryLabels[order.delivery.status]
-              : 'No delivery confirmed'}
-          </p>
-          <p className="text-sm">{trackingGuidance(order)}</p>
-        </div>
-      )}
+      <DeliveryProgress order={order} />
       {!compact && order.delivery && (
         <dl className="space-y-2 text-sm">
           <div>
