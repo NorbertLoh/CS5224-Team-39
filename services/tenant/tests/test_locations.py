@@ -108,11 +108,11 @@ def test_internal_location_is_service_only_and_requires_active_clinic(api):
 def test_pickup_contact_normalized_audited_and_preserved_for_older_clients(api):
     tenant = clinic(api)
     path = f"/clinics/{tenant}/location"
-    contact = {"name": "  Clinic pickup desk  ", "phone": "8123 4567"}
+    contact = {"name": "  Updated pickup desk  ", "phone": "8123 4567"}
     value = LOCATION | {"pickup_contact": contact}
     first = api.client.put(path, json=value, headers=api.user())
     assert first.status_code == 200, first.text
-    normalized = {"name": "Clinic pickup desk", "phone": "+6581234567"}
+    normalized = {"name": "Updated pickup desk", "phone": "+6581234567"}
     assert first.json()["location"]["pickup_contact"] == normalized
     legacy = {key: value for key, value in LOCATION.items() if key != "pickup_contact"}
     second = api.client.put(path, json=legacy, headers=api.user())
