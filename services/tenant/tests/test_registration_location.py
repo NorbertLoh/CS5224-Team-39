@@ -47,6 +47,23 @@ def test_registration_rejects_missing_location():
         ClinicCreate.model_validate(payload)
 
 
+def test_registration_normalizes_pickup_contact():
+    location = PICKUP_LOCATION | {
+        "pickup_contact": {"name": "  Pickup desk  ", "phone": "8123 4567"}
+    }
+    parsed = ClinicCreate.model_validate(body(location=location))
+    assert parsed.location.pickup_contact.name == "Pickup desk"
+    assert parsed.location.pickup_contact.phone == "+6581234567"
+
+
+def test_invalid_registration_creates_no_clinic_or_membership(api):
+    payload = body(location=PICKUP_LOCATION | {"pickup_contact": None})
+    assert api.client.post("/clinics", json=payload, headers=api.user()).status_code == 422
+    assert api.state["calls"] == 0
+    with Session(api.engine) as db:
+        assert db.scalar(select(Clinic).where(Clinic.slug == payload["slug"])) is None
+
+
 def test_registration_location_survives_provisioning_failure_and_retry(api):
     payload = body()
     api.state["fail"] = True

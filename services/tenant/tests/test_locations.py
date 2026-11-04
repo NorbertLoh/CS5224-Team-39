@@ -98,7 +98,7 @@ def test_internal_location_is_service_only_and_requires_active_clinic(api):
     assert api.client.get(path).status_code == 401
     assert api.client.get(path, headers=headers).status_code == 409
     activate(api, UUID(tenant))
-    assert api.client.get(path, headers=headers).json()["location"] is None
+    assert api.client.get(path, headers=headers).json()["location"] == PICKUP_LOCATION
     api.client.put(f"/clinics/{tenant}/location", json=LOCATION, headers=api.user())
     response = api.client.get(path, headers=headers)
     assert response.json() == {"tenant_id": tenant, "location": LOCATION}
