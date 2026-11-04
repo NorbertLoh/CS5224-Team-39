@@ -1,11 +1,5 @@
 # TeleLink Health: shared implementation backlog
 
-## Doctor Upcoming documents (RF40)
-
-- [ ] RF40: Hide Past documents in doctor Upcoming appointment details and retain
-  it in Past details. Dependency RF37 merged. Effort S. NorbertLoh; In progress;
-  issue #351. Verify both doctor appointment periods and frontend checks.
-
 
 ## Booking hold action spacing (RF38)
 
@@ -43,6 +37,12 @@
   Browser verified the blank Past card and dated expandable rows with downloads.
   Completed-page MC removal and retained documents/recovery verified from the
   running Tailscale-served application source; no clinical records were changed.
+
+## Doctor Upcoming documents (RF40)
+
+- [ ] RF40: Hide Past documents in doctor Upcoming appointment details and retain
+  it in Past details. Dependency RF37 merged. Effort S. NorbertLoh; In progress;
+  issue #351. Verify both doctor appointment periods and frontend checks.
 
 ## Anytime consultation access (RF36)
 
