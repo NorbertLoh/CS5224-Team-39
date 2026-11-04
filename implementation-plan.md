@@ -1,5 +1,12 @@
 # TeleLink Health: shared implementation backlog
 
+## Tailscale PDF downloads (RF47)
+
+- [ ] RF47: Download local demo PDFs through the authenticated document API.
+  Verify patient downloads over Tailscale, reject unrelated/anonymous access,
+  and preserve document audits and AWS signing. Dependencies P03, U14 and RF33
+  merged. Effort S. NorbertLoh, issue #365 In progress.
+
 ## Previous visit PDFs in doctor Consult (RF46)
 
 - [x] RF46: Show notes and expandable PDFs from earlier completed visits for
