@@ -159,7 +159,7 @@ export function CheckoutStatus({
         {(state === 'ready' || state === 'pending') && (
           <button
             type="button"
-            className="rounded-lg bg-slate-900 px-4 py-3 text-white"
+            className="primary-action rounded-lg px-4 py-3"
             disabled={busy}
             onClick={onRetry}
           >
