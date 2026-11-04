@@ -1,5 +1,16 @@
 # TeleLink Health: shared implementation backlog
 
+## Anytime consultation access (RF36)
+
+- [ ] RF36: Allow assigned doctors to start paid confirmed consultations at any
+  time, and booked participants to open/rejoin confirmed/in-progress video before
+  or after scheduled times until explicit completion. Align frontend, consultation
+  and scheduling gates; migrate actual start-time constraints. Preserve current
+  participant, tenant, role, payment and terminal-state checks and bounded renewable
+  credentials. Dependencies RF12/RF29/RF30, U11/R04 merged. Effort M. NorbertLoh;
+  In progress; issue #343. Completion: timing, renewal, denial, retry, migration
+  tests and frontend checks pass. Stacked above RF35 to retain its UI refinements.
+
 ## Prescription issuance on consultation end (RF35)
 
 - [ ] RF35: Remove the standalone Issue prescription action from the doctor
