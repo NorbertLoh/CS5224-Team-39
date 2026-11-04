@@ -15,6 +15,9 @@
   Existing completion issuance/failure/retry code and regression cases reviewed;
   no real prescription was issued or consultation ended during verification.
   No new configuration or migration.
+  User refinement: rename Visit documents to Past documents, remove the heading
+  subline and match Previous visit notes heading styling. Preserve its disclosure
+  and existing document status, refresh and download controls in draft PR #342.
 
 ## Clinic registration pickup details (RF34)
 

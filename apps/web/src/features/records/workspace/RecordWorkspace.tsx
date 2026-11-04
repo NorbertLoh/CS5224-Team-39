@@ -118,12 +118,7 @@ export function RecordWorkspace({
             <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
               <FileText aria-hidden="true" size={18} />
             </span>
-            <span>
-              <span className="block font-semibold">Visit documents</span>
-              <span className="mt-1 block text-xs text-slate-600">
-                View or download PDFs for this visit.
-              </span>
-            </span>
+            <h3 className="font-semibold">Past documents</h3>
           </span>
           <ChevronDown
             aria-hidden="true"
