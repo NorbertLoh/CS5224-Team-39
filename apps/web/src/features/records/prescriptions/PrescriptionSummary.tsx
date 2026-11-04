@@ -5,6 +5,7 @@ import type { Prescription } from '@/features/records/types'
 import { appointmentDetail } from '@/features/scheduling/api'
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
+import { PatientStatusBadge } from '@/features/patient/components/PatientStatusBadge'
 
 export function PrescriptionSummary({
   prescription,
@@ -72,11 +73,7 @@ export function PrescriptionSummary({
       title={
         <span className="flex flex-wrap items-center gap-2">
           Prescription
-          <span
-            className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset ${colour}`}
-          >
-            {label}
-          </span>
+          <PatientStatusBadge label={label} colour={colour} />
         </span>
       }
       open={selected}

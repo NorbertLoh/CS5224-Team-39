@@ -1,7 +1,7 @@
 import type { Order } from '@/features/fulfilment/api'
 import { MedicationOrderAction } from '@/features/records/patient/MedicationOrderAction'
-import { MedicationOrderStatus } from '@/features/records/patient/MedicationOrderStatus'
 import type { Prescription } from '@/features/records/types'
+import { consultationPrice } from '@/lib/money'
 import type { ReactNode } from 'react'
 
 export function PatientMedicationCard({
@@ -30,7 +30,16 @@ export function PatientMedicationCard({
         </p>
       ) : (
         <>
-          <MedicationOrderStatus order={order} />
+          {order && (
+            <p className="text-sm">
+              {order.total ? 'Medicines + delivery: ' : 'Medicines: '}
+              {consultationPrice(
+                (order.total ?? order.medication_subtotal).amount_minor,
+                'SGD',
+              )}
+              {!order.total && ' · Delivery calculated after entering your address'}
+            </p>
+          )}
           <MedicationOrderAction prescription={prescription} order={order} />
         </>
       )}

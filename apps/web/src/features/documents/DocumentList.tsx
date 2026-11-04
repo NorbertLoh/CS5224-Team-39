@@ -56,6 +56,7 @@ export function DocumentResults({
 }: Props & { token: string; scope: string }) {
   const headingId = useId()
   const groupByVisit = role === 'patient' && !appointmentId
+  const standalone = groupByVisit && headingLevel === 1
   const Heading = headingLevel === 1 ? 'h1' : 'h2'
   const query = useInfiniteQuery({
     queryKey: [
@@ -87,7 +88,9 @@ export function DocumentResults({
       className={
         variant === 'past'
           ? 'space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
-          : 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
+          : standalone
+            ? 'space-y-6'
+            : 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
       }
     >
       {variant === 'past' ? (
@@ -100,7 +103,9 @@ export function DocumentResults({
           </h3>
         </div>
       ) : (
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div
+          className={`flex flex-wrap justify-between gap-3 ${standalone ? 'items-start' : 'items-center'}`}
+        >
           <div>
             <Heading
               id={headingId}

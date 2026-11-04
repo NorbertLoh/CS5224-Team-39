@@ -54,7 +54,11 @@ export function PatientPrescriptionList({
   })
   return (
     <section
-      className="mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6"
+      className={
+        headingLevel === 1
+          ? 'space-y-6'
+          : 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
+      }
       aria-labelledby="prescription-heading"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -98,9 +102,12 @@ export function PatientPrescriptionList({
           {!prescriptions.length && (
             <p role="status">No prescriptions available.</p>
           )}
-          <ul className="divide-y">
+          <ul className="space-y-3">
             {prescriptions.map((prescription) => (
-              <li key={prescription.prescription_id}>
+              <li
+                key={prescription.prescription_id}
+                className="rounded-2xl border border-slate-300 bg-white px-4 sm:px-5"
+              >
                 <PrescriptionSummary
                   prescription={prescription}
                   order={orders.data?.find(

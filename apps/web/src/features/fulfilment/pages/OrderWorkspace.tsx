@@ -120,19 +120,9 @@ export function OrderWorkspace({
     </button>
   )
   return (
-    <main
-      className={
-        patient
-          ? 'mx-auto max-w-6xl px-6 py-10'
-          : 'mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6'
-      }
-    >
+    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <section
-        className={
-          patient
-            ? 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
-            : 'space-y-6'
-        }
+        className="space-y-6"
         aria-labelledby="orders-page-heading"
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
