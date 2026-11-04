@@ -6,6 +6,7 @@ import { pricePath, request } from '@/features/fulfilment/api/pricing'
 import { prescriptionPrices } from '@/features/fulfilment/pricing/clinicMedicineQueries'
 import { MedicationCorrectionEditor } from '@/features/fulfilment/pricing/MedicationCorrectionEditor'
 import { decimal, minorUnits } from '@/features/fulfilment/pricing/money'
+import { PatientStatusBadge } from '@/features/patient/components/PatientStatusBadge'
 import { appointmentDetail } from '@/features/scheduling/api'
 import { ApiError } from '@/lib/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -13,9 +14,9 @@ import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
 const appearances = {
-  unpriced: ['Unpriced', 'border-red-500', 'bg-red-100 text-red-800'],
-  inProgress: ['In progress', 'border-yellow-500', 'bg-yellow-100 text-yellow-900'],
-  done: ['Done', 'border-green-500', 'bg-green-100 text-green-800'],
+  unpriced: ['Unpriced', 'border-red-500', 'bg-red-50 text-red-700 ring-red-200'],
+  inProgress: ['In progress', 'border-yellow-500', 'bg-yellow-50 text-yellow-900 ring-yellow-200'],
+  done: ['Done', 'border-green-500', 'bg-emerald-50 text-emerald-800 ring-emerald-200'],
 } as const
 
 export function PrescriptionPriceCard({
@@ -78,9 +79,7 @@ export function PrescriptionPriceCard({
               Prescription {prescription.prescription_id.slice(-8)}
             </h2>
             {appearance && (
-              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${appearance[2]}`}>
-                {appearance[0]}
-              </span>
+              <PatientStatusBadge label={appearance[0]} colour={appearance[2]} />
             )}
           </div>
           <p className="mt-2 text-sm font-medium">
