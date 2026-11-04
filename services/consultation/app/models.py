@@ -47,9 +47,7 @@ class ConsultationSession(Base):
             name="ck_sessions_lifecycle",
         ),
         CheckConstraint(
-            "started_at IS NULL OR (isfinite(started_at) "
-            "AND started_at >= starts_at - test_start_early_minutes * interval '1 minute' "
-            "AND started_at < ends_at)",
+            "started_at IS NULL OR isfinite(started_at)",
             name="ck_sessions_start_window",
         ),
         CheckConstraint(

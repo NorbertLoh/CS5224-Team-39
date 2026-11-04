@@ -1,7 +1,6 @@
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingState } from '@/components/LoadingState'
 import { DocumentList } from '@/features/documents/DocumentList'
-import { MedicalCertificateForm } from '@/features/records/certificates/MedicalCertificateForm'
 import { appointmentDetail } from '@/features/scheduling/api'
 import { useSchedulingIdentity } from '@/features/scheduling/useSchedulingIdentity'
 import {
@@ -12,7 +11,6 @@ import {
 } from '@/features/video/api/admission'
 import { CompletionHandoff } from '@/features/video/components/CompletionHandoff'
 import { ConsultationActions } from '@/features/video/components/ConsultationActions'
-import { joinEarlyMinutes } from '@/features/video/domain/joinWindow'
 import { VideoRoom } from '@/features/video/room/VideoRoom'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
@@ -77,22 +75,16 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
         <h1 className="text-2xl font-semibold">Consultation completed</h1>
         <p>This appointment has ended.</p>
         {role === 'doctor' && (
-          <>
-            <CompletionHandoff
-              appointment={appointment.data}
-              token={identity.token}
-            />
-            <MedicalCertificateForm
-              appointmentId={id}
-              token={identity.token}
-              editable={false}
-            />
-          </>
+          <CompletionHandoff
+            appointment={appointment.data}
+            token={identity.token}
+          />
         )}
         <DocumentList
           role={role}
           appointmentId={id}
           tenantId={appointment.data.tenant_id}
+          autoRefresh={role === 'doctor'}
         />
         <a className="underline" href={`/${role}`}>
           Back to appointments
@@ -104,9 +96,7 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
     !roomEligibility(appointment.data, role, subject)
   )
     return (
-      <ErrorState
-        message={`This appointment is not ready for video. Calls open ${joinEarlyMinutes} minutes before the appointment and require confirmed payment and current participant access.`}
-      />
+      <ErrorState message="This appointment is not ready for video. Calls require confirmed payment, an unfinished consultation and current participant access." />
     )
   if (setup.error || !setup.connection)
     return (

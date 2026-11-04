@@ -12,6 +12,7 @@ import {
   ManagedClinics,
 } from '@/features/clinics'
 import { LiveOrders } from '@/features/fulfilment'
+import { ClinicMedicinePricing } from '@/features/fulfilment/pages/ClinicMedicinePricing'
 import { PatientProfilePage, PatientRecordsPage } from '@/features/patient'
 import { ClinicPayments } from '@/features/payments/ClinicPayments'
 import { PlatformClinics } from '@/features/platform-clinics/PlatformClinics'
@@ -65,6 +66,14 @@ export function AppRoutes({
           key={route.tenantId}
           role="clinic_admin"
           tenantId={route.tenantId}
+        />
+      )
+    case 'medicine-pricing':
+      return session && (
+        <ClinicMedicinePricing
+          key={route.tenantId}
+          tenantId={route.tenantId}
+          token={session.accessToken}
         />
       )
     case 'consultation':

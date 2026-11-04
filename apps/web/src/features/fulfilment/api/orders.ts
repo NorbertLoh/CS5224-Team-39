@@ -2,19 +2,27 @@ import type { CursorPage } from '@/lib/api-types'
 import { request } from './client'
 import type { Delivery, Order } from './types'
 
+export async function listOrderRows(
+  tenantId?: string,
+  cursor?: string | null,
+  signal?: AbortSignal,
+  sort: 'oldest' | 'newest' = 'newest',
+  limit = 25,
+): Promise<CursorPage<Order>> {
+  const params = new URLSearchParams({ limit: String(limit) })
+  params.set('sort', sort)
+  if (tenantId) params.set('tenant_id', tenantId)
+  if (cursor) params.set('cursor', cursor)
+  return (await request(`/orders?${params}`, { signal })).json()
+}
+
 export async function listOrders(
   tenantId?: string,
   cursor?: string | null,
   signal?: AbortSignal,
   sort: 'oldest' | 'newest' = 'newest',
 ): Promise<CursorPage<Order>> {
-  const params = new URLSearchParams({ limit: '25' })
-  params.set('sort', sort)
-  if (tenantId) params.set('tenant_id', tenantId)
-  if (cursor) params.set('cursor', cursor)
-  const page: CursorPage<Order> = await (
-    await request(`/orders?${params}`, { signal })
-  ).json()
+  const page = await listOrderRows(tenantId, cursor, signal, sort)
   const items = await Promise.all(
     page.items.map(async (order) => {
       if (!order.delivery_id) return order

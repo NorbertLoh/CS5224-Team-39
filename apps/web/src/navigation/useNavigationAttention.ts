@@ -8,12 +8,14 @@ import { clinicCounts } from '@/features/platform-clinics/api'
 import { listAppointments } from '@/features/scheduling/api'
 import { request } from '@/features/fulfilment/api/client'
 import type { Order } from '@/features/fulfilment/api'
+import { listPrescriptions } from '@/features/records/api'
 import type { CursorPage } from '@/lib/api-types'
 import { emptyFilters } from '@/lib/list-filters'
 import {
   appointmentPaymentAttention,
   orderAttention,
   pendingAttention,
+  prescriptionPaymentAttention,
   verificationAttention,
 } from './attention'
 import { useQuery } from '@tanstack/react-query'
@@ -108,10 +110,20 @@ export function usePatientAttention(identity: Identity) {
       }),
     ...refresh,
   })
+  const prescriptions = useQuery({
+    queryKey: ['records', 'navigation-attention', token, subject],
+    queryFn: ({ signal }) => navigationItems((cursor) =>
+      listPrescriptions(undefined, cursor, signal),
+    ),
+    ...refresh,
+  })
   return {
     appointments: appointments.isSuccess
       ? appointmentPaymentAttention(appointments.data, subject)
       : undefined,
     orders: orders.isSuccess ? orderAttention(orders.data, subject) : undefined,
+    prescriptions: prescriptions.isSuccess && orders.isSuccess
+      ? prescriptionPaymentAttention(prescriptions.data, orders.data, subject)
+      : undefined,
   }
 }

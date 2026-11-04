@@ -83,9 +83,12 @@ export function VisitDocumentList({
       )
     })
   return (
-    <ul className="divide-y">
+    <ul className="space-y-3">
       {sorted.map(({ key, items, appointment, loading }) => (
-        <li key={key}>
+        <li
+          key={key}
+          className="rounded-2xl border border-slate-300 bg-white px-4 sm:px-5"
+        >
           <PatientAccordionItem
             title={appointment?.clinic_name || 'Visit documents'}
             summary={

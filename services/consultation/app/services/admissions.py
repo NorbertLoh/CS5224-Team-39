@@ -85,8 +85,6 @@ def issue(db, sources, settings, appointment_id, identity, request_id):
     lease.token_digest, lease.peer_id = digest(token), uuid4()
     lease.issued_at = instant
     lease.expires_at = instant + timedelta(seconds=settings.admission_ttl_seconds)
-    if record.status == "scheduled":
-        lease.expires_at = min(lease.expires_at, record.ends_at)
     lease.consumed_at = lease.released_at = None
     lease.active_expires_at = None
     lease.call_expires_at = instant + timedelta(seconds=settings.call_max_seconds)
@@ -164,8 +162,6 @@ def renew(db, sources, token, peer_id, identity, request_id):
     if instant >= deadline:
         denied()
     expiry = min(instant + timedelta(seconds=sources.settings.active_lease_seconds), deadline)
-    if record.status == "scheduled":
-        expiry = min(expiry, record.ends_at)
     lease.active_expires_at = max(effective_expiry(lease), expiry)
     db.flush()
     return lease_public(lease, record)

@@ -84,6 +84,11 @@ export function medicineProgress(order?: Order) {
   return 'Preparing medicines'
 }
 
+export function awaitingPrescriptionPayment(order?: Pick<Order, 'status' | 'payment_status'>) {
+  return !order ||
+    (order.status === 'awaiting_payment' && order.payment_status === 'unpaid')
+}
+
 export function canReviewMedicinePayment(order?: Order) {
   return (
     !order ||

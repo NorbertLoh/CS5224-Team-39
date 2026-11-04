@@ -71,7 +71,7 @@ administrative review details. An admin profile includes all clinic fields plus
 | GET `/clinics` | Public active profiles, C01 pagination; order `name`, `tenant_id` ascending | Public |
 | GET `/clinics/by-slug/{slug}` | Active public profile; 200, otherwise 404 | Public |
 | GET `/clinics/{tenant_id}/doctors` | Active doctors: `doctor_id`, `display_name`; C01 pagination, order `display_name`, `doctor_id` ascending | Public for active clinic; no membership IDs or private identity fields |
-| POST `/clinics` | `slug`, `name`, `branding`, `consultation_price`; admin profile, 201 (200 for identical same-creator retry); server sets pending_review, commission default 0 | Verified subject; server assigns creator's admin membership |
+| POST `/clinics` | `slug`, `name`, `branding`, `consultation_price`, `location` (pickup address/postal code/coordinates and required contact name/SG phone); admin profile, 201 (200 for identical same-creator retry); server sets pending_review, commission default 0 | Verified subject; server assigns creator's admin membership |
 | GET `/clinics/{tenant_id}` | Admin profile; 200 | Active clinic admin or platform admin |
 | PATCH `/clinics/{tenant_id}` | Optional `name`, complete `branding`, `consultation_price`; admin profile, 200 | Active clinic admin or platform admin; no status/commission input |
 | GET `/admin/clinics` | Admin profiles; optional `status`, C01 pagination ordered `created_at`, `tenant_id` ascending | Platform admin |

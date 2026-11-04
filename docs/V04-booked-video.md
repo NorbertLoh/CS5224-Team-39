@@ -39,7 +39,8 @@ callback/logout allowlists for the HTTPS origin and explicitly trust its local C
 in your dedicated development browser as needed. This workflow never changes the
 host trust store. Automated local TLS tests may use a test-only certificate exception.
 
-Use a paid booked appointment within its join interval. Open its details and select
+Use a paid, confirmed or in-progress booked appointment at any time until doctor
+completion (RF36; see [migration and rollout](RF36-anytime-consultation.md)). Open its details and select
 **Open video consultation**. Join requests camera/microphone, obtains authenticated
 admission and connects WSS with the issued peer/credential. The doctor waits; the
 patient discovers and initiates media. Users never enter peer IDs/credentials.
@@ -82,7 +83,7 @@ transactions. On failure refresh and retry the same action: it reads scheduling'
 current state and skips an already applied transition. A locally completed session
 denies admission even while scheduling is unavailable. There is no background
 reconciler: retry is required if a handoff did not apply. Terminal appointments
-are never reopened. A start retry is still subject to the original start window
+are never reopened. A start retry still requires current participant, payment and lifecycle checks
 if the local start was never committed. An uncertain handoff must be resolved
 before attempting a different lifecycle action.
 

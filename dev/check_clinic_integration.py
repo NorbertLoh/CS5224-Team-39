@@ -33,6 +33,16 @@ def create_clinic(client, token, suffix):
         json={
             "slug": f"a11-{suffix}",
             "name": f"A11 {suffix}",
+            "location": {
+                "address_line": "1 Raffles Place",
+                "postal_code": "048616",
+                "country_code": "SG",
+                "coordinates": {"lat": "1.2844", "lng": "103.8511"},
+                "pickup_contact": {
+                    "name": "Clinic pickup desk",
+                    "phone": "+6581234567",
+                },
+            },
             "branding": {
                 "primary_color": "#156B63",
                 "logo_url": None,
@@ -45,7 +55,8 @@ def create_clinic(client, token, suffix):
 
 def check_clinic(client, tokens, clinic):
     admin, platform, doctor, patient = [
-        tokens[role]["access_token"] for role in ["clinic", "platform", "doctor", "patient"]
+        tokens[role]["access_token"]
+        for role in ["clinic", "platform", "doctor", "patient"]
     ]
     tenant_id = clinic["tenant_id"]
     path = f"/tenant/clinics/{tenant_id}"
@@ -98,7 +109,9 @@ def check_clinic(client, tokens, clinic):
         status=403,
         json={"commission_bps": 1250},
     )
-    request(client, "PUT", path + "/commission", platform, json={"commission_bps": 1250})
+    request(
+        client, "PUT", path + "/commission", platform, json={"commission_bps": 1250}
+    )
     assert request(client, "GET", path, platform)["commission_bps"] == 1250
     assert "commission_bps" not in request(client, "GET", public)
 
@@ -141,7 +154,9 @@ def check_clinic(client, tokens, clinic):
         client, "GET", staff, admin, params={"limit": 1, "cursor": page["next_cursor"]}
     )
     assert next_page["items"][0]["membership_id"] != page["items"][0]["membership_id"]
-    request(client, "PUT", f"{staff}/{doctor_id}", admin, json={"roles": ["clinic_admin"]})
+    request(
+        client, "PUT", f"{staff}/{doctor_id}", admin, json={"roles": ["clinic_admin"]}
+    )
     assert not request(client, "GET", path + "/doctors")["items"]
     request(client, "PUT", f"{staff}/{doctor_id}", admin, json={"roles": ["doctor"]})
     request(client, "DELETE", f"{staff}/{admin_id}", admin, status=409)
@@ -157,7 +172,9 @@ def check_clinic(client, tokens, clinic):
     request(client, "PATCH", path, patient, status=404, json={"name": "Denied"})
     request(client, "GET", "/tenant/admin/clinics", patient, status=403)
     request(client, "GET", path, status=401)
-    print("Profile, price, logo, commission, staff lifecycle, pagination and role denials passed.")
+    print(
+        "Profile, price, logo, commission, staff lifecycle, pagination and role denials passed."
+    )
 
 
 def main():
@@ -179,7 +196,9 @@ def main():
             suffix = uuid4().hex[:12]
             clinic = create_clinic(client, tokens["clinic"]["access_token"], suffix)
             clinics.append(clinic)
-            other = create_clinic(client, tokens["patient"]["access_token"], suffix + "-other")
+            other = create_clinic(
+                client, tokens["patient"]["access_token"], suffix + "-other"
+            )
             clinics.append(other)
             request(
                 client,

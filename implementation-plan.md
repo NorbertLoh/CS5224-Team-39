@@ -1,5 +1,134 @@
 # TeleLink Health: shared implementation backlog
 
+## Previous visit PDFs in doctor Consult (RF46)
+
+- [ ] RF46: Show notes and expandable PDFs from earlier completed visits for
+  the same patient and clinic in the doctor records workspace. Require an active
+  clinic doctor assigned to the current visit and keep earlier visits read-only.
+  Make both history cards independently expandable and collapsed by default. Keep older visits
+  reachable and preserve the current visit's document list on
+  consultation completion. Dependencies RF12, RF37, RF41 and P03 merged.
+  Effort M. Issue #363 assigned to NorbertLoh and in progress.
+
+## Clinic medicine workspaces (RF39)
+
+- [x] RF39: Split clinic Medicine Pricing and Medicine Delivery, with red
+  counters for prescriptions that need pricing and paid orders that need
+  preparation. Remove the redundant prescription refresh button. Preserve
+  clinic access and order links. Dependencies RF06/RF12 merged. Effort M.
+  NorbertLoh; Completed in merged PR #350; issue #349 closed. Verify frontend checks and clinic navigation.
+
+
+## Booking hold action spacing (RF38)
+
+- [x] RF38: Add a small gap between Booking hold actions, including when buttons
+  wrap on narrow screens. Preserve payment/release behavior. Dependencies S07/B07
+  merged. Effort S. NorbertLoh; completed; issue #347. Completion: local spacing,
+  frontend lint/typecheck/build and updated Tailscale web verified.
+  Merged PR #348 groups payment/release actions with a wrapping 12px gap. Frontend
+  lint/typecheck/build passed; web rebuilt and healthy, and Tailscale serves the
+  updated action row. No booking/payment was created for verification. No migration
+  or configuration changes.
+
+## Appointment and consultation document views (RF37)
+
+- [x] RF37: Hide Documents in patient Upcoming appointment details, retaining
+  Past details and doctor document behavior. Pass the selected period to details
+  and avoid mounting/querying documents for patient Upcoming. Dependencies RF10
+  and S07 merged. Effort S. NorbertLoh; complete; issue #345 closed after PR #346
+  merged (`c4ca02a`) on 4 November 2026. All final PR checks passed. Merged after
+  RF35 and RF36; frontend lint/typecheck/build and focused browser checks passed.
+  Frontend lint/typecheck/build passed. Web rebuilt and healthy on Tailscale.
+  Demo-patient browser check confirmed Upcoming details omit Documents and Past
+  completed details retain the prescription download. No appointment data changed.
+  No migration or configuration changes.
+  User refinement: add a small gap below the appointment count and above selected
+  appointment details in both Upcoming and Past, scoped to appointment components.
+  Further clarification: Past documents has a blank body when empty and expandable
+  dated document rows like Previous visit notes when populated. Remove its subtitle,
+  manual refresh control and empty placeholder in patient Past details and doctor
+  records. Preserve standalone document pages and authorized downloads; refresh
+  embedded document status automatically.
+  User refinement: simplify the completed consultation screen to documents,
+  removing the read-only medical certificate card and duplicate prescription
+  content. Retain retry recovery when completion handoff is unfinished.
+  Browser verified the blank Past card and dated expandable rows with downloads.
+  Completed-page MC removal and retained documents/recovery verified from the
+  running Tailscale-served application source; no clinical records were changed.
+
+## Doctor Upcoming documents (RF40)
+
+- [x] RF40: Hide Past documents in doctor Upcoming appointment details and retain
+  it in Past details. Dependency RF37 merged. Effort S. NorbertLoh; Completed in merged PR #352; issue #351 closed. Verify both doctor appointment periods and frontend checks.
+
+## Anytime consultation access (RF36)
+
+- [x] RF36: Allow assigned doctors to start paid confirmed consultations at any
+  time, and booked participants to open/rejoin confirmed/in-progress video before
+  or after scheduled times until explicit completion. Align frontend, consultation
+  and scheduling gates; migrate actual start-time constraints. Preserve current
+  participant, tenant, role, payment and terminal-state checks and bounded renewable
+  credentials. Dependencies RF12/RF29/RF30, U11/R04 merged. Effort M. NorbertLoh;
+  complete; issue #343 closed after PR #344 merged (`7f60eed`) on 4 November 2026.
+  Timing, renewal, denial, retry, migration and frontend checks passed. RF35 merged
+  first; all final PR checks passed. Consultation 157, scheduling 272 (2 skips),
+  Ruff and frontend lint/typecheck/build. Verified early/late start/join, renewal
+  across slot end, completion/revocation, retry and guarded migration behavior on
+  isolated PostgreSQL/Redis. Local consultation schema backed up before applying
+  `0006`; consultation/scheduling/web rebuilt and healthy. Existing Tailscale APIs
+  are ready and serve updated controls. No real consultation was started/completed
+  for verification. No new environment variables; AWS behavior remains unverified.
+
+## Prescription issuance on consultation end (RF35)
+
+- [x] RF35: Remove the standalone Issue prescription action from the doctor
+  prescription editor; End consultation issues the valid saved draft. Preserve
+  autosave, validation, completion error/retry handling and issued-content locks.
+  Dependencies: RF12, U11 and R04 merged. Effort S. NorbertLoh; complete;
+  issue #341 closed after PR #342 merged (`1e50b5a`) on 4 November 2026.
+  Standalone action/copy removed; all final PR checks and frontend checks passed.
+  PR #342 removes the editor's issuance mutation/button and misleading copy;
+  draft autosave and the existing End consultation completion API remain in place.
+  Frontend lint/typecheck/build passed. Web rebuilt and healthy; Tailscale served
+  the updated editor without Issue prescription and retained End consultation.
+  Existing completion issuance/failure/retry code and regression cases reviewed;
+  no real prescription was issued or consultation ended during verification.
+  No new configuration or migration.
+  User refinement: rename Visit documents to Past documents, remove the heading
+  subline and match Previous visit notes heading styling. Preserve its disclosure
+  and existing document status, refresh and download controls in PR #342.
+  RF37 subsequently refined the document card and removed its manual refresh UI.
+
+## Completed consultation documents (RF41)
+
+- [x] RF41: Update completed consultation documents automatically while PDFs are
+  generated. Preserve completion handoff recovery and document access.
+  Dependencies RF35/RF37 merged. Effort S. NorbertLoh; Completed in merged PR #354; issue #353 closed.
+
+## Clinic registration pickup details (RF34)
+
+- [x] RF34: Require all Clinic Settings pickup fields during clinic registration:
+  contact name, Singapore phone, address, postal code and Singapore coordinates.
+  Share fields/validation, save audited settings with the clinic reservation and
+  preserve safe retries and later Settings edits. Dependencies: A08/A11 and RF12
+  merged. Effort M. NorbertLoh; complete; issue #339 closed. Completion: required-field,
+  validation, persistence/retry checks and frontend lint/typecheck/build pass.
+  PR #340 merged (`fa9e4c4`) on 4 November 2026; all final checks passed.
+  Tenant PostgreSQL CI: 152 tests passed, including registration
+  validation, saved pickup/audit, provisioning failure/retry and later Settings
+  edits. Frontend lint/typecheck/build and tenant Ruff passed. Existing API probes
+  now provide required pickup fixtures. No new migration/configuration; deploy
+  matching web/tenant builds. Updated web and tenant containers are running locally
+  and through the existing Tailscale endpoint. Browser verified all six pickup
+  fields on registration; tenant readiness and the updated Tailscale source passed.
+  No clinic application was submitted during browser verification; AWS deployment
+  remains unverified.
+
+## Patient prescription payment badge (RF42)
+
+- [x] RF42: Show a red count for patient prescriptions awaiting payment.
+  Dependency RF24 merged. Effort S. NorbertLoh; Completed in merged PR #356; issue #355 closed.
+
 ## Production payment receipts (RF33)
 
 - [ ] RF33: Generate one private PDF receipt per verified consultation or
@@ -28,6 +157,12 @@
   22 PR checks passed. AWS publication/rollout remains RF32.
   Scope and commands: [release preparation](docs/RF31-production-release.md).
 
+## Button feedback (RF43)
+
+- [x] RF43: Add consistent hover and pointer feedback for buttons. Highlight
+  payment and price calculation actions. Dependency RF24 merged. Effort S.
+  NorbertLoh; Completed in merged PR #358; issue #357 closed.
+
 ## Renewable active video leases (RF30)
 
 - [x] RF30: Separate single-use join expiry from a renewable active-call lease.
@@ -38,6 +173,13 @@
   (`bfe035f`), issue #330 closed. All CI checks passed, including direct and
   forced-TURN media beyond the original join deadline. Deployment requires
   consultation migration `0005` and matching application builds.
+
+## Patient status badges (RF44)
+
+- [x] RF44: Use matching status badges for patient prescriptions and medicine
+  orders. Remove duplicate status from expanded patient prescription details.
+  Dependency RF24 merged. Effort S. NorbertLoh; complete; issue #359 closed after PR #360 merged.
+  Local frontend lint, typecheck, build and Tailscale browser verification passed.
 
 ## Architecture reference (27 October 2026)
 
@@ -95,6 +237,11 @@ refresh every 30 seconds/on focus; server aggregates can reduce cost at scale.
 Setup and limits: [doctor verification](docs/RF28-doctor-verification.md),
 [workspace filters](docs/RF28-workspace-filters.md),
 [navigation](apps/web/src/navigation/README.md).
+
+## Patient delivery tracker (RF45)
+
+- [ ] RF45: Show a colored progress tracker in patient and clinic delivery details.
+  Dependency D06 merged. Effort S. NorbertLoh; In progress; issue #361.
 
 ## Serverless workers and edge controls (31 October 2026)
 

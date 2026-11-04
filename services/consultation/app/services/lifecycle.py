@@ -4,7 +4,7 @@ No method here authorizes HTTP callers or establishes appointment/payment truth.
 V02 must validate those before calling, and coordinate scheduling start/complete.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import select
@@ -84,13 +84,8 @@ def locked_session(db, *, session_id: UUID, tenant_id: UUID):
 def can_join(
     record: ConsultationSession, *, now: datetime | None = None, early_minutes: int = 10
 ) -> bool:
-    """Window eligibility only, never an admission/authorization decision."""
-    instant = server_time(now)
-    opens_at = utc(record.starts_at) - timedelta(minutes=early_minutes)
-    return opens_at <= instant and (
-        record.status == "in_progress"
-        or (record.status == "scheduled" and instant < utc(record.ends_at))
-    )
+    """Lifecycle eligibility only; callers still authorize participants and payment."""
+    return record.status in {"scheduled", "in_progress"}
 
 
 def transition(
@@ -111,9 +106,7 @@ def transition(
     if action == "start":
         if record.status == "in_progress":
             return record
-        if record.status != "scheduled" or not (
-            record.starts_at - timedelta(minutes=early_minutes) <= instant < record.ends_at
-        ):
+        if record.status != "scheduled":
             raise DomainError(409, "invalid_session_transition", "Session cannot start.")
         record.test_start_early_minutes = early_minutes
         record.status, record.started_at = "in_progress", instant

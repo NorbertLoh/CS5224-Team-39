@@ -27,7 +27,9 @@ links on narrow screens, and a single bottom-border active/focus indicator.
   Consultation pages do not mark a list link current or show a clinic picker.
 - Clinic admin: My clinics and Appointments at the workspace entry. Selecting a
   clinic shows one management bar: Clinic profile, Staff, Appointments, Payments,
-  Medicine & delivery and Settings. The named clinic selector retains the section
+  Medicine Pricing, Medicine Delivery and Settings. The medicine tabs show red
+  counts for prescriptions with missing prices and paid orders awaiting preparation.
+  The named clinic selector retains the section
   when changing clinics; All my clinics returns to the list. The unscoped
   appointment page retains its existing per-clinic schedule selector.
 - Platform admin: Clinics and Doctor applications. Platform administrators retain
@@ -74,6 +76,8 @@ meaning does not depend on color.
 - Patient Appointments: Payment due counts only this patient's live held or
   pending-payment bookings with a future hold deadline and appointment end.
   Refunded/refund-required, cancelled and expired bookings are excluded.
+- Patient Prescriptions: Red count for issued medicine prescriptions awaiting
+  payment, including those without an order.
 - Patient Orders & delivery: Needs attention for unpaid orders, exceptions or
   refund review; In progress for pending payment confirmation, paid/preparing,
   submitting or dispatched orders. Completed/refunded and ordinary cancelled

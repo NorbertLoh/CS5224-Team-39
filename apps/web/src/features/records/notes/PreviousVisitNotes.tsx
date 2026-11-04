@@ -32,18 +32,20 @@ export function PreviousVisitNotes({
   })
   const visits = history.data?.pages.flatMap((page) => page.items) ?? []
   return (
-    <section
-      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-      aria-label="Previous visit notes"
-    >
-      <div className="flex items-center gap-3">
+    <details className="group/history rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm open:space-y-3">
+      <summary className="flex cursor-pointer list-none items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
         <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
           <History aria-hidden="true" size={18} />
         </span>
         <h3 className="font-semibold">Previous visit notes</h3>
-      </div>
+        <ChevronDown
+          aria-hidden="true"
+          size={20}
+          className="ml-auto shrink-0 text-slate-500 transition-transform group-open/history:rotate-180"
+        />
+      </summary>
       <p className="text-sm text-slate-600">
-        Earlier completed visits for this patient with you at this clinic,
+        Earlier completed visits for this patient at this clinic,
         newest first. Open a visit to read its saved note.
       </p>
       {history.isPending ? (
@@ -51,7 +53,12 @@ export function PreviousVisitNotes({
       ) : (
         <>
           {visits.map((visit) => (
-            <VisitNote key={visit.appointment_id} visit={visit} token={token} />
+            <VisitNote
+              key={visit.appointment_id}
+              visit={visit}
+              token={token}
+              historyFor={appointment.appointment_id}
+            />
           ))}
           {history.isError ? (
             <ErrorState
@@ -81,16 +88,20 @@ export function PreviousVisitNotes({
           )}
         </>
       )}
-    </section>
+    </details>
   )
 }
 
-function VisitNote({ visit, token }: { visit: Appointment; token: string }) {
+function VisitNote({
+  visit,
+  token,
+  historyFor,
+}: { visit: Appointment; token: string; historyFor: string }) {
   const [open, setOpen] = useState(false)
   const note = useQuery({
-    queryKey: ['records', 'previous-note', token, visit.appointment_id],
+    queryKey: ['records', 'previous-note', token, visit.appointment_id, historyFor],
     queryFn: async ({ signal }) => {
-      const saved = await readNote(visit.appointment_id, signal)
+      const saved = await readNote(visit.appointment_id, signal, historyFor)
       if (
         saved &&
         ['appointment_id', 'patient_id', 'tenant_id', 'doctor_id'].some(
