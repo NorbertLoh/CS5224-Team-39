@@ -2,12 +2,14 @@
 
 ## PostgreSQL signalling matchmaker (RF29)
 
-- [ ] RF29: Add database-backed signalling server leases, transactional consultation
+- [x] RF29: Add database-backed signalling server leases, transactional consultation
   assignments and admission fencing, room-aware routing, automatic authorized browser
   recovery and graceful draining. Keep demo capacity one; verify concurrent placement,
   two-node routing, stale-owner rejection and reconnect/leave behavior. Dependencies:
   V01-V04, U11 and RF12 merged; AWS configuration coordinated with RF27 #316 / #325.
-  Effort: L. NorbertLoh; issue #326 In progress. AWS deployment evidence remains RF01/W11.
+  Effort: L. NorbertLoh; issue #326 closed after PR #327 merged (`cf58f86`).
+  PostgreSQL, two-node WebSocket, browser recovery and Terraform CI passed.
+  AWS deployment evidence remains RF01/W11.
 
 ## Doctor verification, workspace lists and navigation (RF28)
 
@@ -54,7 +56,7 @@ Setup and limits: [doctor verification](docs/RF28-doctor-verification.md),
 | Done | ID | Deliverable | Dependencies | Effort | Claim |
 | --- | --- | --- | --- | --- | --- |
 | [x] | RF26 | Add application Lambda adapters, bounded notification dispatch, NullPool connections, outbox metrics and public cache headers; preserve local workers and inbox/outbox. Terraform modules, deployment concurrency, CloudFront rules and alarms are split into RF27 (#316). Verify application tests and Lambda images. | N01/N02, P02/P03, M01-M04 complete; AWS deployment needs W01/W02/W04/W06/W08-W10/W12 and reachable owning-service APIs. Independent module/adapter implementation only until these gates complete. W01 PR #233 owns environment scaffolding. | L | NorbertLoh; complete; #314 closed; merged PR #315 (f78c767) |
-| [ ] | RF27 | Author Singapore demo and managed-service Terraform with scaling/replacement/failover mechanisms and demo capacities set to one: ECS APIs/worker autoscaling, private API ALB/VPC Link, signalling, configurable RDS standby/cache replicas/AZ-local NAT, self-healing TURN ASG/EIP pool, Cognito, S3/ECR/secrets, events/queues/SES, bounded Lambda concurrency, migrations and data protection. Provide a non-default future-two overlay and explicit application singleton exceptions. Validate three modules/two examples, mocked capacities and TURN agent tests. No AWS apply; W01-owned scaffolding remains separate. | RF26 merged; real AWS deployment still needs coordinated W01 state, owned DNS/account/provider inputs and integration verification. W02-W21 are not completed by configuration alone. | L | NorbertLoh; original implementation merged in PR #317 (4f73f53); user-requested AWS-only managed scaling/failover refinement In progress, #316 reopened, draft PR #325. Local Compose unchanged. |
+| [x] | RF27 | Author Singapore demo and managed-service Terraform with scaling/replacement/failover mechanisms and demo capacities set to one: ECS APIs/worker autoscaling, private API ALB/VPC Link, signalling, configurable RDS standby/cache replicas/AZ-local NAT, self-healing TURN ASG/EIP pool, Cognito, S3/ECR/secrets, events/queues/SES, bounded Lambda concurrency, migrations and data protection. Provide a non-default future-two overlay and explicit application singleton exceptions. Validate three modules/two examples, mocked capacities and TURN agent tests. | RF26 merged; AWS deployment still needs coordinated W01 state, owned DNS/account/provider inputs and integration verification. | L | NorbertLoh; issue #316 closed. Original PR #317 and managed refinement PR #325 (`c4315dd`) merged. Terraform and TURN agent CI passed. |
 
 Setup and verification: [RF26](docs/RF26-serverless-workers.md). No AWS deployment
 or backlog deployment gate is completed by this implementation.
