@@ -6,6 +6,10 @@
   wrap on narrow screens. Preserve payment/release behavior. Dependencies S07/B07
   merged. Effort S. NorbertLoh; In progress; issue #347. Completion: local spacing,
   frontend lint/typecheck/build and updated Tailscale web verified.
+  Draft PR #348 groups payment/release actions with a wrapping 12px gap. Frontend
+  lint/typecheck/build passed; web rebuilt and healthy, and Tailscale serves the
+  updated action row. No booking/payment was created for verification. No migration
+  or configuration changes.
 
 ## Appointment and consultation document views (RF37)
 
