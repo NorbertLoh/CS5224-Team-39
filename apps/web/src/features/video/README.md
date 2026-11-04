@@ -5,6 +5,9 @@ supports real PeerJS 1.5.5 audio/video when given a `RoomConnection` adapter. Th
 role-protected `/patient/consultation` and `/doctor/consultation` routes use
 `BookedConsultation` with real appointment admission and scoped live discovery.
 Choose a booking in appointment details; a route without an ID links back there.
+RF36 allows clinical start and paid confirmed/in-progress video access before or
+after the booked slot until explicit completion. Schedule times do not disable
+the start/video controls. Current participant, payment and status checks remain.
 No manual peer-ID/token fields or fixture authentication are added to production.
 
 ## Adapter boundary

@@ -10,17 +10,17 @@ from tests.test_lifecycle import END, START
 
 
 @pytest.mark.parametrize("environment", ["local", "test"])
-def test_extended_window_is_opt_in(environment):
+def test_legacy_window_setting_does_not_limit_access(environment):
     settings = Settings(_env_file=None, environment=environment)
     record = SimpleNamespace(starts_at=START, ends_at=END, status="scheduled")
     assert settings.test_join_early_minutes == 10
-    assert not can_join(record, now=START - timedelta(hours=2))
+    assert can_join(record, now=START - timedelta(hours=2))
     settings = Settings(_env_file=None, environment=environment, test_join_early_minutes=180)
     assert can_join(
         record, now=START - timedelta(hours=3), early_minutes=settings.test_join_early_minutes
     )
-    assert not can_join(record, now=START - timedelta(hours=3, microseconds=1), early_minutes=180)
-    assert not can_join(record, now=END, early_minutes=180)
+    assert can_join(record, now=START - timedelta(hours=3, microseconds=1), early_minutes=180)
+    assert can_join(record, now=END, early_minutes=180)
     record.status = "completed"
     assert not can_join(record, now=START, early_minutes=180)
 

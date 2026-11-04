@@ -52,7 +52,8 @@ Historical appointments remain permitted. PostgreSQL deadlines govern expiry;
 Redis TTLs cannot release database capacity. S04 cancellation releases capacity
 under the same slot-first locks and records reason/actor/time. Cancelling a confirmed
 booking flags its payment for manual refund review, without calling a provider.
-S04 internal actions enforce legal state/time windows. S05 consumes on-time bound
+S04 internal actions enforce legal states. RF36 allows clinical start/completion
+outside booked times; the no-show time gate remains. S05 consumes on-time bound
 payment successes. S06 recovers available future slots or records refund-required
 exceptions without replacing another reservation. Real billing integration remains B02/B05.
 

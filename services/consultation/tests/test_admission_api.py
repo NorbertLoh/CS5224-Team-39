@@ -291,31 +291,29 @@ def test_grant_consumption_release_and_fresh_rejoin(api):
     assert internal(api, "consume", rejoin).status_code == 200
 
 
-def test_local_extended_window_covers_issue_consume_and_check(api):
-    start = api.state["clock"] + timedelta(hours=2)
+@pytest.mark.parametrize("offset", [-172800, 172800])
+def test_anytime_access_does_not_need_local_window_override(api, offset):
+    start = api.state["clock"] + timedelta(seconds=offset)
     api.state["appointment"].update(
         starts_at=start.isoformat(), ends_at=(start + timedelta(minutes=30)).isoformat()
     )
-    assert issue(api).status_code == 403
-    api.settings.test_join_early_minutes = 180
     response = issue(api)
     assert response.status_code == 201, response.text
     grant = response.json()
     assert internal(api, "consume", grant).status_code == 200
     assert internal(api, "check", grant).status_code == 200
     api.settings.test_join_early_minutes = 10
-    assert internal(api, "check", grant).status_code == 403
+    assert internal(api, "check", grant).status_code == 200
 
 
-def test_local_early_clinical_start_and_completion(api):
-    start = api.state["clock"] + timedelta(hours=2)
+@pytest.mark.parametrize("offset", [-172800, 172800])
+def test_anytime_clinical_start_and_completion(api, offset):
+    start = api.state["clock"] + timedelta(seconds=offset)
     api.state["appointment"].update(
         starts_at=start.isoformat(), ends_at=(start + timedelta(minutes=30)).isoformat()
     )
     route = f"/appointments/{api.appointment_id}"
     headers = api.headers(api.doctor)
-    assert api.client.post(route + "/start", headers=headers).status_code == 409
-    api.settings.test_join_early_minutes = 180
     assert api.client.post(route + "/start", headers=api.headers()).status_code == 404
     response = api.client.post(route + "/start", headers=headers)
     assert response.status_code == 200, response.text
@@ -328,8 +326,8 @@ def test_local_early_clinical_start_and_completion(api):
                 ConsultationSession.appointment_id == api.appointment_id
             )
         )
-        assert row.test_start_early_minutes == 180
-        assert row.started_at < row.starts_at
+        assert row.test_start_early_minutes == 0
+        assert (row.started_at < row.starts_at) == (offset > 0)
         assert row.ended_at >= row.started_at
         # Remove only this isolated test record so downgrade/isolation tests can run.
         db.delete(row)
@@ -509,11 +507,10 @@ def test_expiry_and_appointment_boundary(api, started):
         seconds=1
     )
     final = issue(api).json()
-    if not started:
-        assert final["expires_at"] == api.state["appointment"]["ends_at"][:23] + "Z"
+    assert final["expires_at"] != api.state["appointment"]["ends_at"][:23] + "Z"
     api.state["clock"] += timedelta(seconds=1)
-    assert internal(api, "consume", final).status_code == (200 if started else 403)
-    assert issue(api, api.doctor).status_code == (201 if started else 403)
+    assert internal(api, "consume", final).status_code == 200
+    assert issue(api, api.doctor).status_code == 201
     if started:
         api.state["clock"] += timedelta(days=1)
         for subject in (api.patient, api.doctor):

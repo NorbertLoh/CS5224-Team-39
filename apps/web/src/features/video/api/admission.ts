@@ -1,7 +1,6 @@
 import { accessToken } from '@/auth/access-token'
 import { readSession } from '@/auth/session'
 import type { Appointment } from '@/features/scheduling/api'
-import { joinEarlyMinutes } from '@/features/video/domain/joinWindow'
 import type {
   CallAdmission,
   RoomConnection,
@@ -32,16 +31,12 @@ export function roomEligibility(
   appointment: Appointment,
   role: 'patient' | 'doctor',
   subjectId: string,
-  now = Date.now(),
 ) {
   return (
     appointment[role === 'doctor' ? 'doctor_id' : 'patient_id'] === subjectId &&
     ['confirmed', 'in_progress'].includes(appointment.status) &&
     appointment.payment_resolution === 'confirmed' &&
-    Boolean(appointment.payment_id) &&
-    Date.parse(appointment.starts_at) - joinEarlyMinutes * 60000 <= now &&
-    (appointment.status === 'in_progress' ||
-      now < Date.parse(appointment.ends_at))
+    Boolean(appointment.payment_id)
   )
 }
 

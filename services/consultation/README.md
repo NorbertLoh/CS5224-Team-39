@@ -9,7 +9,9 @@ hashed, single-use admission leases; see [ADMISSION.md](ADMISSION.md) for API,
 service authentication, setup and observed verification.
 Migration `0004` adds RF29 room assignments and signalling node leases. See the
 [matchmaker deployment instructions](../../docs/RF29-signalling-matchmaker.md).
-Migration `0005` adds renewable active leases. The current runtime requires it.
+Migration `0005` adds renewable active leases. Migration `0006` permits actual
+clinical starts outside the booked slot; the current runtime requires `0006`.
+See [anytime consultation access](../../docs/RF36-anytime-consultation.md).
 The [admission contract](ADMISSION.md) covers renewal and fixed TURN deadlines.
 
 ## Lifecycle rules
@@ -22,18 +24,16 @@ V02 rejects those actual appointment states before using a session.
 
 | Operation | Rule |
 | --- | --- |
-| Join/rejoin eligibility | Scheduled: `[starts_at - 10 minutes, ends_at)`; in progress: from the opening time until doctor completion |
-| Start | Assigned doctor, scheduled state, `starts_at <= server_now < ends_at` |
+| Join/rejoin eligibility | Scheduled or in progress, at any time until doctor completion; current participant/payment checks required |
+| Start | Assigned doctor, paid confirmed appointment and scheduled session, at any time |
 | End | Assigned doctor, in_progress state, `server_now >= started_at` |
 | Retry start/end | Same resulting state returns original timestamps; no duplicate transition |
 | Completed | No join, restart or reopening |
 
-For a 10:00–10:30 appointment, joining opens exactly at 09:50. Early joining is a
-waiting-room allowance and does not start the session. If the doctor has not
-started the consultation, joining closes at 10:30. Once in progress, participants
-can leave and rejoin after 10:30 until the doctor explicitly ends it. End is
-allowed after the scheduled end; there is no automatic expiry/completion worker.
-Every admission still checks current participant access, membership and payment,
+Scheduled times do not gate clinical start or video access. A paid, unfinished
+appointment can open before or after its slot until explicit completion. Joining
+does not itself start the clinical session. There is no automatic completion
+at the booked end. Every admission still checks current participant access, membership and payment,
 and each lease retains its short expiry. Completing the session blocks further
 admission and lease checks.
 

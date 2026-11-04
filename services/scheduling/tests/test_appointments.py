@@ -411,13 +411,14 @@ def test_service_start_complete_and_operator_no_show(appointment_api):
     assert client.post("/internal" + path(past, "/complete"), headers=service()).status_code == 409
 
 
-def test_local_early_start_and_complete_service_routes(appointment_api):
+@pytest.mark.parametrize("days", [-2, 2])
+def test_anytime_start_and_complete_service_routes(appointment_api, days):
     api = appointment_api
-    active = record(api, status="confirmed", start=datetime.now(timezone.utc) + timedelta(hours=2))
+    active = record(
+        api, status="confirmed", start=datetime.now(timezone.utc) + timedelta(days=days)
+    )
     client = api[0]
     route = "/internal" + path(active)
-    assert client.post(route + "/start", headers=service()).status_code == 409
-    client.app.state.settings.test_join_early_minutes = 180
     assert client.post(route + "/start", headers=service()).json()["status"] == "in_progress"
     assert client.post(route + "/complete", headers=service()).json()["status"] == "completed"
 
@@ -460,13 +461,10 @@ def test_service_token_validation(appointment_api, changes):
     )
 
 
-def test_internal_windows_at_exact_boundaries(appointment_api, monkeypatch):
+def test_no_show_boundaries_remain_while_start_is_anytime(appointment_api, monkeypatch):
     api = appointment_api
     stored = record(api, status="confirmed")
     client, route = api[0], "/internal" + path(stored)
-    for now in (stored.starts_at - timedelta(microseconds=1), stored.ends_at):
-        monkeypatch.setattr(appointments, "server_now", lambda _, now=now: now)
-        assert client.post(route + "/start", headers=service()).status_code == 409
     monkeypatch.setattr(
         appointments, "server_now", lambda _: stored.ends_at - timedelta(microseconds=1)
     )

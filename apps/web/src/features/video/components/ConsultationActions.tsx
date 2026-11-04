@@ -3,9 +3,8 @@ import {
   consultationAction,
   consultationError,
 } from '@/features/video/api/admission'
-import { joinEarlyMinutes } from '@/features/video/domain/joinWindow'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 export function ConsultationActions({
   appointment,
@@ -17,15 +16,7 @@ export function ConsultationActions({
   onPendingChange?: (pending: boolean) => void
 }) {
   const cache = useQueryClient()
-  const [now, setNow] = useState(Date.now)
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000)
-    return () => window.clearInterval(timer)
-  }, [])
-  const earlyMinutes = joinEarlyMinutes > 10 ? joinEarlyMinutes : 0
-  const opensAt = Date.parse(appointment.starts_at) - earlyMinutes * 60000
   const action = appointment.status === 'confirmed' ? 'start' : 'complete'
-  const tooEarly = action === 'start' && now < opensAt
   const mutation = useMutation({
     mutationFn: (requested: 'start' | 'complete') =>
       consultationAction(appointment.appointment_id, requested),
@@ -56,8 +47,7 @@ export function ConsultationActions({
       </p>
       <button
         className={`rounded-lg px-5 py-3 font-medium disabled:opacity-50 ${action === 'start' ? 'bg-teal-800 text-white' : 'bg-red-50 text-red-800 border border-red-200'}`}
-        disabled={disabled || mutation.isPending || tooEarly}
-        aria-describedby={tooEarly ? 'clinical-start-time' : undefined}
+        disabled={disabled || mutation.isPending}
         onClick={() => mutation.mutate(action)}
       >
         {mutation.isPending
@@ -70,15 +60,6 @@ export function ConsultationActions({
               ? 'Retry completion handoff'
               : 'End consultation'}
       </button>
-      {tooEarly && (
-        <p id="clinical-start-time" role="status">
-          Clinical start opens at{' '}
-          {new Date(opensAt).toLocaleString('en-SG', {
-            timeZone: 'Asia/Singapore',
-          })}{' '}
-          SGT.
-        </p>
-      )}
       {mutation.isError && (
         <p role="alert">
           {consultationError(mutation.error)} Refresh to check the appointment

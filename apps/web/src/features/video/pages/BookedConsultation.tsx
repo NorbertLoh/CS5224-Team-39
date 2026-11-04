@@ -12,7 +12,6 @@ import {
 } from '@/features/video/api/admission'
 import { CompletionHandoff } from '@/features/video/components/CompletionHandoff'
 import { ConsultationActions } from '@/features/video/components/ConsultationActions'
-import { joinEarlyMinutes } from '@/features/video/domain/joinWindow'
 import { VideoRoom } from '@/features/video/room/VideoRoom'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
@@ -105,7 +104,7 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
   )
     return (
       <ErrorState
-        message={`This appointment is not ready for video. Calls open ${joinEarlyMinutes} minutes before the appointment and require confirmed payment and current participant access.`}
+        message="This appointment is not ready for video. Calls require confirmed payment, an unfinished consultation and current participant access."
       />
     )
   if (setup.error || !setup.connection)
