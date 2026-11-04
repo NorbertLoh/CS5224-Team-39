@@ -10,4 +10,6 @@ the same module from two roots. Operator values belong in ignored tfvars files.
    [demo runbook](../../../docs/RF27-singapore-demo.md).
 
 Default limits remain one even though CPU autoscaling policies are present.
+The example selects one shared private TLS ElastiCache Redis `cache.t4g.micro`
+with encryption at rest and no replicas/failover. It does not run a Redis sidecar.
 `cost-assumptions.json` contains the dated regional pricing snapshot, not a bill.

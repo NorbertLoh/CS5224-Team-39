@@ -12,7 +12,7 @@
     "alb_lcu_hour": 0.008,
     "utility_t4g_nano_hour": 0.0053,
     "public_ipv4_hour": 0.005,
-    "optional_redis_t4g_micro_hour": 0.024
+    "redis_t4g_micro_hour": 0.024
   },
   "sources": {
     "fargate": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECS/current/ap-southeast-1/index.json",
@@ -29,8 +29,8 @@
     "rds_storage": "FXXDJWB23UZKQHCN",
     "alb": "UXD3JNG6UAM79CW6",
     "alb_lcu": "45KY3J5YX2QM6KS7",
-    "optional_redis": "2EWBNSK2RMEHF7K3"
+    "redis": "2EWBNSK2RMEHF7K3"
   },
   "excludes": ["utility EBS", "S3/ECR storage and requests", "Secrets Manager", "CloudWatch logs and alarms", "Lambda and event requests", "SES", "API Gateway", "data transfer and TURN traffic", "extra ALB capacity/addresses", "RDS surplus CPU credits", "Route53/domain", "taxes"],
-  "notes": "List-price planning snapshot, not a quote, hard spending cap or free-tier claim. Refresh before applying. The full platform has nine Fargate tasks, not one task total."
+  "notes": "List-price planning snapshot, not a quote, hard spending cap or free-tier claim. Refresh before applying. The full platform has nine Fargate tasks, not one task total. ElastiCache is the default as of 2026-11-04; the rates retain their original 2026-11-01 snapshot date."
 }

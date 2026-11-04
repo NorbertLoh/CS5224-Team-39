@@ -24,6 +24,8 @@ mock_provider "aws" {
   mock_resource "aws_lambda_function" { defaults = { arn = "arn:aws:lambda:ap-southeast-1:123456789012:function:demo" } }
   mock_resource "aws_ses_email_identity" { defaults = { arn = "arn:aws:ses:ap-southeast-1:123456789012:identity/demo@example.org" } }
   mock_resource "aws_eip" { defaults = { public_ip = "203.0.113.10" } }
+  mock_resource "aws_cloudfront_function" { defaults = { arn = "arn:aws:cloudfront::123456789012:function/demo" } }
+  mock_resource "aws_elasticache_replication_group" { defaults = { primary_endpoint_address = "demo.cache.amazonaws.com" } }
 }
 
 variables {
@@ -35,15 +37,24 @@ variables {
   budget_email           = "owner@example.org"
 }
 
-run "cheap_foundation" {
-  command = plan
+run "managed_cache_foundation" {
+  # Mock-only apply resolves computed subnet/SG IDs for isolation assertions.
+  command = apply
   assert {
     condition     = aws_db_instance.demo.instance_class == "db.t4g.micro" && !aws_db_instance.demo.multi_az && aws_db_instance.demo.allocated_storage == 20
     error_message = "Use one encrypted small RDS instance and bounded storage."
   }
   assert {
-    condition     = length(aws_instance.utility) == 1 && aws_instance.utility[0].instance_type == "t4g.nano" && length(aws_nat_gateway.demo) == 0 && length(aws_elasticache_replication_group.demo) == 0
-    error_message = "Default demo must avoid managed NAT/cache hourly charges."
+    condition     = length(aws_instance.utility) == 1 && aws_instance.utility[0].instance_type == "t4g.nano" && length(aws_nat_gateway.demo) == 0 && length(aws_elasticache_replication_group.demo) == 1
+    error_message = "Default demo must use the shared utility host and one managed Redis node."
+  }
+  assert {
+    condition     = aws_elasticache_replication_group.demo[0].node_type == "cache.t4g.micro" && aws_elasticache_replication_group.demo[0].num_cache_clusters == 1 && aws_elasticache_replication_group.demo[0].transit_encryption_enabled && aws_elasticache_replication_group.demo[0].at_rest_encryption_enabled && !aws_elasticache_replication_group.demo[0].automatic_failover_enabled && !aws_elasticache_replication_group.demo[0].multi_az_enabled
+    error_message = "Managed Redis must use one encrypted TLS micro node without paid replicas/failover."
+  }
+  assert {
+    condition     = toset(aws_elasticache_subnet_group.demo[0].subnet_ids) == toset([aws_subnet.private[0].id]) && aws_elasticache_replication_group.demo[0].security_group_ids == toset([aws_security_group.data.id])
+    error_message = "ElastiCache must use the private subnet and workload-restricted data security group."
   }
   assert {
     condition     = length(aws_ecs_service.api) == 0 && length(aws_ecs_task_definition.api) == 0 && length(module.jobs) == 0
@@ -60,7 +71,8 @@ run "cheap_foundation" {
 }
 
 run "bounded_running_demo" {
-  command = plan
+  # Mock-only apply lets us inspect the full rendered ECS container definitions.
+  command = apply
   variables {
     enable_workloads = true
     images = {
@@ -74,7 +86,6 @@ run "bounded_running_demo" {
       fulfilment          = "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/fulfilment@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       notification        = "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/notification@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       signalling          = "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/signalling@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-      redis               = "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/redis@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       document-lambda     = "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/document-lambda@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       notification-lambda = "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/notification-lambda@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     }
@@ -92,12 +103,29 @@ run "bounded_running_demo" {
     error_message = "Each schema needs an independent controlled migration task."
   }
   assert {
-    condition     = local.public_env["scheduling"].SERVICE_REDIS_URL == "redis://127.0.0.1:6379/0" && length(local.workers["scheduling"]) == 4
-    error_message = "The demo scheduling task must include its bounded local Redis mirror."
+    condition     = local.public_env["scheduling"].SERVICE_REDIS_URL == "rediss://demo.cache.amazonaws.com:6379/0" && output.redis_url == local.public_env["scheduling"].SERVICE_REDIS_URL && alltrue([for c in jsondecode(aws_ecs_task_definition.api["scheduling"].container_definitions) : c.name != "redis"])
+    error_message = "Default scheduling task must use the shared TLS endpoint without a Redis sidecar or image."
+  }
+  assert {
+    condition     = alltrue([for c in jsondecode(aws_ecs_task_definition.api["scheduling"].container_definitions) : contains(c.environment, { name = "SERVICE_REDIS_URL", value = "rediss://demo.cache.amazonaws.com:6379/0" })])
+    error_message = "Scheduling API and every scheduling worker must receive the shared TLS endpoint."
   }
   assert {
     condition     = alltrue([for limit in values(module.jobs[0].concurrency_limits) : limit == 1])
     error_message = "All three Lambda functions must have a hard concurrency ceiling of one."
+  }
+}
+
+run "explicit_sidecar" {
+  command = plan
+  variables {
+    redis_mode       = "sidecar"
+    enable_workloads = true
+    images           = { for name in keys(run.bounded_running_demo.repositories) : name => "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/${name}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+  }
+  assert {
+    condition     = length(aws_elasticache_replication_group.demo) == 0 && output.redis_url == "redis://127.0.0.1:6379/0" && length([for c in jsondecode(aws_ecs_task_definition.api["scheduling"].container_definitions) : c if c.name == "redis"]) == 1
+    error_message = "Explicit sidecar mode must retain one task-local Redis and omit ElastiCache."
   }
 }
 

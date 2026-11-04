@@ -9,7 +9,8 @@ budget_email           = "owner@example.org"
 monthly_budget_usd     = 100
 enable_workloads       = false
 # Populate all digest-pinned images after foundation creation/build/push.
-# Regular service/signalling/redis images: linux/arm64. Lambda images: linux/amd64.
+# Regular service/signalling images: linux/arm64. Lambda images: linux/amd64.
+# Redis runs in ElastiCache; this example does not require a Redis image.
 images = {}
 # For checkout, set billing SERVICE_STRIPE_DESTINATIONS to the real test account map.
 service_environment = {}
