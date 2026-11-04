@@ -6,6 +6,30 @@ variable "name_prefix" {
     error_message = "Use a 3-20 character lowercase resource prefix."
   }
 }
+variable "deployment_profile" {
+  description = "demo retains the compact layout; managed separates API ingress/workers, uses production settings and protects persistent data. Neither profile establishes production readiness."
+  type        = string
+  default     = "demo"
+  validation {
+    condition     = contains(["demo", "managed"], var.deployment_profile)
+    error_message = "Choose demo or managed."
+  }
+}
+variable "internal_origin_hostname" {
+  description = "Managed profile: owned DNS name for the private API ALB, covered by the supplied origin certificate (or requested as its SAN)."
+  type        = string
+  default     = null
+}
+variable "deletion_protection" {
+  description = "Managed profile: protect RDS/ALBs. Disable only for an intentional reviewed teardown; final DB snapshot and bucket safeguards remain."
+  type        = bool
+  default     = true
+}
+variable "final_snapshot_identifier" {
+  description = "Optional unique final RDS snapshot name for managed-profile teardown; defaults to name_prefix-final."
+  type        = string
+  default     = null
+}
 variable "enable_workloads" {
   description = "Enable only after ECR images, service JSON secrets, database bootstrap/migrations and external sandbox credentials are ready. False does not stop infrastructure billing."
   type        = bool

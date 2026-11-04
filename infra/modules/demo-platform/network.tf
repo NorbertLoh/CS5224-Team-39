@@ -87,8 +87,44 @@ resource "aws_security_group" "alb" {
 }
 resource "aws_vpc_security_group_ingress_rule" "api" {
   security_group_id            = aws_security_group.workloads.id
-  referenced_security_group_id = aws_security_group.alb.id
+  referenced_security_group_id = local.managed ? aws_security_group.private_alb[0].id : aws_security_group.alb.id
   from_port                    = 8000
+  to_port                      = local.managed ? 8000 : 9000
+  ip_protocol                  = "tcp"
+}
+resource "aws_security_group" "vpc_link" {
+  count       = local.managed ? 1 : 0
+  name_prefix = "${var.name_prefix}-vpc-link-"
+  vpc_id      = aws_vpc.demo.id
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = aws_subnet.private[*].cidr_block
+  }
+}
+resource "aws_security_group" "private_alb" {
+  count       = local.managed ? 1 : 0
+  name_prefix = "${var.name_prefix}-private-alb-"
+  vpc_id      = aws_vpc.demo.id
+  ingress {
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.workloads.id, aws_security_group.vpc_link[0].id]
+  }
+  egress {
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.workloads.id]
+  }
+}
+resource "aws_vpc_security_group_ingress_rule" "signalling" {
+  count                        = local.managed ? 1 : 0
+  security_group_id            = aws_security_group.workloads.id
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 9000
   to_port                      = 9000
   ip_protocol                  = "tcp"
 }

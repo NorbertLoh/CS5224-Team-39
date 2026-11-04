@@ -1,6 +1,9 @@
 output "frontend_url" { value = "https://${module.edge.domain_name}" }
 output "distribution_id" { value = module.edge.distribution_id }
 output "cluster_name" { value = aws_ecs_cluster.demo.name }
+output "deployment_profile" { value = var.deployment_profile }
+output "private_api_dns" { value = try(aws_lb.private_api[0].dns_name, null) }
+output "worker_service_names" { value = { for name, service in aws_ecs_service.worker : name => service.name } }
 output "repositories" { value = { for k, r in aws_ecr_repository.app : k => r.repository_url } }
 output "config_secret_arns" { value = { for k, s in aws_secretsmanager_secret.config : k => s.arn } }
 output "database_host" { value = aws_db_instance.demo.address }

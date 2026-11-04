@@ -2,7 +2,8 @@ module "jobs" {
   count               = var.enable_workloads ? 1 : 0
   source              = "../background-jobs"
   name_prefix         = var.name_prefix
-  environment         = "demo"
+  environment         = local.environment
+  log_retention_days  = local.log_retention
   subnet_ids          = [aws_subnet.private[0].id]
   security_group_ids  = [aws_security_group.workloads.id]
   document_bucket_arn = aws_s3_bucket.storage["documents"].arn

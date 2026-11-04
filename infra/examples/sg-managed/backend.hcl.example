@@ -1,0 +1,7 @@
+# Existing W01-owned remote-state bucket, provisioned separately.
+bucket       = "REPLACE_WITH_EXISTING_STATE_BUCKET"
+key          = "telelink/managed/terraform.tfstate"
+region       = "ap-southeast-1"
+encrypt      = true
+use_lockfile = true
+# Use AWS profile/SSO/role environment configuration, never credentials here.

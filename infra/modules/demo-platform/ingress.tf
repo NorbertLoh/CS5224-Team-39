@@ -1,21 +1,28 @@
 resource "aws_acm_certificate" "origin" {
-  count             = var.origin_certificate_arn == null ? 1 : 0
-  domain_name       = var.origin_hostname
-  validation_method = "DNS"
+  count                     = var.origin_certificate_arn == null ? 1 : 0
+  domain_name               = var.origin_hostname
+  subject_alternative_names = local.managed ? [coalesce(var.internal_origin_hostname, var.origin_hostname)] : []
+  validation_method         = "DNS"
   lifecycle { create_before_destroy = true }
 }
+locals {
+  certificate_domains = local.managed ? [var.origin_hostname, coalesce(var.internal_origin_hostname, var.origin_hostname)] : [var.origin_hostname]
+  certificate_validation = var.origin_certificate_arn == null ? {
+    for option in aws_acm_certificate.origin[0].domain_validation_options : option.domain_name => option
+  } : {}
+}
 resource "aws_route53_record" "certificate" {
-  count   = var.origin_certificate_arn == null ? 1 : 0
+  count   = var.origin_certificate_arn == null ? (local.managed ? 2 : 1) : 0
   zone_id = var.hosted_zone_id
-  name    = tolist(aws_acm_certificate.origin[0].domain_validation_options)[0].resource_record_name
-  type    = tolist(aws_acm_certificate.origin[0].domain_validation_options)[0].resource_record_type
-  records = [tolist(aws_acm_certificate.origin[0].domain_validation_options)[0].resource_record_value]
+  name    = local.certificate_validation[local.certificate_domains[count.index]].resource_record_name
+  type    = local.certificate_validation[local.certificate_domains[count.index]].resource_record_type
+  records = [local.certificate_validation[local.certificate_domains[count.index]].resource_record_value]
   ttl     = 60
 }
 resource "aws_acm_certificate_validation" "origin" {
   count                   = var.origin_certificate_arn == null ? 1 : 0
   certificate_arn         = aws_acm_certificate.origin[0].arn
-  validation_record_fqdns = [aws_route53_record.certificate[0].fqdn]
+  validation_record_fqdns = aws_route53_record.certificate[*].fqdn
 }
 resource "aws_lb" "demo" {
   name                       = var.name_prefix
@@ -24,7 +31,28 @@ resource "aws_lb" "demo" {
   subnets                    = aws_subnet.public[*].id
   security_groups            = [aws_security_group.alb.id]
   idle_timeout               = 120
-  enable_deletion_protection = false
+  enable_deletion_protection = local.managed && var.deletion_protection
+}
+resource "aws_lb" "private_api" {
+  count                      = local.managed ? 1 : 0
+  name                       = "${var.name_prefix}-api"
+  load_balancer_type         = "application"
+  internal                   = true
+  subnets                    = aws_subnet.private[*].id
+  security_groups            = [aws_security_group.private_alb[0].id]
+  idle_timeout               = 120
+  enable_deletion_protection = var.deletion_protection
+}
+resource "aws_route53_record" "internal_origin" {
+  count   = local.managed ? 1 : 0
+  zone_id = var.hosted_zone_id
+  name    = coalesce(var.internal_origin_hostname, var.origin_hostname)
+  type    = "A"
+  alias {
+    name                   = aws_lb.private_api[0].dns_name
+    zone_id                = aws_lb.private_api[0].zone_id
+    evaluate_target_health = true
+  }
 }
 resource "aws_route53_record" "origin" {
   zone_id = var.hosted_zone_id
@@ -52,9 +80,11 @@ resource "aws_lb_listener" "https" {
   }
 }
 resource "aws_lb_listener" "private" {
-  load_balancer_arn = aws_lb.demo.arn
-  port              = 80
-  protocol          = "HTTP"
+  load_balancer_arn = local.managed ? aws_lb.private_api[0].arn : aws_lb.demo.arn
+  port              = local.managed ? 443 : 80
+  protocol          = local.managed ? "HTTPS" : "HTTP"
+  certificate_arn   = local.managed ? (var.origin_certificate_arn != null ? var.origin_certificate_arn : aws_acm_certificate_validation.origin[0].certificate_arn) : null
+  ssl_policy        = local.managed ? "ELBSecurityPolicy-TLS13-1-2-2021-06" : null
   default_action {
     type = "fixed-response"
     fixed_response {
@@ -82,7 +112,7 @@ resource "aws_lb_target_group" "api" {
 }
 locals {
   listener_routes = merge(
-    { for s in local.services : "public-${s}" => { service = s, listener = aws_lb_listener.https.arn } },
+    { for s in local.services : "public-${s}" => { service = s, listener = aws_lb_listener.https.arn } if !local.managed },
     { for s in local.services : "private-${s}" => { service = s, listener = aws_lb_listener.private.arn } }
   )
 }
@@ -120,7 +150,7 @@ resource "aws_lb_target_group" "signalling" {
   health_check { path = "/healthz" }
 }
 resource "aws_lb_listener_rule" "document_internal" {
-  listener_arn = aws_lb_listener.https.arn
+  listener_arn = local.managed ? aws_lb_listener.private.arn : aws_lb_listener.https.arn
   priority     = 5
   action {
     type             = "forward"
@@ -157,7 +187,7 @@ resource "aws_apigatewayv2_api" "http" {
 resource "aws_apigatewayv2_vpc_link" "demo" {
   name               = var.name_prefix
   subnet_ids         = [aws_subnet.private[0].id]
-  security_group_ids = [aws_security_group.workloads.id]
+  security_group_ids = local.managed ? [aws_security_group.vpc_link[0].id] : [aws_security_group.workloads.id]
 }
 resource "aws_apigatewayv2_integration" "alb" {
   api_id                 = aws_apigatewayv2_api.http.id
@@ -168,6 +198,10 @@ resource "aws_apigatewayv2_integration" "alb" {
   connection_id          = aws_apigatewayv2_vpc_link.demo.id
   payload_format_version = "1.0"
   request_parameters     = { "overwrite:path" = "$request.path" }
+  dynamic "tls_config" {
+    for_each = local.managed ? [1] : []
+    content { server_name_to_verify = var.internal_origin_hostname }
+  }
 }
 resource "aws_apigatewayv2_authorizer" "jwt" {
   api_id           = aws_apigatewayv2_api.http.id
@@ -211,7 +245,7 @@ resource "aws_apigatewayv2_route" "collection" {
 }
 resource "aws_cloudwatch_log_group" "gateway" {
   name              = "/telelink/${var.name_prefix}/gateway"
-  retention_in_days = 3
+  retention_in_days = local.log_retention
 }
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.http.id

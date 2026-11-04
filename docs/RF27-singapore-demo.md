@@ -1,5 +1,10 @@
 # RF27: Singapore demo deployment, cost and scalability
 
+This guide describes the compact `sg-demo` layout. The user-requested
+[managed service profile](../infra/examples/sg-managed/README.md) selects NAT
+Gateway, separate TURN/private API ingress/worker groups and stronger data controls
+while capping each workload at one replica. Its resource count and costs differ.
+
 Issue #316 / merged PR #317. Requested 1 November 2026. These files configure AWS;
 they have not been applied and do not prove the AWS patient journey works.
 

@@ -5,11 +5,14 @@ data "aws_ssm_parameter" "ubuntu" {
 resource "aws_security_group" "utility" {
   name_prefix = "${var.name_prefix}-utility-"
   vpc_id      = aws_vpc.demo.id
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = aws_subnet.private[*].cidr_block
+  dynamic "ingress" {
+    for_each = var.egress_mode == "instance" ? [1] : []
+    content {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = aws_subnet.private[*].cidr_block
+    }
   }
   dynamic "ingress" {
     for_each = var.enable_turn ? { tcp = "tcp", udp = "udp" } : {}
@@ -68,7 +71,7 @@ resource "aws_instance" "utility" {
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.utility.id]
   iam_instance_profile        = aws_iam_instance_profile.utility[0].name
-  source_dest_check           = false
+  source_dest_check           = var.egress_mode != "instance"
   user_data_replace_on_change = true
   user_data = templatefile("${path.module}/utility.sh.tftpl", {
     nat_enabled  = var.egress_mode == "instance"
@@ -88,7 +91,7 @@ resource "aws_instance" "utility" {
     http_put_response_hop_limit = 1
   }
   credit_specification { cpu_credits = "standard" }
-  tags       = { Name = "${var.name_prefix}-nat-turn" }
+  tags       = { Name = var.egress_mode == "instance" ? "${var.name_prefix}-nat-turn" : "${var.name_prefix}-turn" }
   depends_on = [aws_route.internet, aws_iam_role_policy.utility_secret]
 }
 resource "aws_eip_association" "utility" {

@@ -22,11 +22,12 @@ resource "aws_db_instance" "demo" {
   publicly_accessible         = false
   multi_az                    = false
   availability_zone           = data.aws_availability_zones.available.names[0]
-  backup_retention_period     = 1
+  backup_retention_period     = local.managed ? 7 : 1
   auto_minor_version_upgrade  = true
   copy_tags_to_snapshot       = true
-  deletion_protection         = false
-  skip_final_snapshot         = true
+  deletion_protection         = local.managed && var.deletion_protection
+  skip_final_snapshot         = !local.managed
+  final_snapshot_identifier   = local.managed ? coalesce(var.final_snapshot_identifier, "${var.name_prefix}-final") : null
   # Fixed 20 GiB: no automatic storage growth or paid replicas in the demo.
 }
 resource "aws_elasticache_subnet_group" "demo" {
@@ -77,6 +78,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "storage" {
     apply_server_side_encryption_by_default { sse_algorithm = "AES256" }
   }
 }
+resource "aws_s3_bucket_versioning" "storage" {
+  for_each = local.managed ? aws_s3_bucket.storage : {}
+  bucket   = each.value.id
+  versioning_configuration { status = "Enabled" }
+}
 resource "aws_s3_bucket_policy" "private" {
   for_each = { for k, v in aws_s3_bucket.storage : k => v if k != "frontend" }
   bucket   = each.value.id
@@ -100,7 +106,7 @@ resource "aws_ecr_repository" "app" {
   name                 = "${var.name_prefix}/${each.key}"
   image_tag_mutability = "IMMUTABLE"
   force_delete         = var.allow_destroy_demo_data
-  image_scanning_configuration { scan_on_push = false }
+  image_scanning_configuration { scan_on_push = local.managed }
 }
 resource "aws_ecr_lifecycle_policy" "app" {
   for_each   = aws_ecr_repository.app

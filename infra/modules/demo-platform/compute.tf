@@ -8,7 +8,7 @@ resource "aws_ecs_cluster" "demo" {
 resource "aws_cloudwatch_log_group" "service" {
   for_each          = setunion(local.services, toset(["notification", "signalling", "bootstrap"]))
   name              = "/telelink/${var.name_prefix}/${each.key}"
-  retention_in_days = 3
+  retention_in_days = local.log_retention
 }
 resource "aws_iam_role" "execution" {
   for_each           = setunion(local.services, toset(["notification", "signalling"]))
@@ -56,7 +56,7 @@ locals {
   public_env = {
     for s in local.services : s => merge({
       SERVICE_NAME                       = s
-      SERVICE_ENVIRONMENT                = "demo"
+      SERVICE_ENVIRONMENT                = local.environment
       SERVICE_HOST                       = "0.0.0.0"
       SERVICE_PORT                       = "8000"
       SERVICE_ROOT_PATH                  = contains(local.preserve_prefix, s) ? "" : "/api/v1/${local.paths[s]}"
@@ -128,16 +128,7 @@ resource "aws_ecs_task_definition" "api" {
       command          = concat(each.key == "fulfilment" ? ["python", "-c", file("${path.module}/config_files.py")] : [], ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--limit-concurrency", "8"])
       stopTimeout      = 30
     }
-    ], [for name, args in local.workers[each.key] : {
-      name             = name
-      image            = var.images[each.key]
-      essential        = true
-      environment      = [for k, v in local.public_env[each.key] : { name = k, value = v }]
-      secrets          = local.ecs_secrets[each.key]
-      command          = concat(each.key == "fulfilment" ? ["python", "-c", file("${path.module}/config_files.py")] : [], ["python", "-m"], args)
-      logConfiguration = local.logs[each.key]
-      stopTimeout      = 30
-      }], each.key == "scheduling" && var.redis_mode == "sidecar" ? [{
+    ], local.managed ? [] : local.worker_containers[each.key], each.key == "scheduling" && var.redis_mode == "sidecar" ? [{
       name             = "redis"
       image            = var.images["redis"]
       essential        = true
@@ -171,7 +162,7 @@ resource "aws_ecs_service" "api" {
     container_name   = "api"
     container_port   = 8000
   }
-  depends_on = [aws_lb_listener_rule.api, aws_route.private_egress]
+  depends_on = [aws_lb_listener_rule.api, aws_route.private_egress, aws_route53_record.internal_origin]
 }
 resource "aws_appautoscaling_target" "api" {
   for_each           = var.enable_workloads ? local.services : toset([])
@@ -238,5 +229,5 @@ resource "aws_ecs_service" "signalling" {
     container_name   = "signalling"
     container_port   = 9000
   }
-  depends_on = [aws_lb_listener_rule.signalling, aws_route.private_egress]
+  depends_on = [aws_lb_listener_rule.signalling, aws_route.private_egress, aws_route53_record.internal_origin]
 }

@@ -165,3 +165,113 @@ run "reject_other_region" {
   }
   expect_failures = [terraform_data.guards]
 }
+
+run "managed_single_replica_layout" {
+  # All AWS resources are mocked, including this apply.
+  command = apply
+  variables {
+    deployment_profile       = "managed"
+    internal_origin_hostname = "api.internal.demo.example.org"
+    egress_mode              = "gateway"
+    enable_workloads         = true
+    images                   = { for name in keys(run.bounded_running_demo.repositories) : name => "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/${name}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" if name != "redis" }
+  }
+  assert {
+    condition     = length(aws_nat_gateway.demo) == 1 && length(aws_instance.utility) == 1 && aws_instance.utility[0].source_dest_check && !strcontains(aws_instance.utility[0].user_data, "iptables -t nat -A")
+    error_message = "Managed profile must separate NAT Gateway from its dedicated non-routing TURN host."
+  }
+  assert {
+    condition     = length(aws_lb.private_api) == 1 && aws_lb.private_api[0].internal && aws_lb_listener.private.protocol == "HTTPS" && aws_apigatewayv2_integration.alb.tls_config[0].server_name_to_verify == "api.internal.demo.example.org"
+    error_message = "API Gateway must use a private TLS ALB with server-name verification."
+  }
+  assert {
+    condition     = length(aws_lb_listener_rule.api) == 8 && alltrue([for key in keys(aws_lb_listener_rule.api) : startswith(key, "private-")]) && aws_lb_listener_rule.document_internal.listener_arn == aws_lb_listener.private.arn
+    error_message = "Managed profile must not expose API/internal routes on the public signalling ALB."
+  }
+  assert {
+    condition     = aws_vpc_security_group_ingress_rule.api.referenced_security_group_id == aws_security_group.private_alb[0].id && aws_vpc_security_group_ingress_rule.api.to_port == 8000 && aws_vpc_security_group_ingress_rule.signalling[0].from_port == 9000 && aws_apigatewayv2_vpc_link.demo.security_group_ids == toset([aws_security_group.vpc_link[0].id])
+    error_message = "API and signalling ingress must use separate security-group paths."
+  }
+  assert {
+    condition     = length(aws_ecs_service.api) == 8 && length(aws_ecs_service.worker) == 5 && aws_ecs_service.signalling[0].desired_count == 1 && alltrue([for service in merge(aws_ecs_service.api, aws_ecs_service.worker) : service.desired_count == 1 && service.deployment_minimum_healthy_percent == 0 && service.deployment_maximum_percent == 100]) && alltrue([for target in aws_appautoscaling_target.api : target.min_capacity == 1 && target.max_capacity == 1])
+    error_message = "Eight APIs, five separate worker groups and signalling must remain one replica, including replacements."
+  }
+  assert {
+    condition     = alltrue([for task in aws_ecs_task_definition.api : length(jsondecode(task.container_definitions)) == 1]) && length(jsondecode(aws_ecs_task_definition.worker["scheduling"].container_definitions)) == 4 && alltrue([for task in aws_ecs_task_definition.worker : alltrue([for container in jsondecode(task.container_definitions) : container.name != "api" && container.name != "redis"])])
+    error_message = "APIs must run separately from existing worker loops, with no Redis sidecar."
+  }
+  assert {
+    condition     = local.public_env["scheduling"].SERVICE_REDIS_URL == "rediss://demo.cache.amazonaws.com:6379/0" && alltrue([for settings in values(local.public_env) : settings.SERVICE_ENVIRONMENT == "production" && settings.SERVICE_IDENTITY_URL == "https://api.internal.demo.example.org/api/v1/identity"])
+    error_message = "Services must use production settings, shared TLS Redis and private HTTPS service URLs."
+  }
+  assert {
+    condition     = aws_db_instance.demo.deletion_protection && aws_lb.demo.enable_deletion_protection && aws_lb.private_api[0].enable_deletion_protection && !aws_db_instance.demo.skip_final_snapshot && aws_db_instance.demo.backup_retention_period == 7 && !aws_db_instance.demo.multi_az && aws_elasticache_replication_group.demo[0].num_cache_clusters == 1 && !aws_elasticache_replication_group.demo[0].automatic_failover_enabled
+    error_message = "Protect database data while retaining one DB/cache node without standby replicas."
+  }
+  assert {
+    condition     = length(aws_s3_bucket_versioning.storage) == 3 && alltrue([for bucket in aws_s3_bucket.storage : !bucket.force_destroy]) && aws_cloudwatch_log_group.service["scheduling"].retention_in_days == 14 && alltrue([for limit in values(module.jobs[0].concurrency_limits) : limit == 1])
+    error_message = "Managed storage must be versioned/non-destructive, logs retained and Lambda concurrency capped at one."
+  }
+}
+
+run "reject_managed_instance_nat" {
+  command = plan
+  variables {
+    deployment_profile       = "managed"
+    internal_origin_hostname = "api.internal.demo.example.org"
+    egress_mode              = "instance"
+  }
+  expect_failures = [terraform_data.guards]
+}
+
+run "reject_managed_scale_out" {
+  command = plan
+  variables {
+    deployment_profile       = "managed"
+    internal_origin_hostname = "api.internal.demo.example.org"
+    egress_mode              = "gateway"
+    max_tasks                = 2
+    allow_scale_out          = true
+  }
+  expect_failures = [terraform_data.guards]
+}
+
+run "managed_origin_certificate" {
+  command = plan
+  variables {
+    deployment_profile       = "managed"
+    internal_origin_hostname = "api.internal.demo.example.org"
+    origin_certificate_arn   = null
+    egress_mode              = "gateway"
+  }
+  assert {
+    condition     = aws_acm_certificate.origin[0].subject_alternative_names == toset(["api.internal.demo.example.org"]) && length(aws_route53_record.certificate) == 2
+    error_message = "A new managed-profile certificate must cover and validate both signalling and private API origins."
+  }
+}
+
+run "managed_reviewed_teardown_unlock" {
+  command = plan
+  variables {
+    deployment_profile        = "managed"
+    internal_origin_hostname  = "api.internal.demo.example.org"
+    egress_mode               = "gateway"
+    deletion_protection       = false
+    final_snapshot_identifier = "managed-final-reviewed"
+  }
+  assert {
+    condition     = !aws_db_instance.demo.deletion_protection && !aws_lb.demo.enable_deletion_protection && !aws_lb.private_api[0].enable_deletion_protection && !aws_db_instance.demo.skip_final_snapshot && aws_db_instance.demo.final_snapshot_identifier == "managed-final-reviewed" && alltrue([for bucket in aws_s3_bucket.storage : !bucket.force_destroy])
+    error_message = "Reviewed teardown can unlock deletion while keeping final-snapshot and nonempty-bucket safeguards."
+  }
+}
+
+run "reject_managed_sidecar" {
+  command = plan
+  variables {
+    deployment_profile       = "managed"
+    internal_origin_hostname = "api.internal.demo.example.org"
+    egress_mode              = "gateway"
+    redis_mode               = "sidecar"
+  }
+  expect_failures = [terraform_data.guards]
+}
