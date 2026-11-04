@@ -12,6 +12,7 @@ export const images = [
   ...['document', 'notification'].map(name => ({ name: `${name}-lambda`, platform: 'linux/amd64', context: '.', file: `services/${name}/Dockerfile.lambda`, shared: true })),
 ]
 export const frontendKeys = ['VITE_USE_AWS', 'VITE_AWS_API_BASE_URL', 'VITE_AWS_COGNITO_CLIENT_ID', 'VITE_AWS_COGNITO_ISSUER', 'VITE_AWS_COGNITO_OAUTH_BASE_URL', 'VITE_AWS_COGNITO_API_URL']
+const optionalFrontendKeys = ['VITE_DOCUMENT_DOWNLOAD_VIA_API']
 
 function run(command, args, capture = false) {
   const result = spawnSync(command, args, { cwd: root, encoding: 'utf8', stdio: capture ? ['ignore', 'pipe', 'inherit'] : 'inherit' })
@@ -28,9 +29,10 @@ export function platformOutput(value) {
 }
 export function frontendConfig(value) {
   const config = value.frontend_environment ?? value
-  if (Object.keys(config).some(key => !frontendKeys.includes(key))) throw new Error('Only the six public frontend environment keys are accepted')
+  if (Object.keys(config).some(key => ![...frontendKeys, ...optionalFrontendKeys].includes(key))) throw new Error('Only public frontend environment keys are accepted')
   if (frontendKeys.some(key => typeof config[key] !== 'string' || !config[key])) throw new Error('All six frontend settings are required')
   if (config.VITE_USE_AWS !== 'true') throw new Error('Release frontend requires VITE_USE_AWS=true')
+  if (config.VITE_DOCUMENT_DOWNLOAD_VIA_API !== undefined && !['true', 'false'].includes(config.VITE_DOCUMENT_DOWNLOAD_VIA_API)) throw new Error('VITE_DOCUMENT_DOWNLOAD_VIA_API must be true or false')
   for (const key of frontendKeys.filter(key => key.endsWith('URL') || key.endsWith('ISSUER'))) {
     const url = new URL(config[key])
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new Error(`${key} requires a public HTTPS URL without credentials, query or fragment`)

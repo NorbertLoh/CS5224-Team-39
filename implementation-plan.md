@@ -1,5 +1,12 @@
 # TeleLink Health: shared implementation backlog
 
+## Terraform PDF download configuration (RF48)
+
+- [ ] RF48: Configure authenticated PDF content downloads in the Terraform
+  document API and frontend release settings. Verify mocked infrastructure,
+  release validation and production API access. Dependencies RF47/RF32 merged.
+  Effort S. NorbertLoh, issue #367 In progress.
+
 ## Tailscale PDF downloads (RF47)
 
 - [x] RF47: Download local demo PDFs through the authenticated document API.

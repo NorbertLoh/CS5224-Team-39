@@ -2,7 +2,7 @@ import { accessToken } from '@/auth/access-token'
 import type { DocumentMetadata } from '@/features/documents/types'
 import { ApiError, apiFetch } from '@/lib/api'
 import type { CursorPage } from '@/lib/api-types'
-import { usesAws } from '@/lib/backend-config'
+import { downloadsViaApi, usesAws } from '@/lib/backend-config'
 
 const base = '/document/documents'
 async function request(path: string, signal?: AbortSignal) {
@@ -61,14 +61,15 @@ export async function documentDownloadUrl(
   signal?: AbortSignal,
   historyFor?: string,
 ) {
+  const content = downloadsViaApi()
   const params = new URLSearchParams()
   if (historyFor) params.set('history_for', historyFor)
-  if (!usesAws()) params.set('content', 'true')
+  if (content) params.set('content', 'true')
   const query = params.size ? `?${params}` : ''
   const response = await request(
     `${base}/${encodeURIComponent(documentId)}/download${query}`, signal,
   )
-  if (!usesAws()) {
+  if (content) {
     if (response.headers.get('Content-Type')?.split(';')[0] !== 'application/pdf')
       throw new Error('Invalid PDF download')
     return URL.createObjectURL(await response.blob())

@@ -44,8 +44,13 @@ Local/test deployments with an emulator endpoint also accept
 `GET /api/v1/document/documents/{document_id}/download?content=true`.
 This returns authenticated PDF bytes through the application origin after
 the same access, integrity and durable audit checks. The local frontend uses
-this route so downloads work over Tailscale. Storage stays on the internal
-network. AWS deployments continue to use signed downloads.
+this route so downloads work over Tailscale.
+
+Terraform also enables this response on AWS with
+`SERVICE_DOWNLOAD_VIA_API=true` and emits
+`VITE_DOCUMENT_DOWNLOAD_VIA_API=true` for the frontend release build.
+Deploy the updated document image and rebuild the frontend using fresh Terraform
+outputs together. The endpoint without `content=true` still returns signed URLs.
 
 Install dependencies as described in the service README, then migrate before
 starting the API. From `services/document`, export:

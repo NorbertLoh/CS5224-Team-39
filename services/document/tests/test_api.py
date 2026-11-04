@@ -166,8 +166,13 @@ def download(api):
     return client.get(f"{PREFIX}/{row.document_id}/download")
 
 
-def test_local_pdf_content_is_authorized_audited_and_verified(api):
+@pytest.mark.parametrize("production", [False, True])
+def test_pdf_content_is_authorized_audited_and_verified(api, production):
     client, state, row, database, app, storage, users = api
+    if production:
+        app.state.settings.environment = "production"
+        app.state.settings.aws_endpoint_url = None
+        app.state.settings.download_via_api = True
     data = b"%PDF-1.7\nlocal test PDF"
     with Session(database) as session:
         stored = session.get(Document, row.document_id)
@@ -199,6 +204,7 @@ def test_local_pdf_content_is_authorized_audited_and_verified(api):
     storage.get_object.return_value = {"Body": BytesIO(b"%PDF-corrupted")}
     assert client.get(target).status_code == 503
     app.state.settings.environment = "production"
+    app.state.settings.download_via_api = False
     assert client.get(target).status_code == 404
 
 

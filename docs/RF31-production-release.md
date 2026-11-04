@@ -74,6 +74,13 @@ Each frontend configuration gets its own directory keyed by a configuration hash
    node dev/release/release.mjs frontend .local/platform-output.json
    ```
 
+   Export fresh Terraform outputs for the frontend build. RF48 adds
+   `VITE_DOCUMENT_DOWNLOAD_VIA_API=true`, paired with
+   `SERVICE_DOWNLOAD_VIA_API=true` in the document task definition. Build and
+   publish the document image from the same release revision, pass its digest
+   in the image map, and publish the rebuilt frontend after the API is healthy.
+   Reusing an older image digest or frontend export will retain its older behavior.
+
    `pin` performs registry reads only. It validates architecture and single-image
    manifests, then writes `images.tfvars.json` with real ECR digests and
    `enable_workloads=false`. It never pushes images or invokes Terraform. Pass

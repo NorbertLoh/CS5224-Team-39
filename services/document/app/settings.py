@@ -11,6 +11,7 @@ class Settings(ServiceSettings):
     scheduling_url: str | None = None
     cursor_secret: SecretStr | None = None
     s3_browser_endpoint_url: str | None = None
+    download_via_api: bool = False
     download_ttl_seconds: int = Field(default=120, ge=30, le=300)
     records_url: str | None = None
     records_secret: SecretStr | None = None
