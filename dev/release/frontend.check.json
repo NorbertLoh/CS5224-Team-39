@@ -1,0 +1,8 @@
+{
+  "VITE_USE_AWS": "true",
+  "VITE_AWS_API_BASE_URL": "https://release-check.invalid/api/v1",
+  "VITE_AWS_COGNITO_CLIENT_ID": "build-check-only",
+  "VITE_AWS_COGNITO_ISSUER": "https://cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_buildcheck",
+  "VITE_AWS_COGNITO_OAUTH_BASE_URL": "https://release-check.auth.ap-southeast-1.amazoncognito.com",
+  "VITE_AWS_COGNITO_API_URL": "https://cognito-idp.ap-southeast-1.amazonaws.com/"
+}

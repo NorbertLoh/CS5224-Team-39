@@ -1,0 +1,18 @@
+# syntax=docker/dockerfile:1
+FROM node:24-alpine AS build
+WORKDIR /workspace/apps/web
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY . .
+COPY --from=contracts . /workspace/contracts
+# These values are public and embedded in the JavaScript bundle, never secrets.
+ARG VITE_USE_AWS=true
+ARG VITE_AWS_API_BASE_URL
+ARG VITE_AWS_COGNITO_CLIENT_ID
+ARG VITE_AWS_COGNITO_ISSUER
+ARG VITE_AWS_COGNITO_OAUTH_BASE_URL
+ARG VITE_AWS_COGNITO_API_URL
+RUN npm run lint && npm run build
+
+FROM scratch AS export
+COPY --from=build /workspace/apps/web/dist/ /
