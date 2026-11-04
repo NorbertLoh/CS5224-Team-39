@@ -1,8 +1,8 @@
 # AWS development and demo deployment
 
-Status: placeholder. No resources have been provisioned.
+Status: Terraform skeleton only (W01). No resources have been provisioned.
 
-W01-W21 supply the executable infrastructure and deployment workflow. Before provisioning, confirm account permissions, budget, region, IaC tool and demo availability requirements.
+Infrastructure is Terraform in [infra/](../infra/README.md): a one-time `bootstrap` root for remote state and the budget, plus `envs/dev` and `envs/demo`. It targets one shared team AWS account in `ap-southeast-1`. Cost estimates and the teardown schedule are in [aws-cost-notes.md](aws-cost-notes.md). W02-W21 add the resources and deployment workflow. Before provisioning, confirm account permissions, the budget amount and demo availability requirements.
 
 Record infrastructure commands, environment configuration, GitHub-to-AWS authentication, per-service image builds, controlled migrations, frontend publishing, health checks, logs, provider callbacks and teardown steps as they are implemented.
 

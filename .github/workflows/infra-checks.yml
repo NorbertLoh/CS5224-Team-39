@@ -1,0 +1,36 @@
+name: Infrastructure checks
+
+on:
+  push:
+    paths:
+      - 'infra/**'
+      - '.github/workflows/infra-checks.yml'
+  pull_request:
+    paths:
+      - 'infra/**'
+      - '.github/workflows/infra-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform fmt and validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.16.6
+          terraform_wrapper: false
+      - run: terraform fmt -check -recursive
+      - name: Validate each root without a backend or credentials
+        run: |
+          for root in bootstrap envs/dev envs/demo; do
+            terraform -chdir="$root" init -backend=false -input=false -lockfile=readonly
+            terraform -chdir="$root" validate
+          done

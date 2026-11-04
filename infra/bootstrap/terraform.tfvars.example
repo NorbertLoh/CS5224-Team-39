@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars (gitignored) and fill in real values.
+aws_account_id      = "123456789012"
+monthly_budget_usd  = 50
+budget_alert_emails = ["team@example.com"]
