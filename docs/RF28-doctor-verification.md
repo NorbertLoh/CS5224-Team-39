@@ -1,5 +1,7 @@
 # RF28 doctor applications and verification
 
+Merged in PR #321 (5f1d734) on 4 November 2026; issue #320 is closed.
+
 Accounts remain shared. `/join-as-doctor` requires sign-in and preserves that
 destination through signup/sign-in. The form collects name on licence, registration
 number, licensing authority, specialty and one supporting PDF/PNG/JPEG (maximum
