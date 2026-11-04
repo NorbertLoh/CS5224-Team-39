@@ -1,5 +1,11 @@
 # TeleLink Health: shared implementation backlog
 
+## Architecture reference (27 October 2026)
+
+| Done | ID | Deliverable | Dependencies | Effort | Claim |
+| --- | --- | --- | --- | --- | --- |
+| [ ] | RF25 | Create a single technical architecture guide from system overview to code-level workflows; verify links, endpoints, event routes and worker commands; distinguish implemented local behavior from planned AWS work. | RF22-RF24 merged; current contracts and local Compose | M | NorbertLoh; In progress; #312 |
+
 ## PostgreSQL signalling matchmaker (RF29)
 
 - [x] RF29: Add database-backed signalling server leases, transactional consultation

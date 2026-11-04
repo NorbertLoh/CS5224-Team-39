@@ -30,6 +30,7 @@ Each business service owns its database schema and Alembic migrations. Do not wr
 
 | Need | Current guide |
 | --- | --- |
+| Understand the system from overview to implementation | [Technical architecture guide](docs/architecture-guide.md) |
 | Run the complete local app | [Compose setup](docs/compose-stack.md) |
 | Sign-in and session behavior | [Authentication](docs/authentication.md) |
 | Frontend setup and checks | [Web README](apps/web/README.md) |
