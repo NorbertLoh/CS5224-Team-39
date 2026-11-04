@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## Clinic medicine workspaces (RF39)
+
+- [ ] RF39: Split clinic Medicine Pricing and Medicine Delivery, with red
+  counters for prescriptions that need pricing and paid orders that need
+  preparation. Remove the redundant prescription refresh button. Preserve
+  clinic access and order links. Dependencies RF06/RF12 merged. Effort M.
+  NorbertLoh; In progress; issue #349. Verify frontend checks and clinic navigation.
+
+
 ## Booking hold action spacing (RF38)
 
 - [x] RF38: Add a small gap between Booking hold actions, including when buttons
