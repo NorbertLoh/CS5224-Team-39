@@ -22,7 +22,7 @@ export function PrescriptionDetails({
       </div>
       <div>
         <dt className="font-medium">Status</dt>
-        <dd>{prescription.status}</dd>
+        <dd>{prescription.status === 'issued' ? 'Issued' : prescription.status}</dd>
       </div>
       <div>
         <dt className="font-medium">Issued (Singapore time)</dt>
