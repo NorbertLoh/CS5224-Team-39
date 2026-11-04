@@ -2,10 +2,10 @@
 
 ## Tailscale PDF downloads (RF47)
 
-- [ ] RF47: Download local demo PDFs through the authenticated document API.
+- [x] RF47: Download local demo PDFs through the authenticated document API.
   Verify patient downloads over Tailscale, reject unrelated/anonymous access,
   and preserve document audits and AWS signing. Dependencies P03, U14 and RF33
-  merged. Effort S. NorbertLoh, issue #365 In progress.
+  merged. Effort S. NorbertLoh. PR #366 merged; issue #365 closed.
 
 ## Previous visit PDFs in doctor Consult (RF46)
 
