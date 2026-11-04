@@ -12,6 +12,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
+const appearances = {
+  unpriced: ['Unpriced', 'border-red-500', 'bg-red-100 text-red-800'],
+  inProgress: ['In progress', 'border-yellow-500', 'bg-yellow-100 text-yellow-900'],
+  done: ['Done', 'border-green-500', 'bg-green-100 text-green-800'],
+} as const
+
 export function PrescriptionPriceCard({
   prescription,
   tenantId,
@@ -28,6 +34,31 @@ export function PrescriptionPriceCard({
   )
   const query = useQuery(priceQuery)
   const cache = useQueryClient()
+  const [draft, setDraft] = useState<Record<string, string>>({})
+  const saved = query.data
+  const savedAmounts = new Map(
+    saved?.items.map((item) => [
+      item.prescription_item_id,
+      item.unit_price.amount_minor,
+    ]),
+  )
+  const dirty = prescription.items.some(({ prescription_item_id: id }) => {
+    const value = draft[id]
+    if (value === undefined) return false
+    const amount = minorUnits(value)
+    return amount !== (savedAmounts.get(id) ?? null) ||
+      (amount === null && value.trim() !== '')
+  })
+  const pricedCount = prescription.items.filter(({ prescription_item_id: id }) =>
+    savedAmounts.has(id),
+  ).length
+  const appearance = saved
+    ? appearances[
+        saved.locked || (!dirty && pricedCount === prescription.items.length)
+          ? 'done'
+          : dirty || pricedCount > 0 ? 'inProgress' : 'unpriced'
+      ]
+    : undefined
   const appointment = useQuery({
     queryKey: ['pricing-patient', token, prescription.appointment_id],
     queryFn: ({ signal }) =>
@@ -37,14 +68,21 @@ export function PrescriptionPriceCard({
   })
   return (
     <details
-      className="group rounded-2xl border-2 border-amber-500 bg-white p-5"
+      className={`group rounded-2xl border-2 bg-white p-5 ${appearance?.[1] ?? 'border-slate-200'}`}
       aria-label={`Prescription ${prescription.prescription_id.slice(-8)}`}
     >
       <summary className="flex cursor-pointer list-none items-start justify-between gap-4 rounded focus-visible:outline-2 focus-visible:outline-offset-4 [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
-          <h2 className="font-semibold">
-            Prescription {prescription.prescription_id.slice(-8)}
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-semibold">
+              Prescription {prescription.prescription_id.slice(-8)}
+            </h2>
+            {appearance && (
+              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${appearance[2]}`}>
+                {appearance[0]}
+              </span>
+            )}
+          </div>
           <p className="mt-2 text-sm font-medium">
             {appointment.data?.patient_name ||
               `Patient ${prescription.patient_id.slice(-8)}`}
@@ -89,10 +127,17 @@ export function PrescriptionPriceCard({
             <PriceEditor
               prescription={prescription}
               tenantId={tenantId}
-              initial={query.data}
+              saved={query.data}
+              savedAmounts={savedAmounts}
+              draft={draft}
+              dirty={dirty}
+              onChange={(id, value) =>
+                setDraft((current) => ({ ...current, [id]: value }))
+              }
               onSaved={async (prices) => {
                 await cache.cancelQueries({ queryKey: priceQuery.queryKey })
                 cache.setQueryData(priceQuery.queryKey, prices)
+                setDraft({})
               }}
             />
           )}
@@ -105,43 +150,34 @@ export function PrescriptionPriceCard({
 function PriceEditor({
   prescription,
   tenantId,
-  initial: saved,
+  saved,
+  savedAmounts,
+  draft,
+  dirty,
+  onChange,
   onSaved,
 }: {
   prescription: Prescription
   tenantId: string
-  initial: Prices
+  saved: Prices
+  savedAmounts: Map<string, number>
+  draft: Record<string, string>
+  dirty: boolean
+  onChange: (id: string, value: string) => void
   onSaved: (prices: Prices) => Promise<void>
 }) {
-  const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      prescription.items.map((line) => {
-        const price = saved.items.find(
-          (item) => item.prescription_item_id === line.prescription_item_id,
-        )?.unit_price.amount_minor
-        return [
-          line.prescription_item_id,
-          price === undefined ? '' : decimal(price),
-        ]
-      }),
-    ),
-  )
-  const amounts = prescription.items.map((line) =>
-    minorUnits(values[line.prescription_item_id] ?? ''),
-  )
+  const values = prescription.items.map(({ prescription_item_id: id }) => {
+    const amount = savedAmounts.get(id)
+    return (!saved.locked ? draft[id] : undefined) ??
+      (amount === undefined ? '' : decimal(amount))
+  })
+  const amounts = values.map(minorUnits)
   const total = prescription.items.reduce(
     (sum, line, index) => sum + (amounts[index] ?? 0) * line.quantity,
     0,
   )
   const valid =
     amounts.every((amount) => amount !== null) && Number.isSafeInteger(total)
-  const dirty = prescription.items.some(
-    (line, index) =>
-      amounts[index] !==
-      saved.items.find(
-        (item) => item.prescription_item_id === line.prescription_item_id,
-      )?.unit_price.amount_minor,
-  )
   const mutation = useMutation({
     mutationFn: async () =>
       (
@@ -195,12 +231,9 @@ function PriceEditor({
                 inputMode="decimal"
                 pattern="[0-9]+(\.[0-9]{1,2})?"
                 placeholder="0.00"
-                value={values[line.prescription_item_id] ?? ''}
+                value={values[index]}
                 onChange={(event) =>
-                  setValues({
-                    ...values,
-                    [line.prescription_item_id]: event.target.value,
-                  })
+                  onChange(line.prescription_item_id, event.target.value)
                 }
               />
             </label>
