@@ -136,7 +136,7 @@
     }
 
     @media (hover: hover) {
-      &:hover:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+      &:hover:not(:disabled, [aria-disabled='true'], [data-disabled], [role='tab']) {
         --button-hover-tint: color-mix(in srgb, currentColor 8%, transparent);
         background-image: linear-gradient(var(--button-hover-tint), var(--button-hover-tint));
       }
