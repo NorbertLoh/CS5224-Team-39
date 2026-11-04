@@ -1,5 +1,13 @@
 # TeleLink Health: shared implementation backlog
 
+## Patient upcoming appointment documents (RF37)
+
+- [ ] RF37: Hide Documents in patient Upcoming appointment details, retaining
+  Past details and doctor document behavior. Pass the selected period to details
+  and avoid mounting/querying documents for patient Upcoming. Dependencies RF10
+  and S07 merged. Effort S. NorbertLoh; In progress. Completion: visibility rules
+  and frontend lint/typecheck/build pass. Stacked above RF36.
+
 ## Anytime consultation access (RF36)
 
 - [ ] RF36: Allow assigned doctors to start paid confirmed consultations at any
