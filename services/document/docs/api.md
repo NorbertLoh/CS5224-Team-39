@@ -40,6 +40,13 @@ them in frontend state beyond the immediate download action.
 
 ## Configuration and startup
 
+Local/test deployments with an emulator endpoint also accept
+`GET /api/v1/document/documents/{document_id}/download?content=true`.
+This returns authenticated PDF bytes through the application origin after
+the same access, integrity and durable audit checks. The local frontend uses
+this route so downloads work over Tailscale. Storage stays on the internal
+network. AWS deployments continue to use signed downloads.
+
 Install dependencies as described in the service README, then migrate before
 starting the API. From `services/document`, export:
 

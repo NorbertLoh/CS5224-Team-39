@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import false, or_, select, tuple_
 from telelink_common.errors import ErrorEnvelope
 
@@ -112,7 +112,11 @@ def download_document(
     identity: Identity,
     session: DB,
     history_for: UUID | None = None,
+    content: bool = False,
 ):
+    settings = request.app.state.settings
+    if content and (settings.environment not in {"local", "test"} or not settings.aws_endpoint_url):
+        not_found()
     query = select(Document).where(Document.document_id == document_id)
     if history_for is None:
         query = query.where(document_scope(identity))
@@ -124,4 +128,14 @@ def download_document(
     downloads.prepare(row)
     audit(session, request, identity, "download", row)
     session.commit()  # Persist access intent before minting a bearer URL.
+    if content:
+        return Response(
+            content=downloads.content(row),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{row.document_id}.pdf"',
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
     return downloads.sign(row)

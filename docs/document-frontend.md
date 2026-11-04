@@ -28,9 +28,11 @@ proxy checks; no npm preview command is provided. AWS uses `VITE_USE_AWS=true` a
 HTTPS `VITE_AWS_API_BASE_URL`; deployed ingress must route `/api/v1/document/*`
 to the document service without caching. No AWS routing is provisioned here.
 
-Signed URLs must already point to a browser-reachable host. For local Floci,
-configure P03's `SERVICE_S3_BROWSER_ENDPOINT_URL` to its published localhost port.
-The UI never rewrites signed hosts and never sends the API bearer token to S3.
+Local Floci downloads use the authenticated document API with `content=true`,
+then save the returned PDF through a temporary browser object URL. This works
+through the application's Tailscale origin. AWS signed URLs must already point
+to a browser-reachable host. The UI never rewrites signed hosts and never sends
+the API bearer token to S3.
 HTTPS links are accepted; HTTP is restricted to localhost/127.0.0.1 in local mode.
 Credentialed, executable, fragment-bearing or already-expired links are rejected.
 
@@ -45,7 +47,7 @@ Credentialed, executable, fragment-bearing or already-expired links are rejected
 3. A pending PDF says Preparing PDF. A failed PDF says PDF unavailable with
    clinic-contact guidance. Neither has a download button.
 4. Select Download PDF on a ready document. The button waits while P03 checks
-   current access and returns a fresh signed URL. A temporary attachment link
+   current access and returns PDF bytes locally or a fresh signed URL on AWS. A temporary attachment link
    starts the download without opening a popup. The UI reports only that the
    download was requested, since it cannot observe the browser's file save.
 5. On a download/network error, try again to obtain a fresh URL. Refresh a changed

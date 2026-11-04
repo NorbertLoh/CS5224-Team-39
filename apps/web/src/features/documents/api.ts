@@ -61,12 +61,19 @@ export async function documentDownloadUrl(
   signal?: AbortSignal,
   historyFor?: string,
 ) {
-  const query = historyFor
-    ? `?${new URLSearchParams({ history_for: historyFor })}`
-    : ''
-  const result = await (
-    await request(`${base}/${encodeURIComponent(documentId)}/download${query}`, signal)
-  ).json()
+  const params = new URLSearchParams()
+  if (historyFor) params.set('history_for', historyFor)
+  if (!usesAws()) params.set('content', 'true')
+  const query = params.size ? `?${params}` : ''
+  const response = await request(
+    `${base}/${encodeURIComponent(documentId)}/download${query}`, signal,
+  )
+  if (!usesAws()) {
+    if (response.headers.get('Content-Type')?.split(';')[0] !== 'application/pdf')
+      throw new Error('Invalid PDF download')
+    return URL.createObjectURL(await response.blob())
+  }
+  const result = await response.json()
   return validateDownload(result)
 }
 

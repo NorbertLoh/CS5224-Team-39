@@ -1,6 +1,7 @@
 """Sign using the browser endpoint itself: rewriting a signed host breaks SigV4."""
 
 from datetime import datetime, timedelta, timezone
+from hashlib import sha256
 from urllib.parse import urlsplit
 
 import boto3
@@ -9,7 +10,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from telelink_common.aws import client_options
 from telelink_common.errors import DomainError
 
-from app.integrations.storage import PrivatePDFStore
+from app.integrations.storage import MAX_PDF_BYTES, PrivatePDFStore
 from app.schemas import DownloadPublic
 
 
@@ -83,3 +84,22 @@ class Downloads:
         except (BotoCoreError, ClientError):
             raise DomainError(503, "unavailable", "Document storage is unavailable.") from None
         return DownloadPublic(download_url=url, expires_at=expires_at)
+
+    def content(self, row):
+        try:
+            response = self.storage.get_object(Bucket=row.storage_bucket, Key=row.storage_key)
+            stream = response["Body"]
+            try:
+                data = stream.read(MAX_PDF_BYTES + 1)
+            finally:
+                stream.close()
+            if (
+                not data.startswith(b"%PDF-")
+                or len(data) > MAX_PDF_BYTES
+                or len(data) != row.size_bytes
+                or sha256(data).hexdigest() != row.sha256
+            ):
+                raise RuntimeError("Document integrity check failed")
+            return data
+        except (BotoCoreError, ClientError, RuntimeError):
+            raise DomainError(503, "unavailable", "Document storage is unavailable.") from None
