@@ -219,6 +219,11 @@ Setup and limits: [doctor verification](docs/RF28-doctor-verification.md),
 [workspace filters](docs/RF28-workspace-filters.md),
 [navigation](apps/web/src/navigation/README.md).
 
+## Patient delivery tracker (RF45)
+
+- [ ] RF45: Show a colored progress tracker in patient and clinic delivery details.
+  Dependency D06 merged. Effort S. NorbertLoh; In progress; issue #361.
+
 ## Serverless workers and edge controls (31 October 2026)
 
 | Done | ID | Deliverable | Dependencies | Effort | Claim |
