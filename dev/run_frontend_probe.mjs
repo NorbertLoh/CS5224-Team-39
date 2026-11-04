@@ -7,6 +7,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const probes = new Set([
   'check_records_frontend.mts',
   'check_scheduling_frontend.mts',
+  'check_navigation_frontend.mts',
 ])
 const probe = process.argv[2]
 if (!probes.has(probe)) {
@@ -29,7 +30,13 @@ if (!probes.has(probe)) {
   try {
     if (server.config.env.VITE_USE_AWS === 'true')
       throw new Error('Frontend probes require local API configuration.')
-    await server.ssrLoadModule(path.join(root, 'dev', probe))
+    await server.ssrLoadModule(
+      path.join(
+        root,
+        probe === 'check_navigation_frontend.mts' ? 'apps/web/probes' : 'dev',
+        probe,
+      ),
+    )
   } finally {
     await server.close()
   }

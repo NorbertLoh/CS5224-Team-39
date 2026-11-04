@@ -107,7 +107,7 @@ function StaffPage({ tenantId }: { tenantId: string }) {
         editing
           ? saveStaff(tenantId, editing.subject_id, roles)
           : assignStaff(tenantId, email, roles),
-      'Staff roles saved. Access is active.',
+      'Staff roles saved. Doctor access requires approved verification and active clinic membership.',
     )
   }
 
@@ -117,7 +117,9 @@ function StaffPage({ tenantId }: { tenantId: string }) {
         <h1 className="text-3xl font-semibold">Staff management</h1>
         <p className="mt-3 text-sm text-slate-600">
           Assign an existing account to this clinic by email. Revoking access
-          keeps the membership record; saving roles reactivates it.
+          keeps the membership record; saving roles reactivates it. Doctors can
+          be added before approval, but cannot access clinical work until
+          platform verification is approved.
         </p>
         <p role="status" className="my-5 text-sm">
           {message}
@@ -226,6 +228,15 @@ function StaffPage({ tenantId }: { tenantId: string }) {
                         <p className="break-words font-medium">
                           {item.subject.display_name}
                         </p>
+                        {item.roles.includes('doctor') && (
+                          <p className="mt-2 text-sm font-medium text-teal-700">
+                            {item.subject.doctor_verification === 'approved'
+                              ? 'Doctor verification approved'
+                              : item.subject.doctor_verification === 'revoked'
+                                ? 'Approval revoked — doctor access disabled'
+                                : 'Pending verification — doctor access disabled'}
+                          </p>
+                        )}
                         {item.subject.email && (
                           <p className="mt-1 break-all text-sm text-slate-600">
                             {item.subject.email}

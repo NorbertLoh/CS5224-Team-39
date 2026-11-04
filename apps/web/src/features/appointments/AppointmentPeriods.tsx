@@ -4,9 +4,15 @@ import { AppointmentGrid } from '@/features/appointments/AppointmentGrid'
 import { LiveAppointmentDetails } from '@/features/appointments/LiveAppointmentDetails'
 import type { AppointmentRole } from '@/features/appointments/types'
 import type { AppointmentPeriod } from '@/features/scheduling/api'
-import { listAppointments, schedulingError } from '@/features/scheduling/api'
-import { useInfiniteQuery } from '@tanstack/react-query'
-import { Tabs } from 'radix-ui'
+import {
+  appointmentCounts,
+  listAppointments,
+  schedulingError,
+} from '@/features/scheduling/api'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { CountTabs } from '@/components/CountTabs'
+import { ListFilters } from '@/components/ListFilters'
+import { emptyFilters } from '@/lib/list-filters'
 import { useState } from 'react'
 
 export function AppointmentPeriods({
@@ -22,11 +28,34 @@ export function AppointmentPeriods({
 }) {
   const [period, setPeriod] = useState<AppointmentPeriod>('upcoming')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [filters, setFilters] = useState(emptyFilters)
+  const counts = useQuery({
+    queryKey: [
+      'scheduling',
+      'appointments',
+      'counts',
+      token,
+      role,
+      tenantId,
+      filters,
+    ],
+    queryFn: ({ signal }) => appointmentCounts(tenantId, filters, signal, role),
+    refetchInterval: 15000,
+    retry: false,
+  })
   const query = useInfiniteQuery({
-    queryKey: ['scheduling', 'appointments', token, role, tenantId, period],
+    queryKey: [
+      'scheduling',
+      'appointments',
+      token,
+      role,
+      tenantId,
+      period,
+      filters,
+    ],
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) =>
-      listAppointments(tenantId, pageParam, signal, period),
+      listAppointments(tenantId, pageParam, signal, period, filters, role),
     getNextPageParam: (page) => page.next_cursor ?? undefined,
     refetchInterval: 15000,
     refetchOnWindowFocus: true,
@@ -42,40 +71,59 @@ export function AppointmentPeriods({
         : appointment.tenant_id === tenantId,
   )
   return (
-    <Tabs.Root
-      value={period}
-      onValueChange={(value) => {
-        setPeriod(value as AppointmentPeriod)
-        setSelectedId(null)
-      }}
-    >
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <Tabs.List
-          aria-label="Appointment period"
-          className="flex w-fit gap-1 rounded-lg bg-slate-100 p-1"
-        >
-          {(['upcoming', 'past'] as const).map((value) => (
-            <Tabs.Trigger
-              key={value}
-              value={value}
-              className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              {value === 'upcoming' ? 'Upcoming' : 'Past'}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
+    <>
+      <ListFilters
+        value={filters}
+        onApply={(value) => {
+          setFilters(value)
+          setSelectedId(null)
+        }}
+        dateLabel="Appointment"
+        placeholder="Patient, doctor, clinic name or appointment ID"
+        statuses={{
+          held: 'Held',
+          pending_payment: 'Pending payment',
+          confirmed: 'Confirmed',
+          in_progress: 'In progress',
+          completed: 'Completed',
+          cancelled: 'Cancelled',
+          expired: 'Expired',
+          no_show: 'No show',
+        }}
+      />
+      {counts.isError && (
+        <ErrorState
+          message="Could not refresh appointment counts."
+          onRetry={() => void counts.refetch()}
+        />
+      )}
+      <div className="mb-4 flex flex-wrap justify-between gap-3">
+        <p className="text-sm text-slate-600" aria-live="polite">
+          {counts.data?.total ?? '—'} matching appointments
+        </p>
         <button
           className="rounded border px-4 py-2"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
+          disabled={query.isFetching || counts.isFetching}
+          onClick={() => {
+            void query.refetch()
+            void counts.refetch()
+          }}
         >
           Refresh appointments
         </button>
       </div>
-      <Tabs.Content
-        key={period}
+      <CountTabs
         value={period}
-        className="space-y-5 focus-visible:outline-2 focus-visible:outline-offset-2"
+        onChange={(value) => {
+          setPeriod(value as AppointmentPeriod)
+          setSelectedId(null)
+        }}
+        label="Appointment period"
+        items={[
+          { value: 'upcoming', label: 'Upcoming' },
+          { value: 'past', label: 'Past' },
+        ]}
+        counts={counts.data}
       >
         <p className="text-sm text-slate-600">
           {period === 'upcoming'
@@ -134,7 +182,7 @@ export function AppointmentPeriods({
               )}
           </>
         )}
-      </Tabs.Content>
-    </Tabs.Root>
+      </CountTabs>
+    </>
   )
 }

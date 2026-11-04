@@ -55,6 +55,71 @@ async function released(api, grant) {
   assert.equal(api.grants.get(grant.token).released, true);
 }
 
+test('both signalling entry points reach the assigned PeerServer, with fresh routing after failure', { timeout: 10000 }, async (t) => {
+  const fixture = fixtures();
+  const servers = [fixture.server];
+  const wires = new Set();
+  const origin = 'https://localhost:8443';
+  t.after(() => {
+    for (const wire of wires) wire.terminate();
+    for (const server of servers) { server.drain?.(); server.closeAllConnections(); server.close(); }
+  });
+  const listen = async (server) => {
+    server.listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    return `http://127.0.0.1:${server.address().port}`;
+  };
+  const api = await listen(fixture.server);
+  const node = async () => {
+    const config = configuration({ SIGNALLING_SECRET: SECRET, CONSULTATION_URL: api, SIGNALLING_MATCHMAKER: 'true' });
+    config.checkIntervalMs = 30;
+    const server = createServer(config);
+    servers.push(server);
+    config.internalUrl = await listen(server);
+    await server.registry.heartbeat();
+    assert.equal((await fetch(`${config.internalUrl}/healthz`)).status, 200);
+    return { server, id: config.nodeId, base: config.internalUrl };
+  };
+  const owner = await node();
+  const entry = await node();
+  const assign = (subject, assigned, version) => fixture.issue(subject, 'a', {
+    node_id: assigned.id, assignment_version: version,
+  });
+  const connect = (via, target, grant) => new Promise((resolve, reject) => {
+    const params = new URLSearchParams({ key: 'telelink', id: grant.peer_id, token: grant.token });
+    const wire = new WebSocket(`${via.base.replace('http:', 'ws:')}/peerjs/nodes/${target.id}/peerjs?${params}`, { origin });
+    wires.add(wire);
+    wire.on('error', reject);
+    wire.once('message', (data) => { assert.deepEqual(JSON.parse(data), { type: 'OPEN' }); resolve(wire); });
+  });
+  const discover = (via, target, grant) => fetch(`${via.base}/peerjs/nodes/${target.id}/counterpart`, {
+    method: 'POST', headers: { origin, 'content-type': 'application/json' },
+    body: JSON.stringify({ peer_id: grant.peer_id, token: grant.token }),
+  });
+  const patient = assign('patient-a', owner, 1);
+  const doctor = assign('doctor-a', owner, 1);
+  await assert.rejects(connect(entry, entry, patient), /403/);
+  const caller = await connect(entry, owner, patient);
+  const receiver = await connect(owner, owner, doctor);
+  const discovery = await discover(entry, owner, patient);
+  assert.equal(discovery.status, 200);
+  assert.deepEqual(await discovery.json(), { peer_id: doctor.peer_id });
+  const offer = once(receiver, 'message');
+  caller.send(JSON.stringify({ type: 'OFFER', dst: doctor.peer_id, payload: {} }));
+  assert.equal(JSON.parse((await offer)[0]).src, patient.peer_id);
+
+  const lost = once(caller, 'close');
+  fixture.nodes.delete(owner.id);
+  owner.server.drain();
+  await lost;
+  await assert.rejects(connect(entry, owner, patient), /403/);
+  const fresh = assign('patient-a', entry, 2);
+  const freshDoctor = assign('doctor-a', entry, 2);
+  await connect(entry, entry, fresh);
+  await connect(entry, entry, freshDoctor);
+  assert.deepEqual(await (await discover(entry, entry, fresh)).json(), { peer_id: freshDoctor.peer_id });
+});
+
 test('real HTTP admission consumption precedes PeerServer registration and prevents replay', async (t) => {
   const api = await setup(t);
   assert.equal((await fetch(`${api.base}/peerjs/telelink/id`)).status, 403);

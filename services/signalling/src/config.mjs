@@ -15,7 +15,17 @@ export function configuration(env = process.env) {
   }
   const port = Number(env.SIGNALLING_PORT || 9000);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Invalid port');
-  return { url: url.href.replace(/\/$/, ''), secret, origins, port,
+  const matchmaker = env.SIGNALLING_MATCHMAKER === 'true';
+  const requireTaskProtection = env.SIGNALLING_REQUIRE_TASK_PROTECTION === 'true';
+  const internalUrl = env.SIGNALLING_INTERNAL_URL;
+  if (internalUrl) {
+    const endpoint = new URL(internalUrl);
+    if (endpoint.protocol !== 'http:' || endpoint.username || endpoint.password
+      || endpoint.search || endpoint.hash || endpoint.pathname !== '/') throw new Error('Invalid node URL');
+  }
+  const drainMs = Number(env.SIGNALLING_DRAIN_SECONDS || 120) * 1000;
+  if (!Number.isInteger(drainMs) || drainMs < 5000 || drainMs > 120000) throw new Error('Invalid drain deadline');
+  return { url: url.href.replace(/\/$/, ''), secret, origins, port, matchmaker, internalUrl, drainMs, requireTaskProtection,
     host: env.SIGNALLING_HOST || '127.0.0.1', key: 'telelink',
     timeoutMs: 3000, checkIntervalMs: 2000, maxConnections: 100 };
 }

@@ -37,11 +37,12 @@ def decode_cursor(settings, cursor):
         ) from None
 
 
-def encode_admin_cursor(settings, subject_id, status, clinic):
+def encode_admin_cursor(settings, subject_id, status, clinic, filters=None):
     return sign_cursor(
         {
             "sub": str(subject_id),
             "status": status,
+            "filters": filters or {},
             "order": "created_at,tenant_id",
             "created_at": clinic.created_at.isoformat(),
             "id": str(clinic.tenant_id),
@@ -52,7 +53,7 @@ def encode_admin_cursor(settings, subject_id, status, clinic):
     )
 
 
-def decode_admin_cursor(settings, cursor, subject_id, status):
+def decode_admin_cursor(settings, cursor, subject_id, status, filters=None):
     key = cursor_key(settings)
     try:
         claims = verify_cursor(
@@ -65,6 +66,8 @@ def decode_admin_cursor(settings, cursor, subject_id, status):
         # JWT's required-claim check rejects null; null means the unfiltered list.
         if "status" not in claims:
             raise ValueError("Missing cursor scope")
+        if claims.get("filters", {}) != (filters or {}):
+            raise ValueError("Mismatched filter scope")
         if (claims["sub"], claims["status"], claims["order"]) != (
             str(subject_id),
             status,

@@ -15,6 +15,8 @@ import { LiveOrders } from '@/features/fulfilment'
 import { PatientProfilePage, PatientRecordsPage } from '@/features/patient'
 import { ClinicPayments } from '@/features/payments/ClinicPayments'
 import { PlatformClinics } from '@/features/platform-clinics/PlatformClinics'
+import { DoctorApplicationPage } from '@/features/doctor-onboarding/DoctorApplicationPage'
+import { DoctorApplicationsReview } from '@/features/doctor-onboarding/DoctorApplicationsReview'
 import { StaffManagement } from '@/features/staff/StaffManagement'
 import { ClinicStorefront } from '@/features/storefront/ClinicStorefront'
 import { BookedConsultation } from '@/features/video'
@@ -30,6 +32,10 @@ export function AppRoutes({
   session: Session | null
 }) {
   switch (route.kind) {
+    case 'doctor-application':
+      return <DoctorApplicationPage />
+    case 'doctor-applications-review':
+      return <DoctorApplicationsReview />
     case 'clinic-registration':
       return <ClinicRegistration />
     case 'doctor-availability':

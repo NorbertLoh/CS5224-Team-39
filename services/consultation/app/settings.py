@@ -1,3 +1,4 @@
+from ipaddress import ip_network
 from urllib.parse import urlsplit
 
 from pydantic import Field, SecretStr, model_validator
@@ -21,9 +22,18 @@ class Settings(ServiceSettings):
     turn_secret: SecretStr | None = None
     relay_only: bool = False
     test_join_early_minutes: int = Field(default=10, ge=10, le=180)
+    signalling_matchmaker: bool = False
+    signalling_networks: list[str] = Field(default_factory=lambda: ["127.0.0.0/8"])
+    signalling_internal_port: int = Field(default=9000, ge=1, le=65535)
+    signalling_lease_seconds: int = Field(default=30, ge=10, le=120)
 
     @model_validator(mode="after")
     def validate_admission(self):
+        if not self.signalling_networks or any(
+            ip_network(n).version != 4 or ip_network(n).prefixlen < 8
+            for n in self.signalling_networks
+        ):
+            raise ValueError("Signalling requires explicit IPv4 networks with prefix >= 8")
         if self.test_join_early_minutes != 10 and self.environment not in {"local", "test"}:
             raise ValueError("Extended test join window requires local/test environment")
         if any(

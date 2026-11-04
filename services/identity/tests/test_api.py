@@ -20,7 +20,13 @@ from sqlalchemy.orm import Session
 from app.database import create_database_engine
 from app.integrations.clinics import ClinicDirectory
 from app.main import create_app
-from app.models import Membership, Subject
+from app.models import (
+    DoctorApplication,
+    DoctorApplicationEvent,
+    DoctorDocument,
+    Membership,
+    Subject,
+)
 from app.settings import Settings
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -113,6 +119,7 @@ def api(api_database, signing_key):
                 )
             )
         session.flush()
+        approve_fixture_doctor(session, ids["doctor"])
         for name, tenant, role, status in (
             ("doctor", TENANT_A, "doctor", "active"),
             ("former", TENANT_A, "doctor", "revoked"),
@@ -164,12 +171,42 @@ def api(api_database, signing_key):
             settings=settings,
         )
     with Session(engine) as session, session.begin():
+        session.execute(
+            delete(DoctorApplicationEvent).where(
+                DoctorApplicationEvent.subject_id.in_(ids.values())
+            )
+        )
+        session.execute(
+            delete(DoctorApplication).where(DoctorApplication.subject_id.in_(ids.values()))
+        )
+        session.execute(delete(DoctorDocument).where(DoctorDocument.subject_id.in_(ids.values())))
         session.execute(delete(Membership).where(Membership.subject_id.in_(ids.values())))
         session.execute(delete(Subject).where(Subject.subject_id.in_(ids.values())))
 
 
 def headers(api, name="patient", **changes):
     return {"Authorization": f"Bearer {api.mint(name, **changes)}"}
+
+
+def approve_fixture_doctor(session, subject_id):
+    """Existing authorization tests explicitly arrange reviewed doctor eligibility."""
+    document = DoctorDocument(
+        subject_id=subject_id, content_type="application/pdf", content=b"%PDF-1.4 test"
+    )
+    session.add(document)
+    session.flush()
+    session.add(
+        DoctorApplication(
+            subject_id=subject_id,
+            legal_name="Reviewed test doctor",
+            licence_number=f"TEST-{subject_id}",
+            licensing_authority="Test authority",
+            specialty="General practice",
+            document_id=document.document_id,
+            status="approved",
+            revision=1,
+        )
+    )
 
 
 def path(tenant=TENANT_A, subject=None):
@@ -391,7 +428,11 @@ def test_email_assignment_is_normalized_idempotent_and_reactivates(api):
     assert response.status_code == 201
     original = response.json()
     assert original["subject_id"] == str(api.ids["target"])
-    assert original["subject"] == {"display_name": "target", "email": "target@example.test"}
+    assert original["subject"] == {
+        "display_name": "target",
+        "email": "target@example.test",
+        "doctor_verification": "not_applied",
+    }
     repeated = api.client.post(path(), json=body, headers=headers(api, "admin_a"))
     assert repeated.status_code == 200
     assert repeated.json()["membership_id"] == original["membership_id"]
@@ -409,10 +450,12 @@ def test_membership_list_includes_names_and_optional_email_without_cognito_sub(a
     assert rows[str(api.ids["doctor"])]["subject"] == {
         "display_name": "doctor",
         "email": "doctor@example.test",
+        "doctor_verification": "approved",
     }
     assert rows[str(api.ids["former"])]["subject"] == {
         "display_name": "former",
         "email": None,
+        "doctor_verification": "not_applied",
     }
     assert "cognito_sub" not in response.text
 
@@ -948,6 +991,7 @@ def test_doctor_directory_service_scope_pagination_and_revocation(api):
     with Session(api.engine) as session, session.begin():
         session.add(Membership(subject_id=api.ids["target"], tenant_id=TENANT_A, roles=["doctor"]))
         session.add(Membership(subject_id=api.ids["patient"], tenant_id=TENANT_B, roles=["doctor"]))
+        approve_fixture_doctor(session, api.ids["target"])
     first = api.client.get(endpoint, params={"limit": 1}, headers=credential).json()
     assert len(first["items"]) == 1 and first["next_cursor"]
     second = api.client.get(

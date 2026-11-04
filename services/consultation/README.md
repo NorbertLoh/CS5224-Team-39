@@ -7,6 +7,8 @@ appointment, patient, doctor, scheduled UTC interval, state and lifecycle times.
 It contains no clinical notes, raw credentials, media or recordings. V02 adds
 hashed, single-use admission leases; see [ADMISSION.md](ADMISSION.md) for API,
 service authentication, setup and observed verification.
+Migration `0004` adds RF29 room assignments and signalling node leases. See the
+[matchmaker deployment instructions](../../docs/RF29-signalling-matchmaker.md).
 
 ## Lifecycle rules
 

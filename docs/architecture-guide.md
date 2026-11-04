@@ -2,7 +2,7 @@
 
 This guide explains the system from its overall design down to requests,
 transactions, workers and code entry points. It targets engineers working on the
-CS5224 Team 39 prototype. Source review date: **27 October 2026**.
+CS5224 Team 39 prototype. Updated for the merged RF26–RF29 changes.
 
 ## Contents
 
@@ -14,7 +14,7 @@ CS5224 Team 39 prototype. Source review date: **27 October 2026**.
 6. [Data model and security boundaries](#6-data-model-and-security-boundaries)
 7. [End-to-end workflow traces](#7-end-to-end-workflow-traces)
 8. [Events, consistency and failure recovery](#8-events-consistency-and-failure-recovery)
-9. [Local operations and proposed AWS deployment](#9-local-operations-and-proposed-aws-deployment)
+9. [Local operations and AWS configuration](#9-local-operations-and-aws-configuration)
    - [Worker diagrams and explanations](#worker-diagrams-and-explanations)
 10. [Code navigation, verification and troubleshooting](#10-code-navigation-verification-and-troubleshooting)
 
@@ -27,11 +27,10 @@ implementation. Current source takes precedence over old task prose when explain
 behavior. The [backlog](../implementation-plan.md) tracks acceptance and remaining work;
 [plan.md](../plan.md) records scope and architectural intent.
 
-The full local application is implemented. AWS infrastructure and deployed AWS
-verification remain unfinished. The generic FastAPI template is an optional
-scaffolding example, not the only runnable backend. Statements to that effect in
-older service documentation are stale. Likewise, planned React Router adoption
-does not describe the current custom route parser.
+The local application runs through Docker Compose. The AWS Terraform examples
+are implemented and tested with mocked providers. Account-specific setup and live
+AWS acceptance remain separate. The frontend uses the custom route parser
+described below, and the FastAPI template provides optional service scaffolding.
 
 ## 1. System overview and design choices
 
@@ -154,16 +153,16 @@ require their own credentials and context checks.
 
 | Service / owned schema | Owned data and decisions | Representative interfaces and dependencies | Background work / emitted events |
 | --- | --- | --- | --- |
-| Identity / `identity` | Cognito subject mapping, global roles, memberships, patient profiles | `GET /me`, `POST /me/registration`, `GET/PUT /me/patient-profile`, clinic memberships, `POST /access-decisions`, internal purpose-specific subject projections; verifies clinic context through tenant where required | No dedicated Compose worker; no event producer in current workflow contracts |
+| Identity / `identity` | Cognito subject mapping, global roles, memberships, patient profiles, doctor applications and private licence evidence | `GET /me`, `POST /me/registration`, `GET/PUT /me/patient-profile`, `/me/doctor-application`, `/platform/doctor-applications`, clinic memberships and `POST /access-decisions`; verifies clinic context through tenant where required | No dedicated Compose worker; no event producer in current workflow contracts |
 | Tenant / `tenant` | Clinics, branding, activation/review, commission settings, pickup locations, administrative audits | `/clinics`, `/clinics/by-slug/{slug}`, clinic `/review`, `/commission`, `/location`; identity creator provisioning and staff lookups; internal booking/billing/document projections | No dedicated worker or current clinic-lifecycle event route; clinic coordination uses HTTP |
 | Scheduling / `scheduling` | Fixed availability slots, holds, appointments, payment resolution/recovery | `/clinics/{tenant_id}/slots`, `/appointments`, appointment `/cancel`; internal checkout reservation, consultation start/complete, refund and notification context; tenant + billing reads | Hold expiry, payment consumption, outbox publication, resolution delivery; `appointment_confirmed.v1` |
-| Consultation / `consultation` | Session lifecycle, trusted appointment snapshot, short-lived admissions and socket leases | `/admissions`, `/appointments/{appointment_id}/start` and `/complete`; internal admissions `/consume`, `/check`, `/release`; scheduling, billing, identity and records integrations | No dedicated Compose worker; explicit retryable lifecycle handoffs |
+| Consultation / `consultation` | Session lifecycle, trusted appointment snapshot, admissions, signalling node leases and room assignments | `/admissions`, `/appointments/{appointment_id}/start` and `/complete`; internal admission checks and `/internal/signalling/heartbeat`; scheduling, billing, identity and records integrations | No dedicated Compose worker; explicit retryable lifecycle handoffs |
 | Clinical records / `clinical_records` | Notes, prescription/item versions and corrections, MC decisions, user/service read audits | Full prefix `/api/v1/clinical-records`; appointment notes/prescriptions/MC, prescription `/issue`, `/finalize-prescription` under appointment; internal dispensing/PDF projections; scheduling, identity, tenant, fulfilment context | Outbox publisher; `prescription_issued.v1`, `medical_certificate_issued.v1` |
 | Billing / `billing` | Payments, checkout attempts/keys, immutable charge/commission snapshots, webhook receipts, refund attempts | `/consultation-checkouts`, `/medication-checkouts`, `/payments`, payment `/refunds`, `/webhooks/stripe`; scheduling/tenant/fulfilment trusted sources and Stripe | Checkout expiry, webhook/payment processing, refund processing, outbox publication; the two payment-success events |
 | Document / `document` | PDF metadata, object integrity/ownership bindings, download-access audit | Full prefix `/api/v1/document/documents`, document `/{document_id}/download`; internal notification context; records projections, scheduling access rechecks and S3 | Generation consumer, outbox publisher; `document_ready.v1` |
 | Fulfilment / `fulfilment` | Catalogue/prices, prescription price snapshots, medication orders, quotes/contact snapshots, readiness, deliveries and exceptions | `/orders`, order `/quotes`, `/ready`, `/delivery-details`, `/deliveries/{delivery_id}`; internal checkout reservation; records, tenant, identity, billing and Lalamove | Payment consumer; submission, resolution, publication and tracking workers; `delivery_status_changed.v1` |
 | Notification / `notification` | Durable email jobs, event inbox, recipient/send outcome | No business HTTP API in current Compose; fetches context from identity, scheduling, document and fulfilment using scoped service credentials | Event intake and SES dispatch in `app.worker`; no downstream workflow event |
-| Signalling / no domain database | Live peer/socket bindings and transport restrictions | `/peerjs` HTTP/WSS and `/peerjs/counterpart`; consultation consumes/checks/releases admissions | Live connection/lease checks; no business event producer |
+| Signalling / no domain database | Live peer/socket bindings, node heartbeats and transport restrictions | `/peerjs/*` HTTP/WSS; managed room paths under `/peerjs/nodes/{node_id}`; consultation consumes, checks and releases admissions | Live connection and lease checks; no business event producer |
 
 Read each service's `app/main.py`, `app/api/`, `app/models.py` and
 `app/settings.py` for exact wiring. Notification uses `app/worker.py` instead of
@@ -196,6 +195,7 @@ These guards shape the UI; each backend operation independently authorises acces
 | `/patient/medication-orders` | Medication checkout and tracking |
 | `/clinic-admin/clinics/:tenantId/{profile,staff,payments,orders,appointments,settings}` | Clinic-scoped operations; braces describe alternatives, not a literal URL |
 | `/platform-admin/clinics` | Clinic review and platform operations |
+| `/join-as-doctor`, `/platform-admin/doctors` | Doctor application and platform verification review |
 
 ### Features, transport and cached state
 
@@ -215,6 +215,8 @@ query/mutation retries and focus refetch. Features explicitly opt into polling,
 invalidation and other behavior. Keys include user/session or clinic/resource
 context where required. Clinical draft autosave and video lifecycle hooks have
 their own timing; a cached component is not authority to submit a state change.
+Workspace list searches, date filters and tab totals use role-scoped API queries.
+Totals represent the filtered result across pages. [RF28 workspace filters](RF28-workspace-filters.md)
 
 ### Authentication and session lifecycle
 
@@ -400,8 +402,13 @@ Creation flows requiring idempotency also use `Idempotency-Key`.
    `POST /api/v1/tenant/clinics/{tenant_id}/review`. Approval/commission/settings
    changes are audited. Clinic states include `pending_review`, `active`,
    `rejected` and `suspended`.
-4. Authorised administration links staff through identity membership APIs. Doctor
-   availability uses `POST /api/v1/scheduling/clinics/{tenant_id}/slots`.
+4. Authorised administration links staff through identity membership APIs. An
+   assigned doctor gains clinical access when both clinic membership and platform
+   verification are active. Applicants submit licence evidence through identity,
+   and platform reviewers approve, reject or revoke verification. Revocation
+   removes doctor eligibility across clinics while retaining other granted roles.
+   Doctor availability uses `POST /api/v1/scheduling/clinics/{tenant_id}/slots`.
+   [RF28 doctor verification](RF28-doctor-verification.md)
 5. Public storefront reads use the active-clinic directory/by-slug APIs. Booking
    rechecks active clinic and doctor context on the server.
 
@@ -493,6 +500,17 @@ and only routes permitted frames between distinct admitted participants in the
 same session/tenant/appointment. General peer discovery and unauthenticated peer-ID
 allocation are disabled. Lease checks deny stale/revoked eligibility; disconnect
 cleanup releases the lease. A rejoin requests fresh admission.
+
+In the managed AWS profile, consultation uses PostgreSQL to assign both participants
+to one healthy PeerServer. The admission response carries a same-origin node path.
+Any signalling task can receive a request and forward it to the assigned task over
+the private network. Admission checks bind each grant to the node and assignment
+version. An expired owner lease lets the next admission select a replacement and
+rejects credentials for the old assignment. Browsers retry with fresh credentials
+and rebuild the call. Active sockets use ECS task protection during planned scale-in.
+The demo has one task, so recovery waits for replacement. Local Compose defaults
+to the singleton route. Both modes require consultation migration `0004` with the
+current build. [RF29 deployment and recovery](RF29-signalling-matchmaker.md)
 
 PeerJS is the signalling client/server layer. **WebRTC carries media**. STUN helps
 discover usable network candidates; TURN relays media when a direct connection
@@ -694,7 +712,7 @@ creation time and ID tie-breakers. Appointment Upcoming/Past views have their ow
 time/status ordering. Cursors bind filtering/order context; they do not grant
 authority and cannot replace current resource checks.
 
-## 9. Local operations and proposed AWS deployment
+## 9. Local operations and AWS configuration
 
 ### Local lifecycle
 
@@ -949,31 +967,42 @@ closed. Floci emulates AWS APIs; it is not a Stripe or Lalamove emulator. Unit
 tests and specific probes may use deterministic adapters, which is different from
 proving the live integrated journey.
 
-### Proposed AWS mapping — not deployed by this repository
+### Implemented AWS Terraform configuration
 
-| Current local capability | Intended AWS capability |
+| Local capability | Managed AWS profile |
 | --- | --- |
 | Vite/frontend container + local HTTPS | Built static assets in private S3 behind CloudFront with origin access control |
 | Vite API proxy | CloudFront `/api/*` -> API Gateway HTTP API -> VPC Link -> internal ALB -> service targets |
-| Independent service/worker containers | Images in ECR, independently configured ECS Fargate services/tasks |
-| Local PostgreSQL schemas/users | RDS PostgreSQL with service-owned schemas/users |
-| Local Redis | ElastiCache for Redis |
+| Independent service/worker containers | Eight business API services and five worker groups on private Fargate tasks with ECR images |
+| Document generation and notification loops | Three Lambda functions for PDF generation, notification intake and scheduled dispatch. Document outbox publishing stays on ECS |
+| Local PostgreSQL schemas/users | Encrypted private RDS PostgreSQL with service-owned schemas/users and optional Multi-AZ standby |
+| Local Redis | TLS ElastiCache for scheduling, with optional replicas and failover |
 | Floci Cognito/S3/EventBridge/SQS/SES/Secrets Manager | Real AWS services with IAM, privacy/encryption, retry and revocation validation |
-| Local signalling through Caddy | Separately secured HTTPS/WSS ALB ingress to PeerServer; planned CloudFront signalling origin |
+| Local signalling through Caddy | CloudFront `/peerjs/*` to a separate public ALB and private PeerServer tasks, with PostgreSQL room assignments |
+| Local TURN | Coturn EC2 Auto Scaling Group, stable Elastic IP pool and health-based replacement |
+| Local provider egress | NAT Gateway, with an optional gateway and private route in each availability zone |
 | Synthetic local secrets/config | Secrets Manager and task IAM roles; no emulator endpoint overrides |
 | Structured stdout and local checks | CloudWatch logs/alarms plus deployed readiness and workflow checks |
 
-The planned protected API path includes VPC Link; omitting it would leave the
-private ALB integration incomplete. Signalling does not inherit the HTTP API JWT
-authorizer: admission checks remain at the WebSocket boundary. The plan proposes
-private subnets for tasks/data, explicit security groups and outbound provider
-access through appropriate networking. TURN media also needs its own reachable
-ports/configuration; proxying signalling is not media transport.
+The managed profile validates JWTs at API Gateway and routes to the private HTTPS
+ALB through VPC Link. Signalling independently checks consultation admission at the
+WebSocket boundary. TURN handles relayed media through its own addresses and ports.
+CloudFront caches successful public clinic directory and profile responses for up
+to 60 seconds. Authenticated reads and booking decisions use the owning APIs.
 
-[infra/README.md](../infra/README.md) currently records deferred IaC work, not
-provisioned resources. Tooling, costs and infrastructure acceptance remain to be
-settled through the AWS backlog. Local Floci success does not establish AWS IAM,
-real Cognito compatibility, CloudFront routing, revocation, encryption or scaling.
+The managed demo defaults to one replica or concurrency slot per workload. Fully
+enabled, it has 14 Fargate tasks, three Lambda functions, one RDS primary, one
+ElastiCache node and one TURN host. The optional two-capacity overlay enables
+standby or additional capacity where supported. Fulfilment tracking remains a
+single poller per provider account, and FIFO consumers preserve per-group ordering.
+PDF and notification handlers use the existing inbox and domain operations, with
+partial batch failure reporting. [RF26 Lambda adapters](RF26-serverless-workers.md)
+
+The [managed root](../infra/examples/sg-managed/README.md) describes the resource
+layout, migration order and capacity settings. The [compact demo](../infra/examples/sg-demo/README.md)
+provides a smaller alternative. AWS account inputs, state bootstrap and deployment
+acceptance are tracked separately. Local and mocked checks establish configuration
+behavior. Live IAM, provider integrations and media failover require AWS testing.
 
 ## 10. Code navigation, verification and troubleshooting
 
@@ -1004,6 +1033,8 @@ contexts, retries and failure windows that happy-path route code may not explain
 | Service logic/persistence | Service-local tests and corresponding `.github/workflows/*-checks.yml` | Scope depends on fixtures and real PostgreSQL/Redis/PDF/SES dependencies; skips must be reported |
 | Full local stack | `./dev/compose.ps1 check` | Configured stack readiness, not automatic payment/video/delivery acceptance |
 | Focused cross-service probes | `tests/e2e/check_i01_journey.py` through `check_i04_journey.py`, Q02/Q03 probes | Real assertions under documented prerequisites; some create records, replay messages or touch sandboxes |
+| Signalling recovery | Consultation PostgreSQL suite, signalling `npm test`, and `apps/web/probes/video-recovery.test.mts` | Concurrent assignment, stale-owner rejection, live two-node forwarding with a service fixture, and browser retry logic |
+| AWS configuration | Terraform validation of both roots and mocked tests under `infra/modules` | Demo bounds and future capacity settings. AWS acceptance uses a deployed environment |
 
 Run service tests from their own environment to avoid collisions between each
 service's `app` package. Do not indiscriminately run journey/replay scripts as
@@ -1014,10 +1045,9 @@ Historical evidence is recorded for clinic-to-payment (I01), consultation-to-PDF
 (I02), medication payment plus sandbox delivery (I03), notifications (I04), booking
 contention/expiry (Q02), replay (Q03), and local booked video (V04). These reports
 describe their own tested state and limitations; they do not certify every later
-commit or deployed AWS behavior. RF17/RF20 manual UI follow-ups and AWS gates remain
-separately tracked. This guide was checked against source without running the
-application, charging a payment, sending email, creating a courier order or
-deploying infrastructure.
+commit or deployed AWS behavior. The backlog tracks manual UI follow-ups and AWS
+acceptance, including the deployed end-to-end journey (I05) and cross-network
+video (RF01/W11). This guide's validation covers documentation and source references.
 
 ### Troubleshooting by symptom
 

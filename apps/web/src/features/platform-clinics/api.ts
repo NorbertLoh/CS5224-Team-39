@@ -1,6 +1,8 @@
 import type { Clinic } from '@/features/clinics/api'
 import { clinicRequest } from '@/features/clinics/api'
 import type { CursorPage } from '@/lib/api-types'
+import { appendFilters, emptyFilters } from '@/lib/list-filters'
+import type { ListFilterValues } from '@/lib/list-filters'
 
 export type AdminClinic = Clinic & {
   commission_bps: number
@@ -31,12 +33,24 @@ export async function listAdminClinics(
   status: string,
   cursor: string | null,
   signal?: AbortSignal,
+  filters: ListFilterValues = emptyFilters,
 ): Promise<CursorPage<AdminClinic>> {
   const query = new URLSearchParams({ limit: '25' })
   if (status) query.set('status', status)
   if (cursor) query.set('cursor', cursor)
+  appendFilters(query, filters)
   return (
     await clinicRequest(`/admin/clinics?${query}`, { signal }, true)
+  ).json()
+}
+
+export async function clinicCounts(
+  filters: ListFilterValues,
+  signal?: AbortSignal,
+): Promise<Record<keyof typeof clinicStatuses | 'total', number>> {
+  const params = appendFilters(new URLSearchParams(), filters)
+  return (
+    await clinicRequest(`/admin/clinic-counts?${params}`, { signal }, true)
   ).json()
 }
 

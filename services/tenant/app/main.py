@@ -68,6 +68,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.add_middleware(RequestLoggingMiddleware, service="tenant")
     install_error_handlers(app)
+
+    @app.middleware("http")
+    async def cache_policy(request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("Cache-Control", "no-store")
+        return response
+
     app.include_router(router)
     app.include_router(doctors_router)
     app.include_router(admin_router)

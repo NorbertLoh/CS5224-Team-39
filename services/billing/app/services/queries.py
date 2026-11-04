@@ -3,8 +3,32 @@ from uuid import UUID
 from sqlalchemy import false, or_
 from telelink_common.access import has_tenant_role
 from telelink_common.errors import DomainError
+from telelink_common.list_filters import filter_query
 
 from app.models import Payment
+
+
+def filtered_payments(query, filters, tenant_id=None, purpose=None, status=None):
+    query = filter_query(
+        query,
+        filters,
+        Payment.created_at,
+        (
+            Payment.payment_id,
+            Payment.patient_id,
+            Payment.appointment_id,
+            Payment.order_id,
+            Payment.quote_id,
+        ),
+    )
+    for column, value in (
+        (Payment.tenant_id, tenant_id),
+        (Payment.purpose, purpose),
+        (Payment.status, status),
+    ):
+        if value is not None:
+            query = query.where(column == value)
+    return query
 
 
 def access_scope(identity, *, admin_only=False, conceal=False):

@@ -9,6 +9,8 @@ from sqlalchemy import (
     FetchedValue,
     ForeignKey,
     Index,
+    Integer,
+    LargeBinary,
     MetaData,
     Text,
     UniqueConstraint,
@@ -16,7 +18,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -107,3 +109,62 @@ class Membership(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), server_onupdate=FetchedValue()
     )
+
+
+class DoctorDocument(Base):
+    """Private evidence, served through authenticated endpoints only."""
+
+    __tablename__ = "doctor_documents"
+    __table_args__ = (
+        CheckConstraint("octet_length(content) BETWEEN 1 AND 5242880", name="ck_doctor_doc_size"),
+    )
+    document_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    subject_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("identity.subjects.subject_id", ondelete="CASCADE"), index=True
+    )
+    content_type: Mapped[str] = mapped_column(Text)
+    filename: Mapped[str | None] = mapped_column(Text)
+    content: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class DoctorApplication(Base):
+    __tablename__ = "doctor_applications"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending','approved','rejected','revoked')", name="ck_doctor_status"
+        ),
+        CheckConstraint("revision > 0", name="ck_doctor_revision"),
+    )
+    subject_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("identity.subjects.subject_id", ondelete="CASCADE"), primary_key=True
+    )
+    legal_name: Mapped[str] = mapped_column(Text)
+    licence_number: Mapped[str] = mapped_column(Text)
+    licensing_authority: Mapped[str] = mapped_column(Text)
+    specialty: Mapped[str] = mapped_column(Text)
+    document_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("identity.doctor_documents.document_id", ondelete="RESTRICT")
+    )
+    status: Mapped[str] = mapped_column(Text, default="pending")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    rejection_reason: Mapped[str | None] = mapped_column(Text)
+    submitted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reviewer_id: Mapped[UUID | None] = mapped_column(Uuid)
+
+
+class DoctorApplicationEvent(Base):
+    """Immutable submission/review snapshots, including the evidence identifier."""
+
+    __tablename__ = "doctor_application_events"
+    event_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    subject_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("identity.subjects.subject_id", ondelete="CASCADE"), index=True
+    )
+    actor_id: Mapped[UUID] = mapped_column(Uuid)
+    action: Mapped[str] = mapped_column(Text)
+    snapshot: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

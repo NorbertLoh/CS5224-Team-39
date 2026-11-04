@@ -4,8 +4,10 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
-from sqlalchemy import select, tuple_
+from pydantic import BaseModel
+from sqlalchemy import func, select, tuple_
 from telelink_common.errors import DomainError, ErrorEnvelope
+from telelink_common.list_filters import Filters, filter_query
 
 from app.api.dependencies import DB, PlatformAdmin
 from app.models import AuditEvent, Clinic
@@ -51,17 +53,20 @@ def clinics(
     request: Request,
     identity: PlatformAdmin,
     session: DB,
+    filters: Filters,
     status: ClinicStatus | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     cursor: Annotated[str | None, Query(max_length=4096)] = None,
 ):
     settings = request.app.state.settings
     cursor_key(settings)
-    query = select(Clinic)
+    query = filtered_clinics(select(Clinic), filters)
     if status is not None:
         query = query.where(Clinic.status == status)
     if cursor is not None:
-        created_at, tenant_id = decode_admin_cursor(settings, cursor, identity.subject_id, status)
+        created_at, tenant_id = decode_admin_cursor(
+            settings, cursor, identity.subject_id, status, filters.scope
+        )
         query = query.where(
             tuple_(Clinic.created_at, Clinic.tenant_id) > tuple_(created_at, tenant_id)
         )
@@ -69,13 +74,36 @@ def clinics(
         query.order_by(Clinic.created_at, Clinic.tenant_id).limit(limit + 1)
     ).all()
     next_cursor = (
-        encode_admin_cursor(settings, identity.subject_id, status, rows[limit - 1])
+        encode_admin_cursor(settings, identity.subject_id, status, rows[limit - 1], filters.scope)
         if len(rows) > limit
         else None
     )
     return ClinicAdminPage(
         items=[profile(row, admin=True) for row in rows[:limit]], next_cursor=next_cursor
     )
+
+
+class ClinicCounts(BaseModel):
+    pending_review: int = 0
+    active: int = 0
+    rejected: int = 0
+    suspended: int = 0
+    total: int = 0
+
+
+def filtered_clinics(query, filters):
+    return filter_query(
+        query, filters, Clinic.created_at, (Clinic.name, Clinic.slug, Clinic.tenant_id)
+    )
+
+
+@router.get("/admin/clinic-counts", response_model=ClinicCounts)
+def clinic_counts(identity: PlatformAdmin, session: DB, filters: Filters):
+    rows = session.execute(
+        filtered_clinics(select(Clinic.status, func.count()), filters).group_by(Clinic.status)
+    ).all()
+    counts = dict(rows)
+    return ClinicCounts(**counts, total=sum(counts.values()))
 
 
 @router.post("/clinics/{tenant_id}/review", response_model=ClinicAdmin)

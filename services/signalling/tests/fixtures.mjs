@@ -6,16 +6,17 @@ export const SECRET = 'v03-test-only-signalling-secret-at-least-32-bytes';
 export function fixtures({ ttlMs = 15000 } = {}) {
   const state = { unavailable: false, revoked: false, releases: 0, checks: 0, consumes: 0 };
   const grants = new Map();
+  const nodes = new Map();
   const subjects = new Map();
   const appointments = new Map();
-  const issue = (subject = 'patient-a', appointment = 'a') => {
+  const issue = (subject = 'patient-a', appointment = 'a', assignment = {}) => {
     if (!subjects.has(subject)) subjects.set(subject, randomUUID());
     if (!appointments.has(appointment)) appointments.set(appointment, {
       tenant_id: randomUUID(), session_id: randomUUID(), appointment_id: randomUUID(),
     });
     const token = randomBytes(32).toString('base64url');
     const grant = { ...appointments.get(appointment), peer_id: randomUUID(),
-      subject_id: subjects.get(subject), expires_at: new Date(Date.now() + ttlMs).toISOString() };
+      subject_id: subjects.get(subject), expires_at: new Date(Date.now() + ttlMs).toISOString(), ...assignment };
     grants.set(token, { grant, consumed: false, released: false });
     return { ...grant, token };
   };
@@ -26,7 +27,7 @@ export function fixtures({ ttlMs = 15000 } = {}) {
       if (request.url === '/healthz') return send(200, { fixtures: true });
       let body = '';
       for await (const chunk of request) { body += chunk; if (body.length > 4096) return send(413); }
-      body = JSON.parse(body);
+      body = body ? JSON.parse(body) : {};
       // Browser fixture issuer; unrelated/unpaid callers are never admitted.
       if (request.url === '/admissions') {
         const subject = request.headers.authorization?.replace('Bearer fixture-', '');
@@ -44,8 +45,18 @@ export function fixtures({ ttlMs = 15000 } = {}) {
       if (claims.sub !== 'signalling' || claims.iss !== 'telelink-service:signalling'
         || claims.aud !== 'telelink-consultation-admission' || claims.exp <= Date.now() / 1000) return send(401);
       if (state.unavailable) return send(503);
+      if (request.url === '/internal/signalling/heartbeat') {
+        nodes.set(body.node_id, body);
+        return send(200, { lease_seconds: 30, lease_expires_at: new Date(Date.now() + 30000).toISOString() });
+      }
+      if (request.url.startsWith('/internal/signalling/nodes/')) {
+        const node = nodes.get(request.url.split('/').at(-1));
+        return node ? send(200, { internal_url: node.internal_url }) : send(503);
+      }
       const row = grants.get(body.token);
       if (!row || row.grant.peer_id !== body.peer_id) return send(403);
+      if (row.grant.node_id && (row.grant.node_id !== body.node_id
+        || nodes.get(body.node_id)?.node_token !== body.node_token)) return send(403);
       if (request.url === '/internal/admissions/release') {
         row.released = true; state.releases++; return send(204);
       }
@@ -54,6 +65,7 @@ export function fixtures({ ttlMs = 15000 } = {}) {
         if (row.consumed || [...grants.values()].some((other) => other !== row && other.consumed
           && !other.released && other.grant.subject_id === row.grant.subject_id
           && other.grant.session_id === row.grant.session_id
+          && other.grant.assignment_version === row.grant.assignment_version
           && Date.now() < Date.parse(other.grant.expires_at))) return send(403);
         row.consumed = true; state.consumes++;
       } else if (request.url === '/internal/admissions/check') {
@@ -63,5 +75,5 @@ export function fixtures({ ttlMs = 15000 } = {}) {
       return send(200, row.grant);
     } catch { send(400); }
   });
-  return { server, issue, state, grants };
+  return { server, issue, state, grants, nodes };
 }

@@ -9,6 +9,7 @@ from sqlalchemy import Table, insert, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 from telelink_common.events import WorkflowEvent
+from telelink_common.outbox.metrics import emit_backlog
 
 MAX_BATCH = 10  # PutEvents accepts at most 10 entries per call.
 MAX_RETRY_DELAY = timedelta(minutes=5)
@@ -62,6 +63,7 @@ def publish_pending(
         raise ValueError(f"batch_size must be between 1 and {MAX_BATCH}")
     now = now or datetime.now(timezone.utc)
     with sessions.begin() as session:
+        emit_backlog(session, outbox)
         rows = session.execute(
             select(outbox)
             .where(outbox.c.published_at.is_(None), outbox.c.next_attempt_at <= now)

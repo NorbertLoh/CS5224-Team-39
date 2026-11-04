@@ -6,6 +6,67 @@
 | --- | --- | --- | --- | --- | --- |
 | [ ] | RF25 | Create a single technical architecture guide from system overview to code-level workflows; verify links, endpoints, event routes and worker commands; distinguish implemented local behavior from planned AWS work. | RF22-RF24 merged; current contracts and local Compose | M | NorbertLoh; In progress; #312 |
 
+## PostgreSQL signalling matchmaker (RF29)
+
+- [x] RF29: Add database-backed signalling server leases, transactional consultation
+  assignments and admission fencing, room-aware routing, automatic authorized browser
+  recovery and graceful draining. Keep demo capacity one; verify concurrent placement,
+  two-node routing, stale-owner rejection and reconnect/leave behavior. Dependencies:
+  V01-V04, U11 and RF12 merged; AWS configuration coordinated with RF27 #316 / #325.
+  Effort: L. NorbertLoh; issue #326 closed after PR #327 merged (`cf58f86`).
+  PostgreSQL, two-node WebSocket, browser recovery and Terraform CI passed.
+  AWS deployment evidence remains RF01/W11.
+
+## Doctor verification, workspace lists and navigation (RF28)
+
+- [x] RF28: Persist doctor applications, private licence documents and platform
+  review with approval, rejection, revocation and resubmission history. Clinic
+  assignment may precede approval; clinical access requires approved verification
+  and active membership, preserving independent roles and revoked memberships.
+  Dependencies: RF13, A06, A09-A11 and RF11 merged. Effort: L. Assignee: NorbertLoh;
+  complete; issue #320 closed; merged PR #321 (`5f1d734`) on 4 November 2026.
+
+The user-authorized scope also includes searchable workspace lists with full tab
+counters and inclusive Singapore-date filters for doctor/clinic reviews, payments
+and appointments. Authorization and filter scope bind both totals and pagination;
+appointment lists explicitly select the workspace role for mixed-role accounts.
+
+One route-aware workspace dropdown includes Patient alongside other granted
+roles, hides for patient-only accounts and keeps registration on the clinics page.
+Each workspace uses one section bar with one active underline and authorized
+clinic context. Coloured numeric badges identify action/review work or waiting
+and delivery progress; tooltips and accessible text retain status descriptions.
+Application forms, review cards and navigation badges are focused components.
+
+All 19 final PR checks passed on `e483add`: service persistence/security checks,
+Ruff, frontend lint/typecheck/build, probe typecheck, navigation role/status/render
+checks and seven session checks. Earlier isolated suites passed: identity 199,
+tenant 136, billing 319 plus 38 subtests, scheduling 267 (2 skips), and shared
+library/architecture 121 (12 environment skips). Authenticated Tailscale checks
+verified search/count/date behavior and denied unauthorized totals. The updated
+web app is healthy on the existing Tailscale setup; browser acceptance stays with
+the user as requested.
+
+Identity migrations 0004-0006 are required; the local identity database was backed
+up before applying them. Existing/seeded doctors need manual approval. No data
+reset, provider payment/courier transaction, external licence validation or AWS
+rollout was performed. Patient navbar counts use paginated existing APIs and
+refresh every 30 seconds/on focus; server aggregates can reduce cost at scale.
+
+Setup and limits: [doctor verification](docs/RF28-doctor-verification.md),
+[workspace filters](docs/RF28-workspace-filters.md),
+[navigation](apps/web/src/navigation/README.md).
+
+## Serverless workers and edge controls (31 October 2026)
+
+| Done | ID | Deliverable | Dependencies | Effort | Claim |
+| --- | --- | --- | --- | --- | --- |
+| [x] | RF26 | Add application Lambda adapters, bounded notification dispatch, NullPool connections, outbox metrics and public cache headers; preserve local workers and inbox/outbox. Terraform modules, deployment concurrency, CloudFront rules and alarms are split into RF27 (#316). Verify application tests and Lambda images. | N01/N02, P02/P03, M01-M04 complete; AWS deployment needs W01/W02/W04/W06/W08-W10/W12 and reachable owning-service APIs. Independent module/adapter implementation only until these gates complete. W01 PR #233 owns environment scaffolding. | L | NorbertLoh; complete; #314 closed; merged PR #315 (f78c767) |
+| [x] | RF27 | Author Singapore demo and managed-service Terraform with scaling/replacement/failover mechanisms and demo capacities set to one: ECS APIs/worker autoscaling, private API ALB/VPC Link, signalling, configurable RDS standby/cache replicas/AZ-local NAT, self-healing TURN ASG/EIP pool, Cognito, S3/ECR/secrets, events/queues/SES, bounded Lambda concurrency, migrations and data protection. Provide a non-default future-two overlay and explicit application singleton exceptions. Validate three modules/two examples, mocked capacities and TURN agent tests. | RF26 merged; AWS deployment still needs coordinated W01 state, owned DNS/account/provider inputs and integration verification. | L | NorbertLoh; issue #316 closed. Original PR #317 and managed refinement PR #325 (`c4315dd`) merged. Terraform and TURN agent CI passed. |
+
+Setup and verification: [RF26](docs/RF26-serverless-workers.md). No AWS deployment
+or backlog deployment gate is completed by this implementation.
+
 ## Structural refactor requested after RF21
 
 Target responsibilities and verification: [project structure](docs/project-structure.md).

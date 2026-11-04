@@ -1,0 +1,15 @@
+# FUTURE review/test overlay, not applied by default.
+# terraform plan -var-file=scale-two.tfvars.example
+# Normal terraform.tfvars supplies account/domain/images/secrets configuration.
+allow_scale_out    = true
+min_tasks          = 2
+max_tasks          = 2
+worker_min_tasks   = 2
+worker_max_tasks   = 2
+lambda_concurrency = 2
+database_multi_az  = true
+redis_node_count   = 2
+nat_gateway_count  = 2
+turn_capacity     = { min = 2, desired = 2, max = 2 }
+# Requires RF29 consultation migration and matching signalling/frontend images.
+# Fulfilment polling remains a singleton. FIFO Lambdas keep per-group ordering.

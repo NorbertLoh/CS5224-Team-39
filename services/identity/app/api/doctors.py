@@ -14,6 +14,7 @@ from app.api.dependencies import DB
 from app.api.provisioning import bearer, verify_tenant_service
 from app.models import Membership, Subject
 from app.pagination import cursor_error, cursor_key
+from app.services.doctor_verification import approved_doctor
 
 router = APIRouter(tags=["internal"])
 
@@ -81,6 +82,7 @@ def doctors(
             Membership.tenant_id == tenant_id,
             Membership.status == "active",
             Membership.roles.any("doctor"),
+            approved_doctor(Subject.subject_id),
         )
     )
     if cursor is not None:
