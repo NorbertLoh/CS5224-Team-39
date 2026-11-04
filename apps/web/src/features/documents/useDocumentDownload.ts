@@ -18,7 +18,10 @@ export function useDocumentDownload(item: DocumentMetadata, historyFor?: string)
     setRequested(false)
     try {
       const url = await documentDownloadUrl(item.document_id, pending.signal, historyFor)
-      if (pending.signal.aborted) return
+      if (pending.signal.aborted) {
+        if (url.startsWith('blob:')) URL.revokeObjectURL(url)
+        return
+      }
       const link = window.document.createElement('a')
       link.href = url
       link.referrerPolicy = 'no-referrer'
@@ -26,6 +29,8 @@ export function useDocumentDownload(item: DocumentMetadata, historyFor?: string)
       window.document.body.append(link)
       link.click()
       link.remove()
+      if (url.startsWith('blob:'))
+        window.setTimeout(() => URL.revokeObjectURL(url), 60000)
       setRequested(true)
     } catch (failure) {
       if (!pending.signal.aborted) setError(documentsError(failure))

@@ -2,6 +2,8 @@
 
 import os
 from datetime import datetime, timedelta, timezone
+from hashlib import sha256
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import Mock
 from uuid import uuid4
@@ -162,6 +164,42 @@ def api(database, monkeypatch):
 def download(api):
     client, _, row, *_ = api
     return client.get(f"{PREFIX}/{row.document_id}/download")
+
+
+def test_local_pdf_content_is_authorized_audited_and_verified(api):
+    client, state, row, database, app, storage, users = api
+    data = b"%PDF-1.7\nlocal test PDF"
+    with Session(database) as session:
+        stored = session.get(Document, row.document_id)
+        stored.size_bytes = len(data)
+        stored.sha256 = sha256(data).hexdigest()
+        session.commit()
+    storage.head_object.return_value["ContentLength"] = len(data)
+    storage.head_object.return_value["Metadata"]["sha256"] = sha256(data).hexdigest()
+    stream = BytesIO(data)
+    storage.get_object.return_value = {"Body": stream}
+    target = f"{PREFIX}/{row.document_id}/download?content=true"
+    response = client.get(target)
+    assert response.status_code == 200
+    assert response.content == data
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.headers["cache-control"] == "no-store"
+    assert stream.closed
+    app.state.downloads.signer.generate_presigned_url.assert_not_called()
+    with Session(database) as session:
+        audit = session.scalar(
+            select(AccessAudit).where(
+                AccessAudit.document_id == row.document_id, AccessAudit.action == "download"
+            )
+        )
+        assert audit.actor_id == users["patient"].subject_id
+    state["user"] = "other_patient"
+    assert client.get(target).status_code == 404
+    state["user"] = "patient"
+    storage.get_object.return_value = {"Body": BytesIO(b"%PDF-corrupted")}
+    assert client.get(target).status_code == 503
+    app.state.settings.environment = "production"
+    assert client.get(target).status_code == 404
 
 
 def test_same_clinic_history_lists_and_downloads_after_scheduling_authorizes(api):
