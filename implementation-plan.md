@@ -4,7 +4,7 @@
 
 | Done | ID | Deliverable | Dependencies | Effort | Claim |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | RF25 | Create a single technical architecture guide from system overview to code-level workflows; verify links, endpoints, event routes and worker commands; distinguish implemented local behavior from planned AWS work. | RF22-RF24 merged; current contracts and local Compose | M | NorbertLoh; In progress; #312 |
+| [x] | RF25 | Create a single technical architecture guide from system overview to code-level workflows. Verify links, routes, event contracts and worker commands. Distinguish source and configuration from deployed AWS evidence. | RF22-RF24 merged | M | NorbertLoh. PR #313 merged (`660c246`), issue #312 closed. CI and documentation checks passed. |
 
 ## PostgreSQL signalling matchmaker (RF29)
 
