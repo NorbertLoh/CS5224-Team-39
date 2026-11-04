@@ -98,9 +98,12 @@ export function PatientPrescriptionList({
           {!prescriptions.length && (
             <p role="status">No prescriptions available.</p>
           )}
-          <ul className="divide-y">
+          <ul className="space-y-3">
             {prescriptions.map((prescription) => (
-              <li key={prescription.prescription_id}>
+              <li
+                key={prescription.prescription_id}
+                className="rounded-2xl border border-slate-300 bg-white px-4 sm:px-5"
+              >
                 <PrescriptionSummary
                   prescription={prescription}
                   order={orders.data?.find(

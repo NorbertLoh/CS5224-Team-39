@@ -22,7 +22,7 @@ export function PatientOrderAccordion({
   if (!orders.length)
     return <p role="status">No medication orders to display.</p>
   return (
-    <ul className="divide-y">
+    <ul className="space-y-3">
       {orders.map((order) => {
         const current = trackingOrder(
           order,
@@ -33,7 +33,10 @@ export function PatientOrderAccordion({
         const appearance = orderAppearance(current)
         const open = selectedId === order.order_id
         return (
-          <li key={order.order_id}>
+          <li
+            key={order.order_id}
+            className="rounded-2xl border border-slate-300 bg-white px-4 sm:px-5"
+          >
             <PatientAccordionItem
               title={
                 <span className="flex flex-wrap items-center gap-2">
