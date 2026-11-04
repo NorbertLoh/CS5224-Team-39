@@ -32,6 +32,7 @@ resource "aws_lb" "demo" {
   security_groups            = [aws_security_group.alb.id]
   idle_timeout               = 120
   enable_deletion_protection = local.managed && var.deletion_protection
+  depends_on                 = [aws_internet_gateway.demo]
 }
 resource "aws_lb" "private_api" {
   count                      = local.managed ? 1 : 0
@@ -42,6 +43,7 @@ resource "aws_lb" "private_api" {
   security_groups            = [aws_security_group.private_alb[0].id]
   idle_timeout               = 120
   enable_deletion_protection = var.deletion_protection
+  depends_on                 = [aws_internet_gateway.demo]
 }
 resource "aws_route53_record" "internal_origin" {
   count   = local.managed && !var.domain_free ? 1 : 0
@@ -313,9 +315,8 @@ module "edge" {
   api_domain             = trimprefix(aws_apigatewayv2_api.http.api_endpoint, "https://")
   signalling_domain      = var.domain_free ? aws_lb.demo.dns_name : var.origin_hostname
   private_origins = var.domain_free ? {
-    signalling = { arn = aws_lb.demo.arn, domain = aws_lb.demo.dns_name }
-    internal   = { arn = aws_lb.private_api[0].arn, domain = aws_lb.private_api[0].dns_name }
+    signalling = { arn = aws_lb_listener.https.load_balancer_arn, domain = aws_lb.demo.dns_name }
+    internal   = { arn = aws_lb_listener.private.load_balancer_arn, domain = aws_lb.private_api[0].dns_name }
   } : {}
   service_source_ips = var.domain_free ? aws_eip.nat[*].public_ip : []
-  depends_on         = [aws_lb_listener.https, aws_lb_listener.private, aws_internet_gateway.demo]
 }
