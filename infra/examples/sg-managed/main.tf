@@ -35,12 +35,20 @@ module "platform" {
   allow_destroy_demo_data   = var.allow_destroy_demo_data
   service_environment       = var.service_environment
   service_secret_keys       = var.service_secret_keys
-  # Explicit single-replica ceiling, including replacement deployments.
-  max_tasks        = 1
-  allow_scale_out  = false
-  cpu_architecture = "ARM64"
-  redis_mode       = "managed"
-  egress_mode      = "gateway"
-  enable_turn      = true
+  # Configurable architecture; demo values live in capacity.tf/tfvars.
+  min_tasks          = var.min_tasks
+  max_tasks          = var.max_tasks
+  worker_min_tasks   = var.worker_min_tasks
+  worker_max_tasks   = var.worker_max_tasks
+  allow_scale_out    = var.allow_scale_out
+  lambda_concurrency = var.lambda_concurrency
+  database_multi_az  = var.database_multi_az
+  redis_node_count   = var.redis_node_count
+  nat_gateway_count  = var.nat_gateway_count
+  turn_capacity      = var.turn_capacity
+  cpu_architecture   = "ARM64"
+  redis_mode         = "managed"
+  egress_mode        = "gateway"
+  enable_turn        = true
 }
 output "platform" { value = module.platform }

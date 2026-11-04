@@ -44,4 +44,5 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - run: python -m py_compile infra/modules/demo-platform/bootstrap_database.py infra/modules/demo-platform/config_files.py
+      - run: python -m py_compile infra/modules/demo-platform/bootstrap_database.py infra/modules/demo-platform/config_files.py infra/modules/demo-platform/turn_agent.py
+      - run: python -m unittest discover -s infra/modules/demo-platform/tests -p test_turn_agent.py

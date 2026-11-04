@@ -35,16 +35,16 @@ resource "aws_route_table" "private" { vpc_id = aws_vpc.demo.id }
 resource "aws_route_table_association" "private" {
   count          = 2
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = var.egress_mode == "gateway" && var.nat_gateway_count == 2 && count.index == 1 ? aws_route_table.private_extra[0].id : aws_route_table.private.id
 }
 resource "aws_eip" "nat" {
-  count  = var.egress_mode == "gateway" ? 1 : 0
+  count  = var.egress_mode == "gateway" ? var.nat_gateway_count : 0
   domain = "vpc"
 }
 resource "aws_nat_gateway" "demo" {
-  count         = var.egress_mode == "gateway" ? 1 : 0
-  allocation_id = aws_eip.nat[0].id
-  subnet_id     = aws_subnet.public[0].id
+  count         = var.egress_mode == "gateway" ? var.nat_gateway_count : 0
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
   depends_on    = [aws_internet_gateway.demo]
 }
 resource "aws_route" "private_egress" {
@@ -52,6 +52,16 @@ resource "aws_route" "private_egress" {
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = var.egress_mode == "gateway" ? aws_nat_gateway.demo[0].id : null
   network_interface_id   = var.egress_mode == "instance" ? aws_instance.utility[0].primary_network_interface_id : null
+}
+resource "aws_route_table" "private_extra" {
+  count  = var.egress_mode == "gateway" && var.nat_gateway_count == 2 ? 1 : 0
+  vpc_id = aws_vpc.demo.id
+}
+resource "aws_route" "private_extra_egress" {
+  count                  = var.egress_mode == "gateway" && var.nat_gateway_count == 2 ? 1 : 0
+  route_table_id         = aws_route_table.private_extra[0].id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.demo[1].id
 }
 resource "aws_security_group" "workloads" {
   name_prefix = "${var.name_prefix}-tasks-"

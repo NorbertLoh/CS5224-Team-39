@@ -21,3 +21,15 @@ service_environment = {}
 service_secret_keys = {}
 # Managed profile rejects destructive bucket cleanup.
 allow_destroy_demo_data = false
+
+# Demo capacities; mechanisms remain configured and can be raised later.
+allow_scale_out    = false
+min_tasks          = 1
+max_tasks          = 1
+worker_min_tasks   = 1
+worker_max_tasks   = 1
+lambda_concurrency = 1
+database_multi_az  = false
+redis_node_count   = 1
+nat_gateway_count  = 1
+turn_capacity     = { min = 1, desired = 1, max = 1 }

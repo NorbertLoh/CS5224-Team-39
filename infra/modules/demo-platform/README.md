@@ -1,10 +1,11 @@
 # Singapore demo platform
 
-For production-oriented AWS service choices with one replica per workload, use
+For production-oriented AWS services/scaling with demo capacity defaulted to one, use
 [`sg-managed`](../../examples/sg-managed/README.md). Its `managed` deployment profile
-adds separate private API ingress and worker groups, NAT Gateway with dedicated
-TURN, production application settings and data protections. It is not HA or a
-claim of verified production readiness. The defaults below describe `sg-demo`.
+adds separate private API ingress and worker groups, NAT Gateway with TURN ASG,
+production settings and data protections. Capacities and RDS/cache/AZ failover
+settings are configurable; a future-two overlay is provided. It is not a claim
+of verified production readiness. The defaults below describe `sg-demo`.
 
 Complete reusable demo composition for RF27 / #316 / merged PR #317. Defaults are
 single-replica, single-AZ compute, small ARM Fargate tasks, one shared private

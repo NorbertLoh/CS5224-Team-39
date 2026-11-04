@@ -20,8 +20,8 @@ resource "aws_db_instance" "demo" {
   db_subnet_group_name        = aws_db_subnet_group.demo.name
   vpc_security_group_ids      = [aws_security_group.data.id]
   publicly_accessible         = false
-  multi_az                    = false
-  availability_zone           = data.aws_availability_zones.available.names[0]
+  multi_az                    = var.database_multi_az
+  availability_zone           = var.database_multi_az ? null : data.aws_availability_zones.available.names[0]
   backup_retention_period     = local.managed ? 7 : 1
   auto_minor_version_upgrade  = true
   copy_tags_to_snapshot       = true
@@ -33,23 +33,24 @@ resource "aws_db_instance" "demo" {
 resource "aws_elasticache_subnet_group" "demo" {
   count      = var.redis_mode == "managed" ? 1 : 0
   name       = var.name_prefix
-  subnet_ids = [aws_subnet.private[0].id]
+  subnet_ids = aws_subnet.private[*].id
 }
 resource "aws_elasticache_replication_group" "demo" {
-  count                      = var.redis_mode == "managed" ? 1 : 0
-  replication_group_id       = var.name_prefix
-  description                = "Single demo cache node; PostgreSQL owns booking capacity"
-  engine                     = "redis"
-  engine_version             = "7.1"
-  node_type                  = "cache.t4g.micro"
-  num_cache_clusters         = 1
-  automatic_failover_enabled = false
-  multi_az_enabled           = false
-  subnet_group_name          = aws_elasticache_subnet_group.demo[0].name
-  security_group_ids         = [aws_security_group.data.id]
-  at_rest_encryption_enabled = true
-  transit_encryption_enabled = true
-  snapshot_retention_limit   = 0
+  count                       = var.redis_mode == "managed" ? 1 : 0
+  replication_group_id        = var.name_prefix
+  description                 = "Shared Redis with configurable replicas; PostgreSQL owns booking capacity"
+  engine                      = "redis"
+  engine_version              = "7.1"
+  node_type                   = "cache.t4g.micro"
+  num_cache_clusters          = var.redis_node_count
+  preferred_cache_cluster_azs = [for index in range(var.redis_node_count) : data.aws_availability_zones.available.names[index % 2]]
+  automatic_failover_enabled  = var.redis_node_count > 1
+  multi_az_enabled            = var.redis_node_count > 1
+  subnet_group_name           = aws_elasticache_subnet_group.demo[0].name
+  security_group_ids          = [aws_security_group.data.id]
+  at_rest_encryption_enabled  = true
+  transit_encryption_enabled  = true
+  snapshot_retention_limit    = 0
   # VPC SG isolation + TLS; no Terraform-managed plaintext Redis password.
 }
 resource "aws_secretsmanager_secret" "config" {

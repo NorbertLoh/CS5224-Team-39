@@ -186,7 +186,7 @@ resource "aws_apigatewayv2_api" "http" {
 }
 resource "aws_apigatewayv2_vpc_link" "demo" {
   name               = var.name_prefix
-  subnet_ids         = [aws_subnet.private[0].id]
+  subnet_ids         = local.workload_subnets
   security_group_ids = local.managed ? [aws_security_group.vpc_link[0].id] : [aws_security_group.workloads.id]
 }
 resource "aws_apigatewayv2_integration" "alb" {

@@ -5,6 +5,8 @@ mock_provider "aws" {
   mock_data "aws_rds_engine_version" { defaults = { version = "17.6" } }
   mock_data "aws_ssm_parameter" { defaults = { value = "ami-0123456789abcdef0" } }
   mock_resource "aws_iam_role" { defaults = { arn = "arn:aws:iam::123456789012:role/demo" } }
+  mock_resource "aws_iam_instance_profile" { defaults = { arn = "arn:aws:iam::123456789012:instance-profile/demo" } }
+  mock_resource "aws_launch_template" { defaults = { id = "lt-0123456789abcdef0", latest_version = 1 } }
   mock_resource "aws_db_instance" {
     defaults = { address = "demo.rds.amazonaws.com", master_user_secret = [{ secret_arn = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:master-abcdef", kms_key_id = "test", secret_status = "active" }] }
   }
@@ -53,7 +55,7 @@ run "managed_cache_foundation" {
     error_message = "Managed Redis must use one encrypted TLS micro node without paid replicas/failover."
   }
   assert {
-    condition     = toset(aws_elasticache_subnet_group.demo[0].subnet_ids) == toset([aws_subnet.private[0].id]) && aws_elasticache_replication_group.demo[0].security_group_ids == toset([aws_security_group.data.id])
+    condition     = toset(aws_elasticache_subnet_group.demo[0].subnet_ids) == toset(aws_subnet.private[*].id) && aws_elasticache_replication_group.demo[0].security_group_ids == toset([aws_security_group.data.id])
     error_message = "ElastiCache must use the private subnet and workload-restricted data security group."
   }
   assert {
@@ -177,8 +179,12 @@ run "managed_single_replica_layout" {
     images                   = { for name in keys(run.bounded_running_demo.repositories) : name => "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/${name}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" if name != "redis" }
   }
   assert {
-    condition     = length(aws_nat_gateway.demo) == 1 && length(aws_instance.utility) == 1 && aws_instance.utility[0].source_dest_check && !strcontains(aws_instance.utility[0].user_data, "iptables -t nat -A")
-    error_message = "Managed profile must separate NAT Gateway from its dedicated non-routing TURN host."
+    condition     = length(aws_nat_gateway.demo) == 1 && length(aws_instance.utility) == 0 && length(aws_autoscaling_group.turn) == 1 && aws_autoscaling_group.turn[0].min_size == 1 && aws_autoscaling_group.turn[0].desired_capacity == 1 && aws_autoscaling_group.turn[0].max_size == 1 && !strcontains(base64decode(aws_launch_template.turn[0].user_data), "iptables -t nat -A")
+    error_message = "Managed profile must separate NAT Gateway from a self-healing TURN ASG capped at one for the demo."
+  }
+  assert {
+    condition     = length(aws_eip.turn) == 1 && one(aws_autoscaling_group.turn[0].initial_lifecycle_hook).default_result == "ABANDON" && aws_autoscaling_group.turn[0].instance_maintenance_policy[0].max_healthy_percentage == 100 && aws_autoscaling_policy.turn_cpu[0].target_tracking_configuration[0].disable_scale_in && strcontains(base64decode(aws_launch_template.turn[0].user_data), "AllowReassociation=False") && length(base64decode(aws_launch_template.turn[0].user_data)) < 16384
+    error_message = "Relay replacement must wait for readiness, stay within the demo ceiling, avoid address stealing and preserve active calls on scale-in."
   }
   assert {
     condition     = length(aws_lb.private_api) == 1 && aws_lb.private_api[0].internal && aws_lb_listener.private.protocol == "HTTPS" && aws_apigatewayv2_integration.alb.tls_config[0].server_name_to_verify == "api.internal.demo.example.org"
@@ -224,16 +230,37 @@ run "reject_managed_instance_nat" {
   expect_failures = [terraform_data.guards]
 }
 
-run "reject_managed_scale_out" {
-  command = plan
+run "future_managed_scale_out" {
+  command = apply
   variables {
     deployment_profile       = "managed"
     internal_origin_hostname = "api.internal.demo.example.org"
     egress_mode              = "gateway"
     max_tasks                = 2
+    min_tasks                = 2
+    worker_max_tasks         = 2
+    worker_min_tasks         = 2
+    lambda_concurrency       = 2
+    database_multi_az        = true
+    redis_node_count         = 2
+    nat_gateway_count        = 2
+    turn_capacity            = { min = 2, desired = 2, max = 2 }
+    enable_workloads         = true
+    images                   = { for name in keys(run.bounded_running_demo.repositories) : name => "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/${name}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" if name != "redis" }
     allow_scale_out          = true
   }
-  expect_failures = [terraform_data.guards]
+  assert {
+    condition     = alltrue([for target in aws_appautoscaling_target.api : target.min_capacity == 2 && target.max_capacity == 2]) && aws_appautoscaling_target.worker["scheduling"].max_capacity == 2 && aws_appautoscaling_target.worker["fulfilment"].max_capacity == 1 && aws_ecs_service.signalling[0].desired_count == 1
+    error_message = "Configurable APIs/workers may scale while stateful PeerJS and provider-account polling retain explicit singleton limits."
+  }
+  assert {
+    condition     = aws_db_instance.demo.multi_az && aws_elasticache_replication_group.demo[0].num_cache_clusters == 2 && aws_elasticache_replication_group.demo[0].automatic_failover_enabled && aws_elasticache_replication_group.demo[0].multi_az_enabled && length(aws_nat_gateway.demo) == 2 && length(aws_route.private_extra_egress) == 1
+    error_message = "Future HA must enable the RDS standby, cache promotion and AZ-local NAT routes through settings."
+  }
+  assert {
+    condition     = aws_autoscaling_group.turn[0].min_size == 2 && aws_autoscaling_group.turn[0].max_size == 2 && length(aws_eip.turn) == 2 && length(output.turn_urls) == 4 && length(aws_autoscaling_group.turn[0].vpc_zone_identifier) == 2 && alltrue([for limit in values(module.jobs[0].concurrency_limits) : limit == 2])
+    error_message = "Future relay fleet spans both AZs with one address per capacity slot; Lambda reservations follow configuration."
+  }
 }
 
 run "managed_origin_certificate" {

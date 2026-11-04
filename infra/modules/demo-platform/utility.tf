@@ -40,7 +40,7 @@ resource "aws_security_group" "utility" {
   }
 }
 resource "aws_eip" "utility" {
-  count  = local.utility_needed ? 1 : 0
+  count  = local.legacy_utility ? 1 : 0
   domain = "vpc"
 }
 resource "aws_iam_role" "utility" {
@@ -64,7 +64,7 @@ resource "aws_iam_instance_profile" "utility" {
   role  = aws_iam_role.utility[0].name
 }
 resource "aws_instance" "utility" {
-  count                       = local.utility_needed ? 1 : 0
+  count                       = local.legacy_utility ? 1 : 0
   ami                         = data.aws_ssm_parameter.ubuntu[0].value
   instance_type               = "t4g.nano"
   subnet_id                   = aws_subnet.public[0].id
@@ -95,7 +95,7 @@ resource "aws_instance" "utility" {
   depends_on = [aws_route.internet, aws_iam_role_policy.utility_secret]
 }
 resource "aws_eip_association" "utility" {
-  count         = local.utility_needed ? 1 : 0
+  count         = local.legacy_utility ? 1 : 0
   instance_id   = aws_instance.utility[0].id
   allocation_id = aws_eip.utility[0].id
 }

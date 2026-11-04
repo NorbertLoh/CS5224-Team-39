@@ -37,6 +37,7 @@ locals {
   service_urls           = { for s in local.services : s => "${local.origin}/api/v1/${local.paths[s]}" }
   task_services          = length(var.images) > 0 ? local.services : toset([])
   utility_needed         = var.egress_mode == "instance" || var.enable_turn
+  legacy_utility         = local.utility_needed && (!local.managed || var.egress_mode == "instance")
 }
 
 resource "terraform_data" "guards" {
@@ -46,12 +47,16 @@ resource "terraform_data" "guards" {
       error_message = "This demo is restricted to Singapore (ap-southeast-1)."
     }
     precondition {
-      condition     = var.max_tasks == 1 || var.allow_scale_out
-      error_message = "The demo is capped at one task; enable_scale_out budget approval must be explicit."
+      condition     = (var.max_tasks == 1 && var.worker_max_tasks == 1 && var.turn_capacity.max == 1 && var.lambda_concurrency == 1 && var.redis_node_count == 1 && var.nat_gateway_count == 1 && !var.database_multi_az) || var.allow_scale_out
+      error_message = "Demo capacity defaults are one. Raising replicas/concurrency or enabling HA requires allow_scale_out=true."
     }
     precondition {
-      condition     = !local.managed || (var.egress_mode == "gateway" && var.redis_mode == "managed" && var.max_tasks == 1 && !var.allow_scale_out && !var.allow_destroy_demo_data && can(regex("^[a-zA-Z0-9][a-zA-Z0-9.-]+[a-zA-Z0-9]$", var.internal_origin_hostname)) && var.internal_origin_hostname != var.origin_hostname)
-      error_message = "Managed profile requires NAT Gateway, ElastiCache, max_tasks=1, no scale-out/destructive bucket cleanup, and a distinct internal origin DNS name."
+      condition     = !local.managed || (var.egress_mode == "gateway" && var.redis_mode == "managed" && !var.allow_destroy_demo_data && can(regex("^[a-zA-Z0-9][a-zA-Z0-9.-]+[a-zA-Z0-9]$", var.internal_origin_hostname)) && var.internal_origin_hostname != var.origin_hostname)
+      error_message = "Managed profile requires NAT Gateway, ElastiCache, no destructive bucket cleanup and a distinct internal origin DNS name."
+    }
+    precondition {
+      condition     = var.min_tasks <= var.max_tasks && var.worker_min_tasks <= var.worker_max_tasks
+      error_message = "API and worker minima cannot exceed their maxima."
     }
     precondition {
       condition     = (!var.enable_workloads && length(var.images) == 0) || alltrue([for k in setunion(local.services, toset(["notification", "signalling", "document-lambda", "notification-lambda"]), var.redis_mode == "sidecar" ? toset(["redis"]) : toset([])) : contains(keys(var.images), k)])

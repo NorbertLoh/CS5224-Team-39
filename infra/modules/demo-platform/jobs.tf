@@ -4,7 +4,7 @@ module "jobs" {
   name_prefix         = var.name_prefix
   environment         = local.environment
   log_retention_days  = local.log_retention
-  subnet_ids          = [aws_subnet.private[0].id]
+  subnet_ids          = local.workload_subnets
   security_group_ids  = [aws_security_group.workloads.id]
   document_bucket_arn = aws_s3_bucket.storage["documents"].arn
   ses_identity_arn    = aws_ses_email_identity.sender.arn
@@ -12,17 +12,17 @@ module "jobs" {
   workers = {
     document = {
       image_uri   = var.images["document-lambda"], config_secret_arn = aws_secretsmanager_secret.config["document"].arn,
-      concurrency = 1, timeout_seconds = 120, memory_mb = 512,
+      concurrency = var.lambda_concurrency, timeout_seconds = 120, memory_mb = 512,
       environment = { for k, v in local.public_env["document"] : k => v if k != "SERVICE_ENVIRONMENT" }
     }
     notification-intake = {
       image_uri   = var.images["notification-lambda"], config_secret_arn = aws_secretsmanager_secret.config["notification"].arn,
-      concurrency = 1, timeout_seconds = 60, memory_mb = 256,
+      concurrency = var.lambda_concurrency, timeout_seconds = 60, memory_mb = 256,
       environment = local.notification_environment
     }
     notification-dispatch = {
       image_uri   = var.images["notification-lambda"], config_secret_arn = aws_secretsmanager_secret.config["notification"].arn,
-      concurrency = 1, timeout_seconds = 60, memory_mb = 256,
+      concurrency = var.lambda_concurrency, timeout_seconds = 60, memory_mb = 256,
       environment = local.notification_environment
     }
   }
