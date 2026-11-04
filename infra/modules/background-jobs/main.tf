@@ -52,7 +52,8 @@ resource "aws_iam_role_policy" "worker" {
         Resource = var.consumer_queues[each.key].arn
       }] : [], each.key == "document" ? [
       {
-        Effect = "Allow", Action = ["s3:GetBucketPublicAccessBlock"], Resource = var.document_bucket_arn
+        # GetObject returns 403 for a missing PDF unless the caller can list its bucket.
+        Effect = "Allow", Action = ["s3:GetBucketPublicAccessBlock", "s3:ListBucket"], Resource = var.document_bucket_arn
       },
       {
         Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject"], Resource = "${var.document_bucket_arn}/*"
