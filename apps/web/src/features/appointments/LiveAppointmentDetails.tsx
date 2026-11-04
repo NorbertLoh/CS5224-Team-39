@@ -64,7 +64,7 @@ export function LiveAppointmentDetails({
       (role === 'patient' && appointment.patient_id === subjectId)) &&
     canCancel(appointment)
   return (
-    <div className="space-y-4">
+    <div className="mt-4 space-y-4">
       <AppointmentDetails appointment={appointment} onClose={onClose} />
       {role === 'patient' && appointment.patient_id === subjectId && (
         <AppointmentPaymentAction appointment={appointment} />

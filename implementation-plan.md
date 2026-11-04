@@ -12,6 +12,8 @@
   Demo-patient browser check confirmed Upcoming details omit Documents and Past
   completed details retain the prescription download. No appointment data changed.
   No migration or configuration changes.
+  User refinement: add a small gap below the appointment count and above selected
+  appointment details in both Upcoming and Past, scoped to appointment components.
 
 ## Anytime consultation access (RF36)
 

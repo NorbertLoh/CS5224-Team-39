@@ -141,7 +141,7 @@ export function AppointmentPeriods({
           <>
             {appointments.length ? (
               <>
-                <p role="status" className="text-sm text-slate-600">
+                <p role="status" className="mb-3 text-sm text-slate-600">
                   {appointments.length}{' '}
                   {appointments.length === 1 ? 'appointment' : 'appointments'}{' '}
                   shown
