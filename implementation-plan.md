@@ -2,10 +2,10 @@
 
 ## Terraform PDF download configuration (RF48)
 
-- [ ] RF48: Configure authenticated PDF content downloads in the Terraform
+- [x] RF48: Configure authenticated PDF content downloads in the Terraform
   document API and frontend release settings. Verify mocked infrastructure,
   release validation and production API access. Dependencies RF47/RF32 merged.
-  Effort S. NorbertLoh, issue #367 In progress.
+  Effort S. NorbertLoh. PR #368 merged; issue #367 closed.
 
 ## Tailscale PDF downloads (RF47)
 
