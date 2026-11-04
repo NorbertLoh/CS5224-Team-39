@@ -115,6 +115,11 @@
   No clinic application was submitted during browser verification; AWS deployment
   remains unverified.
 
+## Patient prescription payment badge (RF42)
+
+- [ ] RF42: Show a red count for patient prescriptions awaiting payment.
+  Dependency RF24 merged. Effort S. NorbertLoh; In progress; issue #355.
+
 ## Production release preparation (RF31)
 
 - [ ] RF31: Prepare all AMD64 API/worker/migration and signalling images, AMD64

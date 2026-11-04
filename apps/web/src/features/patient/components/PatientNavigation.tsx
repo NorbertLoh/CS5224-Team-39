@@ -51,7 +51,9 @@ export function PatientNavigation({
             ? attention.appointments
             : href === '/patient/medication-orders'
               ? attention.orders
-              : undefined,
+              : href === '/patient/prescriptions'
+                ? attention.prescriptions
+                : undefined,
       }))}
     />
   )
