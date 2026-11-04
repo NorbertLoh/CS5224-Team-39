@@ -1,16 +1,19 @@
 import { currentIdentity } from '@/auth/identity'
-import { readSession } from '@/auth/session'
+import { accessTokenPrincipal, readSession } from '@/auth/session'
 import { useQuery } from '@tanstack/react-query'
 
-export function useSchedulingIdentity() {
+export function useSchedulingIdentity(stableAcrossRefresh = false) {
   const token = readSession()?.accessToken
+  const principal =
+    stableAcrossRefresh && token ? accessTokenPrincipal(token) : null
+  const cacheKey = principal ?? token
   const identity = useQuery({
-    queryKey: ['identity', token],
+    queryKey: [principal ? 'consultation-identity' : 'identity', cacheKey],
     queryFn: currentIdentity,
     enabled: Boolean(token),
     staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: 30000,
   })
-  return { ...identity, token }
+  return { ...identity, token, cacheKey }
 }

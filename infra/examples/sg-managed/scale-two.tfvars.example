@@ -11,5 +11,5 @@ database_multi_az  = true
 redis_node_count   = 2
 nat_gateway_count  = 2
 turn_capacity     = { min = 2, desired = 2, max = 2 }
-# PeerJS and fulfilment polling remain singletons until their application/provider
-# routing/coordination changes are verified. FIFO Lambdas keep per-group ordering.
+# Requires RF29 consultation migration and matching signalling/frontend images.
+# Fulfilment polling remains a singleton. FIFO Lambdas keep per-group ordering.

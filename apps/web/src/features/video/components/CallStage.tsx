@@ -109,22 +109,26 @@ export function CallStage({
             )}
           </div>
           <h2 className="mt-5 text-xl font-medium">
-            {state === 'joining' || state === 'connecting'
-              ? 'Connecting your call'
-              : waiting
-                ? `Waiting for your ${peer}`
-                : state === 'left'
-                  ? 'You have left the room'
-                  : 'Your connection was interrupted'}
+            {state === 'reconnecting'
+              ? 'Reconnecting your call'
+              : state === 'joining' || state === 'connecting'
+                ? 'Connecting your call'
+                : waiting
+                  ? `Waiting for your ${peer}`
+                  : state === 'left'
+                    ? 'You have left the room'
+                    : 'Your connection was interrupted'}
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-400">
-            {state === 'joining' || state === 'connecting'
-              ? 'Please wait while the call connects.'
-              : waiting
-                ? live
-                  ? 'The other participant will appear here when connected.'
-                  : 'Open a booked appointment to join a live consultation.'
-                : 'Rejoin when you are ready. Your camera and microphone will be requested again.'}
+            {state === 'reconnecting'
+              ? 'We are requesting fresh access. You can leave the call at any time.'
+              : state === 'joining' || state === 'connecting'
+                ? 'Please wait while the call connects.'
+                : waiting
+                  ? live
+                    ? 'The other participant will appear here when connected.'
+                    : 'Open a booked appointment to join a live consultation.'
+                  : 'Rejoin when you are ready. Your camera and microphone will be requested again.'}
           </p>
           {!expanded && (
             <button

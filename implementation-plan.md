@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## PostgreSQL signalling matchmaker (RF29)
+
+- [ ] RF29: Add database-backed signalling server leases, transactional consultation
+  assignments and admission fencing, room-aware routing, automatic authorized browser
+  recovery and graceful draining. Keep demo capacity one; verify concurrent placement,
+  two-node routing, stale-owner rejection and reconnect/leave behavior. Dependencies:
+  V01-V04, U11 and RF12 merged; AWS configuration coordinated with RF27 #316 / #325.
+  Effort: L. NorbertLoh; issue #326 In progress. AWS deployment evidence remains RF01/W11.
+
 ## Doctor verification, workspace lists and navigation (RF28)
 
 - [x] RF28: Persist doctor applications, private licence documents and platform

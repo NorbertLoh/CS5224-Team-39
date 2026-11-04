@@ -25,6 +25,8 @@ export function admissionTransport(options, admissions, config) {
     pending++;
     socket.pause();
     try {
+      if (!config.origins.includes(request.headers.origin)) throw new Error('Origin denied');
+      if (config.router && await config.router.upgrade(request, socket, head)) return;
       const url = new URL(request.url, 'http://localhost');
       const query = url.searchParams;
       if (url.pathname !== options.path || query.get('key') !== config.key
@@ -32,6 +34,7 @@ export function admissionTransport(options, admissions, config) {
         || ['id', 'token', 'key'].some((name) => query.getAll(name).length !== 1)
         || !validCredential(query.get('token'), query.get('id'))) throw new Error('Admission denied');
       grant = await admissions.consume(query.get('token'), query.get('id'));
+      await config.protection?.ensure();
       if (draining || socket.destroyed || Date.now() >= grant.expiresAt || active.has(grant.peerId)
         || [...active.values()].some(({ grant: other }) => other.sessionId === grant.sessionId
           && other.subject === grant.subject)) throw new Error('Admission denied');
@@ -132,5 +135,7 @@ export function admissionTransport(options, admissions, config) {
     draining = true;
     for (const { deny } of [...active.values()]) deny();
   };
+  transport.activeCount = () => active.size;
+  transport.pendingCount = () => pending;
   return transport;
 }

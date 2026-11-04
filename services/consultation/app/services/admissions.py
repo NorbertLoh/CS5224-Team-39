@@ -9,6 +9,7 @@ from sqlalchemy import select
 from telelink_common.errors import DomainError
 
 from app.models import Admission, ConsultationSession
+from app.services import matchmaker
 from app.services.lifecycle import can_join, ensure_session, locked_session
 
 CONTEXT_FIELDS = ("appointment_id", "tenant_id", "patient_id", "doctor_id", "starts_at", "ends_at")
@@ -34,6 +35,8 @@ def lease_public(lease, record):
         subject_id=lease.subject_id,
         peer_id=lease.peer_id,
         expires_at=lease.expires_at,
+        node_id=lease.node_id,
+        assignment_version=lease.assignment_version,
     )
 
 
@@ -52,11 +55,19 @@ def issue(db, sources, settings, appointment_id, identity, request_id):
     if not can_join(record, now=instant, early_minutes=settings.test_join_early_minutes):
         denied()
     lease = db.get(Admission, (record.session_id, identity.subject_id), populate_existing=True)
+    assignment = matchmaker.assign(db, record) if settings.signalling_matchmaker else None
     if (
         lease is not None
         and lease.consumed_at is not None
         and lease.released_at is None
         and instant < lease.expires_at
+        and (
+            assignment is None
+            or (
+                lease.node_id == assignment.node_id
+                and lease.assignment_version == assignment.version
+            )
+        )
     ):
         raise DomainError(
             409, "participant_connected", "Participant already has an active admission."
@@ -73,8 +84,14 @@ def issue(db, sources, settings, appointment_id, identity, request_id):
     if record.status == "scheduled":
         lease.expires_at = min(lease.expires_at, record.ends_at)
     lease.consumed_at = lease.released_at = None
+    lease.node_id = assignment.node_id if assignment else None
+    lease.assignment_version = assignment.version if assignment else None
     db.flush()
-    return {**lease_public(lease, record), "token": token}
+    return {
+        **lease_public(lease, record),
+        "token": token,
+        "signalling_path": f"/peerjs/nodes/{assignment.node_id}" if assignment else "/peerjs",
+    }
 
 
 def bound_lease(db, token, peer_id):
@@ -116,19 +133,21 @@ def validate_live(db, sources, record, lease, request_id):
     return instant
 
 
-def consume(db, sources, token, peer_id, request_id, *, check=False):
+def consume(db, sources, token, peer_id, request_id, *, check=False, node_id=None, node_token=None):
     record, lease = bound_lease(db, token, peer_id)
     if (check and lease.consumed_at is None) or (not check and lease.consumed_at is not None):
         denied()
     instant = validate_live(db, sources, record, lease, request_id)
+    matchmaker.validate(db, sources.settings, record, lease, node_id, node_token)
     if not check:
         lease.consumed_at = instant
         db.flush()
     return lease_public(lease, record)
 
 
-def release(db, token, peer_id):
-    _, lease = bound_lease(db, token, peer_id)
+def release(db, token, peer_id, *, settings, node_id=None, node_token=None):
+    record, lease = bound_lease(db, token, peer_id)
+    matchmaker.validate(db, settings, record, lease, node_id, node_token)
     if lease.consumed_at is None:
         denied()
     if lease.released_at is None:

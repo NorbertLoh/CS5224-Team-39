@@ -138,6 +138,19 @@ resource "aws_vpc_security_group_ingress_rule" "signalling" {
   to_port                      = 9000
   ip_protocol                  = "tcp"
 }
+resource "aws_security_group" "signalling_nodes" {
+  count       = local.managed ? 1 : 0
+  name_prefix = "${var.name_prefix}-signalling-nodes-"
+  vpc_id      = aws_vpc.demo.id
+}
+resource "aws_vpc_security_group_ingress_rule" "signalling_peer" {
+  count                        = local.managed ? 1 : 0
+  security_group_id            = aws_security_group.signalling_nodes[0].id
+  referenced_security_group_id = aws_security_group.signalling_nodes[0].id
+  from_port                    = 9000
+  to_port                      = 9000
+  ip_protocol                  = "tcp"
+}
 resource "aws_security_group" "data" {
   name_prefix = "${var.name_prefix}-data-"
   vpc_id      = aws_vpc.demo.id

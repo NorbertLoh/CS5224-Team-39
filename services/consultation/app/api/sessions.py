@@ -57,7 +57,13 @@ def issue(body: AdmissionRequest, request: Request, identity: Identity, session:
 @router.post("/internal/admissions/consume", response_model=LeasePublic, tags=["internal"])
 def consume(body: LeaseRequest, request: Request, caller: Signalling, session: DB):
     result = admissions.consume(
-        session, request.app.state.sources, body.token, body.peer_id, request.state.request_id
+        session,
+        request.app.state.sources,
+        body.token,
+        body.peer_id,
+        request.state.request_id,
+        node_id=body.node_id,
+        node_token=body.node_token,
     )
     session.commit()
     return result
@@ -72,11 +78,20 @@ def check(body: LeaseRequest, request: Request, caller: Signalling, session: DB)
         body.peer_id,
         request.state.request_id,
         check=True,
+        node_id=body.node_id,
+        node_token=body.node_token,
     )
 
 
 @router.post("/internal/admissions/release", status_code=204, tags=["internal"])
-def release(body: LeaseRequest, caller: Signalling, session: DB):
-    admissions.release(session, body.token, body.peer_id)
+def release(body: LeaseRequest, request: Request, caller: Signalling, session: DB):
+    admissions.release(
+        session,
+        body.token,
+        body.peer_id,
+        settings=request.app.state.settings,
+        node_id=body.node_id,
+        node_token=body.node_token,
+    )
     session.commit()
     return Response(status_code=204)

@@ -206,7 +206,7 @@ PeerServer handles signalling; it does not relay audio/video. WebRTC media may t
 - Prototype one patient + one doctor in separate networks early, including TURN-only connectivity.
 - Proposed AWS TURN option: coturn on EC2 with a stable public address and explicitly configured relay ports. This is an additional component missing from the diagram; confirm budget and network configuration before implementation.
 - Use expiring TURN credentials. Do not route TURN media through CloudFront or the HTTP ALB.
-- Start PeerServer as one replica. Do not enable multi-replica scaling until signalling state, reconnection and affinity behaviour are proven.
+- Start PeerServer as one replica for the demo. RF29 assigns consultations to healthy tasks using PostgreSQL leases and routes both participants to the owner. Verify two-task recovery on AWS before raising capacity for users. [RF29 setup and verification](docs/RF29-signalling-matchmaker.md)
 - Define disconnect/rejoin behaviour and graceful deployment draining. No recording in the initial scope.
 
 ## 8. Data consistency and workflow rules

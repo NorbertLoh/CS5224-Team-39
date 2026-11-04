@@ -86,7 +86,9 @@ locals {
       SERVICE_LOGO_BUCKET          = aws_s3_bucket.storage["logos"].id
       SERVICE_LOGO_PUBLIC_BASE_URL = "https://${module.edge.domain_name}"
       } : {}, s == "consultation" ? {
-      SERVICE_TURN_URLS = jsonencode(local.turn_urls)
+      SERVICE_TURN_URLS             = jsonencode(local.turn_urls)
+      SERVICE_SIGNALLING_MATCHMAKER = tostring(local.managed)
+      SERVICE_SIGNALLING_NETWORKS   = jsonencode(aws_subnet.private[*].cidr_block)
       } : {}, s == "billing" ? {
       SERVICE_CHECKOUT_SUCCESS_URL = "https://${module.edge.domain_name}/payments/return"
       SERVICE_CHECKOUT_CANCEL_URL  = "https://${module.edge.domain_name}/appointments"
@@ -202,10 +204,14 @@ resource "aws_ecs_task_definition" "signalling" {
   }
   container_definitions = jsonencode([{
     name         = "signalling", image = var.images["signalling"], essential = true
+    stopTimeout  = 120
     portMappings = [{ containerPort = 9000, protocol = "tcp" }]
     environment = [for k, v in {
-      SIGNALLING_ENVIRONMENT = "production", SIGNALLING_HOST = "0.0.0.0", SIGNALLING_PORT = "9000",
-      SIGNALLING_ORIGINS     = "https://${module.edge.domain_name}", CONSULTATION_URL = local.service_urls["consultation"]
+      SIGNALLING_ENVIRONMENT             = "production", SIGNALLING_HOST = "0.0.0.0", SIGNALLING_PORT = "9000",
+      SIGNALLING_ORIGINS                 = "https://${module.edge.domain_name}", CONSULTATION_URL = local.service_urls["consultation"]
+      SIGNALLING_MATCHMAKER              = tostring(local.managed)
+      SIGNALLING_REQUIRE_TASK_PROTECTION = tostring(local.managed)
+      SIGNALLING_DRAIN_SECONDS           = "110"
     } : { name = k, value = v }]
     secrets          = [{ name = "SIGNALLING_SECRET", valueFrom = "${aws_secretsmanager_secret.config["signalling"].arn}:signalling_secret::" }]
     logConfiguration = local.logs["signalling"]
@@ -216,13 +222,13 @@ resource "aws_ecs_service" "signalling" {
   name                               = "signalling"
   cluster                            = aws_ecs_cluster.demo.id
   task_definition                    = aws_ecs_task_definition.signalling[0].arn
-  desired_count                      = 1
+  desired_count                      = local.managed ? var.min_tasks : 1
   launch_type                        = "FARGATE"
-  deployment_minimum_healthy_percent = 0
+  deployment_minimum_healthy_percent = local.managed && var.min_tasks > 1 ? 50 : 0
   deployment_maximum_percent         = 100
   network_configuration {
     subnets          = local.workload_subnets
-    security_groups  = [aws_security_group.workloads.id]
+    security_groups  = concat([aws_security_group.workloads.id], local.managed ? [aws_security_group.signalling_nodes[0].id] : [])
     assign_public_ip = false
   }
   load_balancer {
@@ -231,4 +237,41 @@ resource "aws_ecs_service" "signalling" {
     container_port   = 9000
   }
   depends_on = [aws_lb_listener_rule.signalling, aws_route.private_egress, aws_route53_record.internal_origin]
+  lifecycle { ignore_changes = [desired_count] }
+}
+
+resource "aws_iam_role_policy" "signalling_protection" {
+  count = local.managed ? 1 : 0
+  role  = aws_iam_role.task["signalling"].id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow", Action = ["ecs:GetTaskProtection", "ecs:UpdateTaskProtection"],
+      Resource = "arn:aws:ecs:ap-southeast-1:${data.aws_caller_identity.current.account_id}:task/${aws_ecs_cluster.demo.name}/*"
+    }]
+  })
+}
+
+resource "aws_appautoscaling_target" "signalling" {
+  count              = local.managed && var.enable_workloads ? 1 : 0
+  min_capacity       = var.min_tasks
+  max_capacity       = var.max_tasks
+  resource_id        = "service/${aws_ecs_cluster.demo.name}/${aws_ecs_service.signalling[0].name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "signalling" {
+  count              = local.managed && var.enable_workloads ? 1 : 0
+  name               = "${var.name_prefix}-signalling-cpu"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.signalling[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.signalling[0].scalable_dimension
+  service_namespace  = "ecs"
+  target_tracking_scaling_policy_configuration {
+    target_value       = 60
+    scale_in_cooldown  = 180
+    scale_out_cooldown = 60
+    predefined_metric_specification { predefined_metric_type = "ECSServiceAverageCPUUtilization" }
+  }
 }
