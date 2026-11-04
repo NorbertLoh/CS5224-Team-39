@@ -1,5 +1,11 @@
 # TeleLink Health: shared implementation backlog
 
+## Website icon (RF49)
+
+- [ ] RF49: Generate a teal TeleLink Health icon, save the asset in the
+  frontend and link it as the browser favicon. Verify a production build.
+  Dependencies F06/RF03 complete. Effort S. NorbertLoh, issue #369 In progress.
+
 ## Terraform PDF download configuration (RF48)
 
 - [x] RF48: Configure authenticated PDF content downloads in the Terraform
