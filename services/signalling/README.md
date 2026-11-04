@@ -89,10 +89,11 @@ before PeerServer can route/queue them. Both source and destination leases are
 checked through V02 before routing, then checked locally again after the awaits.
 
 An idle eligibility check runs every two seconds. A failed/denied/timed-out check
-closes the socket; a separate timer enforces the original lease deadline even
-without traffic. No check extends expiry. V02's default 60-second lease means a
-fresh admission/peer ID is needed to reconnect after expiry. Automatic PeerJS
-reconnect with the old credential is denied. Disconnect/failed upgrade releases
+closes the socket. RF30 lets the participant renew its active lease through the
+consultation API. Signalling checks observe that renewed deadline and keep the
+same WebSocket registered. A separate timer enforces expiry when renewal stops.
+Expired connections require a fresh admission and peer ID. Reusing the old
+consumed credential for another upgrade is denied. Disconnect/failed upgrade releases
 the lease; release is idempotent with at most three bounded attempts. A lost
 release recovers at lease expiry. The local routing slot is removed immediately
 on denial, before waiting for the close handshake.

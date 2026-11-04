@@ -62,7 +62,7 @@ connection limit and 1 KiB body limit. Existing frame isolation still applies.
 Admission includes `ice_servers` and `relay_only`. For coturn REST auth configure
 consultation's JSON `SERVICE_TURN_URLS` list and an independent `SERVICE_TURN_SECRET`
 of at least 32 bytes matching coturn. `SERVICE_RELAY_ONLY=true` requires TURN.
-Credentials use the issued peer ID and admission expiry with coturn's HMAC-SHA1
+RF30 credentials use the issued peer ID and fixed call deadline with coturn's HMAC-SHA1
 REST format. The shared secret stays on the server. Without configured TURN the
 ICE list is empty, suitable only where direct connectivity succeeds. Reachable
 TURN infrastructure is still required for restrictive networks.
