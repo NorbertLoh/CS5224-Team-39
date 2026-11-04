@@ -1,6 +1,37 @@
 data "aws_cloudfront_cache_policy" "disabled" { name = "Managed-CachingDisabled" }
 data "aws_cloudfront_cache_policy" "assets" { name = "Managed-CachingOptimized" }
 data "aws_cloudfront_origin_request_policy" "api" { name = "Managed-AllViewerExceptHostHeader" }
+data "aws_cloudfront_response_headers_policy" "security" { name = "Managed-SecurityHeadersPolicy" }
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudfront_vpc_origin" "private" {
+  for_each = var.private_origins
+  vpc_origin_endpoint_config {
+    name                   = "${var.name_prefix}-${each.key}"
+    arn                    = each.value.arn
+    http_port              = 80
+    https_port             = 443
+    origin_protocol_policy = "http-only"
+    origin_ssl_protocols {
+      items    = ["TLSv1.2"]
+      quantity = 1
+    }
+  }
+}
+
+resource "aws_cloudfront_function" "service" {
+  count   = contains(keys(var.private_origins), "internal") ? 1 : 0
+  name    = "${var.name_prefix}-private-service"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = templatefile("${path.module}/service-route.js.tftpl", { allowed_sources = jsonencode(var.service_source_ips) })
+  lifecycle {
+    precondition {
+      condition     = length(var.service_source_ips) > 0
+      error_message = "The private service path requires explicit NAT egress addresses."
+    }
+  }
+}
 
 resource "aws_cloudfront_cache_policy" "public_clinics" {
   name        = "${var.name_prefix}-public-clinics"
@@ -76,11 +107,12 @@ resource "aws_cloudfront_distribution" "app" {
     s3_origin_config { origin_access_identity = "" }
   }
   dynamic "origin" {
-    for_each = { api = var.api_domain, signalling = var.signalling_domain }
+    for_each = merge({ api = var.api_domain }, contains(keys(var.private_origins), "signalling") ? {} : { signalling = var.signalling_domain })
     content {
       domain_name = origin.value
       origin_id   = origin.key
       custom_origin_config {
+        ip_address_type        = "ipv4"
         http_port              = 80
         https_port             = 443
         origin_protocol_policy = "https-only"
@@ -89,6 +121,34 @@ resource "aws_cloudfront_distribution" "app" {
     }
   }
 
+  dynamic "origin" {
+    for_each = var.private_origins
+    content {
+      domain_name = origin.value.domain
+      origin_id   = origin.key
+      vpc_origin_config {
+        vpc_origin_id    = aws_cloudfront_vpc_origin.private[origin.key].id
+        owner_account_id = data.aws_caller_identity.current.account_id
+      }
+    }
+  }
+  dynamic "ordered_cache_behavior" {
+    for_each = contains(keys(var.private_origins), "internal") ? [1] : []
+    content {
+      path_pattern               = "/service/*"
+      target_origin_id           = "internal"
+      viewer_protocol_policy     = "https-only"
+      allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+      cached_methods             = ["GET", "HEAD"]
+      cache_policy_id            = data.aws_cloudfront_cache_policy.disabled.id
+      origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.api.id
+      response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security.id
+      function_association {
+        event_type   = "viewer-request"
+        function_arn = aws_cloudfront_function.service[0].arn
+      }
+    }
+  }
   # Order matters: these exact public read patterns precede the general API rule.
   dynamic "ordered_cache_behavior" {
     for_each = ["/api/v1/tenant/clinics", "/api/v1/tenant/clinics/by-slug/*"]
@@ -101,21 +161,23 @@ resource "aws_cloudfront_distribution" "app" {
       cache_policy_id        = aws_cloudfront_cache_policy.public_clinics.id
       # POST /clinics shares this path: forward authentication for mutations.
       # GET responses here must remain identical for every viewer.
-      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api.id
-      compress                 = true
+      origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.api.id
+      response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security.id
+      compress                   = true
     }
   }
   dynamic "ordered_cache_behavior" {
     for_each = { "/api/*" = "api", "/clinic-logos/*" = "api", "/peerjs/*" = "signalling" }
     content {
-      path_pattern             = ordered_cache_behavior.key
-      target_origin_id         = ordered_cache_behavior.value
-      viewer_protocol_policy   = "redirect-to-https"
-      allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-      cached_methods           = ["GET", "HEAD"]
-      cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
-      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api.id
-      compress                 = true
+      path_pattern               = ordered_cache_behavior.key
+      target_origin_id           = ordered_cache_behavior.value
+      viewer_protocol_policy     = "redirect-to-https"
+      allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+      cached_methods             = ["GET", "HEAD"]
+      cache_policy_id            = data.aws_cloudfront_cache_policy.disabled.id
+      origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.api.id
+      response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security.id
+      compress                   = true
       dynamic "function_association" {
         for_each = ordered_cache_behavior.key == "/clinic-logos/*" ? [1] : []
         content {
@@ -126,12 +188,13 @@ resource "aws_cloudfront_distribution" "app" {
     }
   }
   default_cache_behavior {
-    target_origin_id       = "frontend"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    cache_policy_id        = data.aws_cloudfront_cache_policy.assets.id
-    compress               = true
+    target_origin_id           = "frontend"
+    viewer_protocol_policy     = "redirect-to-https"
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
+    cache_policy_id            = data.aws_cloudfront_cache_policy.assets.id
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security.id
+    compress                   = true
     function_association {
       event_type   = "viewer-request"
       function_arn = aws_cloudfront_function.spa.arn
@@ -151,7 +214,8 @@ resource "aws_cloudfront_distribution" "app" {
     cloudfront_default_certificate = length(var.aliases) == 0
     acm_certificate_arn            = var.certificate_arn
     ssl_support_method             = length(var.aliases) > 0 ? "sni-only" : null
-    minimum_protocol_version       = "TLSv1.2_2021"
+    # AWS fixes the default *.cloudfront.net certificate policy to TLSv1.
+    minimum_protocol_version = length(var.aliases) > 0 ? "TLSv1.2_2021" : "TLSv1"
   }
   lifecycle {
     precondition {

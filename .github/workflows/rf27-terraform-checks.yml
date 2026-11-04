@@ -25,6 +25,12 @@ jobs:
         working-directory: infra/modules/${{ matrix.module }}
       - run: terraform test
         working-directory: infra/modules/${{ matrix.module }}
+      - uses: actions/setup-node@v4
+        if: matrix.module == 'public-edge'
+        with:
+          node-version: '24'
+      - run: node --test infra/modules/public-edge/tests/service-route.test.mjs
+        if: matrix.module == 'public-edge'
   example:
     runs-on: ubuntu-latest
     strategy:

@@ -33,8 +33,8 @@ locals {
   }
   fulfilment_secret_keys = ["database_url", "cursor_secret", "records_secret", "tenant_secret", "profile_secret", "billing_secret", "notification_secret", "lalamove_api_key", "lalamove_api_secret", "delivery_locations_json"]
   issuer                 = "https://cognito-idp.ap-southeast-1.amazonaws.com/${aws_cognito_user_pool.users.id}"
-  origin                 = "https://${local.managed ? coalesce(var.internal_origin_hostname, var.origin_hostname) : var.origin_hostname}"
-  service_urls           = { for s in local.services : s => "${local.origin}/api/v1/${local.paths[s]}" }
+  origin                 = var.domain_free ? "https://${module.edge.domain_name}/service" : "https://${local.managed ? coalesce(var.internal_origin_hostname, var.origin_hostname) : var.origin_hostname}"
+  service_urls           = { for s in local.services : s => var.domain_free ? "${local.origin}/${local.paths[s]}" : "${local.origin}/api/v1/${local.paths[s]}" }
   task_services          = length(var.images) > 0 ? local.services : toset([])
   utility_needed         = var.egress_mode == "instance" || var.enable_turn
   legacy_utility         = local.utility_needed && (!local.managed || var.egress_mode == "instance")
@@ -51,8 +51,12 @@ resource "terraform_data" "guards" {
       error_message = "Demo capacity defaults are one. Raising replicas/concurrency or enabling HA requires allow_scale_out=true."
     }
     precondition {
-      condition     = !local.managed || (var.egress_mode == "gateway" && var.redis_mode == "managed" && !var.allow_destroy_demo_data && can(regex("^[a-zA-Z0-9][a-zA-Z0-9.-]+[a-zA-Z0-9]$", var.internal_origin_hostname)) && var.internal_origin_hostname != var.origin_hostname)
-      error_message = "Managed profile requires NAT Gateway, ElastiCache, no destructive bucket cleanup and a distinct internal origin DNS name."
+      condition     = !local.managed || (var.egress_mode == "gateway" && var.redis_mode == "managed" && !var.allow_destroy_demo_data && (var.domain_free || (can(regex("^[a-zA-Z0-9][a-zA-Z0-9.-]+[a-zA-Z0-9]$", var.internal_origin_hostname)) && var.internal_origin_hostname != var.origin_hostname)))
+      error_message = "Managed profile requires NAT Gateway, ElastiCache, protected storage and either domain-free mode or a distinct internal origin DNS name."
+    }
+    precondition {
+      condition     = !var.domain_free || (local.managed && var.egress_mode == "gateway" && var.origin_certificate_arn == null)
+      error_message = "Domain-free mode requires the managed profile, NAT Gateway egress and no supplied origin certificate."
     }
     precondition {
       condition     = var.min_tasks <= var.max_tasks && var.worker_min_tasks <= var.worker_max_tasks

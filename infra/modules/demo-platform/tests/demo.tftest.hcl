@@ -1,4 +1,5 @@
 mock_provider "aws" {
+  mock_data "aws_ec2_managed_prefix_list" { defaults = { id = "pl-0123456789abcdef0" } }
   mock_data "aws_region" { defaults = { region = "ap-southeast-1" } }
   mock_data "aws_caller_identity" { defaults = { account_id = "123456789012" } }
   mock_data "aws_availability_zones" { defaults = { names = ["ap-southeast-1a", "ap-southeast-1b"] } }
@@ -226,6 +227,34 @@ run "managed_single_replica_layout" {
   assert {
     condition     = length(aws_s3_bucket_versioning.storage) == 3 && alltrue([for bucket in aws_s3_bucket.storage : !bucket.force_destroy]) && aws_cloudwatch_log_group.service["scheduling"].retention_in_days == 14 && alltrue([for limit in values(module.jobs[0].concurrency_limits) : limit == 1])
     error_message = "Managed storage must be versioned/non-destructive, logs retained and Lambda concurrency capped at one."
+  }
+}
+
+run "domain_free_running_demo" {
+  command = apply
+  variables {
+    domain_free              = true
+    deployment_profile       = "managed"
+    cpu_architecture         = "X86_64"
+    egress_mode              = "gateway"
+    origin_hostname          = ""
+    internal_origin_hostname = null
+    hosted_zone_id           = ""
+    origin_certificate_arn   = null
+    enable_workloads         = true
+    images                   = { for name in keys(run.bounded_running_demo.repositories) : name => "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/${name}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" if name != "redis" }
+  }
+  assert {
+    condition     = length(aws_acm_certificate.origin) == 0 && length(aws_acm_certificate_validation.origin) == 0 && length(aws_route53_record.origin) == 0 && length(aws_route53_record.internal_origin) == 0 && length(aws_route53_record.certificate) == 0
+    error_message = "Domain-free mode must not create custom-domain certificates or DNS records."
+  }
+  assert {
+    condition     = aws_lb.demo.internal && aws_lb.private_api[0].internal && aws_lb_listener.https.port == 80 && aws_lb_listener.private.port == 80 && length(aws_apigatewayv2_integration.alb.tls_config) == 0 && alltrue([for rule in aws_security_group.alb.ingress : length(coalesce(rule.cidr_blocks, toset([]))) == 0 && rule.from_port == 80])
+    error_message = "Both ALBs must remain private with restricted HTTP origin/VPC Link access."
+  }
+  assert {
+    condition     = alltrue([for service, url in local.service_urls : startswith(url, "https://") && endswith(url, "/service/${local.paths[service]}")]) && alltrue([for task in aws_ecs_task_definition.api : task.runtime_platform[0].cpu_architecture == "X86_64"])
+    error_message = "Services must keep HTTPS URLs and the selected AMD64 architecture."
   }
 }
 

@@ -129,13 +129,24 @@
 - [x] RF42: Show a red count for patient prescriptions awaiting payment.
   Dependency RF24 merged. Effort S. NorbertLoh; Completed in merged PR #356; issue #355 closed.
 
+## Domain-free AWS demo rollout (RF32)
+
+- [ ] RF32: Deploy the managed AMD64 demo through W01 shared state, using
+  CloudFront private VPC origins and a NAT-restricted HTTPS service path instead
+  of custom domains/Route53. Verify source, plans, staged deployment and actual
+  health; retain explicit integration gates. Independent module preparation:
+  RF27 merged. Live rollout consumes W01/RF31. Effort L. NorbertLoh, #335 In progress.
+  Details: [domain-free demo](docs/RF32-domain-free-demo.md).
+
 ## Production release preparation (RF31)
 
-- [ ] RF31: Prepare all AMD64 API/worker/migration and signalling images, AMD64
+- [x] RF31: Prepare all AMD64 API/worker/migration and signalling images, AMD64
   Lambda images, static frontend build and digest-pinned Terraform image handoff.
   Preparation only; no AWS uploads/apply or Route53 setup. Dependencies: RF26/RF27
   merged. Deployment still needs W01/W03/W06, real configuration and acceptance
-  gates; W12 remains separate. Effort M. NorbertLoh, #332 In progress.
+  gates; W12 remains separate. Effort M. NorbertLoh. PR #333 merged; #332 closed.
+  Twelve local image builds, packaged imports, static frontend export and all
+  22 PR checks passed. AWS publication/rollout remains RF32.
   Scope and commands: [release preparation](docs/RF31-production-release.md).
 
 ## Button feedback (RF43)
@@ -463,7 +474,7 @@ Service-specific outbox/inbox migrations belong to the service using the helpers
 
 | Done | ID | Task and completion criterion | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | W01 | Choose IaC tool; create environment skeleton, cost notes and ignore remote state. | F01, F02 | M |
+| [x] | W01 | Choose IaC tool; create environment skeleton, cost notes and ignore remote state. PR #233 merged after confirmed takeover by NorbertLoh; #232 closed. Bootstrap applied and verified; account/operator values remain local. | F01, F02 | M |
 | [ ] | W02 | Provision network/security groups and HTTP API -> VPC Link -> internal ALB ingress. | W01 | L |
 | [ ] | W03 | Provision ECR/ECS skeleton and scoped execution/task roles; deploy health service. | W02, F05 | L |
 | [ ] | W04 | Host built frontend on private S3/CloudFront with SPA/API routing separated. | W01, F07 | M |

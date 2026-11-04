@@ -65,11 +65,10 @@ def test_near_timeout_leaves_messages_unhandled(store):
 
 def test_secrets_loaded_without_changing_process_environment(monkeypatch):
     class Client:
-        def __enter__(self):
-            return self
+        closed = False
 
-        def __exit__(self, *args):
-            pass
+        def close(self):
+            self.closed = True
 
         def get_secret_value(self, SecretId):
             assert SecretId == "test-secret"
@@ -77,10 +76,35 @@ def test_secrets_loaded_without_changing_process_environment(monkeypatch):
 
     monkeypatch.setenv("SERVICE_CONFIG_SECRET_ARN", "test-secret")
     monkeypatch.delenv("SERVICE_DATABASE_URL", raising=False)
-    monkeypatch.setitem(sys.modules, "boto3", SimpleNamespace(client=lambda name: Client()))
+    client = Client()
+    monkeypatch.setitem(sys.modules, "boto3", SimpleNamespace(client=lambda name: client))
     settings = load_settings(lambda **kwargs: SimpleNamespace(log_level="INFO", **kwargs))
     assert settings.database_url == "private-value"
     assert "SERVICE_DATABASE_URL" not in os.environ
+    assert client.closed
+
+
+def test_secrets_loaded_with_real_botocore_client(monkeypatch):
+    boto3 = pytest.importorskip("boto3")
+    from botocore.stub import Stubber
+
+    client = boto3.client(
+        "secretsmanager",
+        region_name="ap-southeast-1",
+        aws_access_key_id="offline-sdk-check",
+        aws_secret_access_key="offline-sdk-check",
+    )
+    monkeypatch.setenv("SERVICE_CONFIG_SECRET_ARN", "test-secret")
+    monkeypatch.setattr(boto3, "client", lambda name: client)
+    with Stubber(client) as stub:
+        stub.add_response(
+            "get_secret_value",
+            {"SecretString": json.dumps({"database_url": "private-value"})},
+            {"SecretId": "test-secret"},
+        )
+        settings = load_settings(lambda **kwargs: SimpleNamespace(log_level="INFO", **kwargs))
+        assert settings.database_url == "private-value"
+        stub.assert_no_pending_responses()
 
 
 def test_database_connections_are_not_retained_between_invocations():

@@ -12,6 +12,16 @@ variable "signalling_domain" {
   description = "Existing reachable signalling origin DNS name with a matching TLS certificate; admission enforcement remains at the application."
   type        = string
 }
+variable "private_origins" {
+  description = "Optional private VPC origins named internal and signalling."
+  type        = map(object({ arn = string, domain = string }))
+  default     = {}
+}
+variable "service_source_ips" {
+  description = "Actual NAT egress IPv4 addresses allowed on the uncached /service path."
+  type        = list(string)
+  default     = []
+}
 variable "aliases" {
   type    = list(string)
   default = []

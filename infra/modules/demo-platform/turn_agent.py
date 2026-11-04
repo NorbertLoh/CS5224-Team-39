@@ -69,7 +69,7 @@ def configuration(secret, realm, public_ip, private_ip):
         "external-ip=" + public_ip + "/" + private_ip,
         "min-port=49160", "max-port=49200", "no-cli", "no-tls", "no-dtls",
         "no-multicast-peers", "user-quota=2", "total-quota=10",
-        "bps-capacity=2500000", "log-file=stdout",
+        "max-bps=1000000", "bps-capacity=2500000", "log-file=stdout",
         "denied-peer-ip=0.0.0.0-0.255.255.255",
         "denied-peer-ip=10.0.0.0-10.255.255.255",
         "denied-peer-ip=127.0.0.0-127.255.255.255",

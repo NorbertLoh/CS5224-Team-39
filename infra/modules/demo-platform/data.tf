@@ -1,6 +1,7 @@
 data "aws_rds_engine_version" "postgres" {
   engine  = "postgres"
   version = "17"
+  latest  = true
 }
 resource "aws_db_subnet_group" "demo" {
   name       = var.name_prefix

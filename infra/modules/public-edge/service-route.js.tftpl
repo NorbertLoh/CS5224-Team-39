@@ -1,0 +1,12 @@
+function handler(event) {
+  var request = event.request;
+  var allowed = ${allowed_sources};
+  if (allowed.indexOf(event.viewer.ip) === -1 ||
+      !/^\/service\/(identity|tenant|scheduling|consultation|clinical-records|billing|document|fulfilment)(\/|$)/.test(request.uri) ||
+      /[%\\]/.test(request.uri) ||
+      /(^|\/)\.{1,2}(\/|$)/.test(request.uri)) {
+    return {statusCode: 403, statusDescription: 'Forbidden', headers: {'cache-control': {value: 'no-store'}}};
+  }
+  request.uri = request.uri.replace(/^\/service\//, '/api/v1/');
+  return request;
+}
