@@ -92,7 +92,7 @@ export function LiveCheckout({
       </p>
       <div className="flex flex-wrap gap-3">
         <a
-          className="inline-block rounded border px-4 py-3"
+          className="primary-action inline-block rounded px-4 py-3"
           href={`/patient/checkout?appointment_id=${current.appointment_id}`}
         >
           Continue to payment
