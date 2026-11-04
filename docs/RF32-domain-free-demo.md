@@ -4,6 +4,11 @@ Issue #335. Deploy the managed AMD64 layout using the shared W01 demo state.
 No Route53 zone, custom domain or ACM certificate is required in this mode.
 The default named-domain configuration remains available.
 
+The generated CloudFront hostname uses AWS's default viewer certificate/policy;
+AWS reports its minimum protocol as TLSv1. Custom-domain certificates retain the
+explicit TLSv1.2_2021 policy. HTTPS remains mandatory for the private service route,
+and normal browser routes redirect HTTP to HTTPS. Use synthetic demo data.
+
 Browser HTTPS/WSS uses the generated CloudFront hostname. Signalling and internal
 API ALBs are private CloudFront VPC origins. API Gateway keeps JWT authorization
 for normal browser API calls and reaches the private API ALB through its VPC Link.

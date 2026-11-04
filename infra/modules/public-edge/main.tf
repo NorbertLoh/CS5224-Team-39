@@ -2,6 +2,7 @@ data "aws_cloudfront_cache_policy" "disabled" { name = "Managed-CachingDisabled"
 data "aws_cloudfront_cache_policy" "assets" { name = "Managed-CachingOptimized" }
 data "aws_cloudfront_origin_request_policy" "api" { name = "Managed-AllViewerExceptHostHeader" }
 data "aws_cloudfront_response_headers_policy" "security" { name = "Managed-SecurityHeadersPolicy" }
+data "aws_caller_identity" "current" {}
 
 resource "aws_cloudfront_vpc_origin" "private" {
   for_each = var.private_origins
@@ -111,6 +112,7 @@ resource "aws_cloudfront_distribution" "app" {
       domain_name = origin.value
       origin_id   = origin.key
       custom_origin_config {
+        ip_address_type        = "ipv4"
         http_port              = 80
         https_port             = 443
         origin_protocol_policy = "https-only"
@@ -125,7 +127,8 @@ resource "aws_cloudfront_distribution" "app" {
       domain_name = origin.value.domain
       origin_id   = origin.key
       vpc_origin_config {
-        vpc_origin_id = aws_cloudfront_vpc_origin.private[origin.key].id
+        vpc_origin_id    = aws_cloudfront_vpc_origin.private[origin.key].id
+        owner_account_id = data.aws_caller_identity.current.account_id
       }
     }
   }
@@ -211,7 +214,8 @@ resource "aws_cloudfront_distribution" "app" {
     cloudfront_default_certificate = length(var.aliases) == 0
     acm_certificate_arn            = var.certificate_arn
     ssl_support_method             = length(var.aliases) > 0 ? "sni-only" : null
-    minimum_protocol_version       = "TLSv1.2_2021"
+    # AWS fixes the default *.cloudfront.net certificate policy to TLSv1.
+    minimum_protocol_version = length(var.aliases) > 0 ? "TLSv1.2_2021" : "TLSv1"
   }
   lifecycle {
     precondition {
