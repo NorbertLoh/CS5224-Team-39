@@ -73,20 +73,39 @@ resource "aws_security_group" "workloads" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+data "aws_ec2_managed_prefix_list" "cloudfront" {
+  count = var.domain_free ? 1 : 0
+  name  = "com.amazonaws.global.cloudfront.origin-facing"
+}
 resource "aws_security_group" "alb" {
   name_prefix = "${var.name_prefix}-alb-"
   vpc_id      = aws_vpc.demo.id
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = var.domain_free ? [] : [1]
+    content {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
   }
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.workloads.id]
+  dynamic "ingress" {
+    for_each = var.domain_free ? [] : [1]
+    content {
+      from_port       = 80
+      to_port         = 80
+      protocol        = "tcp"
+      security_groups = [aws_security_group.workloads.id]
+    }
+  }
+  dynamic "ingress" {
+    for_each = var.domain_free ? [1] : []
+    content {
+      from_port       = 80
+      to_port         = 80
+      protocol        = "tcp"
+      prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront[0].id]
+    }
   }
   egress {
     from_port       = 8000
@@ -107,8 +126,8 @@ resource "aws_security_group" "vpc_link" {
   name_prefix = "${var.name_prefix}-vpc-link-"
   vpc_id      = aws_vpc.demo.id
   egress {
-    from_port   = 443
-    to_port     = 443
+    from_port   = var.domain_free ? 80 : 443
+    to_port     = var.domain_free ? 80 : 443
     protocol    = "tcp"
     cidr_blocks = aws_subnet.private[*].cidr_block
   }
@@ -118,10 +137,19 @@ resource "aws_security_group" "private_alb" {
   name_prefix = "${var.name_prefix}-private-alb-"
   vpc_id      = aws_vpc.demo.id
   ingress {
-    from_port       = 443
-    to_port         = 443
+    from_port       = var.domain_free ? 80 : 443
+    to_port         = var.domain_free ? 80 : 443
     protocol        = "tcp"
     security_groups = [aws_security_group.workloads.id, aws_security_group.vpc_link[0].id]
+  }
+  dynamic "ingress" {
+    for_each = var.domain_free ? [1] : []
+    content {
+      from_port       = 80
+      to_port         = 80
+      protocol        = "tcp"
+      prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront[0].id]
+    }
   }
   egress {
     from_port       = 8000

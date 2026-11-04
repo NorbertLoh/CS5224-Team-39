@@ -50,7 +50,7 @@ resource "aws_launch_template" "turn" {
     config = jsonencode({
       region      = "ap-southeast-1", group = "${var.name_prefix}-turn", hook = "turn-ready",
       allocations = aws_eip.turn[*].id, secret_arn = aws_secretsmanager_secret.config["turn"].arn,
-      realm       = var.origin_hostname
+      realm       = var.domain_free ? var.name_prefix : var.origin_hostname
     })
   }))
   tag_specifications {

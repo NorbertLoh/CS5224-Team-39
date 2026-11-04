@@ -15,6 +15,11 @@ variable "deployment_profile" {
     error_message = "Choose demo or managed."
   }
 }
+variable "domain_free" {
+  description = "Managed demo: generated CloudFront HTTPS/WSS with private origins, NAT-restricted service routing, and no Route53/ACM."
+  type        = bool
+  default     = false
+}
 variable "internal_origin_hostname" {
   description = "Managed profile: owned DNS name for the private API ALB, covered by the supplied origin certificate (or requested as its SAN)."
   type        = string

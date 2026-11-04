@@ -1,18 +1,18 @@
 resource "aws_acm_certificate" "origin" {
-  count                     = var.origin_certificate_arn == null ? 1 : 0
+  count                     = !var.domain_free && var.origin_certificate_arn == null ? 1 : 0
   domain_name               = var.origin_hostname
   subject_alternative_names = local.managed ? [coalesce(var.internal_origin_hostname, var.origin_hostname)] : []
   validation_method         = "DNS"
   lifecycle { create_before_destroy = true }
 }
 locals {
-  certificate_domains = local.managed ? [var.origin_hostname, coalesce(var.internal_origin_hostname, var.origin_hostname)] : [var.origin_hostname]
-  certificate_validation = var.origin_certificate_arn == null ? {
+  certificate_domains = var.domain_free ? [] : (local.managed ? [var.origin_hostname, coalesce(var.internal_origin_hostname, var.origin_hostname)] : [var.origin_hostname])
+  certificate_validation = !var.domain_free && var.origin_certificate_arn == null ? {
     for option in aws_acm_certificate.origin[0].domain_validation_options : option.domain_name => option
   } : {}
 }
 resource "aws_route53_record" "certificate" {
-  count   = var.origin_certificate_arn == null ? (local.managed ? 2 : 1) : 0
+  count   = !var.domain_free && var.origin_certificate_arn == null ? (local.managed ? 2 : 1) : 0
   zone_id = var.hosted_zone_id
   name    = local.certificate_validation[local.certificate_domains[count.index]].resource_record_name
   type    = local.certificate_validation[local.certificate_domains[count.index]].resource_record_type
@@ -20,15 +20,15 @@ resource "aws_route53_record" "certificate" {
   ttl     = 60
 }
 resource "aws_acm_certificate_validation" "origin" {
-  count                   = var.origin_certificate_arn == null ? 1 : 0
+  count                   = !var.domain_free && var.origin_certificate_arn == null ? 1 : 0
   certificate_arn         = aws_acm_certificate.origin[0].arn
   validation_record_fqdns = aws_route53_record.certificate[*].fqdn
 }
 resource "aws_lb" "demo" {
   name                       = var.name_prefix
   load_balancer_type         = "application"
-  internal                   = false
-  subnets                    = aws_subnet.public[*].id
+  internal                   = var.domain_free
+  subnets                    = var.domain_free ? aws_subnet.private[*].id : aws_subnet.public[*].id
   security_groups            = [aws_security_group.alb.id]
   idle_timeout               = 120
   enable_deletion_protection = local.managed && var.deletion_protection
@@ -44,7 +44,7 @@ resource "aws_lb" "private_api" {
   enable_deletion_protection = var.deletion_protection
 }
 resource "aws_route53_record" "internal_origin" {
-  count   = local.managed ? 1 : 0
+  count   = local.managed && !var.domain_free ? 1 : 0
   zone_id = var.hosted_zone_id
   name    = coalesce(var.internal_origin_hostname, var.origin_hostname)
   type    = "A"
@@ -55,6 +55,7 @@ resource "aws_route53_record" "internal_origin" {
   }
 }
 resource "aws_route53_record" "origin" {
+  count   = var.domain_free ? 0 : 1
   zone_id = var.hosted_zone_id
   name    = var.origin_hostname
   type    = "A"
@@ -66,10 +67,10 @@ resource "aws_route53_record" "origin" {
 }
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.demo.arn
-  port              = 443
-  protocol          = "HTTPS"
-  certificate_arn   = var.origin_certificate_arn != null ? var.origin_certificate_arn : aws_acm_certificate_validation.origin[0].certificate_arn
-  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  port              = var.domain_free ? 80 : 443
+  protocol          = var.domain_free ? "HTTP" : "HTTPS"
+  certificate_arn   = var.domain_free ? null : (var.origin_certificate_arn != null ? var.origin_certificate_arn : aws_acm_certificate_validation.origin[0].certificate_arn)
+  ssl_policy        = var.domain_free ? null : "ELBSecurityPolicy-TLS13-1-2-2021-06"
   default_action {
     type = "fixed-response"
     fixed_response {
@@ -81,10 +82,10 @@ resource "aws_lb_listener" "https" {
 }
 resource "aws_lb_listener" "private" {
   load_balancer_arn = local.managed ? aws_lb.private_api[0].arn : aws_lb.demo.arn
-  port              = local.managed ? 443 : 80
-  protocol          = local.managed ? "HTTPS" : "HTTP"
-  certificate_arn   = local.managed ? (var.origin_certificate_arn != null ? var.origin_certificate_arn : aws_acm_certificate_validation.origin[0].certificate_arn) : null
-  ssl_policy        = local.managed ? "ELBSecurityPolicy-TLS13-1-2-2021-06" : null
+  port              = local.managed && !var.domain_free ? 443 : 80
+  protocol          = local.managed && !var.domain_free ? "HTTPS" : "HTTP"
+  certificate_arn   = local.managed && !var.domain_free ? (var.origin_certificate_arn != null ? var.origin_certificate_arn : aws_acm_certificate_validation.origin[0].certificate_arn) : null
+  ssl_policy        = local.managed && !var.domain_free ? "ELBSecurityPolicy-TLS13-1-2-2021-06" : null
   default_action {
     type = "fixed-response"
     fixed_response {
@@ -199,7 +200,7 @@ resource "aws_apigatewayv2_integration" "alb" {
   payload_format_version = "1.0"
   request_parameters     = { "overwrite:path" = "$request.path" }
   dynamic "tls_config" {
-    for_each = local.managed ? [1] : []
+    for_each = local.managed && !var.domain_free ? [1] : []
     content { server_name_to_verify = var.internal_origin_hostname }
   }
 }
@@ -310,5 +311,11 @@ module "edge" {
   frontend_bucket_domain = aws_s3_bucket.storage["frontend"].bucket_regional_domain_name
   frontend_bucket_arn    = aws_s3_bucket.storage["frontend"].arn
   api_domain             = trimprefix(aws_apigatewayv2_api.http.api_endpoint, "https://")
-  signalling_domain      = var.origin_hostname
+  signalling_domain      = var.domain_free ? aws_lb.demo.dns_name : var.origin_hostname
+  private_origins = var.domain_free ? {
+    signalling = { arn = aws_lb.demo.arn, domain = aws_lb.demo.dns_name }
+    internal   = { arn = aws_lb.private_api[0].arn, domain = aws_lb.private_api[0].dns_name }
+  } : {}
+  service_source_ips = var.domain_free ? aws_eip.nat[*].public_ip : []
+  depends_on         = [aws_lb_listener.https, aws_lb_listener.private, aws_internet_gateway.demo]
 }
