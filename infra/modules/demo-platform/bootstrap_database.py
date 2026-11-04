@@ -37,6 +37,10 @@ def main():
         autocommit=True,
     ) as connection:
         connection.execute("REVOKE CREATE ON SCHEMA public FROM PUBLIC")
+        # Scheduling's UUID exclusion constraints require this GiST operator class.
+        connection.execute(
+            "CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public"
+        )
         for owner, config in configs.items():
             url = urlsplit(config["database_url"])
             if (
