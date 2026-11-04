@@ -56,7 +56,18 @@ export function admissionTransport(options, admissions, config) {
           setTimeout(() => wire.terminate(), 250).unref();
         };
         entry.deny = deny;
-        const expiry = setTimeout(deny, Math.max(0, grant.expiresAt - Date.now()));
+        let expiry;
+        const expire = async () => {
+          if (blocked) return;
+          // A renewal can commit between the periodic check and this deadline.
+          try {
+            await admissions.check(grant);
+            if (!live(grant)) return deny();
+            expiry = setTimeout(expire, Math.max(1, grant.expiresAt - Date.now()));
+            expiry.unref();
+          } catch { deny(); }
+        };
+        expiry = setTimeout(expire, Math.max(1, grant.expiresAt - Date.now()));
         expiry.unref();
         let checking = false;
         const interval = setInterval(async () => {

@@ -24,6 +24,14 @@ https://localhost:8443 {
         rewrite * /admissions
         reverse_proxy {$CONSULTATION_UPSTREAM:host.docker.internal:8004}
     }
+    @renewal {
+        path /api/v1/consultation/admissions/renew
+        method POST
+    }
+    handle @renewal {
+        rewrite * /admissions/renew
+        reverse_proxy {$CONSULTATION_UPSTREAM:host.docker.internal:8004}
+    }
     handle /healthz {
         reverse_proxy signalling:9000
     }

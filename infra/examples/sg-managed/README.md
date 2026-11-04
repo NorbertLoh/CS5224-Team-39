@@ -75,7 +75,7 @@ those workloads requires separate ordering and coordination changes.
 
 RF29 uses PostgreSQL to assign both participants to one live PeerServer. The
 managed profile enables private node forwarding and ECS task protection. Apply
-consultation migration `0004` and publish matching consultation, signalling and
+consultation migration `0005` and publish matching consultation, signalling and
 frontend builds before enabling or scaling the workload. See
 [RF29 deployment and recovery](../../../docs/RF29-signalling-matchmaker.md).
 

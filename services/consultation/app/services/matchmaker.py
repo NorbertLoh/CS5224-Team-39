@@ -129,23 +129,35 @@ def assign(db, record):
     return assignment
 
 
-def validate(db, settings, record, lease, node_id=None, node_token=None):
+def validate_assignment(db, settings, record, lease):
     if lease.node_id is None:
-        if settings.signalling_matchmaker or node_id is not None:
+        if settings.signalling_matchmaker:
             denied()
         return
     node = db.get(SignallingNode, lease.node_id, populate_existing=True)
     assignment = db.get(RoomAssignment, record.session_id, populate_existing=True)
     if (
         not healthy(db, node)
-        or node_id != lease.node_id
+        or assignment is None
+        or assignment.node_id != lease.node_id
+        or assignment.version != lease.assignment_version
+    ):
+        denied()
+    return node
+
+
+def validate(db, settings, record, lease, node_id=None, node_token=None):
+    node = validate_assignment(db, settings, record, lease)
+    if node is None:
+        if node_id is not None:
+            denied()
+        return
+    if (
+        node_id != lease.node_id
         or not node_token
         or not secrets.compare_digest(
             node.token_digest, hashlib.sha256(node_token.encode()).hexdigest()
         )
-        or assignment is None
-        or assignment.node_id != lease.node_id
-        or assignment.version != lease.assignment_version
     ):
         denied()
 

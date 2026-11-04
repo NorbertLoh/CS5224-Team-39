@@ -25,6 +25,7 @@ export type RoomConnection = {
     secure: true
   }
   acquire: (signal: AbortSignal) => Promise<CallAdmission>
+  renew?: (admission: CallAdmission, signal: AbortSignal) => Promise<number>
   counterpart: (
     admission: CallAdmission,
     signal: AbortSignal,
@@ -93,6 +94,7 @@ export class RoomCall {
   private retrying = false
   private failures = 0
   private recoveryStarted: number | null = null
+  private expiryTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(
     private connection: RoomConnection,
@@ -126,6 +128,7 @@ export class RoomCall {
     this.attemptAbort.abort()
     for (const timer of this.timers) clearTimeout(timer)
     this.timers.clear()
+    this.expiryTimer = null
     this.call?.close()
     this.peer?.destroy()
     this.remote?.getTracks().forEach((track) => track.stop())
@@ -165,7 +168,10 @@ export class RoomCall {
       this.recoveryStarted !== null &&
       Date.now() - this.recoveryStarted >= 12 * 60 * 60 * 1000
     ) {
-      this.stop('disconnected', 'Could not reconnect. Rejoin when you are ready.')
+      this.stop(
+        'disconnected',
+        'Could not reconnect. Rejoin when you are ready.',
+      )
       return
     }
     const attempt = ++this.attempt
@@ -179,7 +185,7 @@ export class RoomCall {
       if (!current()) return
       validateAdmission(admission)
       this.admission = admission
-      this.later(this.fail, admission.expiresAt - Date.now())
+      this.watchExpiry(admission)
       const peer = await this.factory(admission, this.connection)
       if (!current()) {
         peer.destroy()
@@ -192,6 +198,7 @@ export class RoomCall {
         if (!current()) return
         clearTimeout(opening)
         this.events.state('waiting')
+        if (this.connection.renew) this.scheduleRenewal(admission, attempt)
         if (this.role === 'patient') void this.findCounterpart()
       })
       peer.on('call', (call) => {
@@ -210,6 +217,51 @@ export class RoomCall {
           this.stop('disconnected', error.message)
         else this.fail()
       }
+    }
+  }
+
+  private watchExpiry(admission: CallAdmission) {
+    if (this.expiryTimer) {
+      clearTimeout(this.expiryTimer)
+      this.timers.delete(this.expiryTimer)
+    }
+    this.expiryTimer = this.later(this.fail, admission.expiresAt - Date.now())
+  }
+
+  private scheduleRenewal(
+    admission: CallAdmission,
+    attempt: number,
+    retry = false,
+  ) {
+    const remaining = admission.expiresAt - Date.now()
+    const delay = retry ? Math.min(2000, remaining / 4) : remaining / 3
+    this.later(
+      () => {
+        void this.renew(admission, attempt)
+      },
+      Math.max(1, delay),
+    )
+  }
+
+  private async renew(admission: CallAdmission, attempt: number) {
+    const current = () => this.live() && attempt === this.attempt
+    if (!current() || !this.connection.renew) return
+    try {
+      const expiresAt = await this.connection.renew(
+        admission,
+        this.attemptAbort.signal,
+      )
+      if (!current()) return
+      validateAdmission({ ...admission, expiresAt })
+      admission.expiresAt = Math.max(admission.expiresAt, expiresAt)
+      this.watchExpiry(admission)
+      this.scheduleRenewal(admission, attempt)
+    } catch (error) {
+      if (!current()) return
+      if (error instanceof RoomAccessError)
+        this.stop('disconnected', error.message)
+      else if (Date.now() >= admission.expiresAt) this.fail()
+      else this.scheduleRenewal(admission, attempt, true)
     }
   }
 

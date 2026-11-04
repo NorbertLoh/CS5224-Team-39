@@ -154,5 +154,36 @@ export function bookedRoomConnection(
         throw new Error('Invalid participant')
       return result.peer_id as string | null
     },
+    async renew(admission, signal) {
+      if (!readSession()) throw new RoomAccessError('Sign in to continue.')
+      try {
+        const response = await apiFetch('/consultation/admissions/renew', {
+          method: 'POST',
+          accessToken: await accessToken(),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            peer_id: admission.peerId,
+            token: admission.token,
+          }),
+          signal: AbortSignal.any([signal, AbortSignal.timeout(10000)]),
+        })
+        const lease = await response.json()
+        const expectedNode =
+          admission.signallingPath?.split('/nodes/')[1] ?? null
+        if (
+          lease.peer_id !== admission.peerId ||
+          lease.subject_id !== subjectId ||
+          lease.appointment_id !== appointmentId ||
+          lease.node_id !== expectedNode ||
+          typeof lease.expires_at !== 'string'
+        )
+          throw new RoomAccessError('Invalid active call context')
+        return Date.parse(lease.expires_at)
+      } catch (error) {
+        if (roomAccessDenied(error))
+          throw new RoomAccessError(consultationError(error))
+        throw error
+      }
+    },
   }
 }

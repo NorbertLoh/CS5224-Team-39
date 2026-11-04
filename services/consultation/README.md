@@ -9,6 +9,8 @@ hashed, single-use admission leases; see [ADMISSION.md](ADMISSION.md) for API,
 service authentication, setup and observed verification.
 Migration `0004` adds RF29 room assignments and signalling node leases. See the
 [matchmaker deployment instructions](../../docs/RF29-signalling-matchmaker.md).
+Migration `0005` adds renewable active leases. The current runtime requires it.
+The [admission contract](ADMISSION.md) covers renewal and fixed TURN deadlines.
 
 ## Lifecycle rules
 
