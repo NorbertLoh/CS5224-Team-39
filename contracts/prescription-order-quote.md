@@ -13,8 +13,8 @@ Clinical records owns notes and prescriptions. Prescription requires
 `status` (`draft`, `issued`, `voided`), `items`, `issued_at` (instant or null),
 `created_at`, `updated_at`. Each item requires `prescription_item_id`,
 `medication_id`, `quantity` (positive integer dispensing units), `instructions`
-(plain text) and `display_name` (snapshot). Initial prototype uses the owning
-clinic's fixed catalogue, no substitutions/partial fills or arbitrary patient
+(plain text) and `display_name` (snapshot). RF12 lets doctors register typed names in the owning
+clinic's catalogue as unpriced references. No substitutions/partial fills or arbitrary patient
 quantities. Instructions are supplied by the authorized doctor; fixtures have
 nonclinical placeholder text. A prescription has no trusted charge total.
 
@@ -31,7 +31,7 @@ are audited. Clinic/platform admins receive no note or instruction content.
 | PATCH `/prescriptions/{prescription_id}` | Full `items` replacement; draft, 200 | Same doctor while draft/in_progress |
 | POST `/prescriptions/{prescription_id}/issue` | Empty body; issued prescription, 200 | Same doctor/in_progress; nonempty valid items; repeated issue returns same resource/event identity |
 | GET `/prescriptions/{prescription_id}` | Prescription, 200 | Own patient or assigned active doctor; audit |
-| GET `/prescriptions` | Optional appointment_id; C01 pagination ordered created_at, prescription_id ascending | Same scoped read policy |
+| GET `/prescriptions` | Optional appointment_id; C01 pagination ordered created_at, prescription_id descending (newest first) | Same scoped read policy |
 
 Issuance freezes content and commits prescription_issued.v1 to the same outbox
 transaction. Voiding is an authenticated operator workflow, outside the initial
@@ -55,12 +55,18 @@ Patient PDF retrieval still goes through document authorization/auditing below.
 
 ## Catalogue, order and quote shapes
 
-Fulfilment owns the catalogue and orders. A catalogue item requires `medication_id`,
-`tenant_id`, `display_name`, `unit_label`, `unit_price` (C01 SGD Money), `active`,
-`updated_at`. Clinic admin controls price/active status; prescription display name
-does not establish price. A doctor selects active medications, not patient-supplied
-prices. An order price is frozen at successful checkout reservation; before that,
-the server refreshes current catalogue prices on each new quote.
+Fulfilment owns medicine orders and prescription-specific prices. Doctors type
+medication names freely. Internal medication references preserve prescription and
+document UUIDs without requiring clinic catalogue maintenance. Legacy reference
+APIs retain medication_id, tenant_id, display_name, unit_label, nullable unit_price,
+active and updated_at for compatibility; their rates do not price new prescriptions.
+
+For each issued prescription, the active owning-clinic admin supplies an SGD unit
+price for every prescribed item using the clinic's existing system as a reference.
+Prices are scoped by tenant, prescription and item; one prescription's rates never
+price another. Ordering rejects incomplete pricing with medication_unpriced. Prices
+lock when a patient opens an order, before any quote/payment. Old issued/paid orders
+retain their legacy snapshots. See the RF12 route/projection details below.
 
 Order requires `order_id`, `tenant_id`, `prescription_id`, `appointment_id`,
 `patient_id`, `status` (`awaiting_payment`, `paid`, `submitting`, `dispatched`,
@@ -86,10 +92,11 @@ Provider references and address payloads never appear in C05 events/general logs
 | Route (prefix `/api/v1/fulfilment`) | Body / response | Policy |
 | --- | --- | --- |
 | GET `/clinics/{tenant_id}/catalogue` | Active items, C01 pagination ordered display_name, medication_id ascending | Active owning-clinic doctor/admin; not a public medical catalogue |
+| POST `/clinics/{tenant_id}/catalogue` | display_name; existing item 200 or new unpriced item 201 | Active owning-clinic doctor/admin; name-only input; stable reference on case-insensitive replay |
 | PUT `/clinics/{tenant_id}/catalogue/{medication_id}` | display_name, unit_label, unit_price, active; item, 201/200 | Active owning-clinic admin; server validates SGD/nonnegative amount |
 | POST `/orders` | prescription_id; order, 201 new / 200 existing | Own patient; one order per issued prescription, including retries |
 | GET `/orders/{order_id}` | Order, 200 | Own patient or active owning-clinic admin; platform operational view, no clinical data |
-| GET `/orders` | Optional tenant_id/status; C01 pagination ordered created_at, order_id ascending | Same scoped policy |
+| GET `/orders` | Optional tenant_id/status; C01 pagination ordered created_at, order_id descending (newest first); explicit `sort=oldest` remains supported | Same scoped policy |
 | POST `/orders/{order_id}/quotes` | destination structured address; quote, 201 | Own patient; unpaid, no active pending payment; server obtains provider fee and refreshes catalogue snapshot |
 | GET `/quotes/{quote_id}` | Quote, 200 | Own patient or active owning-clinic admin; operational fields only |
 | POST `/orders/{order_id}/ready` | Empty body; order, 200 | Active owning-clinic admin; issued prescription, valid active order; repeated ready is safe |
@@ -186,7 +193,7 @@ delivery/audit history. Clinic readiness never implies payment or delivery succe
 
 Document service generates one PDF per issued prescription through C05/P02.
 GET `/api/v1/document/documents` (optional appointment_id; C01 pagination ordered
-created_at, document_id ascending) returns metadata `document_id`, `tenant_id`,
+created_at, document_id descending, newest first) returns metadata `document_id`, `tenant_id`,
 `appointment_id`, `prescription_id`, `kind=prescription_pdf`, `status` (`pending`,
 `ready`, `failed`), created_at/updated_at. GET `/documents/{document_id}/download`
 returns 200 `{ "download_url": "https://...", "expires_at": "..." }` for ready
@@ -209,3 +216,27 @@ has no delivery yet; the later delivery demonstrates a normalized terminal state
 Consumer review with records/fulfilment/billing or prescription/order UI owner
 must cover amount/quantity tampering, tenant mismatch, expiry equality, frozen
 prices, payment/ready order, duplicate submissions and uncertain-provider recovery.
+
+## RF12 prescription-specific pricing
+
+The user superseded catalogue management with pricing each medication on each issued
+prescription. New prescriptions and existing drafts use `pricing_mode=prescription`;
+legacy issued prescriptions retain `catalogue` mode for compatibility. The trusted
+service-only dispensing projection adds pricing_mode plus each item's display_name.
+No instructions or notes are added. Existing metadata-only events stay unchanged.
+Internal medication-name references do not require clinic catalogue maintenance.
+
+Active owning-clinic admins may GET clinical-records
+`/clinics/{tenant_id}/prescription-pricing` (25 newest issued prescriptions plus
+cursor). The audited response contains prescription/appointment/patient/tenant IDs,
+created_at and item IDs/names/quantities, excluding all notes and instructions.
+
+Fulfilment GET/PUT `/clinics/{tenant_id}/prescriptions/{prescription_id}/prices`
+reads/writes prescription-specific prices. PUT requires patient_id and every
+prescription_item_id exactly once with an SGD unit_price. The service verifies
+the authoritative issued prescription, clinic, patient, IDs and quantities.
+Only active owning-clinic admins can price. No cross-prescription rate reuse.
+Orders/new quotes for prescription mode use these prices, never shared catalogue
+rates, and fail with `medication_unpriced` until priced. Prices lock after an order
+is opened; identical replays are allowed, changes are rejected. Legacy paid/quoted
+snapshots are preserved. See docs/medication-pricing.md for migrations 0006/0007.

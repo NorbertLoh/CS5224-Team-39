@@ -1,0 +1,272 @@
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { nameOrId, readableStatus } from '@/features/appointments/display'
+import { DocumentList } from '@/features/documents/DocumentList'
+import {
+  appointmentPrescriptions,
+  readNote,
+  recordsError,
+} from '@/features/records/api'
+import { MedicalCertificateForm } from '@/features/records/certificates/MedicalCertificateForm'
+import {
+  useRecordFormState,
+  type RecordFormState,
+  type RecordFormStateChange,
+} from '@/features/records/hooks/useRecordFormState'
+import { ConsultationNoteForm } from '@/features/records/notes/ConsultationNoteForm'
+import { PreviousVisitNotes } from '@/features/records/notes/PreviousVisitNotes'
+import { PrescriptionEditor } from '@/features/records/prescriptions/PrescriptionEditor'
+import { ReloadRecordsButton } from '@/features/records/workspace/ReloadRecordsButton'
+import { appointmentDetail } from '@/features/scheduling/api'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ChevronDown, FileText } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+export function RecordWorkspace({
+  appointmentId,
+  token,
+  subjectId,
+  onStateChange,
+}: {
+  appointmentId: string
+  token: string
+  subjectId: string
+  onStateChange?: RecordFormStateChange
+}) {
+  const [revision, setRevision] = useState(0)
+  const cache = useQueryClient()
+  const appointment = useQuery({
+    queryKey: ['records', 'context', token, appointmentId],
+    queryFn: ({ signal }) => appointmentDetail(appointmentId, signal),
+    refetchInterval: 10000,
+    retry: false,
+    gcTime: 0,
+  })
+  if (appointment.isError)
+    return (
+      <ErrorState
+        message={recordsError(appointment.error)}
+        onRetry={() => void appointment.refetch()}
+      />
+    )
+  if (!appointment.data)
+    return <LoadingState message="Checking appointment..." />
+  const context = appointment.data
+  if (
+    context.doctor_id !== subjectId ||
+    context.appointment_id !== appointmentId
+  )
+    return (
+      <ErrorState message="This appointment is unavailable to your account." />
+    )
+  return (
+    <div className="space-y-5">
+      <section
+        className="rounded-2xl border border-teal-100 bg-teal-50/60 p-5"
+        aria-label="Visit context"
+      >
+        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-teal-800">
+          Current visit
+        </p>
+        <dl className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt className="text-xs text-slate-600">Patient</dt>
+            <dd className="mt-1 break-words font-semibold">
+              {nameOrId(context.patient_name, context.patient_id)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-slate-600">Clinic</dt>
+            <dd className="mt-1 break-words font-medium">
+              {nameOrId(context.clinic_name, context.tenant_id)}
+            </dd>
+          </div>
+          <div className="col-span-2 flex items-center justify-between border-t border-teal-100 pt-3">
+            <dt className="text-slate-600">Session</dt>
+            <dd className="rounded-full bg-white px-3 py-1 text-xs font-medium capitalize text-teal-900">
+              {readableStatus(context.status)}
+            </dd>
+          </div>
+        </dl>
+      </section>
+      <Records
+        key={`${appointmentId}:${revision}`}
+        appointmentId={appointmentId}
+        tenantId={context.tenant_id}
+        token={token}
+        editable={context.status === 'in_progress'}
+        onStateChange={onStateChange}
+        onReload={() => {
+          void appointment.refetch()
+          for (const resource of ['workspace', 'mc']) {
+            cache.removeQueries({
+              queryKey: ['records', resource, token, appointmentId],
+              exact: true,
+            })
+          }
+          setRevision((value) => value + 1)
+        }}
+      />
+      <PreviousVisitNotes
+        key={appointmentId}
+        appointment={context}
+        token={token}
+      />
+      <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-5 focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
+          <span className="flex items-center gap-3">
+            <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
+              <FileText aria-hidden="true" size={18} />
+            </span>
+            <span>
+              <span className="block font-semibold">Visit documents</span>
+              <span className="mt-1 block text-xs text-slate-600">
+                View or download PDFs for this visit.
+              </span>
+            </span>
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            size={20}
+            className="shrink-0 text-slate-500 transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <div className="border-t border-slate-200 [&>section]:m-0 [&>section]:rounded-none [&>section]:border-0">
+          <DocumentList
+            role="doctor"
+            appointmentId={appointmentId}
+            tenantId={context.tenant_id}
+          />
+        </div>
+      </details>
+    </div>
+  )
+}
+
+function Records({
+  appointmentId,
+  tenantId,
+  token,
+  editable,
+  onReload,
+  onStateChange,
+}: {
+  appointmentId: string
+  tenantId: string
+  token: string
+  editable: boolean
+  onReload: () => void
+  onStateChange?: RecordFormStateChange
+}) {
+  const [uncertain, setUncertain] = useState(false)
+  const [noteState, setNoteState] = useState<RecordFormState>({
+    dirty: false,
+    busy: false,
+  })
+  const [mcState, setMcState] = useState<RecordFormState>({
+    dirty: false,
+    busy: false,
+  })
+  const [prescriptionState, setPrescriptionState] = useState<RecordFormState>({
+    dirty: false,
+    busy: false,
+  })
+  const dirty = noteState.dirty || mcState.dirty || prescriptionState.dirty
+  const busy = noteState.busy || mcState.busy || prescriptionState.busy
+  useRecordFormState(dirty, busy, onStateChange)
+  useEffect(() => {
+    if (!dirty && !busy) return
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', warnBeforeLeaving)
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving)
+  }, [dirty, busy])
+  const records = useQuery({
+    queryKey: ['records', 'workspace', token, appointmentId],
+    queryFn: async ({ signal }) => {
+      const [note, prescriptions] = await Promise.all([
+        readNote(appointmentId, signal),
+        appointmentPrescriptions(appointmentId, signal),
+      ])
+      return {
+        note,
+        prescription:
+          prescriptions.find((item) => item.status !== 'voided') ??
+          prescriptions.at(-1) ??
+          null,
+      }
+    },
+    retry: false,
+    gcTime: 0,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  })
+  if (records.isError)
+    return (
+      <ErrorState
+        message={recordsError(records.error)}
+        onRetry={() => void records.refetch()}
+      />
+    )
+  if (!records.data)
+    return <LoadingState message="Loading clinical records..." />
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">Clinical records</h2>
+          <p className="mt-1 text-xs text-slate-600" role="status">
+            {busy
+              ? 'Saving changes…'
+              : dirty
+                ? 'You have unsaved changes.'
+                : 'Drafts autosave after a short pause. Wait for Saved before completing the visit.'}
+          </p>
+        </div>
+        <ReloadRecordsButton dirty={dirty} busy={busy} onReload={onReload} />
+      </div>
+      {!editable && (
+        <p
+          role="status"
+          className="rounded-xl bg-slate-100 p-4 text-sm text-slate-600"
+        >
+          Read-only records. Editing is available while the consultation is in
+          progress.
+        </p>
+      )}
+      {uncertain && (
+        <p
+          role="alert"
+          className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+        >
+          A request could not be confirmed. Reload saved records to check its
+          outcome before making further changes.
+        </p>
+      )}
+      <ConsultationNoteForm
+        appointmentId={appointmentId}
+        note={records.data.note}
+        editable={editable && !uncertain}
+        onFailure={() => setUncertain(true)}
+        onStateChange={setNoteState}
+      />
+      <MedicalCertificateForm
+        appointmentId={appointmentId}
+        token={token}
+        editable={editable && !uncertain}
+        onStateChange={setMcState}
+      />
+      <PrescriptionEditor
+        appointmentId={appointmentId}
+        tenantId={tenantId}
+        token={token}
+        prescription={records.data.prescription}
+        editable={editable && !uncertain}
+        onFailure={() => setUncertain(true)}
+        onStateChange={setPrescriptionState}
+      />
+    </div>
+  )
+}

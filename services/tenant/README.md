@@ -6,6 +6,9 @@ service-local migrations and focused persistence checks. A08 implements clinic
 creation, authorised profile edits, public profiles and booking eligibility.
 A09 adds platform review, commission settings and durable audit events.
 See [API setup and integration boundaries](docs/api.md).
+Clinic admins can save pickup locations in the clinic management **Settings**
+page. Migration `0004`, service connection configuration and verification are in
+[clinic pickup settings](../../docs/clinic-pickup-settings.md).
 
 A10 provides an identity-service-only clinic lookup for live staff membership
 administration. Staff roles and memberships stay in identity; see

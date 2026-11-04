@@ -1,0 +1,35 @@
+import { ClinicDirectory } from '@/features/clinics/components/ClinicDirectory'
+
+export function HomePage() {
+  return (
+    <div className="mx-auto max-w-6xl">
+      <main className="px-5 py-12 sm:px-8 sm:py-16">
+        <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+          Connected care
+        </p>
+        <h1 className="mt-4 max-w-3xl text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">
+          Your clinic, wherever you are.
+        </h1>
+        <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
+          A shared home for patients, doctors and clinic teams.
+        </p>
+        <section id="clinics" className="mt-10">
+          <a
+            href="/register-clinic"
+            className="mb-6 inline-block rounded-md bg-slate-900 px-4 py-3 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            Register your clinic
+          </a>
+          <a
+            href="/join-as-doctor"
+            className="mb-6 ml-3 inline-block rounded-md border px-4 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            Join as a doctor
+          </a>
+          <h2 className="text-2xl font-semibold">Explore clinics</h2>
+          <ClinicDirectory />
+        </section>
+      </main>
+    </div>
+  )
+}

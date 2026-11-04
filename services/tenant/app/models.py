@@ -89,7 +89,7 @@ class AuditEvent(Base):
     __table_args__ = (
         CheckConstraint(
             "action IN ('clinic.approved', 'clinic.rejected', 'clinic.suspended', "
-            "'clinic.commission_changed')",
+            "'clinic.commission_changed', 'clinic.location_changed')",
             name="ck_audit_events_action",
         ),
         CheckConstraint(
@@ -112,3 +112,16 @@ class AuditEvent(Base):
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class ClinicLocation(Base):
+    __tablename__ = "clinic_locations"
+    __table_args__ = (
+        CheckConstraint("jsonb_typeof(location) = 'object'", name="ck_clinic_locations_object"),
+    )
+    tenant_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("tenant.clinics.tenant_id", ondelete="RESTRICT"), primary_key=True
+    )
+    location: Mapped[dict] = mapped_column(JSONB)
+    updated_by: Mapped[UUID] = mapped_column(Uuid)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

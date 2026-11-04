@@ -1,6 +1,6 @@
 # S05/S06 payment processing and late recovery
 
-Run migrations through `0006` before starting the workers. Scheduling owns its
+Run migrations through head (`0007`) before starting the workers. Scheduling owns its
 inbox, confirmation outbox and `payment_recoveries` audit/delivery queue. No
 billing tables or shared infrastructure/contracts are changed.
 

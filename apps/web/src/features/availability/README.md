@@ -7,5 +7,3 @@ See [setup, behavior and verification](../../../../../docs/scheduling-frontend.m
 `AvailabilityEditor` selects the current clinic; `DoctorTimetable` owns live queries,
 selection and writes. `WeeklyTimetable`, `TimetableCell` and `useTimetableSelection`
 retain pointer/keyboard interactions. `timetable` and `slot-time` are pure helpers.
-`fixtures`, `FixtureSelectors` and `fixture-selection` are retained only for the
-older fixture tests and are not mounted by the application.

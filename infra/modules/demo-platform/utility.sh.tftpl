@@ -1,0 +1,63 @@
+#!/bin/bash
+set -eu
+export DEBIAN_FRONTEND=noninteractive
+systemctl mask coturn.service
+apt-get update -q
+apt-get install -y -q iptables-persistent python3-boto3 coturn
+%{ if nat_enabled ~}
+printf 'net.ipv4.ip_forward=1\n' >/etc/sysctl.d/90-demo-nat.conf
+sysctl --system >/dev/null
+iface=$(ip route get 1.1.1.1 | awk '{print $5; exit}')
+iptables -t nat -A POSTROUTING -s 10.39.0.0/16 -o "$iface" -j MASQUERADE
+netfilter-persistent save
+%{ endif ~}
+%{ if turn_enabled ~}
+cat >/usr/local/sbin/configure-demo-turn.py <<'PY'
+import json
+import os
+import socket
+import boto3
+
+secret = json.loads(boto3.client('secretsmanager', region_name='ap-southeast-1').get_secret_value(SecretId=${secret_arn})['SecretString'])['shared_secret']
+if len(secret) < 32 or '\n' in secret or '\r' in secret:
+    raise ValueError('Invalid TURN configuration')
+local_ip = socket.gethostbyname(socket.gethostname())
+lines = [
+    'listening-port=3478', 'fingerprint', 'use-auth-secret',
+    'static-auth-secret=' + secret, 'realm=' + ${realm},
+    'external-ip=' + ${public_ip} + '/' + local_ip,
+    'min-port=49160', 'max-port=49200', 'no-cli', 'no-tls', 'no-dtls',
+    'no-multicast-peers', 'user-quota=2', 'total-quota=10',
+    'bps-capacity=2500000', 'log-file=stdout',
+    'denied-peer-ip=0.0.0.0-0.255.255.255',
+    'denied-peer-ip=10.0.0.0-10.255.255.255',
+    'denied-peer-ip=127.0.0.0-127.255.255.255',
+    'denied-peer-ip=169.254.0.0-169.254.255.255',
+    'denied-peer-ip=172.16.0.0-172.31.255.255',
+    'denied-peer-ip=192.168.0.0-192.168.255.255',
+]
+fd = os.open('/etc/turnserver.conf', os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+with os.fdopen(fd, 'w') as output:
+    output.write('\n'.join(lines) + '\n')
+PY
+cat >/etc/systemd/system/demo-turn.service <<'UNIT'
+[Unit]
+Description=Single-node demo TURN with Secrets Manager configuration
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/python3 /usr/local/sbin/configure-demo-turn.py
+ExecStart=/usr/bin/turnserver -c /etc/turnserver.conf
+Restart=on-failure
+RestartSec=30
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl disable --now coturn || true
+systemctl daemon-reload
+systemctl enable --now demo-turn
+%{ else ~}
+systemctl disable --now coturn || true
+%{ endif ~}

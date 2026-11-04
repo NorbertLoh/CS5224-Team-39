@@ -19,11 +19,11 @@ from telelink_common.inbox import consume_batch
 from telelink_common.inbox.consumer import handle_event
 from test_persistence import database as database
 
-from app.generation import GeneratePrescription
+from app.integrations.records import IssuedPrescription, RecordsClient
+from app.integrations.storage import PUBLIC_BLOCK, PrivatePDFStore
 from app.models import Document, event_inbox, event_outbox
-from app.records import IssuedPrescription, RecordsClient
+from app.services.generation import GeneratePrescription
 from app.settings import Settings
-from app.storage import PUBLIC_BLOCK, PrivatePDFStore
 
 
 def workflow(**changes):

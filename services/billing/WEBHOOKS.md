@@ -9,7 +9,7 @@ B04; accepting a receipt does not confirm a payment.
 Install the billing lockfile (including Stripe SDK 16.0.0), upgrade Alembic to
 `head` (`0003`), and start the billing API as described in [CHECKOUT.md](CHECKOUT.md).
 Set `SERVICE_STRIPE_WEBHOOK_SECRET` to this endpoint's `whsec_` signing secret.
-It is separate from the API key and the unprefixed X04 spike variable. With no
+It is separate from the API key. With no
 signing secret or database, the receiver returns 503; existing checkout readiness
 still checks checkout configuration independently.
 
@@ -91,3 +91,19 @@ with PostgreSQL, along with Ruff lint/format and `pip check`. Migration round-tr
 and Alembic schema parity passed. Actual loopback HTTP returned 200 for a signed
 receipt and replay, 400 for body tampering, and left exactly one PostgreSQL
 receipt. The existing Starlette TestClient deprecation warning remains.
+
+### Retired X04 standalone receiver
+
+X04 completed in [PR #162](https://github.com/NorbertLoh/CS5224-Team-39/pull/162)
+([issue #161](https://github.com/NorbertLoh/CS5224-Team-39/issues/161)). Its historical
+17 October 2026 evidence was 28 checks, including an actual loopback UTF-8 HTTP
+callback, plus Ruff lint/format and pip dependency checks. That evidence established
+sample signatures only, not Stripe-origin delivery or application payment processing.
+
+RF18 removes the isolated handler, its duplicate lockfile and dedicated workflow.
+Use this service's receiver and pinned dependencies instead. Run
+`python -m pytest tests/test_webhooks.py -q` from `services/billing`; checks needing
+PostgreSQL require the explicitly disposable setup in [README.md](README.md).
+UTF-8, JSON reserialization, both signature-rotation orders and real loopback
+HTTP are covered in the active suite. The loopback check uses an explicit receipt
+storage spy; it establishes HTTP/signature behavior, not durable integration.

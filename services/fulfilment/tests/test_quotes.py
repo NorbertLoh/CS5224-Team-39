@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from telelink_common.errors import DomainError
 
-from app.delivery_provider import DeliveryPrice
+from app.integrations.delivery_provider import DeliveryPrice
 from app.main import create_app
 from app.models import CatalogueItem, Order, Quote, QuoteRequest
 from app.settings import Settings
@@ -22,6 +22,7 @@ from tests.test_api import (
 from tests.test_api import api as api
 
 DESTINATION = {"address_line": "3 Temasek Boulevard", "postal_code": "038983", "country_code": "SG"}
+RECIPIENT = {"name": "Synthetic recipient", "phone_number": "+6581234567"}
 
 
 class Provider:
@@ -59,7 +60,7 @@ def quote(client, state, key="quote-key", destination=None, **extra):
     return client.post(
         f"/orders/{state.order_id}/quotes",
         headers={"Idempotency-Key": key},
-        json={"destination": destination or DESTINATION} | extra,
+        json={"destination": destination or DESTINATION, "recipient": RECIPIENT} | extra,
     )
 
 
@@ -88,7 +89,7 @@ def test_trusted_totals_refresh_snapshots_supersession_and_replay(quotes):
     with state.sessions() as db:
         old = db.get(Quote, UUID(data["quote_id"]))
         assert old.items[0]["unit_price_minor"] == 1234
-        assert old.destination == DESTINATION
+        assert old.destination == DESTINATION | {"recipient_contact": RECIPIENT}
     assert (
         quote(client, state, destination=DESTINATION | {"address_line": "other"}).status_code == 409
     )
@@ -118,13 +119,13 @@ def test_concurrent_quotes(quotes, same_key):
 def test_expiry_equality_and_ten_minute_cap(quotes, monkeypatch):
     client, state = quotes
     now = datetime.now(timezone.utc)
-    monkeypatch.setattr("app.quotes.utcnow", lambda: now)
+    monkeypatch.setattr("app.services.quotes.utcnow", lambda: now)
     state.provider.expiry = now + timedelta(hours=1)
     data = quote(client, state).json()
     expiry = now + timedelta(minutes=10)
     with state.sessions() as db:
         assert db.get(Quote, UUID(data["quote_id"])).expires_at == expiry
-    monkeypatch.setattr("app.quotes.utcnow", lambda: expiry)
+    monkeypatch.setattr("app.services.quotes.utcnow", lambda: expiry)
     assert client.get(f"/quotes/{data['quote_id']}").json()["status"] == "expired"
     state.provider.expiry = expiry
     assert quote(client, state, key="expired").status_code == 409
@@ -253,3 +254,40 @@ def test_unauthenticated_quotes_fail_closed():
             ).status_code
             == 401
         )
+
+
+def test_unpriced_catalogue_blocks_quote_without_provider_call(quotes):
+    client, state = quotes
+    with state.sessions.begin() as db:
+        db.get(CatalogueItem, (TENANT, MEDICATION)).unit_price_minor = None
+    response = quote(client, state)
+    assert response.status_code == 409 and response.json()["error"]["code"] == "medication_unpriced"
+    assert state.provider.calls == 0
+    with state.sessions() as db:
+        assert db.scalar(select(func.count()).select_from(Quote)) == 0
+
+
+def test_prescription_prices_ignore_catalogue_repricing(quotes):
+    from app.models import PrescriptionPrice
+    from tests.test_api import ITEM, PATIENT, RX
+
+    client, state = quotes
+    with state.sessions.begin() as db:
+        order = db.get(Order, UUID(state.order_id))
+        order.pricing_mode = "prescription"
+        db.add(
+            PrescriptionPrice(
+                tenant_id=TENANT,
+                prescription_id=RX,
+                prescription_item_id=ITEM,
+                medication_id=MEDICATION,
+                display_name="Typed medicine",
+                quantity=2,
+                unit_price_minor=250,
+                priced_by=PATIENT,
+            )
+        )
+        db.get(CatalogueItem, (TENANT, MEDICATION)).unit_price_minor = 9999
+    response = quote(client, state)
+    assert response.status_code == 201, response.text
+    assert response.json()["medication_subtotal"]["amount_minor"] == 500

@@ -13,6 +13,9 @@ class Settings(ServiceSettings):
     dispensing_fixture_path: Path | None = None
     records_url: str | None = None
     records_secret: SecretStr | None = None
+    tenant_url: str | None = None
+    tenant_secret: SecretStr | None = None
+    profile_secret: SecretStr | None = None
     lalamove_api_key: SecretStr | None = None
     lalamove_api_secret: SecretStr | None = None
     delivery_locations_path: Path | None = None
@@ -24,7 +27,7 @@ class Settings(ServiceSettings):
 
     @model_validator(mode="after")
     def validate_configuration(self):
-        for field in ("records_url",):
+        for field in ("records_url", "tenant_url"):
             value = getattr(self, field)
             if value is not None:
                 url = urlsplit(value)
@@ -46,6 +49,8 @@ class Settings(ServiceSettings):
                 self.billing_secret,
                 self.records_secret,
                 self.notification_secret,
+                self.tenant_secret,
+                self.profile_secret,
             )
             if value is not None
         ]

@@ -13,7 +13,7 @@ from telelink_common.access import IdentityClient
 from telelink_common.errors import DomainError
 
 from app.database import get_session
-from app.dispensing import DispensingContext, FixtureDispensing, UnavailableDispensing
+from app.integrations.dispensing import DispensingContext, FixtureDispensing, UnavailableDispensing
 from app.main import create_app
 from app.models import Order
 from app.schemas import Money

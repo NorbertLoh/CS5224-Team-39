@@ -1,0 +1,13 @@
+{
+  "extends": "../apps/web/tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "typeRoots": ["../apps/web/node_modules/@types"]
+  },
+  "include": [
+    "../apps/web/src/vite-env.d.ts",
+    "check_records_frontend.mts",
+    "check_scheduling_frontend.mts",
+    "../apps/web/probes/check_navigation_frontend.mts"
+  ]
+}

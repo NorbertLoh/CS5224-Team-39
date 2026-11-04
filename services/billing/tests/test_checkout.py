@@ -16,12 +16,12 @@ from sqlalchemy.orm import Session
 from telelink_common.access import IdentityClient
 from telelink_common.service_auth import service_token
 
-from app.expire_checkouts import expire_due
+from app.integrations.stripe import StripeCheckout
+from app.integrations.upstream import CheckoutSources
 from app.main import create_app
 from app.models import CheckoutAttempt, Payment
-from app.provider import StripeCheckout
 from app.settings import Settings
-from app.upstream import CheckoutSources
+from app.workers.expiry import expire_due
 
 SCHEDULING = "b02-scheduling-secret-with-at-least-32-bytes"
 TENANT = "b02-tenant-secret-with-at-least-32-bytes"
@@ -35,7 +35,8 @@ def api(database, database_url):
         connection.execute(
             text(
                 "TRUNCATE billing.checkout_keys, billing.checkout_attempts, billing.payments, "
-                "billing.medication_checkout_keys, billing.medication_checkout_attempts"
+                "billing.medication_checkout_keys, billing.medication_checkout_attempts, "
+                "billing.refund_attempts"
             )
         )
     patient, other, tenant, appointment = uuid4(), uuid4(), uuid4(), uuid4()

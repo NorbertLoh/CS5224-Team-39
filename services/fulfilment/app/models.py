@@ -45,7 +45,7 @@ class CatalogueItem(Base):
     medication_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     display_name: Mapped[str] = mapped_column(String(200))
     unit_label: Mapped[str] = mapped_column(String(80))
-    unit_price_minor: Mapped[int] = mapped_column(BigInteger)
+    unit_price_minor: Mapped[int | None] = mapped_column(BigInteger)
     active: Mapped[bool]
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -79,6 +79,7 @@ class Order(Base):
         Index("ix_orders_tenant_page", "tenant_id", "created_at", "order_id"),
     )
     order_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    pricing_mode: Mapped[str] = mapped_column(String(20), server_default=text("'catalogue'"))
     tenant_id: Mapped[UUID] = mapped_column(Uuid)
     prescription_id: Mapped[UUID] = mapped_column(Uuid)
     appointment_id: Mapped[UUID] = mapped_column(Uuid)
@@ -99,6 +100,32 @@ class Order(Base):
         lazy="selectin",
         order_by="OrderItem.position",
     )
+
+
+class PrescriptionPrice(Base):
+    __tablename__ = "prescription_prices"
+    __table_args__ = (
+        CheckConstraint(f"unit_price_minor BETWEEN 0 AND {MAX_MONEY}", name="ck_rx_price"),
+        CheckConstraint("quantity > 0", name="ck_rx_price_quantity"),
+    )
+    tenant_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    prescription_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    prescription_item_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    medication_id: Mapped[UUID] = mapped_column(Uuid)
+    display_name: Mapped[str] = mapped_column(String(200))
+    quantity: Mapped[int] = mapped_column(BigInteger)
+    unit_price_minor: Mapped[int] = mapped_column(BigInteger)
+    priced_by: Mapped[UUID] = mapped_column(Uuid)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PrescriptionCorrectionHold(Base):
+    __tablename__ = "prescription_correction_holds"
+    prescription_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    tenant_id: Mapped[UUID] = mapped_column(Uuid)
+    patient_id: Mapped[UUID] = mapped_column(Uuid)
+    corrected_by: Mapped[UUID] = mapped_column(Uuid)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class OrderItem(Base):

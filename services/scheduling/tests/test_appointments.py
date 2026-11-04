@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from sqlalchemy.orm import Session
 
-from app import appointments
+from app.api import appointments
 from app.main import create_app
 from app.models import Appointment, AvailabilitySlot
 from app.settings import Settings
@@ -409,6 +409,17 @@ def test_service_start_complete_and_operator_no_show(appointment_api):
         == "no_show"
     )
     assert client.post("/internal" + path(past, "/complete"), headers=service()).status_code == 409
+
+
+def test_local_early_start_and_complete_service_routes(appointment_api):
+    api = appointment_api
+    active = record(api, status="confirmed", start=datetime.now(timezone.utc) + timedelta(hours=2))
+    client = api[0]
+    route = "/internal" + path(active)
+    assert client.post(route + "/start", headers=service()).status_code == 409
+    client.app.state.settings.test_join_early_minutes = 180
+    assert client.post(route + "/start", headers=service()).json()["status"] == "in_progress"
+    assert client.post(route + "/complete", headers=service()).json()["status"] == "completed"
 
 
 @pytest.mark.parametrize(

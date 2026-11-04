@@ -30,5 +30,19 @@ jobs:
       - run: docker compose config --quiet
       - run: docker compose up --build --wait --wait-timeout 90
       - run: npm run test:browser
+      - name: Start relay for renewal acceptance
+        run: >-
+          docker run -d --name rf30-turn --network host
+          coturn/coturn:4.6.3@sha256:71c3c990283385567f11794ee692e3a47b66fd9b0bb39e42afbe776e331dd888
+          -n --listening-port=34780 --listening-ip=127.0.0.1 --relay-ip=127.0.0.1
+          --min-port=49300 --max-port=49320 --allow-loopback-peers
+          --use-auth-secret --static-auth-secret=rf30-test-only-relay-secret-at-least-32-bytes
+          --realm=rf30.test --no-tls --no-dtls --no-cli
+      - name: Verify renewed call with forced TURN
+        env:
+          RF30_TEST_TURN_URL: turn:127.0.0.1:34780?transport=tcp
+        run: npx playwright test --grep 'two-way media'
       - if: always()
         run: docker compose down
+      - if: always()
+        run: docker rm -f rf30-turn || true

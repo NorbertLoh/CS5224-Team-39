@@ -59,6 +59,8 @@ Construct validated snapshots from `app.template_data`, then call
 `render_prescription`, `render_receipt`, or `render_medical_certificate` from
 `app.templates`. Each returns PDF bytes without network or storage side effects.
 See `tests/test_templates.py` for complete synthetic examples.
+The [RF02 design notes and sample PDFs](../../docs/RF02-pdf-design.md) show the
+shared clinic layout and explain how to regenerate offline review samples.
 
 - Prescription: clinic/patient/reference/issue time, doctor/registration,
   medication names, quantities and instructions.

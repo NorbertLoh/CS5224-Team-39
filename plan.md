@@ -1,6 +1,11 @@
 # TeleLink Health implementation plan
 
-Status: architecture plan, 12 October 2026. F02 scaffold and F03 FastAPI template are merged; F04's optional database/migration example is implemented on its task branch with review/merge pending. No business workflows or AWS resources have been created.
+Status: architecture plan, originally 12 October 2026; current implementation
+summary updated 26 October 2026. The React frontend, independent business APIs,
+workers and local Compose application are implemented. Local integration evidence,
+remaining checks and AWS deployment work are tracked in
+[implementation-plan.md](implementation-plan.md). Local verification does not
+establish deployed AWS behavior.
 
 Execution checklist: [implementation-plan.md](implementation-plan.md), with small unassigned tasks, effort estimates, dependencies and completion criteria for the four-week prototype. Anyone can claim a ready task.
 
@@ -10,6 +15,30 @@ networks are deferred to refinement RF01 (issue #155), sharing W11's deployment
 verification evidence. This does not complete W11, Q04 or the AWS integration gates.
 
 ## 1. Decisions and scope
+
+RF27 managed-service refinement (4 November 2026):
+[`infra/examples/sg-managed`](infra/examples/sg-managed/README.md) provides the
+production-oriented AWS service layout with scalable/replacement/HA mechanisms
+and demo capacities defaulted to one: managed NAT and ElastiCache, a TURN ASG,
+private HTTPS API ALB/VPC Link, separate ECS API/worker groups, configurable
+RDS standby/cache replicas/AZ-local NAT, protected data and remote state.
+The compact `sg-demo` and local Compose remain separate choices. This is
+configuration, not deployed production/HA/capacity evidence; track issue #316 /
+draft PR #325 and existing AWS integration gates.
+
+RF12 patient profile extension: identity owns patients' self-edited contact/address
+details and current display name. Fulfilment reads only recipient name/phone
+through an authenticated service projection. Checkout offers the saved address
+as an editable default; existing quote/delivery route snapshots stay authoritative.
+See [patient profile](docs/patient-profile.md).
+
+RF12 scope extension (26 October 2026): selected-clinic Settings owns a saved
+medicine pickup location in tenant storage, with clinic-admin authorization and
+audited updates. Fulfilment fetches the minimal active-clinic location through
+an authenticated tenant API for new quotations. Existing quote/payment/delivery
+route snapshots remain authoritative. Destination postcode coordinates retain
+the prototype's operator-maintained coverage directory; broad geocoding is not
+part of this extension. Setup and validation: [clinic pickup settings](docs/clinic-pickup-settings.md).
 
 - React + TypeScript + Vite frontend.
 - Python + FastAPI business microservices, independently deployable to ECS Fargate. This is a confirmed requirement.
@@ -25,7 +54,28 @@ The four-week delivery scope below takes priority over advanced capabilities els
 
 Deliver a complete journey: clinic approval -> booking -> consultation payment -> authorised video consultation -> prescription/documents -> medication and delivery payment -> medicine readiness -> delivery tracking. Include a working view for each of the four roles.
 
-Premium subscriptions, promoted placement, extensive analytics, custom clinic domains, video recording, and production onboarding are later work.
+Premium subscriptions, promoted placement, extensive analytics, custom clinic domains, video recording, and production onboarding beyond RF28's manual doctor review are later work.
+
+RF08 scope override (23 October 2026): user-requested, clinic-admin full consultation
+refunds are now in scope. No platform approval queue or medication/delivery refund
+action is included. Use durable provider idempotency, current clinic membership,
+audit history and provider polling. Preserve existing delivery exception review;
+payment alone does not guarantee dispatch. Broader automatic/partial/out-of-band
+refund reconciliation remains deferred. Track implementation in issue #269 / PR #270.
+
+RF09 history refinement (23 October 2026): payment, medicine/delivery order,
+prescription and document API histories default to descending creation time with
+descending ID tie-breakers. Cursor scopes include the ordering so previously issued
+ascending cursors cannot be used to page descending results. Patient visit grouping
+and upcoming appointment chronology remain as designed. Track issue #271 / PR #272.
+
+RF10 appointment refinement (23 October 2026): patient, doctor and clinic-admin
+workspaces use shared Upcoming/Past cards across dates, including clinic-specific
+appointments. The scheduling API classifies effective expiry and filters periods
+before pagination: upcoming is active/ongoing with a future end, nearest first;
+past is ended/terminal, newest appointment date first. Existing role/clinic scope
+and booking, availability, payment and consultation rules remain unchanged.
+Track issue #273 / PR #274.
 
 ## 2. Frontend design
 
@@ -60,7 +110,14 @@ Each business service exposes its own FastAPI app and owns its PostgreSQL schema
 | Notification | Notification jobs, templates, send status and deduplication | Event consumers and SES |
 | PeerJS signalling | WebRTC signalling connections | Separate Node.js PeerServer container; authorised by consultation service |
 
-Worker processes use the owning service's image with a separate command and ECS service, where needed. HTTP and worker workloads can scale independently. Start one instance of each needed workload for the demo and increase only based on evidence and budget.
+Worker processes normally use the owning service's image with a separate command
+and ECS service. RF26 adds separate Lambda images for SQS-triggered document
+generation and notification intake, with scheduled bounded notification dispatch.
+Local Compose retains its existing workers; AWS deployments select one consumer
+runtime per queue. Outbox publishers and other existing workers remain on ECS.
+HTTP and worker workloads scale independently, with bounded concurrency and
+database connection budgets. Setup and pending AWS verification:
+[RF26](docs/RF26-serverless-workers.md).
 
 ## 4. Local-to-AWS mapping
 
@@ -112,6 +169,7 @@ Configure the browser endpoint as localhost and container access through the Com
 For real Cognito, use a public SPA client with authorization code + PKCE and no client secret. Register localhost and deployed callback/logout URLs. Test supported flows offline, then verify registration, recovery, refresh/logout and staff MFA against real Cognito before declaring AWS compatibility. [Cognito app clients](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html).
 
 - APIs accept access tokens and verify signature, issuer, expiry, token use and the expected client/scopes. Do not accept an ID token as an API access token.
+- RF03 adds a custom email/password form using Cognito `USER_PASSWORD_AUTH`, alongside hosted PKCE for additional verification. Password-login tokens carry Cognito's reserved `aws.cognito.signin.user.admin` scope. Services must explicitly enable `SERVICE_AUTH_ALLOW_PASSWORD_TOKENS=true` to accept this as an alternative to the `openid` authentication scope; all custom API scopes, signature/issuer/client checks and server-owned role/tenant checks remain required. The reserved scope never grants a TeleLink administrative role. AWS client configuration and API Gateway scope compatibility must be verified before deployment.
 - API Gateway performs JWT validation on protected HTTP routes; services also enforce authentication and domain authorisation so local routing and alternate ingress cannot bypass controls.
 - Use Cognito `sub` as the stable external identity. Keep tenant memberships and application roles in server-controlled records; do not trust a browser-supplied tenant ID or role.
 - Staff may belong to multiple clinics. Resolve the selected clinic against current membership; patients may have appointments at multiple clinics without granting either clinic unrestricted access to all history.
@@ -131,6 +189,12 @@ For the initial design, use a dedicated internet-facing signalling ALB with orig
 
 Disable caching for authenticated API, webhook and signalling paths. Forward necessary authorisation and WebSocket headers. Allow webhook routes without Cognito only when provider signature verification is enforced. Use an explicit CORS allowlist where cross-origin access is required.
 
+RF26 public-read exception: only successful public clinic listing and by-slug
+profiles opt into shared caching for at most 60 seconds. RF27 (#316) separately owns the reusable CloudFront
+module places these exceptions before the uncached API behavior; mutations are
+never cached. These responses must remain viewer-independent. Booking/payment
+decisions and private/internal projections continue to read authoritative state.
+
 ECS tasks, RDS and Redis run in private subnets. Restrict traffic with security groups. Account for outbound access to Stripe/Lalamove and AWS services through NAT and/or endpoints. Database access is service-only. Use TLS in transit, encryption at rest and private file access through short-lived authorised URLs.
 
 ## 7. Reliable video consultations
@@ -142,7 +206,7 @@ PeerServer handles signalling; it does not relay audio/video. WebRTC media may t
 - Prototype one patient + one doctor in separate networks early, including TURN-only connectivity.
 - Proposed AWS TURN option: coturn on EC2 with a stable public address and explicitly configured relay ports. This is an additional component missing from the diagram; confirm budget and network configuration before implementation.
 - Use expiring TURN credentials. Do not route TURN media through CloudFront or the HTTP ALB.
-- Start PeerServer as one replica. Do not enable multi-replica scaling until signalling state, reconnection and affinity behaviour are proven.
+- Start PeerServer as one replica for the demo. RF29 assigns consultations to healthy tasks using PostgreSQL leases and routes both participants to the owner. Verify two-task recovery on AWS before raising capacity for users. [RF29 setup and verification](docs/RF29-signalling-matchmaker.md)
 - Define disconnect/rejoin behaviour and graceful deployment draining. No recording in the initial scope.
 
 ## 8. Data consistency and workflow rules
@@ -212,6 +276,12 @@ Use a rotating integration coordinator to track blockers and shared-file changes
 | 4 | First half: fix integration bugs and run essential checks. Second half: freeze features, rehearse demo, prepare screenshots/video/report and reset instructions. | Four role walkthroughs work with synthetic data on AWS; fresh seed/reset and backup demo recording ready |
 
 Build a prototype with two seeded clinics, a few doctors, fixed slots, basic branding, simple dashboards, a fixed medication catalogue and template documents. Keep clinic review as a manual approve/reject action; do not build automated licence verification.
+
+RF28 adds manual doctor applications and platform approval. Doctor clinic assignments
+may exist before verification, but clinical access requires both an approved doctor
+application and active clinic membership. Patient and clinic-admin rights remain
+independent. Existing/seeded doctors must use the same approval flow; see
+[doctor verification](docs/RF28-doctor-verification.md).
 
 Do not postpone all integration until week four. Use short-lived branches, merge working increments frequently, hold a brief daily blocker check, and run one shared integrated walkthrough each week. Agree OpenAPI and event contracts before dependent work; fixtures must follow those contracts.
 

@@ -15,11 +15,11 @@ from sqlalchemy import event, select, text
 from sqlalchemy.orm import Session
 from telelink_common.service_auth import service_token
 
-from app.expire_checkouts import expire_due
+from app.integrations.stripe import StripeCheckout
+from app.integrations.upstream import CheckoutSources
 from app.models import MedicationCheckoutAttempt, Payment, StripeWebhookEvent, event_outbox
-from app.payments import process_pending
-from app.provider import StripeCheckout
-from app.upstream import CheckoutSources
+from app.services.payments import process_pending
+from app.workers.expiry import expire_due
 from tests import test_checkout as consultation_tests
 from tests.test_payment_processing import receipt as signed_receipt
 
@@ -316,7 +316,7 @@ def test_upstream_conflicts_and_outages(medication_api, status, code):
 def test_quote_expiry_equality(medication_api, monkeypatch):
     api = medication_api[0]
     deadline = api[6]
-    monkeypatch.setattr("app.medication_checkout.now", lambda: deadline)
+    monkeypatch.setattr("app.services.medication_checkout.now", lambda: deadline)
     result = checkout(medication_api)
     assert result.status_code == 409 and result.json()["error"]["code"] == "quote_expired"
     assert not api[7]["provider_calls"]

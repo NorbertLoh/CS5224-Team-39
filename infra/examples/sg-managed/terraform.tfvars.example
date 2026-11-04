@@ -1,0 +1,35 @@
+aws_account_id          = "123456789012"
+name_prefix             = "telelink-managed"
+origin_hostname         = "signal.demo.example.org"
+internal_origin_hostname = "api.internal.demo.example.org"
+hosted_zone_id          = "Z_REPLACE_WITH_YOUR_OWNED_ZONE"
+# If supplied, must cover BOTH origin hostnames and be in Singapore.
+# Otherwise Terraform requests and DNS-validates a certificate for both.
+origin_certificate_arn = null
+deletion_protection    = true
+final_snapshot_identifier = null
+ses_sender            = "demo@example.org"
+budget_email          = "owner@example.org"
+monthly_budget_usd    = 250
+
+# Stage foundation -> images/secrets -> DB bootstrap/migrations -> workloads.
+enable_workloads = false
+images          = {}
+# Use ARM64 ECS images and AMD64 Lambda images, all pinned with @sha256:...
+# No Redis image is required: the profile uses ElastiCache.
+service_environment = {}
+service_secret_keys = {}
+# Managed profile rejects destructive bucket cleanup.
+allow_destroy_demo_data = false
+
+# Demo capacities; mechanisms remain configured and can be raised later.
+allow_scale_out    = false
+min_tasks          = 1
+max_tasks          = 1
+worker_min_tasks   = 1
+worker_max_tasks   = 1
+lambda_concurrency = 1
+database_multi_az  = false
+redis_node_count   = 1
+nat_gateway_count  = 1
+turn_capacity     = { min = 1, desired = 1, max = 1 }

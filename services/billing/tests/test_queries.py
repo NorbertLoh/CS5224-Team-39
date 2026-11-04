@@ -2,7 +2,7 @@
 
 import json
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import httpx
@@ -181,7 +181,7 @@ def test_combined_roles_and_revocation(api):
 def test_filters_and_pagination_with_equal_timestamps(api):
     client, headers, seed, _, tenant, _, _, other, _ = api
     instant = datetime(2026, 10, 1, tzinfo=timezone.utc)
-    wanted = sorted(str(seed(created_at=instant)) for _ in range(4))
+    wanted = sorted((str(seed(created_at=instant)) for _ in range(4)), reverse=True)
     seed(patient_id=other, created_at=instant)
     seed(status="failed", created_at=instant)
     medication = seed(
@@ -216,7 +216,7 @@ def test_cursor_rejected_outside_scope(api, change):
         if change == "expired":
             claims["iat"], claims["exp"] = 1, 2
         else:
-            claims["scope"]["order"] = "descending"
+            claims["scope"]["order"] = "created_at,payment_id:asc"
         params["cursor"] = jwt.encode(claims, CURSOR_SECRET, algorithm="HS256")
     elif change == "subject":
         caller = headers(other)
@@ -354,3 +354,23 @@ def test_totals_empty_and_safe_integer_boundary(api):
 def test_cursor_secret_configuration():
     with pytest.raises(ValueError, match="cursor_secret"):
         Settings(_env_file=None, cursor_secret="short")
+
+
+def test_newest_payment_first_and_paging_past_new_insert(api):
+    client, headers, seed, *_ = api
+    oldest_at = datetime(2026, 10, 1, tzinfo=timezone.utc)
+    oldest = seed(created_at=oldest_at)
+    middle = seed(created_at=oldest_at + timedelta(days=1))
+    newest = seed(created_at=oldest_at + timedelta(days=2))
+    first = client.get("/payments", params={"limit": 1}, headers=headers()).json()
+    assert [p["payment_id"] for p in first["items"]] == [str(newest)]
+    seed(created_at=oldest_at + timedelta(days=3))
+    second = client.get(
+        "/payments", params={"limit": 1, "cursor": first["next_cursor"]}, headers=headers()
+    ).json()
+    assert [p["payment_id"] for p in second["items"]] == [str(middle)]
+    third = client.get(
+        "/payments", params={"limit": 1, "cursor": second["next_cursor"]}, headers=headers()
+    ).json()
+    assert [p["payment_id"] for p in third["items"]] == [str(oldest)]
+    assert third["next_cursor"] is None

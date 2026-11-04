@@ -1,6 +1,6 @@
+import { accessToken } from '@/auth/access-token'
 import { apiFetch } from '@/lib/api'
 import type { CursorPage } from '@/lib/api-types'
-import { accessToken } from '../clinics/api'
 
 export type StaffRole = 'doctor' | 'clinic_admin'
 export type Membership = {
@@ -9,34 +9,71 @@ export type Membership = {
   tenant_id: string
   roles: StaffRole[]
   status: 'active' | 'revoked'
-  subject: { display_name: string; email: string | null }
+  subject: {
+    display_name: string
+    email: string | null
+    doctor_verification:
+      'not_applied' | 'pending' | 'approved' | 'rejected' | 'revoked'
+  }
 }
 
-async function request(tenantId: string, suffix: string, options: RequestInit = {}) {
-  return apiFetch(`/identity/clinics/${encodeURIComponent(tenantId)}/memberships${suffix}`, {
-    ...options, accessToken: await accessToken(),
-  })
+async function request(
+  tenantId: string,
+  suffix: string,
+  options: RequestInit = {},
+) {
+  return apiFetch(
+    `/identity/clinics/${encodeURIComponent(tenantId)}/memberships${suffix}`,
+    {
+      ...options,
+      accessToken: await accessToken(),
+    },
+  )
 }
 
-export async function listStaff(tenantId: string, cursor: string | null, signal?: AbortSignal): Promise<CursorPage<Membership>> {
+export async function listStaff(
+  tenantId: string,
+  cursor: string | null,
+  signal?: AbortSignal,
+): Promise<CursorPage<Membership>> {
   const query = new URLSearchParams({ limit: '25' })
   if (cursor) query.set('cursor', cursor)
   return (await request(tenantId, `?${query}`, { signal })).json()
 }
 
-export async function saveStaff(tenantId: string, subjectId: string, roles: StaffRole[]): Promise<Membership> {
-  return (await request(tenantId, `/${encodeURIComponent(subjectId)}`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ roles }),
-  })).json()
+export async function saveStaff(
+  tenantId: string,
+  subjectId: string,
+  roles: StaffRole[],
+): Promise<Membership> {
+  return (
+    await request(tenantId, `/${encodeURIComponent(subjectId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roles }),
+    })
+  ).json()
 }
 
-export async function revokeStaff(tenantId: string, subjectId: string): Promise<void> {
-  await request(tenantId, `/${encodeURIComponent(subjectId)}`, { method: 'DELETE' })
+export async function revokeStaff(
+  tenantId: string,
+  subjectId: string,
+): Promise<void> {
+  await request(tenantId, `/${encodeURIComponent(subjectId)}`, {
+    method: 'DELETE',
+  })
 }
 
-export async function assignStaff(tenantId: string, email: string, roles: StaffRole[]): Promise<Membership> {
-  return (await request(tenantId, '', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email.trim().toLowerCase(), roles }),
-  })).json()
+export async function assignStaff(
+  tenantId: string,
+  email: string,
+  roles: StaffRole[],
+): Promise<Membership> {
+  return (
+    await request(tenantId, '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), roles }),
+    })
+  ).json()
 }

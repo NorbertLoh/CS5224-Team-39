@@ -9,8 +9,8 @@ from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 from telelink_common.service_auth import service_token
 
+from app.api.notification_context import router
 from app.database import get_session
-from app.notification_context import router
 from app.settings import Settings
 
 KEY = "notification-test-independent-key-at-least-32-bytes"

@@ -2,14 +2,17 @@
 
 ## Behavior
 
-The doctor dashboard links to `/doctor/consultation`. Its records workspace loads
-the current doctor's real appointments from scheduling, including additional
-pages. Selecting an appointment rechecks its detail, loads its note and prescription
-history, and retrieves the owning clinic's active catalogue. The selected catalogue
+The doctor opens the booked workspace at
+`/doctor/consultation?appointment_id=<id>`. Current clinical autosave, reload,
+previous-visit history and consultation controls are documented in the
+[clinical UI guide](../apps/web/src/features/records/README.md).
+The workspace rechecks appointment detail, loads note/prescription history and
+retrieves the owning clinic's active catalogue. The selected catalogue
 ID, positive integer quantity and instructions are the only prescription item
 inputs sent to records. Names, ownership links, item IDs and timestamps come from
-the server. A note save uses PUT; a new draft uses POST, an existing draft uses
-PATCH, and issuance uses R03's POST issue operation. Issuance does not generate a PDF.
+the server. Autosave uses PUT for notes, POST for a new draft and PATCH for an
+existing draft; issuance is an explicit POST. Document generation runs separately
+through the document worker; issuance does not synchronously produce a PDF.
 
 Saved notes/drafts reload from the API. Notes remain editable during an in-progress
 appointment after its prescription is issued. Issued/voided prescriptions are
@@ -24,8 +27,8 @@ responses; list/detail loading, empty and retry states are explicit. Frontend
 subject filters are defense in depth; records remains the authorization boundary.
 
 Clinical queries and mutations are scoped to the current session and discarded
-when inactive. Selecting another appointment remounts the forms; switching
-appointments, navigating away or reloading discards unsaved edits. No clinical
+when inactive. Forms are scoped to the booked appointment; navigation/reload warns
+before discarding unsaved changes, and writes remain serialized per form. No clinical
 payload is stored in localStorage/sessionStorage. After a failed write, the
 workspace disables further writes until Reload records checks the server outcome.
 Writes are never automatically retried; a timed-out POST/issue may have committed.
@@ -35,8 +38,9 @@ Writes are never automatically retried; a timed-out POST/issue may have committe
 Use the existing service READMEs to provision/migrate identity, tenant, scheduling,
 clinical_records and fulfilment and configure the same Floci Cognito issuer/client.
 Run each service separately. Default direct ports are identity 8001, tenant 8002,
-scheduling 8003, records 8005 and fulfilment 8006. Required records migration is
-0003; catalogue access requires an active doctor membership in the owning clinic.
+scheduling 8003, records 8005 and fulfilment 8006. Apply each service's current
+Alembic head; RF12's pricing changes require at least clinical-records 0006 and
+fulfilment 0007. Catalogue access requires an active doctor membership in the owning clinic.
 Create catalogue entries through D01's authorised clinic-admin PUT API. An empty
 catalogue disables prescription saves; it never enables free-text fallback.
 
@@ -66,8 +70,8 @@ API/event contracts changed.
 Run frontend checks from `apps/web`:
 
 ```powershell
-npm test
 npm run lint
+npm run typecheck
 npm run build
 ```
 
@@ -83,16 +87,22 @@ HTTP overrides are `R04_IDENTITY_URL`, `R04_TENANT_URL`, `R04_FULFILMENT_URL` an
 services/identity/.venv/Scripts/python.exe dev/check_records_frontend.py
 ```
 
+RF04 removed the frontend test harness; `npm test` is not an available frontend
+script. The optional adapter helper below is mutating and must only run against
+the explicitly configured local synthetic stack.
+
 This check creates a new synthetic clinic, doctor membership and real catalogue
 entry. It inserts one disposable in-progress scheduling appointment as test setup
-because consultation/payment integration is unfinished. All records operations
+to isolate its adapter verification from consultation/payment. All records operations
 then use the real HTTP services and owning-service authorization. It deletes only
 its own clinical rows, pending issuance event, appointment and slot; deactivates
 its medicine, revokes its membership/tokens and suspends its synthetic clinic.
 Run without a concurrent records outbox publisher so its synthetic event is not
 published before cleanup. It never resets a schema or changes an existing clinic.
 
-Observed on 16 October 2026: 74 frontend tests, ESLint, TypeScript/production build,
+### Historical R04 evidence (16 October 2026)
+
+At implementation time, 74 frontend tests, ESLint, TypeScript/production build,
 Python probe Ruff lint/format and diff checks passed. Real Floci PKCE/JWKS, identity, tenant, scheduling,
 fulfilment, clinical-records, PostgreSQL and Vite checks passed. The real adapters
 verified durable note/draft saves and reload, trusted catalogue names, draft update,
@@ -101,5 +111,7 @@ patient write denial, clinic/platform clinical-read denial, signed-out failure,
 completed-state write rejection and persisted clinical read audits. Synthetic
 cleanup completed. Browser form interaction, AWS, actual payment/consultation
 admission, private PDFs and dispensing/order integration remain unverified.
-The adjacent video is still a local preview; this work does not complete U11/V04
-or the end-to-end I02 gate. P02/P03/U14 remain separate work.
+Those limits describe the R04 run. Later booked video and document/prescription
+journeys are recorded in [V04](V04-booked-video.md), [I02](I02-local-journey.md) and
+[document frontend verification](document-frontend.md). Their evidence is separate;
+this cleanup does not establish new runtime integration or AWS behavior.

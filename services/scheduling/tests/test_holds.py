@@ -13,11 +13,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from test_api import list_params, slot_body
 
-from app import booking
-from app.expire_holds import expire_batch
-from app.holds import HoldCache, expire_slot_holds
+from app.api import booking
 from app.models import ACTIVE_RESERVATION_STATES, Appointment, AvailabilitySlot
+from app.services.holds import HoldCache, expire_slot_holds
 from app.settings import Settings
+from app.workers.expiry import expire_batch
 
 # Reuse the real PostgreSQL and signed upstream HTTP fixtures from S02.
 api = test_api.api
@@ -86,6 +86,10 @@ def test_hold_context_price_deadline_and_real_redis_ttl(holds):
     assert result["doctor_id"] == str(ids["doctor"])
     assert result["status"] == "held" and result["payment_id"] is None
     assert result["consultation_price"] == {"amount_minor": 3210, "currency": "SGD"}
+    names = {"patient_name": "patient", "doctor_name": "Doctor", "clinic_name": "Test Clinic"}
+    assert {key: result[key] for key in names} == names
+    detail = client.get(f"/appointments/{result['appointment_id']}", headers=user()).json()
+    assert {key: detail[key] for key in names} == names
     cache = client.app.state.hold_cache
     assert cache.client.get(cache.key(slot["slot_id"])) == result["appointment_id"]
     assert 590_000 < cache.client.pttl(cache.key(slot["slot_id"])) <= 600_000

@@ -1,7 +1,11 @@
-import type { Payment } from './api'
-import { consultationPrice } from '../../lib/money'
-import { paymentTime, purposeLabels, statusLabels } from './model'
-import { PaymentDetails } from './PaymentDetails'
+import type { Payment } from '@/features/payments/api'
+import {
+  paymentTime,
+  purposeLabels,
+  statusLabels,
+} from '@/features/payments/model'
+import { PaymentDetails } from '@/features/payments/PaymentDetails'
+import { consultationPrice } from '@/lib/money'
 
 export function PaymentHistory({ payments }: { payments: Payment[] }) {
   if (!payments.length)
@@ -14,7 +18,7 @@ export function PaymentHistory({ payments }: { payments: Payment[] }) {
     <div className="overflow-x-auto rounded-xl border">
       <table className="w-full text-left text-sm">
         <caption className="px-4 py-3 text-left text-slate-600">
-          {payments.length} payments · oldest first · all amounts in SGD
+          {payments.length} payments · newest first · all amounts in SGD
         </caption>
         <thead className="bg-slate-50">
           <tr>

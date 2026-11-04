@@ -22,7 +22,9 @@ export class Admissions {
     const response = await fetch(`${this.config.url}/internal/admissions/${action}`, {
       method: 'POST', redirect: 'error', signal: AbortSignal.timeout(this.config.timeoutMs),
       headers: { authorization: `Bearer ${serviceToken(this.config.secret)}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ token, peer_id: peerId }),
+      body: JSON.stringify({ token, peer_id: peerId, ...(this.config.matchmaker ? {
+        node_id: this.config.nodeId, node_token: this.config.nodeToken,
+      } : {}) }),
     });
     if (action === 'release' && response.status === 204) return;
     if (response.status !== 200) {
@@ -44,19 +46,26 @@ export class Admissions {
       throw new Error('Invalid admission response');
     }
     const expiresAt = Date.parse(lease.expires_at);
+    if (this.config.matchmaker && (lease.node_id !== this.config.nodeId
+      || !Number.isSafeInteger(lease.assignment_version) || lease.assignment_version < 1)) {
+      throw new Error('Invalid signalling owner');
+    }
     if (!Number.isFinite(expiresAt) || expiresAt <= Date.now() || expiresAt > Date.now() + 300000) {
       throw new Error('Invalid admission lifetime');
     }
     return { peerId, subject: lease.subject_id, appointmentId: lease.appointment_id,
-      tenantId: lease.tenant_id, sessionId: lease.session_id, expiresAt, token };
+      tenantId: lease.tenant_id, sessionId: lease.session_id, expiresAt, token,
+      nodeId: lease.node_id, assignmentVersion: lease.assignment_version };
   }
 
   consume(token, peerId) { return this.call('consume', token, peerId); }
 
   async check(grant) {
     const current = await this.call('check', grant.token, grant.peerId);
-    if (['subject', 'appointmentId', 'tenantId', 'sessionId', 'expiresAt']
+    if (['subject', 'appointmentId', 'tenantId', 'sessionId', 'nodeId', 'assignmentVersion']
       .some((key) => current[key] !== grant[key])) throw new Error('Admission changed');
+    // Checks observe browser-authorized renewal. They never extend the DB lease.
+    grant.expiresAt = Math.max(grant.expiresAt, current.expiresAt);
   }
 
   async release(grant) {

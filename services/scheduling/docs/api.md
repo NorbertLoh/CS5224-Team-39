@@ -55,8 +55,10 @@ Remove-Item Env:SERVICE_DATABASE_URL
 ```
 
 The service defaults to port 8003. `/health/live` checks process health;
-`/health/ready` checks required configuration, readable tables, revision `0005`
+`/health/ready` checks required configuration, readable tables, revision `0007`
 and Redis connectivity. It does not probe identity/tenant; actual operations handle their failures.
+The readiness regression upgrades to Alembic's current head before checking for
+HTTP 200, so a future migration must keep the runtime revision gate in sync.
 Swagger is `/docs`. No root Compose, frontend proxy or routing changes are part of
 S02; use port 8003 directly until the relevant integration task wires them up.
 
@@ -108,3 +110,9 @@ fixed localhost endpoints and synthetic Floci credentials.
 On 14 October 2026, all 94 local tests, Ruff lint/format and `pip check` passed;
 the real Floci/three-service HTTP check also passed. Browser/UI integration
 and AWS deployment remain unverified.
+
+S08 verification on 21 October 2026: the readiness regression failed on the old
+gate, then all 239 scheduling tests passed with two optional Floci checks skipped.
+Current-head readiness returned HTTP 200; old/missing revisions and unavailable
+database/Redis returned 503. A separate live API probe also returned 200 against
+the persistent `0007` database. Ruff lint and formatting passed.

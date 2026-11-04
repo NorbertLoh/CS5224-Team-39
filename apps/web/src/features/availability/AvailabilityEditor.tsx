@@ -1,8 +1,7 @@
-import { useState } from 'react'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
-import { useSchedulingIdentity } from '../scheduling/useSchedulingIdentity'
-import { DoctorTimetable } from './DoctorTimetable'
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { DoctorTimetable } from '@/features/availability/DoctorTimetable'
+import { useSchedulingIdentity } from '@/features/scheduling/useSchedulingIdentity'
 
 export function AvailabilityEditor({
   tenantId: routeClinic,
@@ -10,16 +9,11 @@ export function AvailabilityEditor({
   tenantId?: string
 }) {
   const identity = useSchedulingIdentity()
-  const [selectedClinic, setSelectedClinic] = useState('')
   const memberships =
     identity.data?.memberships.filter(
       (member) => member.status === 'active' && member.roles.includes('doctor'),
     ) ?? []
-  const tenantId =
-    routeClinic ??
-    (memberships.some((member) => member.tenant_id === selectedClinic)
-      ? selectedClinic
-      : memberships[0]?.tenant_id)
+  const tenantId = routeClinic ?? memberships[0]?.tenant_id
   if (identity.isError)
     return (
       <ErrorState
@@ -40,21 +34,6 @@ export function AvailabilityEditor({
         Select times to add or remove your availability. All times are Singapore
         time (SGT).
       </p>
-      <label className="flex max-w-sm flex-col gap-2">
-        Clinic
-        <select
-          className="rounded border bg-white p-2"
-          value={tenantId}
-          disabled={Boolean(routeClinic)}
-          onChange={(event) => setSelectedClinic(event.target.value)}
-        >
-          {memberships.map((member) => (
-            <option key={member.tenant_id} value={member.tenant_id}>
-              {member.tenant_id}
-            </option>
-          ))}
-        </select>
-      </label>
       <DoctorTimetable
         key={`${identity.token}:${identity.data.subject_id}:${tenantId}`}
         tenantId={tenantId}

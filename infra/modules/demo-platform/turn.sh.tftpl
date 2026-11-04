@@ -1,0 +1,54 @@
+#!/bin/bash
+set -eu
+export DEBIAN_FRONTEND=noninteractive
+systemctl mask coturn.service
+# Failed bootstrap never completes the launch hook; ASG abandons/replaces it.
+apt-get update -q
+apt-get install -y -q python3-boto3 coturn
+install -d -m 700 /etc/telelink
+cat >/etc/telelink/turn.json <<'JSON'
+${config}
+JSON
+chmod 600 /etc/telelink/turn.json
+cat >/usr/local/sbin/telelink-turn.py <<'PY'
+${agent}
+PY
+chmod 700 /usr/local/sbin/telelink-turn.py
+cat >/etc/systemd/system/telelink-turn.service <<'UNIT'
+[Unit]
+Description=Managed coturn relay
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/python3 /usr/local/sbin/telelink-turn.py configure
+ExecStart=/usr/bin/turnserver -c /etc/turnserver.conf
+ExecStartPost=/usr/bin/python3 /usr/local/sbin/telelink-turn.py ready
+Restart=on-failure
+RestartSec=15
+TimeoutStartSec=180
+[Install]
+WantedBy=multi-user.target
+UNIT
+cat >/etc/systemd/system/telelink-turn-health.service <<'UNIT'
+[Unit]
+Description=Protocol health and ASG replacement signal for coturn
+After=network-online.target
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/sbin/telelink-turn.py health
+UNIT
+cat >/etc/systemd/system/telelink-turn-health.timer <<'UNIT'
+[Unit]
+Description=Check coturn every minute
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl disable --now coturn || true
+systemctl daemon-reload
+systemctl enable --now telelink-turn-health.timer
+systemctl enable --now telelink-turn.service

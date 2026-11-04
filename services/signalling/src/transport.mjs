@@ -25,6 +25,8 @@ export function admissionTransport(options, admissions, config) {
     pending++;
     socket.pause();
     try {
+      if (!config.origins.includes(request.headers.origin)) throw new Error('Origin denied');
+      if (config.router && await config.router.upgrade(request, socket, head)) return;
       const url = new URL(request.url, 'http://localhost');
       const query = url.searchParams;
       if (url.pathname !== options.path || query.get('key') !== config.key
@@ -32,6 +34,7 @@ export function admissionTransport(options, admissions, config) {
         || ['id', 'token', 'key'].some((name) => query.getAll(name).length !== 1)
         || !validCredential(query.get('token'), query.get('id'))) throw new Error('Admission denied');
       grant = await admissions.consume(query.get('token'), query.get('id'));
+      await config.protection?.ensure();
       if (draining || socket.destroyed || Date.now() >= grant.expiresAt || active.has(grant.peerId)
         || [...active.values()].some(({ grant: other }) => other.sessionId === grant.sessionId
           && other.subject === grant.subject)) throw new Error('Admission denied');
@@ -53,7 +56,18 @@ export function admissionTransport(options, admissions, config) {
           setTimeout(() => wire.terminate(), 250).unref();
         };
         entry.deny = deny;
-        const expiry = setTimeout(deny, Math.max(0, grant.expiresAt - Date.now()));
+        let expiry;
+        const expire = async () => {
+          if (blocked) return;
+          // A renewal can commit between the periodic check and this deadline.
+          try {
+            await admissions.check(grant);
+            if (!live(grant)) return deny();
+            expiry = setTimeout(expire, Math.max(1, grant.expiresAt - Date.now()));
+            expiry.unref();
+          } catch { deny(); }
+        };
+        expiry = setTimeout(expire, Math.max(1, grant.expiresAt - Date.now()));
         expiry.unref();
         let checking = false;
         const interval = setInterval(async () => {
@@ -132,5 +146,7 @@ export function admissionTransport(options, admissions, config) {
     draining = true;
     for (const { deny } of [...active.values()]) deny();
   };
+  transport.activeCount = () => active.size;
+  transport.pendingCount = () => pending;
   return transport;
 }

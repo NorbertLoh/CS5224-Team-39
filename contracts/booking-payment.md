@@ -21,6 +21,11 @@ Appointment responses require `appointment_id`, `tenant_id`, `patient_id`,
 `refund_required`, `refunded`), `created_at`, `updated_at`. Expired/cancelled
 appointments retain the former expiry for audit unless already confirmed.
 Patient/doctor/tenant links are immutable. No clinical content in this resource.
+Optional display snapshots `patient_name`, `doctor_name` and `clinic_name`
+(string or null) are captured at booking from the patient's identity, the clinic's
+active doctor directory and its booking profile. They are not refreshed after a rename.
+They are null for appointments booked before scheduling migration `0007`, so
+clients fall back to the identifiers.
 
 | Route (prefix `/api/v1/scheduling`) | Body / result | Policy |
 | --- | --- | --- |
@@ -28,7 +33,7 @@ Patient/doctor/tenant links are immutable. No clinical content in this resource.
 | POST `/clinics/{tenant_id}/slots` | `starts_at`, `ends_at`; slot, 201 | Active member doctor; server sets doctor_id to caller; active clinic |
 | DELETE `/slots/{slot_id}` | 204 | Owning active doctor; 409 `slot_reserved` if an active reservation exists |
 | POST `/appointments` | `tenant_id`, `slot_id`; appointment in held state, 201 | Patient role; server resolves patient_id, doctor and price |
-| GET `/appointments` | Optional `tenant_id`, `status`, `from`, `to`; C01 pagination ordered starts_at, appointment_id ascending | C02 scoped patient/assigned doctor/clinic admin/platform metadata |
+| GET `/appointments` | Optional `tenant_id`, `status`, `from`, `to`, `period=upcoming\|past`; C01 pagination ordered starts_at, appointment_id ascending for upcoming/default, descending for past; period-bound cursors | C02 scoped patient/assigned doctor/clinic admin/platform metadata |
 | GET `/appointments/{appointment_id}` | Appointment, 200 | C02 tenant/participant policy |
 | POST `/appointments/{appointment_id}/cancel` | `{ "reason": "Patient requested cancellation" }`; appointment, 200 | Owning patient or active owning-clinic admin; no platform-only cancellation |
 
@@ -102,6 +107,14 @@ link is present: consultation -> appointment, null order/quote;
 medication_delivery -> order and quote, null appointment. Provider IDs and
 webhook payloads are internal, never returned in ordinary patient responses.
 
+RF08 adds `refund_availability` to public payments: `available`, `demo_payment`,
+`unsupported_purpose`, `not_paid` or `unsupported_payment`. This is a payment-level
+capability, not refund authority or confirmation of appointment eligibility;
+current clinic membership and booking state are independently checked on POST.
+Demo payments report `demo_payment` and cannot call the provider. Refund refusals
+use `refund_demo_payment`, `refund_appointment_active` or `refund_not_available`
+so clients do not mistake every HTTP 409 for an active appointment.
+
 Billing obtains consultation price from scheduling's hold snapshot and commission
 from tenant through authenticated APIs. It rejects inactive/expired/cancelled or
 foreign appointments. C04 defines the trusted order/quote snapshot for medication.
@@ -118,7 +131,7 @@ implementation decisions, not inferred from this split. Totals must be safe inte
 | --- | --- | --- |
 | POST `/consultation-checkouts` | `appointment_id`; `{payment, checkout_url, expires_at}`, 201; 200 on replay | Owning patient; checkout URL is provider-generated HTTPS, expiry <= hold deadline |
 | GET `/payments/{payment_id}` | Payment, 200 | Owning patient, active tenant clinic admin, platform admin; no unrelated doctors |
-| GET `/payments` | Optional `tenant_id`, `purpose`, `status`; C01 pagination ordered created_at, payment_id ascending | Same scoped policy; patient sees own charges only |
+| GET `/payments` | Optional `tenant_id`, `purpose`, `status`; C01 pagination ordered created_at, payment_id descending (newest first) | Same scoped policy; patient sees own charges only |
 | POST `/payments/{payment_id}/refund` | `reason`; payment, 200 | Platform-admin operational action, full successful charge only; audit required |
 
 Checkout requires `Idempotency-Key` (1-64 ASCII letters/digits/._-). Scope it to

@@ -1,7 +1,7 @@
 """PostgreSQL-backed authorization/audit checks with explicit upstream/S3 adapters."""
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import Mock
 from uuid import uuid4
@@ -274,17 +274,18 @@ def test_pagination_scoped_tamper_proof_and_stable(api):
                     doctor_id=row.doctor_id,
                     prescription_id=uuid4(),
                     kind="prescription_pdf",
-                    created_at=row.created_at,
+                    created_at=row.created_at + timedelta(days=1) if index == 0 else row.created_at,
                 )
-                for _ in range(3)
+                for index in range(4)
             ]
         )
-    ids, cursor = [], None
+    ids, cursor, ordering = [], None, []
     while True:
         response = client.get(PREFIX, params={"limit": 1, **({"cursor": cursor} if cursor else {})})
         assert response.status_code == 200
         data = response.json()
         ids.extend(item["document_id"] for item in data["items"])
+        ordering.extend((item["created_at"], item["document_id"]) for item in data["items"])
         cursor = data["next_cursor"]
         if cursor is None:
             break
@@ -298,8 +299,8 @@ def test_pagination_scoped_tamper_proof_and_stable(api):
         state["user"] = "doctor"
         assert client.get(PREFIX, params={"cursor": cursor}).status_code == 422
         state["user"] = "patient"
-    assert len(ids) == len(set(ids)) == 4
-    assert ids == sorted(ids)
+    assert len(ids) == len(set(ids)) == 5
+    assert ordering == sorted(ordering, reverse=True)
 
 
 def test_unauthenticated_and_missing_document(api):

@@ -22,13 +22,13 @@ from sqlalchemy.orm import Session
 from telelink_common.access import IdentityClient
 from telelink_common.service_auth import service_token
 
-from app import admissions
 from app.database import create_database_engine
-from app.lifecycle import transition
+from app.integrations.upstream import AdmissionSources
 from app.main import create_app
-from app.models import Admission
+from app.models import Admission, ConsultationSession
+from app.services import admissions
+from app.services.lifecycle import transition
 from app.settings import Settings
-from app.upstream import AdmissionSources
 
 
 @pytest.fixture(scope="module")
@@ -153,6 +153,36 @@ def api(database, monkeypatch):
                 ),
             )
         service = request.url.host.split(".")[0]
+        if service == "records" and request.url.path.endswith("/finalize-prescription"):
+            # This owning-service endpoint authenticates the assigned doctor's
+            # actual JWT, rather than accepting a browser-supplied identity.
+            claims = jwt.decode(
+                request.headers["authorization"].split()[1],
+                key.public_key(),
+                algorithms=["RS256"],
+            )
+            assert claims["sub"] == str(doctor)
+            assert state["appointment"]["status"] in {"in_progress", "completed"}
+            state["prescription_calls"] = state.get("prescription_calls", 0) + 1
+            if state.get("prescription_failure"):
+                return httpx.Response(state["prescription_failure"])
+            if state.pop("lost_prescription_response", False):
+                state["issued_prescription"] = str(uuid4())
+                return httpx.Response(503)
+            links = {
+                name: state["appointment"][name]
+                for name in ("appointment_id", "tenant_id", "patient_id", "doctor_id")
+            }
+            if state.get("wrong_prescription_context"):
+                links["tenant_id"] = str(uuid4())
+            return httpx.Response(
+                200,
+                json={
+                    **links,
+                    "prescription_id": state.get("issued_prescription"),
+                    "status": "issued" if state.get("issued_prescription") else "none",
+                },
+            )
         claims = jwt.decode(
             request.headers["authorization"].split()[1],
             getattr(settings, service + "_secret").get_secret_value(),
@@ -167,6 +197,8 @@ def api(database, monkeypatch):
             if request.method == "POST":
                 action = request.url.path.rsplit("/", 1)[-1]
                 assert action in {"start", "complete"}
+                if action == "complete":
+                    assert state.get("prescription_calls", 0) > 0
                 state["appointment"]["status"] = "in_progress" if action == "start" else "completed"
                 if state.pop("lost_scheduling_response", False):
                     return httpx.Response(503)
@@ -237,6 +269,7 @@ def internal(api, action, grant, *, secret=None, caller="signalling", **override
 
 
 def test_grant_consumption_release_and_fresh_rejoin(api):
+    assert api.client.get("/health/ready").status_code == 200
     response = issue(api)
     assert response.status_code == 201, response.text
     assert response.headers["cache-control"] == "no-store"
@@ -256,6 +289,51 @@ def test_grant_consumption_release_and_fresh_rejoin(api):
     assert rejoin["token"] != grant["token"] and rejoin["peer_id"] != grant["peer_id"]
     assert internal(api, "consume", grant).status_code == 403
     assert internal(api, "consume", rejoin).status_code == 200
+
+
+def test_local_extended_window_covers_issue_consume_and_check(api):
+    start = api.state["clock"] + timedelta(hours=2)
+    api.state["appointment"].update(
+        starts_at=start.isoformat(), ends_at=(start + timedelta(minutes=30)).isoformat()
+    )
+    assert issue(api).status_code == 403
+    api.settings.test_join_early_minutes = 180
+    response = issue(api)
+    assert response.status_code == 201, response.text
+    grant = response.json()
+    assert internal(api, "consume", grant).status_code == 200
+    assert internal(api, "check", grant).status_code == 200
+    api.settings.test_join_early_minutes = 10
+    assert internal(api, "check", grant).status_code == 403
+
+
+def test_local_early_clinical_start_and_completion(api):
+    start = api.state["clock"] + timedelta(hours=2)
+    api.state["appointment"].update(
+        starts_at=start.isoformat(), ends_at=(start + timedelta(minutes=30)).isoformat()
+    )
+    route = f"/appointments/{api.appointment_id}"
+    headers = api.headers(api.doctor)
+    assert api.client.post(route + "/start", headers=headers).status_code == 409
+    api.settings.test_join_early_minutes = 180
+    assert api.client.post(route + "/start", headers=api.headers()).status_code == 404
+    response = api.client.post(route + "/start", headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "in_progress"
+    assert api.client.post(route + "/start", headers=headers).status_code == 200
+    assert api.client.post(route + "/complete", headers=headers).status_code == 200
+    with Session(api.database) as db:
+        row = db.scalar(
+            select(ConsultationSession).where(
+                ConsultationSession.appointment_id == api.appointment_id
+            )
+        )
+        assert row.test_start_early_minutes == 180
+        assert row.started_at < row.starts_at
+        assert row.ended_at >= row.started_at
+        # Remove only this isolated test record so downgrade/isolation tests can run.
+        db.delete(row)
+        db.commit()
 
 
 def test_pending_rotation_and_durable_hash_only_storage(api):
@@ -413,7 +491,13 @@ def test_duplicate_issue_is_bounded_under_concurrency(api):
         )
 
 
-def test_expiry_and_appointment_boundary(api):
+@pytest.mark.parametrize("started", [False, True])
+def test_expiry_and_appointment_boundary(api, started):
+    if started:
+        response = api.client.post(
+            f"/appointments/{api.appointment_id}/start", headers=api.headers(api.doctor)
+        )
+        assert response.status_code == 200
     grant = issue(api).json()
     api.state["clock"] += timedelta(seconds=60)
     assert internal(api, "consume", grant).status_code == 403
@@ -425,14 +509,34 @@ def test_expiry_and_appointment_boundary(api):
         seconds=1
     )
     final = issue(api).json()
-    assert final["expires_at"] == api.state["appointment"]["ends_at"][:23] + "Z"
+    if not started:
+        assert final["expires_at"] == api.state["appointment"]["ends_at"][:23] + "Z"
     api.state["clock"] += timedelta(seconds=1)
-    assert internal(api, "consume", final).status_code == 403
-    assert issue(api).status_code == 403
+    assert internal(api, "consume", final).status_code == (200 if started else 403)
+    assert issue(api, api.doctor).status_code == (201 if started else 403)
+    if started:
+        api.state["clock"] += timedelta(days=1)
+        for subject in (api.patient, api.doctor):
+            grant = issue(api, subject)
+            assert grant.status_code == 201
+            expiry = datetime.fromisoformat(grant.json()["expires_at"].replace("Z", "+00:00"))
+            assert 0 < (expiry - api.state["clock"]).total_seconds() <= 300
+            assert internal(api, "consume", grant.json()).status_code == 200
+            api.state["clock"] += timedelta(seconds=api.settings.admission_ttl_seconds)
+            assert internal(api, "check", grant.json()).status_code == 403
+        api.state["appointment"]["status"] = "completed"
+        assert issue(api).status_code == 409
 
 
 @pytest.mark.parametrize("target", ["membership", "payment", "appointment", "context"])
-def test_current_context_rechecked_before_connection_and_on_check(api, target):
+@pytest.mark.parametrize("started", [False, True])
+def test_current_context_rechecked_before_connection_and_on_check(api, target, started):
+    if started:
+        response = api.client.post(
+            f"/appointments/{api.appointment_id}/start", headers=api.headers(api.doctor)
+        )
+        assert response.status_code == 200
+        api.state["clock"] += timedelta(days=1)
     grant = issue(api, api.doctor).json()
     assert internal(api, "consume", grant).status_code == 200
     if target == "membership":
@@ -533,3 +637,32 @@ def test_completion_handoff_can_retry_after_scheduling_finished(api):
     assert api.state["appointment"]["status"] == "completed"
     assert api.client.post(path + "/complete", headers=api.headers(api.doctor)).status_code == 200
     assert api.state["mc_calls"] == 2
+
+
+@pytest.mark.parametrize("failure", [409, 503, "context", "lost_response"])
+def test_prescription_must_finalize_before_completion_and_can_retry(api, failure):
+    path = f"/appointments/{api.appointment_id}"
+    assert api.client.post(path + "/start", headers=api.headers(api.doctor)).status_code == 200
+    if failure == "context":
+        api.state["wrong_prescription_context"] = True
+    elif failure == "lost_response":
+        api.state["lost_prescription_response"] = True
+    else:
+        api.state["prescription_failure"] = failure
+    response = api.client.post(path + "/complete", headers=api.headers(api.doctor))
+    assert response.status_code == (
+        502 if failure == "context" else 503 if failure == "lost_response" else failure
+    )
+    assert api.state["appointment"]["status"] == "in_progress"
+    with Session(api.database) as db:
+        record = db.scalar(
+            select(ConsultationSession).where(
+                ConsultationSession.appointment_id == api.appointment_id
+            )
+        )
+        assert record.status == "in_progress" and record.ended_at is None
+    api.state.pop("wrong_prescription_context", None)
+    api.state.pop("prescription_failure", None)
+    assert api.client.post(path + "/complete", headers=api.headers(api.doctor)).status_code == 200
+    assert api.state["appointment"]["status"] == "completed"
+    assert api.state["prescription_calls"] == 2

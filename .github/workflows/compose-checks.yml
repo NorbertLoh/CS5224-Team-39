@@ -1,0 +1,59 @@
+name: Compose configuration
+
+on:
+  push:
+    paths:
+      - 'compose*.yaml'
+      - 'dev/compose/**'
+      - 'dev/compose.ps1'
+      - 'services/**/Dockerfile'
+      - 'services/**/.dockerignore'
+      - 'apps/web/Dockerfile'
+      - 'apps/web/.dockerignore'
+      - '.github/workflows/compose-checks.yml'
+  pull_request:
+    paths:
+      - 'compose*.yaml'
+      - 'dev/compose/**'
+      - 'dev/compose.ps1'
+      - 'services/**/Dockerfile'
+      - 'services/**/.dockerignore'
+      - 'apps/web/Dockerfile'
+      - 'apps/web/.dockerignore'
+      - '.github/workflows/compose-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  configuration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: python -m pip install ruff==0.17.0
+      - run: python -m ruff check dev/compose/setup.py
+      - run: python -m ruff format --check dev/compose/setup.py
+      - run: docker compose -f compose.yaml -f compose.app.yaml --profile setup --profile payments config --quiet
+      - run: docker compose -f compose.yaml -f compose.app.yaml -f compose.dev.yaml --profile setup config --quiet
+      - name: Parse PowerShell launcher
+        shell: pwsh
+        run: |
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/dev/compose.ps1", [ref]$null, [ref]$parseErrors) | Out-Null
+          if ($parseErrors) { throw ($parseErrors | Out-String) }
+
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build every application and setup image
+        run: |
+          set -e
+          for group in 'identity tenant' 'scheduling consultation' 'clinical_records fulfilment' 'document billing' 'notification-image web' 'signalling setup'; do
+            docker compose -f compose.yaml -f compose.app.yaml --profile setup build --print $group > /tmp/telelink-build.json
+            docker buildx bake --file /tmp/telelink-build.json --progress plain
+          done

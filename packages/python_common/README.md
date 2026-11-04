@@ -1,7 +1,7 @@
 # Shared Python foundations (A06)
 
-`telelink_common` is an internal installable package used by identity and the
-service template. Domain models, migrations, transactions, readiness checks,
+`telelink_common` is an internal installable package used by the Python services.
+Domain models, migrations, transactions, readiness checks,
 business routes and scheduling service credentials stay service-local.
 
 | Module | Responsibility |
@@ -10,6 +10,7 @@ business routes and scheduling service credentials stay service-local.
 | `auth` | A03 Cognito RS256 access-token verification and bearer dependency |
 | `access` | Current identity HTTP lookup, tenant/global role helpers and dependencies |
 | `database` | PostgreSQL engine construction, timeouts, UTC and safe parameter handling |
+| `pagination` | HS256 cursor signing, 15-minute expiry and JWT verification; resource scope, claims, parsing and public errors stay local |
 | `errors` | C01 error envelopes, response models and safe handlers |
 | `logging`, `middleware` | JSON logs, request IDs and request timing |
 | `events` | M01 C05 event envelope, type/route registry, PutEvents entries and SQS body parsing |

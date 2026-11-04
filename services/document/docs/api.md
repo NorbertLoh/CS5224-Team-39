@@ -6,7 +6,7 @@ Run the API separately from the P02 worker. Both use the same document schema.
 
 - `GET /api/v1/document/documents`: optional `appointment_id`, `limit` (1-100,
   default 25) and `cursor`. Returns `{items, next_cursor}` ordered by
-  `(created_at, document_id)` ascending, including pending/failed metadata.
+  `(created_at, document_id)` descending (newest first), including pending/failed metadata.
 - `GET /api/v1/document/documents/{document_id}/download`: returns
   `{download_url, expires_at}` for a ready PDF. Pending/failed documents return
   409 `document_not_ready` after authorisation.

@@ -15,13 +15,13 @@ from sqlalchemy import event, select, text
 from sqlalchemy.orm import Session, sessionmaker
 from telelink_common.outbox import publish_pending
 
-from app.checkout import checkout_lock
+from app.api.webhooks import persist_receipt, verify_event
+from app.integrations.stripe import StripeCheckout
 from app.main import create_app
 from app.models import CheckoutAttempt, Payment, StripeWebhookEvent, event_outbox
-from app.payments import process_pending
-from app.provider import StripeCheckout
+from app.services.checkout import checkout_lock
+from app.services.payments import process_pending
 from app.settings import Settings
-from app.webhooks import persist_receipt, verify_event
 from tests.helpers import insert, payment_values, read
 
 SECRET = "whsec_B04_synthetic"
@@ -34,7 +34,8 @@ def flow(database):
             text(
                 "TRUNCATE billing.event_outbox, billing.stripe_webhook_events, "
                 "billing.checkout_keys, billing.checkout_attempts, billing.payments, "
-                "billing.medication_checkout_keys, billing.medication_checkout_attempts"
+                "billing.medication_checkout_keys, billing.medication_checkout_attempts, "
+                "billing.refund_attempts"
             )
         )
     values = payment_values(provider_checkout_id="cs_test_" + uuid4().hex)
@@ -350,7 +351,7 @@ def test_receipt_waits_for_inflight_checkout_and_missing_session_link(flow):
 
 @pytest.mark.parametrize("stage", ["staging", "commit"])
 def test_crash_rolls_back_receipt_payment_and_outbox(flow, monkeypatch, stage):
-    import app.payments as payments
+    import app.services.payments as payments
 
     event_id = receipt(flow)
     original = payments.add_event

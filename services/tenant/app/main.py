@@ -10,14 +10,15 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
-from app.admin import router as admin_router
-from app.api import router
-from app.billing_profiles import router as billing_profiles_router
+from app.api.admin import router as admin_router
+from app.api.billing_profiles import router as billing_profiles_router
+from app.api.clinics import router
+from app.api.doctors import router as doctors_router
+from app.api.document_profiles import router as document_profiles_router
+from app.api.locations import router as locations_router
+from app.api.logos import router as logos_router
 from app.database import create_database_engine
-from app.doctors import router as doctors_router
-from app.document_profiles import router as document_profiles_router
-from app.logos import LogoStorage
-from app.logos import router as logos_router
+from app.integrations.logos import LogoStorage
 from app.models import AuditEvent, Clinic
 from app.settings import Settings
 
@@ -67,12 +68,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.add_middleware(RequestLoggingMiddleware, service="tenant")
     install_error_handlers(app)
+
+    @app.middleware("http")
+    async def cache_policy(request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("Cache-Control", "no-store")
+        return response
+
     app.include_router(router)
     app.include_router(doctors_router)
     app.include_router(admin_router)
     app.include_router(logos_router)
     app.include_router(document_profiles_router)
     app.include_router(billing_profiles_router)
+    app.include_router(locations_router)
 
     @app.get("/health/live", tags=["health"])
     def live():
@@ -98,7 +107,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     connection.execute(select(AuditEvent.event_id).limit(1))
                     available = (
                         connection.scalar(text("SELECT version_num FROM tenant.alembic_version"))
-                        == "0003"
+                        == "0004"
                     )
             except SQLAlchemyError:
                 available = False

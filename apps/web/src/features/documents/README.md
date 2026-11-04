@@ -1,6 +1,11 @@
 # Documents UI (U14)
 
-The patient dashboard lists authorised documents. Patient/doctor appointment
+The patient's Documents page groups authorised documents by visit in collapsible
+rows, newest visit first, with clinic, doctor, visit date/time and available PDF
+counts/types. A visit can contain prescription, receipt and/or medical certificate
+PDFs only when issued. Groups merge as more document pages load. Each expanded
+group retains individual document states, references and signed downloads.
+Patient/doctor appointment
 details and the doctor's records workspace show PDFs for the selected appointment.
 These views use the real P03 API, with no document fixtures in production code.
 

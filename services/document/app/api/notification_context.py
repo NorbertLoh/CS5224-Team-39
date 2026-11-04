@@ -1,0 +1,33 @@
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Response
+from telelink_common.errors import DomainError
+from telelink_common.service_auth import require_service
+
+from app.api.dependencies import DB
+from app.models import Document
+
+router = APIRouter(tags=["internal"])
+notification_service = require_service(
+    "notification", "telelink-document-notification", "notification_secret"
+)
+
+
+@router.get(
+    "/internal/documents/{resource_id}/notification-context",
+    dependencies=[Depends(notification_service)],
+)
+def notification_context(resource_id: UUID, tenant_id: UUID, session: DB, response: Response):
+    row = session.get(Document, resource_id)
+    if row is None or row.tenant_id != tenant_id:
+        raise DomainError(404, "not_found", "Resource not found.")
+    response.headers["Cache-Control"] = "no-store"
+    return {
+        "resource_id": row.document_id,
+        "tenant_id": row.tenant_id,
+        "patient_id": row.patient_id,
+        "appointment_id": row.appointment_id,
+        "prescription_id": row.prescription_id,
+        "medical_certificate_id": row.medical_certificate_id,
+        "eligible": row.status == "ready",
+    }

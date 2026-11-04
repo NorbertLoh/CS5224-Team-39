@@ -35,7 +35,8 @@
               "appointment.cancel",
               "clinical.read",
               "clinical.write",
-              "medicine.ready"
+              "medicine.ready",
+              "consultation.join"
             ],
             "title": "Action",
             "type": "string"
@@ -61,6 +62,173 @@
           "resource"
         ],
         "title": "AccessRequest",
+        "type": "object"
+      },
+      "ApplicationCounts": {
+        "properties": {
+          "approved": {
+            "default": 0,
+            "title": "Approved",
+            "type": "integer"
+          },
+          "pending": {
+            "default": 0,
+            "title": "Pending",
+            "type": "integer"
+          },
+          "rejected": {
+            "default": 0,
+            "title": "Rejected",
+            "type": "integer"
+          },
+          "revoked": {
+            "default": 0,
+            "title": "Revoked",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "title": "ApplicationCounts",
+        "type": "object"
+      },
+      "ApplicationRead": {
+        "properties": {
+          "document_id": {
+            "format": "uuid",
+            "title": "Document Id",
+            "type": "string"
+          },
+          "legal_name": {
+            "title": "Legal Name",
+            "type": "string"
+          },
+          "licence_number": {
+            "title": "Licence Number",
+            "type": "string"
+          },
+          "licensing_authority": {
+            "title": "Licensing Authority",
+            "type": "string"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "specialty": {
+            "title": "Specialty",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "revoked"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id",
+          "legal_name",
+          "licence_number",
+          "licensing_authority",
+          "specialty",
+          "document_id",
+          "status",
+          "revision",
+          "rejection_reason",
+          "submitted_at",
+          "reviewed_at"
+        ],
+        "title": "ApplicationRead",
+        "type": "object"
+      },
+      "ApplicationWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "document_id": {
+            "format": "uuid",
+            "title": "Document Id",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "legal_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Legal Name",
+            "type": "string"
+          },
+          "licence_number": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Licence Number",
+            "type": "string"
+          },
+          "licensing_authority": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Licensing Authority",
+            "type": "string"
+          },
+          "specialty": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Specialty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "legal_name",
+          "licence_number",
+          "licensing_authority",
+          "specialty",
+          "document_id",
+          "expected_revision"
+        ],
+        "title": "ApplicationWrite",
         "type": "object"
       },
       "AppointmentContext": {
@@ -111,6 +279,30 @@
         "title": "CreatorMembership",
         "type": "object"
       },
+      "DeliveryContact": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patient_id",
+          "name",
+          "phone"
+        ],
+        "title": "DeliveryContact",
+        "type": "object"
+      },
       "DoctorPage": {
         "properties": {
           "items": {
@@ -156,6 +348,36 @@
           "display_name"
         ],
         "title": "DoctorSummary",
+        "type": "object"
+      },
+      "DocumentParticipants": {
+        "properties": {
+          "doctor_id": {
+            "format": "uuid",
+            "title": "Doctor Id",
+            "type": "string"
+          },
+          "doctor_name": {
+            "title": "Doctor Name",
+            "type": "string"
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "patient_name": {
+            "title": "Patient Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patient_id",
+          "patient_name",
+          "doctor_id",
+          "doctor_name"
+        ],
+        "title": "DocumentParticipants",
         "type": "object"
       },
       "ErrorBody": {
@@ -222,6 +444,43 @@
           "error"
         ],
         "title": "ErrorEnvelope",
+        "type": "object"
+      },
+      "EventRead": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actor_id": {
+            "format": "uuid",
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "event_id": {
+            "format": "uuid",
+            "title": "Event Id",
+            "type": "string"
+          },
+          "snapshot": {
+            "additionalProperties": true,
+            "title": "Snapshot",
+            "type": "object"
+          }
+        },
+        "required": [
+          "event_id",
+          "actor_id",
+          "action",
+          "snapshot",
+          "created_at"
+        ],
+        "title": "EventRead",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -422,6 +681,119 @@
         "title": "MembershipWrite",
         "type": "object"
       },
+      "ProfileRead": {
+        "properties": {
+          "address_line": {
+            "title": "Address Line",
+            "type": "string"
+          },
+          "country_code": {
+            "const": "SG",
+            "default": "SG",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone_number": {
+            "title": "Phone Number",
+            "type": "string"
+          },
+          "postal_code": {
+            "title": "Postal Code",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id",
+          "name",
+          "phone_number",
+          "address_line",
+          "postal_code"
+        ],
+        "title": "ProfileRead",
+        "type": "object"
+      },
+      "ProfileWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "address_line": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Address Line",
+            "type": "string"
+          },
+          "country_code": {
+            "const": "SG",
+            "default": "SG",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "phone_number": {
+            "pattern": "^\\+65[689][0-9]{7}$",
+            "title": "Phone Number",
+            "type": "string"
+          },
+          "postal_code": {
+            "pattern": "^[0-9]{6}$",
+            "title": "Postal Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "phone_number",
+          "address_line",
+          "postal_code"
+        ],
+        "title": "ProfileWrite",
+        "type": "object"
+      },
+      "ReviewWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "approved",
+              "rejected",
+              "revoked"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "reason",
+          "expected_revision"
+        ],
+        "title": "ReviewWrite",
+        "type": "object"
+      },
       "StaffMembershipRead": {
         "properties": {
           "created_at": {
@@ -491,6 +863,18 @@
             "title": "Display Name",
             "type": "string"
           },
+          "doctor_verification": {
+            "default": "not_applied",
+            "enum": [
+              "not_applied",
+              "pending",
+              "approved",
+              "rejected",
+              "revoked"
+            ],
+            "title": "Doctor Verification",
+            "type": "string"
+          },
           "email": {
             "anyOf": [
               {
@@ -557,6 +941,10 @@
         "type": "http"
       },
       "SchedulingServiceJWT": {
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "ServiceJWT": {
         "scheme": "bearer",
         "type": "http"
       },
@@ -1209,6 +1597,52 @@
         ]
       }
     },
+    "/doctor-documents/{document_id}": {
+      "get": {
+        "operationId": "download_doctor_documents__document_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Download",
+        "tags": [
+          "doctor verification"
+        ]
+      }
+    },
     "/health/live": {
       "get": {
         "operationId": "live_health_live_get",
@@ -1410,6 +1844,158 @@
         ]
       }
     },
+    "/internal/document-participants": {
+      "get": {
+        "operationId": "document_participants_internal_document_participants_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "doctor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Doctor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentParticipants"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ServiceJWT": []
+          }
+        ],
+        "summary": "Document Participants",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/notification-recipients/{subject_id}": {
+      "get": {
+        "operationId": "recipient_internal_notification_recipients__subject_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ServiceJWT": []
+          }
+        ],
+        "summary": "Recipient",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/patients/{patient_id}/delivery-contact": {
+      "get": {
+        "operationId": "delivery_contact_internal_patients__patient_id__delivery_contact_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryContact"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ServiceJWT": []
+          }
+        ],
+        "summary": "Delivery Contact",
+        "tags": [
+          "patient-profile"
+        ]
+      }
+    },
     "/me": {
       "get": {
         "operationId": "me_me_get",
@@ -1503,6 +2089,529 @@
         "summary": "Me",
         "tags": [
           "identity"
+        ]
+      }
+    },
+    "/me/doctor-application": {
+      "get": {
+        "operationId": "mine_me_doctor_application_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ApplicationRead"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Mine Me Doctor Application Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Mine",
+        "tags": [
+          "doctor verification"
+        ]
+      },
+      "post": {
+        "operationId": "submit_me_doctor_application_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Submit",
+        "tags": [
+          "doctor verification"
+        ]
+      }
+    },
+    "/me/doctor-documents": {
+      "post": {
+        "operationId": "upload_me_doctor_documents_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Upload",
+        "tags": [
+          "doctor verification"
+        ]
+      }
+    },
+    "/me/patient-profile": {
+      "get": {
+        "operationId": "read_profile_me_patient_profile_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Read Profile",
+        "tags": [
+          "patient-profile"
+        ]
+      },
+      "put": {
+        "operationId": "save_profile_me_patient_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Save Profile",
+        "tags": [
+          "patient-profile"
+        ]
+      }
+    },
+    "/me/registration": {
+      "post": {
+        "operationId": "register_patient_me_registration_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Register Patient",
+        "tags": [
+          "registration"
+        ]
+      }
+    },
+    "/platform/doctor-applications": {
+      "get": {
+        "operationId": "applications_platform_doctor_applications_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "pending",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected",
+                "revoked"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApplicationRead"
+                  },
+                  "title": "Response Applications Platform Doctor Applications Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Applications",
+        "tags": [
+          "doctor verification"
+        ]
+      }
+    },
+    "/platform/doctor-applications/counts": {
+      "get": {
+        "operationId": "application_counts_platform_doctor_applications_counts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationCounts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Application Counts",
+        "tags": [
+          "doctor verification"
+        ]
+      }
+    },
+    "/platform/doctor-applications/{subject_id}/history": {
+      "get": {
+        "operationId": "history_platform_doctor_applications__subject_id__history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EventRead"
+                  },
+                  "title": "Response History Platform Doctor Applications  Subject Id  History Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "History",
+        "tags": [
+          "doctor verification"
+        ]
+      }
+    },
+    "/platform/doctor-applications/{subject_id}/review": {
+      "post": {
+        "operationId": "review_platform_doctor_applications__subject_id__review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "CognitoAccessToken": []
+          }
+        ],
+        "summary": "Review",
+        "tags": [
+          "doctor verification"
         ]
       }
     }

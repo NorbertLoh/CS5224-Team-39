@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 from telelink_common.errors import DomainError
 
 from app.database import create_database_engine
-from app.lifecycle import can_join, ensure_session, transition
 from app.models import ConsultationSession
+from app.services.lifecycle import can_join, ensure_session, transition
 from tests.test_lifecycle import END, START
 
 
@@ -110,7 +110,8 @@ def test_lifecycle_retries_rejoin_and_terminal_state(database):
     with Session(database) as db:
         row = db.get(ConsultationSession, session_id)
         assert can_join(row, now=END - timedelta(microseconds=1))
-        assert not can_join(row, now=END)
+        assert can_join(row, now=END)
+        assert can_join(row, now=END + timedelta(days=1))
     with pytest.raises(DomainError):
         act(database, session_id, fields, "end", START - timedelta(seconds=1))
     assert act(database, session_id, fields, "end", END) == ("completed", START, END)

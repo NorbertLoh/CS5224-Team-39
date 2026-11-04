@@ -1,19 +1,24 @@
-import type { Identity } from '../features/clinics/api'
+import type { Identity } from '@/auth/identity'
 
 export type Role = 'patient' | 'doctor' | 'clinic_admin' | 'platform_admin'
 export type Route =
   | { kind: 'home' }
+  | { kind: 'sign-in' }
+  | { kind: 'clinic-registration' }
+  | { kind: 'doctor-application' }
+  | { kind: 'doctor-applications-review'; role: 'platform_admin' }
   | { kind: 'storefront'; slug: string }
   | { kind: 'booking'; role: 'patient'; slug: string }
   | { kind: 'checkout'; role: 'patient' }
-  | { kind: 'checkout-preview'; role: 'patient' }
-  | { kind: 'medication-order-preview'; role: 'patient' }
-  | { kind: 'delivery-tracking-preview'; role: 'patient' }
   | { kind: 'medication-orders'; role: 'patient' }
+  | { kind: 'patient-profile'; role: 'patient' }
+  | { kind: 'prescriptions' | 'documents'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
+  | { kind: 'doctor-availability'; role: 'doctor'; tenantId?: string }
+  | { kind: 'clinic-appointments'; role: 'clinic_admin'; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | {
-      kind: 'profile' | 'staff' | 'payments' | 'fulfilment-preview' | 'orders'
+      kind: 'profile' | 'staff' | 'payments' | 'orders' | 'settings'
       role: 'clinic_admin'
       tenantId: string
     }
@@ -34,6 +39,13 @@ export const rolePaths: Record<Role, string> = {
 }
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+export function defaultWorkspace(identity: Identity) {
+  const role = (
+    ['platform_admin', 'clinic_admin', 'doctor', 'patient'] as const
+  ).find((item) => hasRole(identity, item))
+  return role ? rolePaths[role] : '/'
+}
+
 export function clinicIds(identity: Identity, role: 'doctor' | 'clinic_admin') {
   return [
     ...new Set(
@@ -52,8 +64,10 @@ export function hasRole(identity: Identity, role: Role) {
 
 export function canAccess(identity: Identity, route: Route) {
   if (!('role' in route)) return true
-  // Medicine readiness requires active owning-clinic administration (D03).
-  if (route.kind === 'fulfilment-preview' || route.kind === 'orders')
+  // Orders and clinic-scoped schedules require active owning-clinic administration.
+  if (route.kind === 'orders' || route.kind === 'settings')
+    return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
+  if (route.kind === 'clinic-appointments' && route.tenantId)
     return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
   // Tenant APIs explicitly permit platform administrators to manage clinics.
   if (
@@ -74,6 +88,11 @@ export function canAccess(identity: Identity, route: Route) {
 
 export function parseRoute(path: string): Route {
   const normalized = path.replace(/\/$/, '') || '/'
+  if (normalized === '/sign-in') return { kind: 'sign-in' }
+  if (normalized === '/register-clinic') return { kind: 'clinic-registration' }
+  if (normalized === '/join-as-doctor') return { kind: 'doctor-application' }
+  if (normalized === '/platform-admin/doctors')
+    return { kind: 'doctor-applications-review', role: 'platform_admin' }
   if (normalized === '/' || normalized === '/auth/callback')
     return { kind: 'home' }
   if (
@@ -83,21 +102,25 @@ export function parseRoute(path: string): Route {
   )
     return { kind: 'checkout', role: 'patient' }
   if (normalized === '/patient') return { kind: 'role', role: 'patient' }
-  if (normalized === '/patient/checkout-preview')
-    return { kind: 'checkout-preview', role: 'patient' }
-  if (normalized === '/patient/medication-order-preview')
-    return { kind: 'medication-order-preview', role: 'patient' }
-  if (normalized === '/patient/delivery-tracking-preview')
-    return { kind: 'delivery-tracking-preview', role: 'patient' }
+  if (normalized === '/patient/prescriptions')
+    return { kind: 'prescriptions', role: 'patient' }
+  if (normalized === '/patient/profile')
+    return { kind: 'patient-profile', role: 'patient' }
+  if (normalized === '/patient/documents')
+    return { kind: 'documents', role: 'patient' }
   if (normalized === '/patient/medication-orders')
     return { kind: 'medication-orders', role: 'patient' }
   if (normalized === '/doctor') return { kind: 'role', role: 'doctor' }
+  if (normalized === '/doctor/availability')
+    return { kind: 'doctor-availability', role: 'doctor' }
   if (normalized === '/patient/consultation')
     return { kind: 'consultation', role: 'patient' }
   if (normalized === '/doctor/consultation')
     return { kind: 'consultation', role: 'doctor' }
   if (normalized === '/clinic-admin')
     return { kind: 'role', role: 'clinic_admin' }
+  if (normalized === '/clinic-admin/appointments')
+    return { kind: 'clinic-appointments', role: 'clinic_admin' }
   const booking = /^\/patient\/clinics\/([^/]+)\/book$/.exec(normalized)
   if (booking) return { kind: 'booking', role: 'patient', slug: booking[1] }
   if (
@@ -115,22 +138,31 @@ export function parseRoute(path: string): Route {
       tenantId: platform[1].toLowerCase(),
     }
   const clinic =
-    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|fulfilment-preview|orders)$/.exec(
+    /^\/clinic-admin\/clinics\/([^/]+)\/(profile|staff|payments|orders|appointments|settings)$/.exec(
       normalized,
     )
-  if (clinic && uuid.test(clinic[1]))
+  if (clinic && uuid.test(clinic[1])) {
+    if (clinic[2] === 'appointments')
+      return {
+        kind: 'clinic-appointments',
+        role: 'clinic_admin',
+        tenantId: clinic[1].toLowerCase(),
+      }
     return {
       kind: clinic[2] as
-        | 'profile'
-        | 'staff'
-        | 'payments'
-        | 'fulfilment-preview'
-        | 'orders',
+        'profile' | 'staff' | 'payments' | 'orders' | 'settings',
       role: 'clinic_admin',
       tenantId: clinic[1].toLowerCase(),
     }
-  const doctor = /^\/doctor\/clinics\/([^/]+)$/.exec(normalized)
+  }
+  const doctor = /^\/doctor\/clinics\/([^/]+)(\/availability)?$/.exec(
+    normalized,
+  )
   if (doctor && uuid.test(doctor[1]))
-    return { kind: 'role', role: 'doctor', tenantId: doctor[1].toLowerCase() }
+    return {
+      kind: doctor[2] ? 'doctor-availability' : 'role',
+      role: 'doctor',
+      tenantId: doctor[1].toLowerCase(),
+    }
   return { kind: 'missing' }
 }

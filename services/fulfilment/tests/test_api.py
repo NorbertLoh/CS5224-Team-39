@@ -10,7 +10,7 @@ from telelink_common.access import ClinicMembership, CurrentIdentity, require_id
 from telelink_common.errors import DomainError
 
 from app.database import get_session
-from app.dispensing import DispensingContext
+from app.integrations.dispensing import DispensingContext
 from app.main import create_app
 from app.models import CatalogueItem, Order, OrderRequest
 from app.settings import Settings
@@ -324,6 +324,58 @@ def test_catalogue_invalid_inputs(api, changes):
     )
 
 
+@pytest.mark.parametrize("equal_times", [False, True])
+def test_newest_order_pagination_and_sort_scope(api, equal_times):
+    client, state, _ = api
+    ids = []
+    for _ in range(3):
+        rx = uuid4()
+        result = create(client, key=str(rx), rx=rx)
+        assert result.status_code == 201
+        ids.append(result.json()["order_id"])
+    # Equal timestamps exercise the ID tie-breaker at every page boundary.
+    if equal_times:
+        with state.sessions.begin() as db:
+            for row in db.scalars(select(Order)):
+                row.created_at = NOW
+    expected = sorted(ids, reverse=True) if equal_times else list(reversed(ids))
+    page = client.get("/orders", params={"sort": "newest", "limit": 1}).json()
+    cursor = page["next_cursor"]
+    seen = [page["items"][0]["order_id"]]
+    while page["next_cursor"]:
+        page = client.get(
+            "/orders",
+            params={
+                "sort": "newest",
+                "limit": 1,
+                "cursor": page["next_cursor"],
+            },
+        ).json()
+        seen.extend(row["order_id"] for row in page["items"])
+    assert seen == expected
+    assert client.get("/orders").json()["items"][0]["order_id"] == expected[0]
+    assert client.get("/orders", params={"limit": 1, "cursor": cursor}).status_code == 200
+    assert (
+        client.get("/orders", params={"sort": "oldest"}).json()["items"][0]["order_id"]
+        == expected[-1]
+    )
+    oldest_cursor = client.get("/orders", params={"sort": "oldest", "limit": 1}).json()[
+        "next_cursor"
+    ]
+    assert (
+        client.get(
+            "/orders",
+            params={
+                "sort": "newest",
+                "limit": 1,
+                "cursor": oldest_cursor,
+            },
+        ).status_code
+        == 422
+    )
+    assert client.get("/orders", params={"sort": "invalid"}).status_code == 422
+
+
 def test_cursor_scope_pagination_filters_and_tampering(api):
     client, state, _ = api
     for _ in range(3):
@@ -354,3 +406,80 @@ def test_cursor_scope_pagination_filters_and_tampering(api):
     assert second["next_cursor"] is None
     state.identity = identity(roles=(), clinic_role="doctor")
     assert client.get(path, params={"limit": 2, "cursor": page["next_cursor"]}).status_code == 422
+
+
+def test_typed_medication_registration_replays_and_admin_prices(api):
+    client, state, _ = api
+    path = f"/clinics/{TENANT}/catalogue"
+    assert client.post(path, json={"display_name": "Novel typed medicine"}).status_code == 404
+    state.identity = identity(roles=(), clinic_role="doctor")
+    created = client.post(path, json={"display_name": " Novel typed medicine "})
+    assert created.status_code == 201, created.text
+    item = created.json()
+    assert item["display_name"] == "Novel typed medicine" and item["unit_price"] is None
+    replay = client.post(path, json={"display_name": "novel TYPED medicine"})
+    assert replay.status_code == 200 and replay.json()["medication_id"] == item["medication_id"]
+    assert (
+        client.post(
+            path, json={"display_name": "x", "unit_price": {"amount_minor": 0, "currency": "SGD"}}
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(f"/clinics/{OTHER_TENANT}/catalogue", json={"display_name": "x"}).status_code
+        == 404
+    )
+    assert client.put(path + "/" + item["medication_id"], json=catalogue_body()).status_code == 404
+    state.identity = identity(roles=(), clinic_role="clinic_admin")
+    priced = client.put(
+        path + "/" + item["medication_id"],
+        json=catalogue_body(
+            display_name=item["display_name"], unit_price={"amount_minor": 125, "currency": "SGD"}
+        ),
+    )
+    assert priced.status_code == 200 and priced.json()["unit_price"]["amount_minor"] == 125
+    replay = client.post(path, json={"display_name": item["display_name"]})
+    assert replay.json()["unit_price"]["amount_minor"] == 125
+
+
+def test_unpriced_medicine_blocks_order_until_admin_sets_price(api):
+    client, state, _ = api
+    with state.sessions.begin() as db:
+        db.get(CatalogueItem, (TENANT, MEDICATION)).unit_price_minor = None
+    result = create(client)
+    assert result.status_code == 409 and result.json()["error"]["code"] == "medication_unpriced"
+    with state.sessions() as db:
+        assert db.scalar(select(func.count()).select_from(Order)) == 0
+    state.identity = identity(roles=(), clinic_role="clinic_admin")
+    result = client.put(
+        f"/clinics/{TENANT}/catalogue/{MEDICATION}",
+        json=catalogue_body(unit_price={"amount_minor": 125, "currency": "SGD"}),
+    )
+    assert result.status_code == 200
+    state.identity = identity()
+    result = create(client)
+    assert result.status_code == 201 and result.json()["medication_subtotal"]["amount_minor"] == 250
+
+
+def test_concurrent_typed_registration_reuses_one_reference(api):
+    client, state, _ = api
+    state.identity = identity(roles=(), clinic_role="doctor")
+
+    def register(_):
+        return client.post(
+            f"/clinics/{TENANT}/catalogue", json={"display_name": "Concurrent named medicine"}
+        )
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        responses = list(executor.map(register, range(4)))
+    assert all(response.status_code in (200, 201) for response in responses)
+    assert len({response.json()["medication_id"] for response in responses}) == 1
+
+
+@pytest.mark.parametrize("name", ["", "   ", "x" * 201])
+def test_typed_medication_name_validation(api, name):
+    client, state, _ = api
+    state.identity = identity(roles=(), clinic_role="doctor")
+    assert (
+        client.post(f"/clinics/{TENANT}/catalogue", json={"display_name": name}).status_code == 422
+    )

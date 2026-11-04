@@ -1,8 +1,8 @@
-import { apiFetch, ApiError } from '../../lib/api'
-import { usesAws } from '../../lib/backend-config'
-import { accessToken } from '../clinics/api'
-import type { CursorPage } from '../../lib/api-types'
-import type { DocumentMetadata } from './types'
+import { accessToken } from '@/auth/access-token'
+import type { DocumentMetadata } from '@/features/documents/types'
+import { ApiError, apiFetch } from '@/lib/api'
+import type { CursorPage } from '@/lib/api-types'
+import { usesAws } from '@/lib/backend-config'
 
 const base = '/document/documents'
 async function request(path: string, signal?: AbortSignal) {

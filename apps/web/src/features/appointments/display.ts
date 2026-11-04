@@ -1,4 +1,4 @@
-import type { Appointment } from '../scheduling/api'
+import type { Appointment } from '@/features/scheduling/api'
 
 export function dateInSingapore(instant: string) {
   return new Date(Date.parse(instant) + 8 * 3600000).toISOString().slice(0, 10)
@@ -34,6 +34,11 @@ export function dayCells(appointments: Appointment[], date: string) {
       ),
     }
   })
+}
+
+// Names are booking-time snapshots; older appointments only have identifiers.
+export function nameOrId(name: string | null | undefined, id: string) {
+  return name || id
 }
 
 export function readableStatus(value: string) {

@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ErrorState } from '@/components/ErrorState'
+import type { Appointment } from '@/features/scheduling/api'
 import {
   appointmentDetail,
-  cancelAppointment,
   canCancel,
+  cancelAppointment,
   schedulingError,
-} from '../scheduling/api'
-import type { Appointment } from '../scheduling/api'
-import { ErrorState } from '../../components/ErrorState'
-import { consultationPrice } from '../../lib/money'
+} from '@/features/scheduling/api'
+import { consultationPrice } from '@/lib/money'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 
 export function LiveCheckout({
   appointment,
@@ -117,9 +117,6 @@ export function LiveCheckout({
             ? 'Release booking and change time'
             : 'Back to available times'}
       </button>
-      <a href="/patient" className="ml-4 underline">
-        Appointments
-      </a>
     </section>
   )
 }

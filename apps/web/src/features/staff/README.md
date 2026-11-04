@@ -2,13 +2,12 @@
 
 `/clinic-admin/clinics/<tenant UUID>/staff` calls the existing identity membership
 APIs through `apiFetch` and the shared access-token refresh helper. The feature
-contains an API module, a page and a clinic context component. Email assignment uses
+contains an API module and a page. Email assignment uses
 the identity POST membership route and migration `0002` for trusted account emails.
 There are no runtime fixtures, new dependencies or environment settings.
 
-The page shows the clinic name beneath its heading, read from the authenticated
-tenant profile API by `ClinicContext.tsx`. A failed name lookup shows the tenant ID
-and a retry action so the clinic context remains identifiable.
+The shared clinic management navbar displays the clinic name and provides links
+to its management pages. Staff does not repeat a clinic name or ID in its body.
 
 The list includes active/revoked memberships with cursor pagination. Assigning
 an existing account by email or saving an edit replaces roles and activates access;

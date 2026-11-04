@@ -13,6 +13,7 @@ class Settings(ServiceSettings):
     identity_secret: SecretStr | None = None
     records_secret: SecretStr | None = None
     billing_secret: SecretStr | None = None
+    fulfilment_secret: SecretStr | None = None
     cors_origins: list[str] = []
     logo_bucket: str | None = None
     logo_public_base_url: str | None = None
@@ -59,6 +60,7 @@ class Settings(ServiceSettings):
                 self.identity_secret,
                 self.records_secret,
                 self.billing_secret,
+                self.fulfilment_secret,
             )
             if value is not None
         ]

@@ -97,6 +97,10 @@ class AppointmentPublic(BaseModel):
     payment_resolution: Literal[
         "none", "awaiting_payment", "confirmed", "refund_required", "refunded"
     ]
+    # Display names captured at booking; null for appointments booked before 0007.
+    patient_name: str | None = None
+    doctor_name: str | None = None
+    clinic_name: str | None = None
     created_at: datetime
     updated_at: datetime
 

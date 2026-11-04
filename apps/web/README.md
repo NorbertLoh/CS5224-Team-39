@@ -1,5 +1,10 @@
 # Web frontend
 
+Account creation is available from **Create an account** on `/sign-in`, with email
+verification and automatic patient provisioning on first sign-in. See
+[RF13 setup and verification](../../docs/RF13-account-signup.md), including local
+Floci email capture and the required Cognito hosted-login self-service scope.
+
 React + TypeScript + Vite frontend. Use Node 22.12+ or Node 24+ and npm.
 
 From `apps/web`:
@@ -9,18 +14,16 @@ npm ci
 npm run lint
 npm run dev
 npm run build
-npm test
-npm run preview
 ```
 
-Development runs at http://127.0.0.1:5173. Preview serves the built `dist/` at http://127.0.0.1:4173. `npm run typecheck` checks TypeScript separately. The lockfile is committed; use `npm ci` for reproducible installs.
+Development runs at http://127.0.0.1:5173. `npm run typecheck` checks TypeScript separately. The lockfile is committed; use `npm ci` for reproducible installs.
 
-`dist/` contains static assets suitable for S3/CloudFront; the Vite development/preview servers are local tools, not production hosting. Configure cloud routing in W04. Browser-visible `VITE_*` environment variables are substituted at build time, so never put credentials or secrets in them.
+`dist/` contains static assets suitable for S3/CloudFront; the Vite development server is a local tool, not production hosting. Configure cloud routing in W04. Browser-visible `VITE_*` environment variables are substituted at build time, so never put credentials or secrets in them.
 
 The clinic list, public storefront at `/clinics/<slug>` and profile editor at
 `/clinic-admin/clinics/<tenant UUID>/profile` always use real identity/tenant APIs.
 Profile fields persist in PostgreSQL; logo files persist in S3. There are no
-runtime fixtures, browser-only saves or fallback data. Booking remains a later task.
+runtime fixtures, browser-only saves or fallback data. Booking, checkout, records, documents and medication orders also use their real service APIs.
 
 Staff management at `/clinic-admin/clinics/<tenant UUID>/staff` uses the real
 identity GET/PUT/DELETE membership APIs with the same local/AWS configuration.
@@ -54,7 +57,11 @@ const response = await apiFetch('/scheduling/appointments?limit=25', {
 const appointments: CursorPage<Appointment> = await response.json()
 ```
 
-This illustrates a future endpoint; domain APIs remain their owning tasks.
+Feature APIs live in their owning feature folders.
+Large fulfilment/records APIs expose focused endpoint modules through `api/index.ts`;
+wire types and request transport are separate from endpoint operations. Authentication
+token refresh/access is owned by `auth/access-token.ts`, and the minimal `/me`
+projection is in `auth/identity.ts`, rather than the clinic-directory feature.
 Pass ordinary fetch options for writes (`method`, JSON.stringify(body), and a
 Content-Type header). Skip response.json() for a 204 response. Construct query
 strings with URLSearchParams and encode dynamic IDs with encodeURIComponent.
@@ -64,7 +71,7 @@ feature pages handle domain validation and field errors when needed.
 The local API base defaults to `/api/v1`. Vite forwards identity, tenant and
 template prefixes to ports 8001, 8002 and 8000, stripping the service prefix.
 Server-only `IDENTITY_API_TARGET`, `TENANT_API_TARGET` and `TEMPLATE_API_TARGET`
-can override those addresses. Preview supports local forwarding too. The static
+can override those addresses. The static
 production build needs deployed gateway routing and explicit CORS for a separate
 origin. Never attach API tokens to external signed download URLs.
 
@@ -78,8 +85,10 @@ Keep clinical caches in memory; services still enforce access.
 `LoadingState` announces progress. `ErrorState` accepts a safe display message
 and an optional retry callback. Do not display raw exception/server text.
 Native fetch cancellation is preserved; callers should ignore AbortError.
-`npm test` checks the helper and components; `npm run build` includes typechecking.
-These synthetic checks do not establish live API integration.
+`npm run build` includes typechecking. Frontend fixture screens, unit/browser test
+harnesses and the local Vite preview command were removed in RF04. Verify live
+journeys using the service setup and walkthroughs in `docs/`; lint and build do
+not establish live integration.
 
 ## Frontend checks in CI
 
@@ -95,6 +104,29 @@ the [service template](../../services/template/README.md).
 TypeScript uses 6.0.x to match the ESLint parser's supported compiler versions.
 Configuration follows the [typescript-eslint quickstart](https://typescript-eslint.io/getting-started/).
 
+`npm run typecheck:probes` checks the existing records/scheduling adapter probes.
+Their Python drivers now invoke `dev/run_frontend_probe.mjs`, which uses the already
+installed Vite runtime; no `tsx` dependency is required. The probes use localStorage
+for the shared RF15 session and remain explicitly mutating local integration tools.
+CI typechecks them and runs the existing seven simulated-tab session checks, without
+creating accounts, bookings or provider transactions.
+
+## Feature structure
+
+Navigation imports public page entry points for clinics, patient, fulfilment and
+video. `WorkspacePage` owns the shared workspace heading/frame. Larger features
+group files by workflow:
+
+- Fulfilment: `api`, `checkout`, `orders`, `pricing`, `readiness`, `tracking`, `pages`, `domain`.
+- Clinical records: `api`, `notes`, `prescriptions`, `certificates`, `patient`, `workspace`, `hooks`, `domain`.
+- Video: `api`, `pages`, `room`, `components`, `hooks`, `media`, `domain`.
+- Clinics and patient: pages, reusable components and focused API/hooks as needed.
+
+Smaller cohesive features keep their existing simple structure. Use the configured
+`@/` alias for application imports; API barrels expose endpoint functions without
+pulling UI components into API modules. Runtime record validators live in `domain`,
+separate from type-only wire definitions.
+
 ## UI components and styling
 
 Use Tailwind CSS v4 utilities for layout and shadcn/ui components for shared controls. Tailwind runs through the Vite plugin; `src/index.css` contains the generated theme tokens and base styles. Avoid a second handwritten component stylesheet.
@@ -103,7 +135,6 @@ The shadcn Nova/Radix setup is configured in `components.json`. Generated compon
 
 ```tsx
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 ```
 
 Add only components your feature needs, from `apps/web`:

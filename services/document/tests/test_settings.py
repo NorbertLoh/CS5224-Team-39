@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from app.downloads import create_signer
+from app.services.downloads import create_signer
 from app.settings import Settings
 
 
@@ -39,7 +39,7 @@ def test_signer_requires_browser_host_for_container_emulator():
 
 def test_aws_signer_uses_aws_endpoint_and_sigv4():
     settings = Settings(_env_file=None, environment="production")
-    with patch("app.downloads.boto3.client") as client:
+    with patch("app.services.downloads.boto3.client") as client:
         create_signer(settings)
     options = client.call_args.kwargs
     assert "endpoint_url" not in options

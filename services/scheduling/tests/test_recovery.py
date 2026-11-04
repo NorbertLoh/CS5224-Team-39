@@ -17,12 +17,12 @@ from telelink_common.inbox import consume_batch, handle_event
 from test_appointments import record
 from test_payments import SECRET, Queue, adapter, event_for, rows
 
-from app import payments
-from app.billing import BillingClient
+from app.integrations.billing import BillingClient
 from app.models import Appointment, AvailabilitySlot, PaymentRecovery, event_inbox
-from app.payment_recovery import deliver_resolutions
-from app.payments import PaymentEventRejected, confirm_payment
-from app.transitions import cancel_appointment, lock_appointment
+from app.services import payments
+from app.services.payment_recovery import deliver_resolutions
+from app.services.payments import PaymentEventRejected, confirm_payment
+from app.services.transitions import cancel_appointment, lock_appointment
 
 api = test_api.api
 api_database = test_api.api_database

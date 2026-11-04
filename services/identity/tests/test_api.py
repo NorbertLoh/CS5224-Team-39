@@ -17,10 +17,16 @@ from pydantic import SecretStr, ValidationError
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.clinics import ClinicDirectory
 from app.database import create_database_engine
+from app.integrations.clinics import ClinicDirectory
 from app.main import create_app
-from app.models import Membership, Subject
+from app.models import (
+    DoctorApplication,
+    DoctorApplicationEvent,
+    DoctorDocument,
+    Membership,
+    Subject,
+)
 from app.settings import Settings
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -113,6 +119,7 @@ def api(api_database, signing_key):
                 )
             )
         session.flush()
+        approve_fixture_doctor(session, ids["doctor"])
         for name, tenant, role, status in (
             ("doctor", TENANT_A, "doctor", "active"),
             ("former", TENANT_A, "doctor", "revoked"),
@@ -164,6 +171,15 @@ def api(api_database, signing_key):
             settings=settings,
         )
     with Session(engine) as session, session.begin():
+        session.execute(
+            delete(DoctorApplicationEvent).where(
+                DoctorApplicationEvent.subject_id.in_(ids.values())
+            )
+        )
+        session.execute(
+            delete(DoctorApplication).where(DoctorApplication.subject_id.in_(ids.values()))
+        )
+        session.execute(delete(DoctorDocument).where(DoctorDocument.subject_id.in_(ids.values())))
         session.execute(delete(Membership).where(Membership.subject_id.in_(ids.values())))
         session.execute(delete(Subject).where(Subject.subject_id.in_(ids.values())))
 
@@ -172,9 +188,111 @@ def headers(api, name="patient", **changes):
     return {"Authorization": f"Bearer {api.mint(name, **changes)}"}
 
 
+def approve_fixture_doctor(session, subject_id):
+    """Existing authorization tests explicitly arrange reviewed doctor eligibility."""
+    document = DoctorDocument(
+        subject_id=subject_id, content_type="application/pdf", content=b"%PDF-1.4 test"
+    )
+    session.add(document)
+    session.flush()
+    session.add(
+        DoctorApplication(
+            subject_id=subject_id,
+            legal_name="Reviewed test doctor",
+            licence_number=f"TEST-{subject_id}",
+            licensing_authority="Test authority",
+            specialty="General practice",
+            document_id=document.document_id,
+            status="approved",
+            revision=1,
+        )
+    )
+
+
 def path(tenant=TENANT_A, subject=None):
     root = f"/clinics/{tenant}/memberships"
     return f"{root}/{subject}" if subject is not None else root
+
+
+def test_registration_requires_authentication(api):
+    assert api.client.post("/me/registration").status_code == 401
+
+
+def test_registration_preserves_existing_identity(api, monkeypatch):
+    def unexpected(*args):
+        pytest.fail("Existing identities must not require Cognito or change roles")
+
+    monkeypatch.setattr("app.api.registration.account_attributes", unexpected)
+    response = api.client.post("/me/registration", headers=headers(api, "doctor"))
+    assert response.status_code == 200
+    assert response.json()["global_roles"] == []
+    assert response.json()["memberships"]
+
+
+def test_registration_is_idempotent_and_patient_only(api, monkeypatch):
+    sub = str(uuid4())
+    email = f"{sub}@example.test"
+    monkeypatch.setattr(
+        "app.api.registration.account_attributes", lambda *args: (email, "New Patient")
+    )
+    auth = headers(api, sub, **{"cognito:groups": ["platform_admin", "doctor"]})
+    try:
+        first = api.client.post("/me/registration", headers=auth)
+        again = api.client.post("/me/registration", headers=auth)
+        assert first.status_code == again.status_code == 200
+        assert first.json() == again.json()
+        assert first.json()["global_roles"] == ["patient"]
+        assert first.json()["memberships"] == []
+        assert first.json()["display_name"] == "New Patient"
+    finally:
+        with Session(api.engine) as session, session.begin():
+            session.execute(delete(Subject).where(Subject.cognito_sub == sub))
+
+
+def test_registration_does_not_take_over_email(api, monkeypatch):
+    monkeypatch.setattr(
+        "app.api.registration.account_attributes", lambda *args: ("patient@example.test", "Other")
+    )
+    response = api.client.post("/me/registration", headers=headers(api, str(uuid4())))
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "email_already_registered"
+
+
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {"sub": "someone-else", "email_verified": "true", "email": "new@example.test"},
+        {"sub": "new-user", "email_verified": "false", "email": "new@example.test"},
+    ],
+)
+def test_registration_requires_matching_verified_cognito_account(api, monkeypatch, attributes):
+    monkeypatch.setattr(
+        "app.api.registration.httpx.post",
+        lambda *args, **kwargs: httpx.Response(
+            200, json={"UserAttributes": [{"Name": k, "Value": v} for k, v in attributes.items()]}
+        ),
+    )
+    response = api.client.post("/me/registration", headers=headers(api, "new-user"))
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "verified_email_required"
+
+
+def test_registration_fails_closed_when_cognito_unavailable(api, monkeypatch):
+    monkeypatch.setattr(
+        "app.api.registration.httpx.post", lambda *args, **kwargs: httpx.Response(503)
+    )
+    response = api.client.post("/me/registration", headers=headers(api, "new-user"))
+    assert response.status_code == 503
+
+
+@pytest.mark.parametrize("attributes", [None, [None], [{"Name": "name", "Value": 123}]])
+def test_registration_rejects_malformed_provider_attributes(api, monkeypatch, attributes):
+    monkeypatch.setattr(
+        "app.api.registration.httpx.post",
+        lambda *args, **kwargs: httpx.Response(200, json={"UserAttributes": attributes}),
+    )
+    response = api.client.post("/me/registration", headers=headers(api, "new-user"))
+    assert response.status_code == 503
 
 
 def decision_body(api, name, action, tenant=TENANT_A, doctor="doctor"):
@@ -310,7 +428,11 @@ def test_email_assignment_is_normalized_idempotent_and_reactivates(api):
     assert response.status_code == 201
     original = response.json()
     assert original["subject_id"] == str(api.ids["target"])
-    assert original["subject"] == {"display_name": "target", "email": "target@example.test"}
+    assert original["subject"] == {
+        "display_name": "target",
+        "email": "target@example.test",
+        "doctor_verification": "not_applied",
+    }
     repeated = api.client.post(path(), json=body, headers=headers(api, "admin_a"))
     assert repeated.status_code == 200
     assert repeated.json()["membership_id"] == original["membership_id"]
@@ -328,10 +450,12 @@ def test_membership_list_includes_names_and_optional_email_without_cognito_sub(a
     assert rows[str(api.ids["doctor"])]["subject"] == {
         "display_name": "doctor",
         "email": "doctor@example.test",
+        "doctor_verification": "approved",
     }
     assert rows[str(api.ids["former"])]["subject"] == {
         "display_name": "former",
         "email": None,
+        "doctor_verification": "not_applied",
     }
     assert "cognito_sub" not in response.text
 
@@ -867,6 +991,7 @@ def test_doctor_directory_service_scope_pagination_and_revocation(api):
     with Session(api.engine) as session, session.begin():
         session.add(Membership(subject_id=api.ids["target"], tenant_id=TENANT_A, roles=["doctor"]))
         session.add(Membership(subject_id=api.ids["patient"], tenant_id=TENANT_B, roles=["doctor"]))
+        approve_fixture_doctor(session, api.ids["target"])
     first = api.client.get(endpoint, params={"limit": 1}, headers=credential).json()
     assert len(first["items"]) == 1 and first["next_cursor"]
     second = api.client.get(

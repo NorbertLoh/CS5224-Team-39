@@ -145,5 +145,5 @@ Eight local unit tests passed, including rejection of mismatched/missing fee lin
 Real declined/cancelled hosted payments have not been exercised. Fixture checks
 reject unpaid/open/cancelled/failed states; these do not establish hosted decline
 or cancellation behaviour. Application checkout/webhook integration remains
-B02-B04, and X04's completed sample signature scope is documented separately in
-`docs/stripe-webhook-spike.md`.
+B02-B04. X04's completed sample-signature evidence and its current replacement
+checks are in the [billing webhook guide](../services/billing/WEBHOOKS.md#retired-x04-standalone-receiver).

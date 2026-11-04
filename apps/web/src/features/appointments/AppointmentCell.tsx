@@ -1,20 +1,33 @@
-import { formatTime, readableStatus } from './display'
-import type { AppointmentRole } from './fixtures'
-import type { dayCells } from './display'
+import type { dayCells } from '@/features/appointments/display'
+import {
+  dateInSingapore,
+  formatDate,
+  formatTime,
+  nameOrId,
+  readableStatus,
+} from '@/features/appointments/display'
+import type { AppointmentRole } from '@/features/appointments/types'
 
 export function AppointmentCell({
   cell,
   role,
+  showDate = role === 'patient',
   selectedId,
   onSelect,
 }: {
   cell: ReturnType<typeof dayCells>[number]
   role: AppointmentRole
+  showDate?: boolean
   selectedId: string | null
   onSelect: (id: string) => void
 }) {
   return (
     <div className="min-h-24 rounded-lg border bg-slate-50 p-3">
+      {showDate && (
+        <p className="text-sm font-medium text-slate-600">
+          {formatDate(dateInSingapore(cell.startsAt))}
+        </p>
+      )}
       <p className="mb-2 text-sm font-medium text-slate-600">
         {formatTime(cell.startsAt)}–{formatTime(cell.endsAt)}
       </p>
@@ -30,13 +43,13 @@ export function AppointmentCell({
             >
               <span className="block font-medium">
                 {role === 'patient'
-                  ? appointment.doctor_id
-                  : appointment.patient_id}
+                  ? nameOrId(appointment.doctor_name, appointment.doctor_id)
+                  : appointment.patient_name || 'Patient name unavailable'}
               </span>
               <span className="block text-slate-600">
-                {appointment.tenant_id}
+                {nameOrId(appointment.clinic_name, appointment.tenant_id)}
                 {role === 'clinic_admin' &&
-                  ` · ${appointment.doctor_id}`}
+                  ` · ${nameOrId(appointment.doctor_name, appointment.doctor_id)}`}
               </span>
               <span className="mt-1 block capitalize">
                 {readableStatus(appointment.status)}

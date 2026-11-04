@@ -1,5 +1,8 @@
 # Local development
 
+For the complete application in containers, use [full-stack Compose](compose-stack.md).
+The foundation-only template/host-frontend workflow remains below.
+
 Compose runs the FastAPI template alongside PostgreSQL, Redis and optional
 Floci. Run the frontend on the host; Vite forwards `/api/v1/template` to the
 API container. Bootstrap supplies S3, synthetic secrets, messaging and Cognito
@@ -54,8 +57,9 @@ Expected result: `status: ready`, `service: template`. Swagger UI is at
 before forwarding; the API uses this root path for generated docs URLs.
 Identity and tenant prefixes are also wired to local ports 8001 and 8002.
 See [real clinic backend setup](clinic-backend.md) to run those services.
-Vite preview also uses this proxy for local build checks. Production routing
-remains W04; the proxy is not included in the static frontend build.
+The frontend has no npm preview command; use the development server for local
+proxy checks. Production routing remains W04; the proxy is not included in the
+static frontend build.
 
 If port 8000 is occupied, change `TEMPLATE_HOST_PORT` in the root `.env` and set
 `TEMPLATE_API_TARGET=http://127.0.0.1:<port>` in `apps/web/.env`, then restart

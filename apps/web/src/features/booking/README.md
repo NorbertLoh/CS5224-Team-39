@@ -6,5 +6,4 @@ time. The booking review links to authenticated live billing checkout and status
 See [setup, boundaries and verification](../../../../../docs/scheduling-frontend.md).
 
 `ClinicBooking` loads clinic and doctor metadata; `BookingFlow` coordinates real slot
-queries and holds. Slot display components remain shared. The older `fixtures` and
-`CheckoutReview` are retained only for fixture tests and are not mounted.
+queries and holds. Slot display components use types from the scheduling API.

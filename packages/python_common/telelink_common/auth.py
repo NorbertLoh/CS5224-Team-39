@@ -58,7 +58,16 @@ class TokenVerifier:
                 raise jwt.InvalidTokenError("invalid scope")
             scopes = frozenset(scope.split())
             required_scopes = set(self.settings.auth_required_scopes.split())
-            if not required_scopes.issubset(scopes):
+            missing_scopes = required_scopes - scopes
+            # API password login issues Cognito's reserved self-service scope,
+            # not OAuth's openid scope. Opt in to that authentication alternative;
+            # every custom API scope and all token checks still apply.
+            if (
+                self.settings.auth_allow_password_tokens
+                and "aws.cognito.signin.user.admin" in scopes
+            ):
+                missing_scopes.discard("openid")
+            if missing_scopes:
                 raise HTTPException(403, "Insufficient access token scope")
             return Principal(subject=claims["sub"], scopes=scopes)
         except PyJWKClientConnectionError:

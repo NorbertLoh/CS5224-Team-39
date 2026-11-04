@@ -1,6 +1,8 @@
-import { apiFetch } from '../../lib/api'
-import { accessToken } from '../clinics/api'
-import type { CursorPage } from '../../lib/api-types'
+import { accessToken } from '@/auth/access-token'
+import { apiFetch } from '@/lib/api'
+import type { CursorPage } from '@/lib/api-types'
+import { appendFilters, emptyFilters } from '@/lib/list-filters'
+import type { ListFilterValues } from '@/lib/list-filters'
 type Money = { amount_minor: number; currency: string }
 
 export type Payment = {
@@ -13,6 +15,12 @@ export type Payment = {
   quote_id: string | null
   status: string
   resolution: string
+  refund_availability:
+    | 'available'
+    | 'demo_payment'
+    | 'unsupported_purpose'
+    | 'not_paid'
+    | 'unsupported_payment'
   amount: Money
   commission_bps: number
   commission_amount: Money
@@ -25,6 +33,40 @@ export type Totals = {
   amount: Money
   commission_amount: Money
   clinic_amount: Money
+}
+export type Refund = {
+  refund_id: string
+  payment_id: string
+  requested_by: string
+  requested_by_name: string
+  reason: string
+  status: 'pending' | 'succeeded' | 'failed' | 'review'
+  created_at: string
+  updated_at: string
+  last_error: string | null
+  retry_allowed: boolean
+}
+
+export async function refundHistory(
+  id: string,
+  signal?: AbortSignal,
+): Promise<Refund[]> {
+  return (
+    await request(`/payments/${encodeURIComponent(id)}/refunds`, { signal })
+  ).json()
+}
+
+export async function refundPayment(
+  id: string,
+  reason: string,
+): Promise<Refund> {
+  return (
+    await request(`/payments/${encodeURIComponent(id)}/refunds`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    })
+  ).json()
 }
 export type Checkout = {
   payment: Payment
@@ -53,21 +95,47 @@ export async function listPayments(
   status = 'all',
   cursor?: string | null,
   signal?: AbortSignal,
+  filters: ListFilterValues = emptyFilters,
 ): Promise<CursorPage<Payment>> {
   const query = new URLSearchParams({ tenant_id: tenantId, limit: '25' })
   if (purpose !== 'all') query.set('purpose', purpose)
   if (status !== 'all') query.set('status', status)
   if (cursor) query.set('cursor', cursor)
+  appendFilters(query, filters)
   return (await request(`/payments?${query}`, { signal })).json()
 }
 export async function paymentTotals(
   tenantId: string,
   purpose = 'all',
   signal?: AbortSignal,
+  filters: ListFilterValues = emptyFilters,
 ): Promise<Totals> {
   const query = new URLSearchParams({ tenant_id: tenantId })
   if (purpose !== 'all') query.set('purpose', purpose)
+  appendFilters(query, filters)
   return (await request(`/commission-totals?${query}`, { signal })).json()
+}
+
+export type PaymentCounts = {
+  purpose: Record<string, number>
+  status: Record<string, number>
+  total: number
+  filtered_total: number
+}
+export async function paymentCounts(
+  tenantId: string,
+  purpose: string,
+  status: string,
+  filters: ListFilterValues,
+  signal?: AbortSignal,
+): Promise<PaymentCounts> {
+  const params = appendFilters(
+    new URLSearchParams({ tenant_id: tenantId }),
+    filters,
+  )
+  if (purpose !== 'all') params.set('purpose', purpose)
+  if (status !== 'all') params.set('status', status)
+  return (await request(`/payment-counts?${params}`, { signal })).json()
 }
 export async function createCheckout(
   appointmentId: string,

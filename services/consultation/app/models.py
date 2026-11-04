@@ -4,11 +4,14 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
     Index,
+    Integer,
     MetaData,
+    SmallInteger,
     Text,
     UniqueConstraint,
     Uuid,
@@ -45,8 +48,14 @@ class ConsultationSession(Base):
         ),
         CheckConstraint(
             "started_at IS NULL OR (isfinite(started_at) "
-            "AND started_at >= starts_at AND started_at < ends_at)",
+            "AND started_at >= starts_at - test_start_early_minutes * interval '1 minute' "
+            "AND started_at < ends_at)",
             name="ck_sessions_start_window",
+        ),
+        CheckConstraint(
+            "test_start_early_minutes BETWEEN 0 AND 180 "
+            "AND (test_start_early_minutes = 0 OR started_at IS NOT NULL)",
+            name="ck_sessions_test_start_window",
         ),
         CheckConstraint(
             "ended_at IS NULL OR (isfinite(ended_at) AND ended_at >= started_at)",
@@ -67,6 +76,9 @@ class ConsultationSession(Base):
         Text, default="scheduled", server_default=text("'scheduled'")
     )
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    test_start_early_minutes: Mapped[int] = mapped_column(
+        SmallInteger, default=0, server_default=text("0")
+    )
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -97,6 +109,18 @@ class Admission(Base):
             "released_at IS NULL OR (consumed_at IS NOT NULL AND released_at >= consumed_at)",
             name="ck_admissions_released",
         ),
+        CheckConstraint(
+            "call_expires_at IS NULL OR (isfinite(call_expires_at) "
+            "AND call_expires_at >= expires_at "
+            "AND call_expires_at <= issued_at + interval '12 hours')",
+            name="ck_admissions_call_expiry",
+        ),
+        CheckConstraint(
+            "active_expires_at IS NULL OR (consumed_at IS NOT NULL "
+            "AND isfinite(active_expires_at) AND active_expires_at > consumed_at "
+            "AND call_expires_at IS NOT NULL AND active_expires_at <= call_expires_at)",
+            name="ck_admissions_active_expiry",
+        ),
     )
 
     session_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
@@ -108,3 +132,33 @@ class Admission(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    node_id: Mapped[UUID | None] = mapped_column(Uuid)
+    assignment_version: Mapped[int | None] = mapped_column(Integer)
+    active_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    call_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SignallingNode(Base):
+    __tablename__ = "signalling_nodes"
+
+    node_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    token_digest: Mapped[str] = mapped_column(Text)
+    internal_url: Mapped[str] = mapped_column(Text)
+    lease_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    draining: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class RoomAssignment(Base):
+    __tablename__ = "room_assignments"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["session_id"], ["consultation.sessions.session_id"], ondelete="CASCADE"
+        ),
+        ForeignKeyConstraint(["node_id"], ["consultation.signalling_nodes.node_id"]),
+        CheckConstraint("version > 0", name="ck_room_assignment_version"),
+        Index("ix_room_assignment_node", "node_id"),
+    )
+
+    session_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    node_id: Mapped[UUID] = mapped_column(Uuid)
+    version: Mapped[int] = mapped_column(Integer)

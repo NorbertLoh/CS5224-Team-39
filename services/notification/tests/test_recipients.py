@@ -5,7 +5,7 @@ import jwt
 import pytest
 from test_worker import workflow
 
-from app.recipients import RecipientDirectory, RecipientLookupError
+from app.integrations.recipients import RecipientDirectory, RecipientLookupError
 from app.settings import Settings
 
 

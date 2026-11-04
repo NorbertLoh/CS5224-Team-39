@@ -1,10 +1,14 @@
 # TeleLink Health
 
-CS5224 Team 39's multi-tenant teleconsultation prototype. Planned stack: React + TypeScript + Vite, independent FastAPI business services, PeerJS signalling, Floci for local AWS APIs, and AWS hosting.
+CS5224 Team 39's multi-tenant teleconsultation prototype. Stack: React + TypeScript + Vite, independent FastAPI business services, PeerJS signalling and Floci for local AWS APIs. AWS hosting remains planned.
 
 ## Current status
 
-This repository contains a [React frontend](apps/web/README.md), a runnable [FastAPI service template](services/template/README.md), and [local Compose dependencies](docs/local-development.md). Business-service integration and AWS infrastructure remain planned work. The template can run independently without AWS or a database.
+This repository contains a [React frontend](apps/web/README.md), independent business
+APIs and workers, and a [full local Compose stack](docs/compose-stack.md). See the
+[implementation backlog](implementation-plan.md) for completed local integrations
+and remaining journey/AWS work. The [FastAPI template](services/template/README.md)
+can also run independently.
 
 ## Repository layout
 
@@ -22,12 +26,33 @@ This repository contains a [React frontend](apps/web/README.md), a runnable [Fas
 
 Each business service owns its database schema and Alembic migrations. Do not write another service's tables. Frontend and backend work can be claimed separately using agreed contracts.
 
+## Documentation
+
+| Need | Current guide |
+| --- | --- |
+| Understand the system from overview to implementation | [Technical architecture guide](docs/architecture-guide.md) |
+| Run the complete local app | [Compose setup](docs/compose-stack.md) |
+| Sign-in and session behavior | [Authentication](docs/authentication.md) |
+| Frontend setup and checks | [Web README](apps/web/README.md) |
+| Booking and Upcoming/Past appointments | [Scheduling frontend](docs/scheduling-frontend.md) |
+| Clinical notes, prescriptions and PDFs | [Records setup](docs/records-frontend.md), [documents](docs/document-frontend.md) |
+| Payment callbacks and refunds | [Billing webhooks](services/billing/WEBHOOKS.md), [refunds](services/billing/REFUNDS.md) |
+| Local tools and synthetic data | [Development support](dev/README.md) |
+| Architecture, contracts and remaining work | [Architecture](plan.md), [contracts](contracts/README.md), [backlog](implementation-plan.md) |
+
+Task-specific evidence is historical unless explicitly dated as a new verification.
+Use current setup guides and package scripts when reproducing checks.
+
 ## Getting started
+
+For the complete local application, follow [full-stack Compose setup](docs/compose-stack.md):
+`./dev/compose.ps1 setup -Payments`, then open `https://localhost:8443`.
+Existing host-stack users can preserve their database with `setup -UseExistingDatabase -Payments`.
 
 1. Read [AGENTS.md](AGENTS.md) for the issue-first claim workflow.
 2. Find a ready task in [implementation-plan.md](implementation-plan.md); create/reuse its GitHub issue and claim it before coding.
 3. Read [plan.md](plan.md) for architecture, scope and the four-week schedule.
-4. Run the [service template](services/template/README.md) for the F03 foundation. Follow [local setup](docs/local-development.md) as later tasks supply the full local stack. For cloud work, see [AWS setup](docs/aws-deployment.md).
+4. Run the [full local Compose stack](docs/compose-stack.md), or the [service template](services/template/README.md) for isolated foundation work. For cloud work, see [AWS setup](docs/aws-deployment.md).
 
 Commit dependency lockfiles, migrations and sanitized configuration examples. Keep credentials, local environment overrides, generated output, Terraform state and runtime data out of Git. Use synthetic records only.
 
@@ -35,8 +60,9 @@ F01 is skipped by team decision. W01 chose Terraform with a shared team AWS acco
 
 ## Local sign-in accounts
 
-All four roles use the same **Sign in** button at http://localhost:5173 or
-http://127.0.0.1:5173. Each local account uses the password `LocalDemo123!`.
+All four roles use the same **Sign in** button at https://localhost:8443 with
+the full Compose stack. Host-only frontend URLs depend on the callback registered
+by that setup guide. Each local account uses the password `LocalDemo123!`.
 
 | Role | Email |
 | --- | --- |
@@ -49,5 +75,5 @@ Follow [clinic backend setup](docs/clinic-backend.md) to create the local Cognit
 accounts, provision their backend roles and link the doctor to the local clinic.
 These accounts are for local Floci development only. Backend roles and clinic
 memberships determine access; Cognito groups alone do not grant permissions.
-Currently, the clinic list, storefront and profile editor are implemented; the
-remaining role pages are still planned.
+Use [full-stack Compose](docs/compose-stack.md) to run the implemented role pages
+against the local services.

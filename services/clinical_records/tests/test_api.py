@@ -17,10 +17,10 @@ from sqlalchemy.orm import Session
 from telelink_common.access import CurrentIdentity, require_identity
 
 from app.database import create_database_engine
+from app.integrations.upstream import Appointment, RecordsUpstream
 from app.main import create_app
 from app.models import Note, Prescription, PrescriptionItem, ReadAudit
 from app.settings import Settings
-from app.upstream import Appointment, RecordsUpstream
 
 PREFIX = "/api/v1/clinical-records"
 
@@ -107,6 +107,17 @@ def api(database):
             # Extra generated appointments in the pagination test share trusted context.
             data["appointment_id"] = request.url.path.rsplit("/", 1)[1]
             return httpx.Response(state.get("scheduling_status", 200), json=data)
+        if request.url.path.endswith("/prepare-correction"):
+            if state.get("correction_failure"):
+                return httpx.Response(state["correction_failure"])
+            return httpx.Response(
+                200,
+                json={
+                    "tenant_id": str(tenant),
+                    "prescription_id": request.url.path.split("/")[-2],
+                    "patient_id": str(patient),
+                },
+            )
         return httpx.Response(
             state["catalogue_status"],
             json={
@@ -117,7 +128,8 @@ def api(database):
                         "display_name": "Synthetic medicine",
                         "active": state.get("active", True),
                     }
-                ],
+                ]
+                + state.get("extra_medications", []),
                 "next_cursor": None,
             },
         )
@@ -340,9 +352,11 @@ def test_pagination_scoped_and_audited(api):
     page = client.get(PREFIX + "/prescriptions", params={"limit": 1})
     assert page.status_code == 200, page.text
     assert len(page.json()["items"]) == 1 and page.json()["next_cursor"]
+    assert page.json()["items"][0]["prescription_id"] == second["prescription_id"]
     cursor = page.json()["next_cursor"]
     next_page = client.get(PREFIX + "/prescriptions", params={"limit": 1, "cursor": cursor})
     assert next_page.status_code == 200
+    assert next_page.json()["items"][0]["prescription_id"] == first["prescription_id"]
     assert {
         page.json()["items"][0]["prescription_id"],
         next_page.json()["items"][0]["prescription_id"],
@@ -435,3 +449,25 @@ def test_missing_bearer_and_unready_configuration():
         response = client.get(PREFIX + f"/appointments/{uuid4()}/note")
         assert response.status_code == 401
         assert client.get("/health/ready").status_code == 503
+
+
+def test_admin_pricing_projection_excludes_private_content_and_is_scoped(api):
+    client, state, users, appointment, _, engine, _ = api
+    row = create(api)
+    assert client.post(PREFIX + f"/prescriptions/{row['prescription_id']}/issue").status_code == 200
+    path = PREFIX + f"/clinics/{appointment.tenant_id}/prescription-pricing"
+    state["user"] = "admin"
+    response = client.get(path, headers={"X-Request-ID": "pricing-audit"})
+    assert response.status_code == 200, response.text
+    assert response.json()["items"][0]["prescription_id"] == row["prescription_id"]
+    assert "Synthetic medicine" in response.text
+    assert "instructions" not in response.text and "text" not in response.json()["items"][0]
+    assert client.get(PREFIX + f"/clinics/{uuid4()}/prescription-pricing").status_code == 404
+    with Session(engine) as db:
+        audit = db.scalar(select(ReadAudit).where(ReadAudit.request_id == "pricing-audit"))
+        assert (
+            audit.tenant_id == appointment.tenant_id and audit.actor_id == users["admin"].subject_id
+        )
+    for role in ["doctor", "patient", "other_doctor", "cross_tenant", "platform"]:
+        state["user"] = role
+        assert client.get(path).status_code == 404

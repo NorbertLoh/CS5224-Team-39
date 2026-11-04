@@ -62,7 +62,7 @@ connection limit and 1 KiB body limit. Existing frame isolation still applies.
 Admission includes `ice_servers` and `relay_only`. For coturn REST auth configure
 consultation's JSON `SERVICE_TURN_URLS` list and an independent `SERVICE_TURN_SECRET`
 of at least 32 bytes matching coturn. `SERVICE_RELAY_ONLY=true` requires TURN.
-Credentials use the issued peer ID and admission expiry with coturn's HMAC-SHA1
+RF30 credentials use the issued peer ID and fixed call deadline with coturn's HMAC-SHA1
 REST format. The shared secret stays on the server. Without configured TURN the
 ICE list is empty, suitable only where direct connectivity succeeds. Reachable
 TURN infrastructure is still required for restrictive networks.
@@ -88,11 +88,12 @@ before attempting a different lifecycle action.
 
 ## Verification
 
-Run `npm test`, `npm run lint` and `npm run build` from `apps/web`; run `npm test`
+Run `npm run lint`, `npm run typecheck` and `npm run build` from `apps/web`; run `npm test`
 from `services/signalling`. Consultation uses the disposable PostgreSQL setup,
 `python -m pytest -q`, `python -m ruff check .` and `python -m ruff format --check .`
-described in its README. Frontend checks include a real Vite proxy test blocking
-consultation-internal access. Results/browser evidence are recorded in PR #202.
+described in its README. RF04 removed the frontend test harness; current frontend
+scripts do not provide `npm test`. Historical proxy/browser checks below were
+recorded in PR #202 and do not represent a new run.
 
 Synthetic persisted paid bookings and signed test identities establish local
 integration, not a new hosted Stripe payment or a complete patient booking flow.

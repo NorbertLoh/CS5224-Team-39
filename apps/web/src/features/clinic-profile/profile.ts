@@ -2,7 +2,11 @@ import type { Money } from '@/lib/api-types'
 
 export type ClinicProfile = {
   name: string
-  branding: { primary_color: string; logo_url: string | null; description: string }
+  branding: {
+    primary_color: string
+    logo_url: string | null
+    description: string
+  }
   consultation_price: Money
 }
 
@@ -28,17 +32,24 @@ export function profileDraft(profile: ClinicProfile): ProfileDraft {
 }
 
 export function feeMinor(value: string): number | null {
-  if (value.length > 20 || !/^\d+(?:\.\d{1,2})?$/.test(value.trim())) return null
+  if (value.length > 20 || !/^\d+(?:\.\d{1,2})?$/.test(value.trim()))
+    return null
   const [whole, fraction = ''] = value.trim().split('.')
   const minor = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0'))
   return minor <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(minor) : null
 }
 
 export function validLogoUrl(value: string): boolean {
-  if (value.length > 2048 || /\s/.test(value) || !/^https:\/\//i.test(value)) return false
+  if (value.length > 2048 || /\s/.test(value) || !/^https:\/\//i.test(value))
+    return false
   try {
     const url = new URL(value)
-    return url.protocol === 'https:' && !!url.hostname && !url.username && !url.password
+    return (
+      url.protocol === 'https:' &&
+      !!url.hostname &&
+      !url.username &&
+      !url.password
+    )
   } catch {
     return false
   }
@@ -46,11 +57,19 @@ export function validLogoUrl(value: string): boolean {
 
 export function validateProfile(draft: ProfileDraft): ProfileErrors {
   const errors: ProfileErrors = {}
-  if (!draft.name.trim() || draft.name.length > 200) errors.name = 'Enter a clinic name of 1–200 characters.'
-  if (draft.description.length > 2000 || /[<>]/.test(draft.description)) errors.description = 'Use plain text, up to 2,000 characters, without < or >.'
-  if (!/^#[0-9a-f]{6}$/i.test(draft.primaryColor)) errors.primaryColor = 'Use a six-digit hex colour, such as #156B63.'
-  if (draft.logoUrl && !validLogoUrl(draft.logoUrl)) errors.logoUrl = 'Use an HTTPS URL without spaces or embedded login details, or leave blank.'
-  if (feeMinor(draft.fee) === null) errors.fee = 'Enter a nonnegative SGD amount with at most two decimal places, within the supported range.'
+  if (!draft.name.trim() || draft.name.length > 200)
+    errors.name = 'Enter a clinic name of 1–200 characters.'
+  if (draft.description.length > 2000 || /[<>]/.test(draft.description))
+    errors.description =
+      'Use plain text, up to 2,000 characters, without < or >.'
+  if (!/^#[0-9a-f]{6}$/i.test(draft.primaryColor))
+    errors.primaryColor = 'Use a six-digit hex colour, such as #156B63.'
+  if (draft.logoUrl && !validLogoUrl(draft.logoUrl))
+    errors.logoUrl =
+      'Use an HTTPS URL without spaces or embedded login details, or leave blank.'
+  if (feeMinor(draft.fee) === null)
+    errors.fee =
+      'Enter a nonnegative SGD amount with at most two decimal places, within the supported range.'
   return errors
 }
 

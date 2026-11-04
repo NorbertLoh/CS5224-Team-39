@@ -72,17 +72,34 @@ Login uses random state and a 256-bit verifier with S256 PKCE, no client secret.
 The callback consumes one pending transaction within ten minutes, checks state,
 exchanges the code once, then strips the callback query from browser history.
 React StrictMode shares the single callback exchange. Access/refresh tokens live
-only in tab-scoped sessionStorage, survive reloads and clear at logout. No tokens
+in localStorage, shared by tabs on the same origin, and survive browser restarts
+until logout or refresh-token expiry. PKCE transactions remain in tab-scoped
+sessionStorage. After upgrading from tab-local sessions, sign in once again;
+old tab-local tokens are not imported, so stale credentials cannot undo logout.
+Sign-out and account changes synchronize across open tabs and clear their private
+query caches. Different origins (including different ports) have separate sessions.
+No tokens
 are rendered or logged. Browser claim checks detect configuration errors; the
 API verifies signatures. As with any browser token storage, XSS can expose tokens.
 
 The UI refreshes within 60 seconds of expiry, checks every five seconds and on
-window focus, and shares concurrent refreshes. A failed refresh clears the
+window focus, and shares concurrent refreshes. Web Locks serialize refreshes
+across tabs where supported; a waiting tab reuses a freshly renewed token. Storage
+comparison also prevents late responses overwriting changed credentials. A failed
+refresh clears the
 session/query cache and asks the user to sign in again. An in-flight refresh
 cannot restore credentials after logout. Logout clears local credentials and
 query data, attempts refresh-token revocation, and redirects through hosted
 logout to clear the login cookie. A revocation outage still signs out locally
 and displays a warning on return.
+
+RF15 verification: after installing the locked frontend dependencies in `apps/web`,
+run `node dev/check_auth_session.mjs` from the repository root. It simulates
+independent tab modules sharing storage and locks, checking new-tab reuse, PKCE
+isolation/callback, session notifications, cleared storage, concurrent refresh,
+late logout/account changes, and retry after a failed refresh. Frontend lint,
+TypeScript and production build also passed. Live browser and AWS verification
+remain outstanding; no environment variables or migrations change.
 
 FastAPI accepts only RS256 signatures from configured JWKS, with exact issuer,
 expiry/issued-at, nonempty subject, `token_use=access`, matching `client_id`, and

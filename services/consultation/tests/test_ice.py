@@ -1,13 +1,13 @@
 import base64
 import hashlib
 import hmac
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
 
-from app.ice import configuration
+from app.integrations.ice import configuration
 from app.settings import Settings
 
 
@@ -35,6 +35,11 @@ def test_turn_credentials_are_bound_to_grant_peer_and_original_deadline():
         "ice_servers": [],
         "relay_only": False,
     }
+    # New admissions retain relay authentication across the renewable call.
+    grant["call_expires_at"] = grant["expires_at"] + timedelta(hours=12)
+    extended = configuration(settings, grant)["ice_servers"][0]
+    assert extended["username"] == f"{int(grant['call_expires_at'].timestamp())}:{grant['peer_id']}"
+    assert extended["credential"] != server["credential"]
 
 
 @pytest.mark.parametrize(

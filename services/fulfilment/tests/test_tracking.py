@@ -9,11 +9,11 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from app.delivery_orders import DeliveryUnavailable, SandboxDeliveries
-from app.delivery_worker import submit_pending
+from app.integrations.delivery_orders import DeliveryUnavailable, SandboxDeliveries
 from app.models import Delivery, event_outbox
+from app.services.tracking import poll_delivery, poll_next
 from app.settings import Settings
-from app.tracking import poll_delivery, poll_next
+from app.workers.deliveries import submit_pending
 from tests.test_deliveries import STOPS, rows
 from tests.test_deliveries import eligible as eligible
 from tests.test_payments import payment_case as payment_case
@@ -267,7 +267,7 @@ def test_status_order_schedule_and_outbox_rollback_together(tracking, monkeypatc
         raise RuntimeError("Synthetic outbox failure")
 
     with monkeypatch.context() as patch:
-        patch.setattr("app.tracking.change_status", crash)
+        patch.setattr("app.services.tracking.change_status", crash)
         with pytest.raises(RuntimeError):
             poll_next(case.sessions, case.tracker)
     order, delivery, events = rows(case)

@@ -1,17 +1,18 @@
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AppointmentDetails } from './AppointmentDetails'
+import { ErrorState } from '@/components/ErrorState'
+import { LoadingState } from '@/components/LoadingState'
+import { AppointmentDetails } from '@/features/appointments/AppointmentDetails'
+import { AppointmentJoinButton } from '@/features/appointments/AppointmentJoinButton'
+import { AppointmentPaymentAction } from '@/features/appointments/AppointmentPaymentAction'
+import type { AppointmentRole } from '@/features/appointments/types'
+import { DocumentList } from '@/features/documents/DocumentList'
 import {
   appointmentDetail,
-  cancelAppointment,
   canCancel,
+  cancelAppointment,
   schedulingError,
-} from '../scheduling/api'
-import { ErrorState } from '../../components/ErrorState'
-import { LoadingState } from '../../components/LoadingState'
-import { DocumentList } from '../documents/DocumentList'
-import type { AppointmentRole } from './fixtures'
-import { roomEligibility } from '../video/admission'
+} from '@/features/scheduling/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 export function LiveAppointmentDetails({
   id,
@@ -62,31 +63,8 @@ export function LiveAppointmentDetails({
   return (
     <div className="space-y-4">
       <AppointmentDetails appointment={appointment} onClose={onClose} />
-      {(role === 'patient' || role === 'doctor') &&
-        roomEligibility(appointment, role, subjectId) && (
-          <a
-            className="inline-block rounded bg-slate-900 px-4 py-3 text-white"
-            href={`/${role}/consultation?appointment_id=${encodeURIComponent(appointment.appointment_id)}`}
-          >
-            Open video consultation
-          </a>
-        )}
-      {((role === 'patient' && appointment.patient_id === subjectId) ||
-        (role === 'doctor' && appointment.doctor_id === subjectId)) && (
-        <DocumentList
-          key={appointment.appointment_id}
-          role={role as 'patient' | 'doctor'}
-          appointmentId={appointment.appointment_id}
-          tenantId={appointment.tenant_id}
-        />
-      )}
       {role === 'patient' && appointment.patient_id === subjectId && (
-        <a
-          className="inline-block rounded border px-4 py-3"
-          href={`/patient/checkout?appointment_id=${appointment.appointment_id}`}
-        >
-          Payment status and checkout
-        </a>
+        <AppointmentPaymentAction appointment={appointment} />
       )}
       {allowed && (
         <form
@@ -122,6 +100,22 @@ export function LiveAppointmentDetails({
       )}
       {cancel.isError && <ErrorState message={schedulingError(cancel.error)} />}
       {cancel.isSuccess && <p role="status">Appointment cancelled.</p>}
+      {(role === 'patient' || role === 'doctor') && (
+        <AppointmentJoinButton
+          appointment={appointment}
+          role={role}
+          subjectId={subjectId}
+        />
+      )}
+      {((role === 'patient' && appointment.patient_id === subjectId) ||
+        (role === 'doctor' && appointment.doctor_id === subjectId)) && (
+        <DocumentList
+          key={appointment.appointment_id}
+          role={role as 'patient' | 'doctor'}
+          appointmentId={appointment.appointment_id}
+          tenantId={appointment.tenant_id}
+        />
+      )}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { slotStart } from './slot-time'
+import { slotStart } from '@/features/availability/slot-time'
 
 export type Cell = { day: number; row: number }
 export type Selection = { from: Cell; to: Cell }

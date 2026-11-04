@@ -165,10 +165,8 @@ def main():
                 subprocess.run(
                     [
                         "node",
-                        str(ROOT / "apps/web/node_modules/tsx/dist/cli.mjs"),
-                        "--tsconfig",
-                        str(ROOT / "apps/web/tsconfig.json"),
-                        str(ROOT / "dev/check_records_frontend.mts"),
+                        str(ROOT / "dev/run_frontend_probe.mjs"),
+                        "check_records_frontend.mts",
                     ],
                     cwd=ROOT,
                     env={
