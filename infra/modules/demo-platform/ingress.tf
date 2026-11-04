@@ -231,6 +231,7 @@ resource "aws_apigatewayv2_route" "public" {
     "GET /api/v1/tenant/clinics/by-slug/{slug}",
     "GET /api/v1/tenant/clinics/{tenant_id}/doctors",
     "GET /api/v1/tenant/clinics/{tenant_id}/public-logo",
+    "GET /api/v1/scheduling/clinics/{tenant_id}/slots",
     "POST /api/v1/billing/webhooks/stripe"
   ])
   api_id             = aws_apigatewayv2_api.http.id
