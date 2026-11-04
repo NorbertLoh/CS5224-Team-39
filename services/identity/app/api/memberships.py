@@ -8,7 +8,7 @@ from sqlalchemy import select, tuple_
 from telelink_common.errors import DomainError, ErrorEnvelope
 
 from app.api.dependencies import DB, User
-from app.models import Membership, Subject
+from app.models import DoctorApplication, Membership, Subject
 from app.pagination import cursor_key, decode_cursor, encode_cursor
 from app.schemas import (
     MembershipByEmailWrite,
@@ -27,6 +27,13 @@ router = APIRouter(
     tags=["identity"],
     responses={status: {"model": ErrorEnvelope} for status in (401, 403, 404, 409, 422, 500, 503)},
 )
+
+
+def staff_read(session, membership):
+    result = StaffMembershipRead.model_validate(membership)
+    application = session.get(DoctorApplication, membership.subject_id)
+    result.subject.doctor_verification = application.status if application else "not_applied"
+    return result
 
 
 @router.get("/clinics/{tenant_id}/memberships", response_model=MembershipPage)
@@ -61,9 +68,7 @@ def memberships(
     if len(rows) > limit:
         rows = rows[:limit]
         next_cursor = encode_cursor(settings, subject.subject_id, tenant_id, status, rows[-1])
-    return MembershipPage(
-        items=[StaffMembershipRead.model_validate(row) for row in rows], next_cursor=next_cursor
-    )
+    return MembershipPage(items=[staff_read(session, row) for row in rows], next_cursor=next_cursor)
 
 
 @router.put(
@@ -104,7 +109,7 @@ def put_membership(
         membership.roles = body.roles
         membership.status = "active"
     session.flush()
-    result = StaffMembershipRead.model_validate(membership)
+    result = staff_read(session, membership)
     session.commit()
     return result
 

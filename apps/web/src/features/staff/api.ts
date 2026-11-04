@@ -9,7 +9,12 @@ export type Membership = {
   tenant_id: string
   roles: StaffRole[]
   status: 'active' | 'revoked'
-  subject: { display_name: string; email: string | null }
+  subject: {
+    display_name: string
+    email: string | null
+    doctor_verification:
+      'not_applied' | 'pending' | 'approved' | 'rejected' | 'revoked'
+  }
 }
 
 async function request(

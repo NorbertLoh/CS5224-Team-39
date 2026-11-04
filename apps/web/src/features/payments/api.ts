@@ -1,6 +1,8 @@
 import { accessToken } from '@/auth/access-token'
 import { apiFetch } from '@/lib/api'
 import type { CursorPage } from '@/lib/api-types'
+import { appendFilters, emptyFilters } from '@/lib/list-filters'
+import type { ListFilterValues } from '@/lib/list-filters'
 type Money = { amount_minor: number; currency: string }
 
 export type Payment = {
@@ -93,21 +95,47 @@ export async function listPayments(
   status = 'all',
   cursor?: string | null,
   signal?: AbortSignal,
+  filters: ListFilterValues = emptyFilters,
 ): Promise<CursorPage<Payment>> {
   const query = new URLSearchParams({ tenant_id: tenantId, limit: '25' })
   if (purpose !== 'all') query.set('purpose', purpose)
   if (status !== 'all') query.set('status', status)
   if (cursor) query.set('cursor', cursor)
+  appendFilters(query, filters)
   return (await request(`/payments?${query}`, { signal })).json()
 }
 export async function paymentTotals(
   tenantId: string,
   purpose = 'all',
   signal?: AbortSignal,
+  filters: ListFilterValues = emptyFilters,
 ): Promise<Totals> {
   const query = new URLSearchParams({ tenant_id: tenantId })
   if (purpose !== 'all') query.set('purpose', purpose)
+  appendFilters(query, filters)
   return (await request(`/commission-totals?${query}`, { signal })).json()
+}
+
+export type PaymentCounts = {
+  purpose: Record<string, number>
+  status: Record<string, number>
+  total: number
+  filtered_total: number
+}
+export async function paymentCounts(
+  tenantId: string,
+  purpose: string,
+  status: string,
+  filters: ListFilterValues,
+  signal?: AbortSignal,
+): Promise<PaymentCounts> {
+  const params = appendFilters(
+    new URLSearchParams({ tenant_id: tenantId }),
+    filters,
+  )
+  if (purpose !== 'all') params.set('purpose', purpose)
+  if (status !== 'all') params.set('status', status)
+  return (await request(`/payment-counts?${params}`, { signal })).json()
 }
 export async function createCheckout(
   appointmentId: string,

@@ -5,6 +5,8 @@ export type Route =
   | { kind: 'home' }
   | { kind: 'sign-in' }
   | { kind: 'clinic-registration' }
+  | { kind: 'doctor-application' }
+  | { kind: 'doctor-applications-review'; role: 'platform_admin' }
   | { kind: 'storefront'; slug: string }
   | { kind: 'booking'; role: 'patient'; slug: string }
   | { kind: 'checkout'; role: 'patient' }
@@ -88,6 +90,9 @@ export function parseRoute(path: string): Route {
   const normalized = path.replace(/\/$/, '') || '/'
   if (normalized === '/sign-in') return { kind: 'sign-in' }
   if (normalized === '/register-clinic') return { kind: 'clinic-registration' }
+  if (normalized === '/join-as-doctor') return { kind: 'doctor-application' }
+  if (normalized === '/platform-admin/doctors')
+    return { kind: 'doctor-applications-review', role: 'platform_admin' }
   if (normalized === '/' || normalized === '/auth/callback')
     return { kind: 'home' }
   if (
@@ -145,11 +150,7 @@ export function parseRoute(path: string): Route {
       }
     return {
       kind: clinic[2] as
-        | 'profile'
-        | 'staff'
-        | 'payments'
-        | 'orders'
-        | 'settings',
+        'profile' | 'staff' | 'payments' | 'orders' | 'settings',
       role: 'clinic_admin',
       tenantId: clinic[1].toLowerCase(),
     }

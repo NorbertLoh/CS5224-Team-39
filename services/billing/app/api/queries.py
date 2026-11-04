@@ -4,14 +4,16 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
+from pydantic import BaseModel
 from sqlalchemy import func, select, tuple_
 from telelink_common.errors import DomainError, ErrorEnvelope
+from telelink_common.list_filters import Filters
 
 from app.api.dependencies import Database, Identity
 from app.models import Payment
 from app.pagination import cursor_key, decode_cursor, encode_cursor
 from app.schemas import CommissionTotals, Money, PaymentPage, PaymentPublic, payment_public
-from app.services.queries import access_scope
+from app.services.queries import access_scope, filtered_payments
 
 router = APIRouter(
     responses={s: {"model": ErrorEnvelope} for s in (401, 403, 404, 409, 422, 502, 503)}
@@ -25,6 +27,7 @@ def list_payments(
     request: Request,
     identity: Identity,
     session: Database,
+    filters: Filters,
     tenant_id: UUID | None = None,
     purpose: Purpose | None = None,
     status: Status | None = None,
@@ -33,16 +36,11 @@ def list_payments(
 ):
     predicate, scope = access_scope(identity)
     scope.update(tenant_id=str(tenant_id) if tenant_id else None, purpose=purpose, status=status)
+    if filters.scope:
+        scope["filters"] = filters.scope
     settings = request.app.state.settings
     cursor_key(settings)
-    query = select(Payment).where(predicate)
-    for column, value in (
-        (Payment.tenant_id, tenant_id),
-        (Payment.purpose, purpose),
-        (Payment.status, status),
-    ):
-        if value is not None:
-            query = query.where(column == value)
+    query = filtered_payments(select(Payment).where(predicate), filters, tenant_id, purpose, status)
     if cursor is not None:
         created_at, payment_id = decode_cursor(settings, scope, cursor)
         query = query.where(
@@ -66,10 +64,57 @@ def get_payment(payment_id: UUID, identity: Identity, session: Database):
     return payment_public(payment)
 
 
+class PaymentCounts(BaseModel):
+    purpose: dict[str, int]
+    status: dict[str, int]
+    total: int
+    filtered_total: int
+
+
+@router.get("/payment-counts", response_model=PaymentCounts)
+def payment_counts(
+    identity: Identity,
+    session: Database,
+    filters: Filters,
+    tenant_id: UUID,
+    purpose: Purpose | None = None,
+    status: Status | None = None,
+):
+    predicate, _ = access_scope(identity, admin_only=True)
+    rows = session.execute(
+        filtered_payments(
+            select(Payment.purpose, Payment.status, func.count()).where(predicate),
+            filters,
+            tenant_id,
+        ).group_by(Payment.purpose, Payment.status)
+    ).all()
+    purposes = dict.fromkeys(("consultation", "medication_delivery"), 0)
+    statuses = dict.fromkeys(
+        ("pending", "succeeded", "failed", "refund_pending", "refunded", "refund_failed"), 0
+    )
+    total = filtered_total = 0
+    for item_purpose, item_status, count in rows:
+        total += count
+        if status is None or item_status == status:
+            purposes[item_purpose] += count
+        if purpose is None or item_purpose == purpose:
+            statuses[item_status] += count
+        if (purpose is None or item_purpose == purpose) and (
+            status is None or item_status == status
+        ):
+            filtered_total += count
+    purposes["all"] = sum(purposes.values())
+    statuses["all"] = sum(statuses.values())
+    return PaymentCounts(
+        purpose=purposes, status=statuses, total=total, filtered_total=filtered_total
+    )
+
+
 @router.get("/commission-totals", response_model=CommissionTotals)
 def commission_totals(
     identity: Identity,
     session: Database,
+    filters: Filters,
     tenant_id: UUID | None = None,
     purpose: Purpose | None = None,
 ):
@@ -78,10 +123,7 @@ def commission_totals(
     query = select(func.count(), *(func.coalesce(func.sum(c), 0) for c in columns)).where(
         predicate, Payment.status == "succeeded", Payment.resolution == "none"
     )
-    if tenant_id is not None:
-        query = query.where(Payment.tenant_id == tenant_id)
-    if purpose is not None:
-        query = query.where(Payment.purpose == purpose)
+    query = filtered_payments(query, filters, tenant_id, purpose)
     count, *amounts = session.execute(query).one()
     if any(value > 9007199254740991 for value in amounts):
         raise DomainError(409, "totals_limit_exceeded", "Totals exceed the supported money range.")

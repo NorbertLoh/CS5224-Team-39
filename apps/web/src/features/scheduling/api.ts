@@ -5,6 +5,8 @@ import type {
 } from '@/features/scheduling/types.generated'
 import { ApiError, apiFetch } from '@/lib/api'
 import type { CursorPage } from '@/lib/api-types'
+import { appendFilters, emptyFilters } from '@/lib/list-filters'
+import type { ListFilterValues } from '@/lib/list-filters'
 export type {
   AppointmentPublic as Appointment,
   SlotPublic as Slot,
@@ -90,12 +92,30 @@ export async function listAppointments(
   cursor?: string | null,
   signal?: AbortSignal,
   period?: AppointmentPeriod,
+  filters: ListFilterValues = emptyFilters,
+  viewRole?: 'patient' | 'doctor' | 'clinic_admin',
 ): Promise<CursorPage<Appointment>> {
   const query = new URLSearchParams({ limit: '100' })
   if (tenantId) query.set('tenant_id', tenantId)
   if (cursor) query.set('cursor', cursor)
   if (period) query.set('period', period)
+  appendFilters(query, filters)
+  if (filters.status !== 'all') query.set('status', filters.status)
+  if (viewRole) query.set('view_role', viewRole)
   return (await request(`/appointments?${query}`, { signal })).json()
+}
+
+export async function appointmentCounts(
+  tenantId: string | undefined,
+  filters: ListFilterValues,
+  signal?: AbortSignal,
+  viewRole?: 'patient' | 'doctor' | 'clinic_admin',
+): Promise<{ upcoming: number; past: number; total: number }> {
+  const params = appendFilters(new URLSearchParams(), filters)
+  if (tenantId) params.set('tenant_id', tenantId)
+  if (filters.status !== 'all') params.set('status', filters.status)
+  if (viewRole) params.set('view_role', viewRole)
+  return (await request(`/appointment-counts?${params}`, { signal })).json()
 }
 export async function appointmentDetail(
   id: string,
@@ -137,7 +157,7 @@ export function canCancel(appointment: Appointment, now = Date.now()) {
   if (appointment.status === 'held' || appointment.status === 'pending_payment')
     return Boolean(
       appointment.hold_expires_at &&
-        Date.parse(appointment.hold_expires_at) > now,
+      Date.parse(appointment.hold_expires_at) > now,
     )
   return (
     appointment.status === 'confirmed' &&

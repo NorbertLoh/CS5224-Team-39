@@ -10,6 +10,7 @@ from app.schemas import (
     IdentityRead,
     MembershipRead,
 )
+from app.services.doctor_verification import effective_membership
 
 
 def current_subject(session, principal):
@@ -20,13 +21,14 @@ def current_subject(session, principal):
 
 
 def active_membership(session, subject_id, tenant_id):
-    return session.scalar(
+    membership = session.scalar(
         select(Membership).where(
             Membership.subject_id == subject_id,
             Membership.tenant_id == tenant_id,
             Membership.status == "active",
         )
     )
+    return effective_membership(session, membership)
 
 
 def authorize_admin(session, principal, tenant_id):
@@ -84,10 +86,15 @@ def read_identity(principal, session):
         )
         .order_by(Membership.created_at, Membership.membership_id)
     ).all()
+    effective_memberships = []
+    for membership in memberships:
+        effective = effective_membership(session, membership)
+        if effective.roles:
+            effective_memberships.append(MembershipRead.model_validate(effective))
     return IdentityRead(
         subject_id=subject.subject_id,
         cognito_sub=subject.cognito_sub,
         display_name=subject.display_name,
         global_roles=subject.global_roles,
-        memberships=[MembershipRead.model_validate(item) for item in memberships],
+        memberships=effective_memberships,
     )
