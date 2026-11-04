@@ -1,6 +1,82 @@
 import { test, expect } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 
+test('two-way media and the same PeerJS connection survive the 60-second join deadline', async ({ browser }) => {
+  test.setTimeout(100000);
+  const context = await browser.newContext({ ignoreHTTPSErrors: true, permissions: ['camera', 'microphone'] });
+  try {
+    const patient = await context.newPage();
+    const doctor = await context.newPage();
+    const join = async (page, subject) => {
+      await page.goto('https://localhost:8443/');
+      await page.addScriptTag({ path: fileURLToPath(new URL('../../node_modules/peerjs/dist/peerjs.min.js', import.meta.url)) });
+      return page.evaluate(async ({ subject, relay }) => {
+        const grant = await (await fetch('/api/v1/consultation/admissions', {
+          method: 'POST', headers: { authorization: `Bearer fixture-${subject}`, 'content-type': 'application/json' },
+          body: JSON.stringify({ appointment_id: 'a' }),
+        })).json();
+        window.grant = grant;
+        window.subject = subject;
+        window.renewals = 0;
+        window.disconnects = 0;
+        window.stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        if (relay && (!grant.relay_only || !grant.ice_servers?.length)) throw new Error('TURN fixture missing');
+        window.peer = new Peer(grant.peer_id, { host: 'localhost', port: 8443, secure: true,
+          path: '/peerjs', key: 'telelink', token: grant.token,
+          config: { iceServers: grant.ice_servers || [], iceTransportPolicy: grant.relay_only ? 'relay' : 'all' } });
+        window.peer.on('disconnected', () => window.disconnects++);
+        window.peer.on('call', (call) => { window.call = call; call.answer(window.stream); });
+        await new Promise((resolve, reject) => { window.peer.once('open', resolve); window.peer.once('error', reject); });
+        window.renewTimer = setInterval(async () => {
+          try {
+            const response = await fetch('/api/v1/consultation/admissions/renew', {
+              method: 'POST', headers: { authorization: `Bearer fixture-${subject}`, 'content-type': 'application/json' },
+              body: JSON.stringify({ peer_id: grant.peer_id, token: grant.token }),
+            });
+            if (!response.ok) throw new Error('Renewal rejected');
+            window.renewals++;
+          } catch { window.renewError = true; }
+        }, 10000);
+        return { id: grant.peer_id, deadline: Date.parse(grant.expires_at) };
+      }, { subject, relay: Boolean(process.env.RF30_TEST_TURN_URL) });
+    };
+    const receiver = await join(doctor, 'doctor-a');
+    const caller = await join(patient, 'patient-a');
+    await patient.evaluate((id) => { window.call = window.peer.call(id, window.stream); }, receiver.id);
+    const stats = (page) => page.evaluate(async () => {
+      const pc = window.call?.peerConnection;
+      if (!pc) return null;
+      const reports = await pc.getStats();
+      const incoming = [...reports.values()].filter((r) => r.type === 'inbound-rtp');
+      const transport = [...reports.values()].find((r) => r.type === 'transport' && r.selectedCandidatePairId);
+      const pair = transport && reports.get(transport.selectedCandidatePairId);
+      return { id: window.peer.id, state: pc.connectionState, disconnects: window.disconnects,
+        renewals: window.renewals, failed: Boolean(window.renewError),
+        audio: incoming.find((r) => r.kind === 'audio')?.bytesReceived || 0,
+        video: incoming.find((r) => r.kind === 'video')?.bytesReceived || 0,
+        candidate: pair && reports.get(pair.localCandidateId)?.candidateType };
+    });
+    for (const page of [patient, doctor]) {
+      await expect.poll(async () => (await stats(page))?.state).toBe('connected');
+      await expect.poll(async () => (await stats(page))?.video || 0).toBeGreaterThan(0);
+      if (process.env.RF30_TEST_TURN_URL) await expect.poll(async () => (await stats(page))?.candidate).toBe('relay');
+    }
+    const before = await Promise.all([stats(patient), stats(doctor)]);
+    // Real elapsed time and RTP prove the allocation/connection crosses join expiry.
+    await patient.waitForTimeout(Math.max(caller.deadline, receiver.deadline) - Date.now() + 5000);
+    const after = await Promise.all([stats(patient), stats(doctor)]);
+    for (let i = 0; i < after.length; i++) {
+      expect(after[i].id).toBe(before[i].id);
+      expect(after[i].state).toBe('connected');
+      expect(after[i].disconnects).toBe(0);
+      expect(after[i].failed).toBe(false);
+      expect(after[i].renewals).toBeGreaterThanOrEqual(6);
+      expect(after[i].audio).toBeGreaterThan(before[i].audio);
+      expect(after[i].video).toBeGreaterThan(before[i].video);
+    }
+  } finally { await context.close(); }
+});
+
 test('packaged PeerServer through Caddy HTTPS/WSS supports admitted PeerJS data and fresh rejoin', async ({ browser }) => {
   const context = await browser.newContext({ ignoreHTTPSErrors: true, permissions: ['camera', 'microphone'] });
   try {

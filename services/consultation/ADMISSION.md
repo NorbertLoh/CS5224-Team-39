@@ -14,6 +14,7 @@ online map; public clients never call internal lease APIs.
 | Route | Authentication | Body/result |
 | --- | --- | --- |
 | POST `/admissions` | Verified Cognito access token and fresh identity `/me` lookup | `{ "appointment_id": "UUID" }`; 201 grant |
+| POST `/admissions/renew` | Participant Cognito access token and fresh identity lookup | `{ "token": "opaque credential", "peer_id": "UUID" }`; 200 active lease |
 | POST `/internal/admissions/consume` | Signalling service JWT | `{ "token": "opaque credential", "peer_id": "UUID" }`; 200 lease, single use |
 | POST `/internal/admissions/check` | Signalling service JWT | Same body; 200 only for an active consumed lease |
 | POST `/internal/admissions/release` | Signalling service JWT | Same body; 204, repeatable for the same consumed lease |
@@ -55,10 +56,29 @@ second issuance with 409 `participant_connected`. Consuming is serialized on the
 parent session, binds the exact generated peer ID and succeeds once, including
 across API processes/restarts. Expired or released leases cannot be consumed or
 checked. Rejoin requires a new token and a new peer ID. Releasing a stale rotated
-token cannot release the replacement connection. A crash can leave a slot claimed
-only until the original lease expires; default TTL 60 seconds, configurable 1-300,
-capped at appointment end while scheduled. In-progress sessions receive the full
-configured TTL, including after the scheduled end. Consume/check never extends it.
+token cannot release the replacement connection. The single-use join deadline
+defaults to 60 seconds and is configurable from 1 to 300 seconds.
+
+RF30 adds a separate active deadline. After consumption, the participant renews
+through the authenticated public endpoint while the existing lease is live.
+Renewal rechecks identity, appointment, payment, join eligibility and assigned
+node/version ownership. It extends the active deadline by
+`SERVICE_ACTIVE_LEASE_SECONDS` (default 60, range 30–300), capped at the scheduled
+end for scheduled sessions and the fixed per-admission call deadline. Check and
+consume observe that deadline. Only participant renewal extends it. The same peer
+and consumed token remain bound throughout renewal. Consume replay is rejected.
+
+`SERVICE_CALL_MAX_SECONDS` defaults to 43200 (12 hours), range 300–43200.
+The initial response includes `call_expires_at`, and TURN credentials use that
+fixed deadline so allocation refresh can continue through join-token expiry.
+Those relay credentials remain valid until their fixed deadline independently
+of later application revocation. Application checks close the socket and browser
+media after denial. Operators can shorten the call deadline. A call reaching it
+uses the existing fresh-admission recovery path.
+
+Apply consultation migration `0005` and deploy consultation, signalling and web
+together. Existing grants retain their original call/TURN deadline after migration.
+Drain active calls before deployment or rollback. Readiness requires `0005`.
 
 V03 must replace X02's fixture issuer/store with this HTTP boundary, await consume
 **before** websocket upgrade/PeerServer registration, and close the socket if
@@ -66,8 +86,8 @@ upgrade fails after consumption. Call release on disconnect; a failed release
 can be retried, otherwise wait for expiry. Retain server-issued bindings locally
 for frame source/destination isolation and allow only distinct participants in
 the same tenant/appointment. Call check for current eligibility, fail closed on
-errors and close sockets at `expires_at` even when idle. Never cache a lease past
-its deadline. Peer discovery remains an authenticated V04 concern.
+errors and close sockets at the current active `expires_at` even when idle.
+The signalling client observes updated active deadlines on check responses.
 
 X02's wire options accept `new Peer(grant.peer_id, { token: grant.token, ... })`.
 Its fixture helper uses camelCase fields; V03 must map the snake_case HTTP lease

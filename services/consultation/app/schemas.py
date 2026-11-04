@@ -19,6 +19,12 @@ class LeaseRequest(BaseModel):
     )
 
 
+class RenewalRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    token: str = Field(min_length=43, max_length=43, pattern=r"^[A-Za-z0-9_-]+$", repr=False)
+    peer_id: UUID
+
+
 class NodeHeartbeat(BaseModel):
     model_config = ConfigDict(extra="forbid")
     node_id: UUID
@@ -49,3 +55,4 @@ class AdmissionPublic(LeasePublic):
     ice_servers: list[dict] = Field(default_factory=list)
     relay_only: bool = False
     signalling_path: str = "/peerjs"
+    call_expires_at: datetime

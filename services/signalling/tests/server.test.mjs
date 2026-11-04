@@ -228,6 +228,21 @@ test('expiry closes idle sockets; a consumed lease is never extended', async (t)
   assert.equal((await once(wire, 'close'))[0], 1008);
 });
 
+test('a renewed active lease keeps the same WebSocket open beyond join expiry, then expires', async (t) => {
+  const api = await setup(t, { ttlMs: 300 });
+  const grant = api.issue();
+  const wire = await api.connect(grant);
+  const row = api.grants.get(grant.token);
+  const original = Date.parse(row.grant.expires_at);
+  await delay(100);
+  // Models a committed browser-authorized renewal, observed by check calls.
+  row.grant.expires_at = new Date(Date.now() + 700).toISOString();
+  await delay(Math.max(1, original - Date.now() + 100));
+  assert.equal(wire.readyState, WebSocket.OPEN);
+  assert.equal(api.state.consumes, 1);
+  assert.equal((await once(wire, 'close'))[0], 1008);
+});
+
 test('service revocation and outages close idle sockets and reject new registrations', async (t) => {
   for (const flag of ['revoked', 'unavailable']) {
     await t.test(flag, async (t) => {

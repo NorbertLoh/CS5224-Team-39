@@ -27,6 +27,10 @@ def denied():
     raise DomainError(403, "admission_denied", "Admission is invalid or no longer permitted.")
 
 
+def effective_expiry(lease):
+    return lease.active_expires_at or lease.expires_at
+
+
 def lease_public(lease, record):
     return dict(
         session_id=record.session_id,
@@ -34,7 +38,7 @@ def lease_public(lease, record):
         appointment_id=record.appointment_id,
         subject_id=lease.subject_id,
         peer_id=lease.peer_id,
-        expires_at=lease.expires_at,
+        expires_at=effective_expiry(lease),
         node_id=lease.node_id,
         assignment_version=lease.assignment_version,
     )
@@ -60,7 +64,7 @@ def issue(db, sources, settings, appointment_id, identity, request_id):
         lease is not None
         and lease.consumed_at is not None
         and lease.released_at is None
-        and instant < lease.expires_at
+        and instant < effective_expiry(lease)
         and (
             assignment is None
             or (
@@ -84,12 +88,15 @@ def issue(db, sources, settings, appointment_id, identity, request_id):
     if record.status == "scheduled":
         lease.expires_at = min(lease.expires_at, record.ends_at)
     lease.consumed_at = lease.released_at = None
+    lease.active_expires_at = None
+    lease.call_expires_at = instant + timedelta(seconds=settings.call_max_seconds)
     lease.node_id = assignment.node_id if assignment else None
     lease.assignment_version = assignment.version if assignment else None
     db.flush()
     return {
         **lease_public(lease, record),
         "token": token,
+        "call_expires_at": lease.call_expires_at,
         "signalling_path": f"/peerjs/nodes/{assignment.node_id}" if assignment else "/peerjs",
     }
 
@@ -126,7 +133,7 @@ def validate_live(db, sources, record, lease, request_id):
     instant = now()  # Read after slow upstream calls, never extend expiry during a lookup.
     if (
         lease.released_at is not None
-        or not lease.issued_at <= instant < lease.expires_at
+        or not lease.issued_at <= instant < effective_expiry(lease)
         or not can_join(record, now=instant, early_minutes=sources.settings.test_join_early_minutes)
     ):
         denied()
@@ -141,7 +148,26 @@ def consume(db, sources, token, peer_id, request_id, *, check=False, node_id=Non
     matchmaker.validate(db, sources.settings, record, lease, node_id, node_token)
     if not check:
         lease.consumed_at = instant
+        lease.active_expires_at = lease.expires_at
+        lease.call_expires_at = lease.call_expires_at or lease.expires_at
         db.flush()
+    return lease_public(lease, record)
+
+
+def renew(db, sources, token, peer_id, identity, request_id):
+    record, lease = bound_lease(db, token, peer_id)
+    if lease.subject_id != identity.subject_id or lease.consumed_at is None:
+        denied()
+    instant = validate_live(db, sources, record, lease, request_id)
+    matchmaker.validate_assignment(db, sources.settings, record, lease)
+    deadline = lease.call_expires_at or lease.expires_at
+    if instant >= deadline:
+        denied()
+    expiry = min(instant + timedelta(seconds=sources.settings.active_lease_seconds), deadline)
+    if record.status == "scheduled":
+        expiry = min(expiry, record.ends_at)
+    lease.active_expires_at = max(effective_expiry(lease), expiry)
+    db.flush()
     return lease_public(lease, record)
 
 

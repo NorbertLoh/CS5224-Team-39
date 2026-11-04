@@ -15,6 +15,113 @@ class TestPeer extends EventEmitter {
   }
 }
 
+test('renewal keeps the same peer and local tracks past the original join deadline', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] })
+  const peer = new TestPeer()
+  let created = 0
+  let renewed = 0
+  let stopped = 0
+  const states: CallState[] = []
+  const initial = Date.now()
+  let deny = false
+  const room = new RoomCall(
+    {
+      signalling: { secure: true },
+      async acquire() {
+        return {
+          peerId: 'same-peer',
+          token: 'same-token',
+          expiresAt: initial + 60000,
+          iceServers: [],
+        }
+      },
+      async renew(grant) {
+        assert.equal(grant.peerId, 'same-peer')
+        assert.equal(grant.token, 'same-token')
+        renewed++
+        if (deny) throw new RoomAccessError('Access revoked')
+        return Date.now() + 60000
+      },
+      async counterpart() {
+        return null
+      },
+    },
+    'doctor',
+    {
+      state: (state) => states.push(state),
+      remote: () => {},
+    },
+    async () => {
+      created++
+      return peer as unknown as Peer
+    },
+  )
+  await room.start({
+    getTracks: () => [{ stop: () => stopped++ }],
+  } as unknown as MediaStream)
+  peer.emit('open')
+  for (let i = 0; i < 4; i++) {
+    t.mock.timers.tick(20000)
+    await Promise.resolve()
+    await Promise.resolve()
+  }
+  assert.ok(Date.now() > initial + 60000)
+  assert.equal(created, 1)
+  assert.equal(renewed, 4)
+  assert.equal(stopped, 0)
+  assert.equal(states.includes('reconnecting'), false)
+  deny = true
+  t.mock.timers.tick(20000)
+  await Promise.resolve()
+  await Promise.resolve()
+  assert.equal(states.at(-1), 'disconnected')
+  assert.equal(stopped, 1)
+  t.mock.timers.tick(30000)
+  assert.equal(renewed, 5)
+})
+
+test('temporary renewal failures preserve the call until the active lease expires', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] })
+  const peer = new TestPeer()
+  const states: CallState[] = []
+  let stopped = 0
+  const room = new RoomCall(
+    {
+      signalling: { secure: true },
+      async acquire() {
+        return {
+          peerId: 'peer',
+          token: 'token',
+          expiresAt: Date.now() + 60000,
+          iceServers: [],
+        }
+      },
+      async renew() {
+        throw new Error('Network unavailable')
+      },
+      async counterpart() {
+        return null
+      },
+    },
+    'doctor',
+    { state: (state) => states.push(state), remote: () => {} },
+    async () => peer as unknown as Peer,
+  )
+  await room.start({
+    getTracks: () => [{ stop: () => stopped++ }],
+  } as unknown as MediaStream)
+  peer.emit('open')
+  t.mock.timers.tick(20000)
+  await Promise.resolve()
+  await Promise.resolve()
+  assert.equal(states.at(-1), 'waiting')
+  t.mock.timers.tick(40000)
+  assert.equal(states.at(-1), 'reconnecting')
+  assert.equal(stopped, 0)
+  room.stop('left')
+  assert.equal(stopped, 1)
+})
+
 test('reconnect uses a fresh assignment, ignores old events and stops on denial', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] })
   const peers: TestPeer[] = []
