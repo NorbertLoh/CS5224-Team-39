@@ -16,6 +16,7 @@ type Props = {
   tenantId?: string
   headingLevel?: 1 | 2
   variant?: 'default' | 'past'
+  autoRefresh?: boolean
 }
 
 export function DocumentList(props: Props) {
@@ -53,6 +54,7 @@ export function DocumentResults({
   scope,
   headingLevel = 2,
   variant = 'default',
+  autoRefresh = false,
 }: Props & { token: string; scope: string }) {
   const headingId = useId()
   const groupByVisit = role === 'patient' && !appointmentId
@@ -73,7 +75,7 @@ export function DocumentResults({
     gcTime: 0,
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: variant === 'past' ? 10000 : false,
+    refetchInterval: autoRefresh ? 5000 : variant === 'past' ? 10000 : false,
   })
   const items = query.data?.pages.flatMap((page) => page.items) ?? []
   const invalid = items.some(
@@ -143,8 +145,9 @@ export function DocumentResults({
         <>
           {!items.length && variant !== 'past' && (
             <p role="status" className="text-sm text-slate-600">
-              No documents available yet. Refresh after your document has been
-              prepared.
+              {autoRefresh
+                ? 'No documents available yet. New PDFs will appear here as they are prepared.'
+                : 'No documents available yet. Refresh after your document has been prepared.'}
             </p>
           )}
           {items.length > 0 &&

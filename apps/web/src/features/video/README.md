@@ -34,6 +34,7 @@ call's metadata establishes identity.
 The completed consultation page shows its documents without a separate medical
 certificate card or duplicate prescription details. Doctors see completion retry
 controls only when the saved prescription or MC handoff still needs finalizing.
+The doctor’s completed view checks for new PDFs automatically while it is open.
 
 Join requests devices through a user gesture, then fresh admission. The patient
 initiates media after discovery; the doctor answers only the resolved counterpart.
