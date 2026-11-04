@@ -2,13 +2,13 @@
 
 ## Previous visit PDFs in doctor Consult (RF46)
 
-- [ ] RF46: Show notes and expandable PDFs from earlier completed visits for
+- [x] RF46: Show notes and expandable PDFs from earlier completed visits for
   the same patient and clinic in the doctor records workspace. Require an active
   clinic doctor assigned to the current visit and keep earlier visits read-only.
   Make both history cards independently expandable and collapsed by default. Keep older visits
   reachable and preserve the current visit's document list on
   consultation completion. Dependencies RF12, RF37, RF41 and P03 merged.
-  Effort M. Issue #363 assigned to NorbertLoh and in progress.
+  Effort M. NorbertLoh. PR #364 merged; issue #363 closed.
 
 ## Clinic medicine workspaces (RF39)
 
@@ -131,11 +131,11 @@
 
 ## Domain-free AWS demo rollout (RF32)
 
-- [ ] RF32: Deploy the managed AMD64 demo through W01 shared state, using
+- [x] RF32: Deploy the managed AMD64 demo through W01 shared state, using
   CloudFront private VPC origins and a NAT-restricted HTTPS service path instead
   of custom domains/Route53. Verify source, plans, staged deployment and actual
   health; retain explicit integration gates. Independent module preparation:
-  RF27 merged. Live rollout consumes W01/RF31. Effort L. NorbertLoh, #335 In progress.
+  RF27 merged. Live rollout consumes W01/RF31. Effort L. NorbertLoh. PR #336 merged; issue #335 closed.
   Details: [domain-free demo](docs/RF32-domain-free-demo.md).
 
 ## Production release preparation (RF31)
@@ -232,8 +232,8 @@ Setup and limits: [doctor verification](docs/RF28-doctor-verification.md),
 
 ## Patient delivery tracker (RF45)
 
-- [ ] RF45: Show a colored progress tracker in patient and clinic delivery details.
-  Dependency D06 merged. Effort S. NorbertLoh; In progress; issue #361.
+- [x] RF45: Show a colored progress tracker in patient and clinic delivery details.
+  Dependency D06 merged. Effort S. NorbertLoh. PR #362 merged; issue #361 closed.
 
 ## Serverless workers and edge controls (31 October 2026)
 
