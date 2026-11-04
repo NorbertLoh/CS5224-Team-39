@@ -46,7 +46,7 @@ module "platform" {
   redis_node_count   = var.redis_node_count
   nat_gateway_count  = var.nat_gateway_count
   turn_capacity      = var.turn_capacity
-  cpu_architecture   = "ARM64"
+  cpu_architecture   = "X86_64"
   redis_mode         = "managed"
   egress_mode        = "gateway"
   enable_turn        = true

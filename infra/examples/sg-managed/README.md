@@ -17,7 +17,7 @@ profiles to the same resource prefix or use this as an in-place profile migratio
 | Authentication | Cognito user pool and public SPA client | Existing signup/password/PKCE integration; service quotas apply |
 | Public APIs | API Gateway HTTP API, JWT authorizer, VPC Link | Existing throttles; successful public clinic reads remain cached up to 60 seconds |
 | API ingress | Separate internal ALB, HTTPS listener and verified server name | One ALB service, mandatory two-AZ subnets; no public API listener rules |
-| Eight business APIs | ECS Fargate in private subnets, ARM64, digest-pinned ECR images, CPU target tracking and unhealthy-task replacement | Demo min/max one; configurable through min_tasks/max_tasks |
+| Eight business APIs | ECS Fargate in private subnets, AMD64, digest-pinned ECR images, CPU target tracking and unhealthy-task replacement | Demo min/max one; configurable through min_tasks/max_tasks |
 | Existing worker loops | Five independent ECS worker groups with CPU target tracking | Demo min/max one; eligible groups can scale; fulfilment polling remains singleton |
 | PDFs/notifications | Document Lambda, notification intake Lambda, scheduled dispatch Lambda | Demo concurrency one; configurable reservations, FIFO group/batch ordering remains |
 | Database | Private encrypted RDS PostgreSQL 17, db.t4g.micro, 20-GiB gp3 | Demo primary only; database_multi_az enables standby/failover |
@@ -170,7 +170,7 @@ values are placeholders. Generated plans/state and operator files are ignored.
 
 Keep `enable_workloads=false` and `images={}` while reviewing/provisioning the
 foundation. As in the [deployment sequence](../../../docs/RF27-singapore-demo.md),
-then publish ARM64 ECS and AMD64 Lambda images, populate service Secrets Manager
+then publish AMD64 ECS and Lambda images, populate service Secrets Manager
 JSON, register test-provider callbacks, bootstrap DB roles/schemas, run each owning
 service's migration task, verify SES and enable workloads. No Redis image is needed.
 Upload the frontend using the emitted environment/CloudFront URL.

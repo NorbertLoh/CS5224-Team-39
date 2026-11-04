@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## Production release preparation (RF31)
+
+- [ ] RF31: Prepare all AMD64 API/worker/migration and signalling images, AMD64
+  Lambda images, static frontend build and digest-pinned Terraform image handoff.
+  Preparation only; no AWS uploads/apply or Route53 setup. Dependencies: RF26/RF27
+  merged. Deployment still needs W01/W03/W06, real configuration and acceptance
+  gates; W12 remains separate. Effort M. NorbertLoh, #332 In progress.
+  Scope and commands: [release preparation](docs/RF31-production-release.md).
+
 ## Renewable active video leases (RF30)
 
 - [x] RF30: Separate single-use join expiry from a renewable active-call lease.

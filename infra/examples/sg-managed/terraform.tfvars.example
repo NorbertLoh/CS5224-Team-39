@@ -15,7 +15,7 @@ monthly_budget_usd    = 250
 # Stage foundation -> images/secrets -> DB bootstrap/migrations -> workloads.
 enable_workloads = false
 images          = {}
-# Use ARM64 ECS images and AMD64 Lambda images, all pinned with @sha256:...
+# Use AMD64 ECS and Lambda images, all pinned with @sha256:...
 # No Redis image is required: the profile uses ElastiCache.
 service_environment = {}
 service_secret_keys = {}
