@@ -1,6 +1,5 @@
 # TeleLink Health: shared implementation backlog
 
-
 ## Booking hold action spacing (RF38)
 
 - [x] RF38: Add a small gap between Booking hold actions, including when buttons
