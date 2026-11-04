@@ -33,4 +33,6 @@ module "platform" {
   enable_workloads    = var.enable_workloads
   service_environment = var.service_environment
   service_secret_keys = var.service_secret_keys
+
+  enable_demo_account_seed = true
 }

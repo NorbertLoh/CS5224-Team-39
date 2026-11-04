@@ -43,3 +43,22 @@ The first real bootstrap exposed that boto3 clients support `close()` but not a
 direct context manager. Bootstrap and Lambda secret loading use `contextlib.closing`;
 a real botocore client with a stubbed response covers the regression offline.
 Rebuild images containing the shared package before enabling Lambda functions.
+
+## Demo accounts
+
+The demo root runs the account seed when workloads are first enabled, when
+re-enabled after a pause, or when the seed task definition changes. Run the
+database bootstrap and migrations first. Terraform uses Node.js and the AWS CLI
+from the operator environment for this step. Set `AWS_PROFILE` to the same demo
+profile used for the apply. Operators need permission to run the seed ECS task
+and pass its roles.
+
+The seed provisions a patient, doctor, clinic admin and platform admin, with
+one synthetic clinic. It preserves existing accounts and application records.
+Each account has a separate generated password. Use the Terraform
+`platform.demo_login_secret` output to locate the credentials in Secrets Manager
+and share them privately with authorized demo operators.
+
+To rerun the seed independently, save the demo root's `terraform output -json`
+to an ignored local file and run
+`node dev/release/seed-demo.mjs <demo-output.json>` from the repository root.

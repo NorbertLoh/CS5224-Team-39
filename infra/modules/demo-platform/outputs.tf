@@ -16,6 +16,8 @@ output "task_network_configuration" {
   value = { awsvpcConfiguration = { subnets = local.workload_subnets, securityGroups = [aws_security_group.workloads.id], assignPublicIp = "DISABLED" } }
 }
 output "bootstrap_task" { value = try(aws_ecs_task_definition.bootstrap[0].arn, null) }
+output "demo_seed_task" { value = try(aws_ecs_task_definition.demo_seed[0].arn, null) }
+output "demo_login_secret" { value = try(aws_secretsmanager_secret.demo_logins[0].name, null) }
 output "migration_tasks" { value = { for k, t in aws_ecs_task_definition.migration : k => t.arn } }
 output "buckets" { value = { for k, b in aws_s3_bucket.storage : k => b.id } }
 output "service_settings" {
