@@ -1,6 +1,6 @@
 # AWS infrastructure
 
-Terraform configuration for the shared team AWS account in `ap-southeast-1`. W01 chose Terraform and created the layout below; later W-tasks add the actual resources. Nothing has been provisioned yet.
+Terraform configuration for the shared team AWS account in `ap-southeast-1`. W01 chose Terraform and created the layout below; later W-tasks add the application resources. The shared-state bootstrap was applied on 4 November 2026; this does not establish an application deployment.
 
 | Path | Purpose |
 | --- | --- |
@@ -62,3 +62,9 @@ terraform fmt -check -recursive
 terraform -chdir=<root> init -backend=false
 terraform -chdir=<root> validate
 ```
+
+W01 takeover verification, 4 November 2026: bootstrap, dev and demo validate;
+recursive formatting passes. The reviewed account-specific bootstrap plan and
+apply created eight resources with no changes or destruction. State versioning,
+encryption and public-access blocking were checked through the AWS API. Real
+operator configuration, plans and bootstrap state remain ignored local files.
