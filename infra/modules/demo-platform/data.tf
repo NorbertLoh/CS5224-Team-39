@@ -20,35 +20,37 @@ resource "aws_db_instance" "demo" {
   db_subnet_group_name        = aws_db_subnet_group.demo.name
   vpc_security_group_ids      = [aws_security_group.data.id]
   publicly_accessible         = false
-  multi_az                    = false
-  availability_zone           = data.aws_availability_zones.available.names[0]
-  backup_retention_period     = 1
+  multi_az                    = var.database_multi_az
+  availability_zone           = var.database_multi_az ? null : data.aws_availability_zones.available.names[0]
+  backup_retention_period     = local.managed ? 7 : 1
   auto_minor_version_upgrade  = true
   copy_tags_to_snapshot       = true
-  deletion_protection         = false
-  skip_final_snapshot         = true
+  deletion_protection         = local.managed && var.deletion_protection
+  skip_final_snapshot         = !local.managed
+  final_snapshot_identifier   = local.managed ? coalesce(var.final_snapshot_identifier, "${var.name_prefix}-final") : null
   # Fixed 20 GiB: no automatic storage growth or paid replicas in the demo.
 }
 resource "aws_elasticache_subnet_group" "demo" {
   count      = var.redis_mode == "managed" ? 1 : 0
   name       = var.name_prefix
-  subnet_ids = [aws_subnet.private[0].id]
+  subnet_ids = aws_subnet.private[*].id
 }
 resource "aws_elasticache_replication_group" "demo" {
-  count                      = var.redis_mode == "managed" ? 1 : 0
-  replication_group_id       = var.name_prefix
-  description                = "Single demo cache node; PostgreSQL owns booking capacity"
-  engine                     = "redis"
-  engine_version             = "7.1"
-  node_type                  = "cache.t4g.micro"
-  num_cache_clusters         = 1
-  automatic_failover_enabled = false
-  multi_az_enabled           = false
-  subnet_group_name          = aws_elasticache_subnet_group.demo[0].name
-  security_group_ids         = [aws_security_group.data.id]
-  at_rest_encryption_enabled = true
-  transit_encryption_enabled = true
-  snapshot_retention_limit   = 0
+  count                       = var.redis_mode == "managed" ? 1 : 0
+  replication_group_id        = var.name_prefix
+  description                 = "Shared Redis with configurable replicas; PostgreSQL owns booking capacity"
+  engine                      = "redis"
+  engine_version              = "7.1"
+  node_type                   = "cache.t4g.micro"
+  num_cache_clusters          = var.redis_node_count
+  preferred_cache_cluster_azs = [for index in range(var.redis_node_count) : data.aws_availability_zones.available.names[index % 2]]
+  automatic_failover_enabled  = var.redis_node_count > 1
+  multi_az_enabled            = var.redis_node_count > 1
+  subnet_group_name           = aws_elasticache_subnet_group.demo[0].name
+  security_group_ids          = [aws_security_group.data.id]
+  at_rest_encryption_enabled  = true
+  transit_encryption_enabled  = true
+  snapshot_retention_limit    = 0
   # VPC SG isolation + TLS; no Terraform-managed plaintext Redis password.
 }
 resource "aws_secretsmanager_secret" "config" {
@@ -77,6 +79,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "storage" {
     apply_server_side_encryption_by_default { sse_algorithm = "AES256" }
   }
 }
+resource "aws_s3_bucket_versioning" "storage" {
+  for_each = local.managed ? aws_s3_bucket.storage : {}
+  bucket   = each.value.id
+  versioning_configuration { status = "Enabled" }
+}
 resource "aws_s3_bucket_policy" "private" {
   for_each = { for k, v in aws_s3_bucket.storage : k => v if k != "frontend" }
   bucket   = each.value.id
@@ -100,7 +107,7 @@ resource "aws_ecr_repository" "app" {
   name                 = "${var.name_prefix}/${each.key}"
   image_tag_mutability = "IMMUTABLE"
   force_delete         = var.allow_destroy_demo_data
-  image_scanning_configuration { scan_on_push = false }
+  image_scanning_configuration { scan_on_push = local.managed }
 }
 resource "aws_ecr_lifecycle_policy" "app" {
   for_each   = aws_ecr_repository.app

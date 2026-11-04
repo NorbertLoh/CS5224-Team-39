@@ -16,6 +16,16 @@ verification evidence. This does not complete W11, Q04 or the AWS integration ga
 
 ## 1. Decisions and scope
 
+RF27 managed-service refinement (4 November 2026):
+[`infra/examples/sg-managed`](infra/examples/sg-managed/README.md) provides the
+production-oriented AWS service layout with scalable/replacement/HA mechanisms
+and demo capacities defaulted to one: managed NAT and ElastiCache, a TURN ASG,
+private HTTPS API ALB/VPC Link, separate ECS API/worker groups, configurable
+RDS standby/cache replicas/AZ-local NAT, protected data and remote state.
+The compact `sg-demo` and local Compose remain separate choices. This is
+configuration, not deployed production/HA/capacity evidence; track issue #316 /
+draft PR #325 and existing AWS integration gates.
+
 RF12 patient profile extension: identity owns patients' self-edited contact/address
 details and current display name. Fulfilment reads only recipient name/phone
 through an authenticated service projection. Checkout offers the saved address

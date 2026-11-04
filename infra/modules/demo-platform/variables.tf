@@ -6,6 +6,30 @@ variable "name_prefix" {
     error_message = "Use a 3-20 character lowercase resource prefix."
   }
 }
+variable "deployment_profile" {
+  description = "demo retains the compact layout; managed separates API ingress/workers, uses production settings and protects persistent data. Neither profile establishes production readiness."
+  type        = string
+  default     = "demo"
+  validation {
+    condition     = contains(["demo", "managed"], var.deployment_profile)
+    error_message = "Choose demo or managed."
+  }
+}
+variable "internal_origin_hostname" {
+  description = "Managed profile: owned DNS name for the private API ALB, covered by the supplied origin certificate (or requested as its SAN)."
+  type        = string
+  default     = null
+}
+variable "deletion_protection" {
+  description = "Managed profile: protect RDS/ALBs. Disable only for an intentional reviewed teardown; final DB snapshot and bucket safeguards remain."
+  type        = bool
+  default     = true
+}
+variable "final_snapshot_identifier" {
+  description = "Optional unique final RDS snapshot name for managed-profile teardown; defaults to name_prefix-final."
+  type        = string
+  default     = null
+}
 variable "enable_workloads" {
   description = "Enable only after ECR images, service JSON secrets, database bootstrap/migrations and external sandbox credentials are ready. False does not stop infrastructure billing."
   type        = bool
@@ -66,9 +90,9 @@ variable "enable_turn" {
   default     = true
 }
 variable "redis_mode" {
-  description = "A localhost Redis sidecar costs no extra task and only mirrors durable holds. managed provisions one TLS ElastiCache node."
+  description = "managed provisions one shared TLS ElastiCache node. sidecar is an explicit single-task cost-saving alternative; PostgreSQL owns durable holds."
   type        = string
-  default     = "sidecar"
+  default     = "managed"
   validation {
     condition     = contains(["sidecar", "managed"], var.redis_mode)
     error_message = "Choose sidecar or managed."

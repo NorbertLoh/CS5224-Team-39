@@ -8,7 +8,7 @@ resource "aws_ecs_cluster" "demo" {
 resource "aws_cloudwatch_log_group" "service" {
   for_each          = setunion(local.services, toset(["notification", "signalling", "bootstrap"]))
   name              = "/telelink/${var.name_prefix}/${each.key}"
-  retention_in_days = 3
+  retention_in_days = local.log_retention
 }
 resource "aws_iam_role" "execution" {
   for_each           = setunion(local.services, toset(["notification", "signalling"]))
@@ -56,7 +56,7 @@ locals {
   public_env = {
     for s in local.services : s => merge({
       SERVICE_NAME                       = s
-      SERVICE_ENVIRONMENT                = "demo"
+      SERVICE_ENVIRONMENT                = local.environment
       SERVICE_HOST                       = "0.0.0.0"
       SERVICE_PORT                       = "8000"
       SERVICE_ROOT_PATH                  = contains(local.preserve_prefix, s) ? "" : "/api/v1/${local.paths[s]}"
@@ -86,7 +86,7 @@ locals {
       SERVICE_LOGO_BUCKET          = aws_s3_bucket.storage["logos"].id
       SERVICE_LOGO_PUBLIC_BASE_URL = "https://${module.edge.domain_name}"
       } : {}, s == "consultation" ? {
-      SERVICE_TURN_URLS = var.enable_turn ? jsonencode(["turn:${aws_eip.utility[0].public_ip}:3478?transport=udp", "turn:${aws_eip.utility[0].public_ip}:3478?transport=tcp"]) : "[]"
+      SERVICE_TURN_URLS = jsonencode(local.turn_urls)
       } : {}, s == "billing" ? {
       SERVICE_CHECKOUT_SUCCESS_URL = "https://${module.edge.domain_name}/payments/return"
       SERVICE_CHECKOUT_CANCEL_URL  = "https://${module.edge.domain_name}/appointments"
@@ -128,16 +128,7 @@ resource "aws_ecs_task_definition" "api" {
       command          = concat(each.key == "fulfilment" ? ["python", "-c", file("${path.module}/config_files.py")] : [], ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--limit-concurrency", "8"])
       stopTimeout      = 30
     }
-    ], [for name, args in local.workers[each.key] : {
-      name             = name
-      image            = var.images[each.key]
-      essential        = true
-      environment      = [for k, v in local.public_env[each.key] : { name = k, value = v }]
-      secrets          = local.ecs_secrets[each.key]
-      command          = concat(each.key == "fulfilment" ? ["python", "-c", file("${path.module}/config_files.py")] : [], ["python", "-m"], args)
-      logConfiguration = local.logs[each.key]
-      stopTimeout      = 30
-      }], each.key == "scheduling" && var.redis_mode == "sidecar" ? [{
+    ], local.managed ? [] : local.worker_containers[each.key], each.key == "scheduling" && var.redis_mode == "sidecar" ? [{
       name             = "redis"
       image            = var.images["redis"]
       essential        = true
@@ -151,10 +142,10 @@ resource "aws_ecs_service" "api" {
   name                               = each.key
   cluster                            = aws_ecs_cluster.demo.id
   task_definition                    = aws_ecs_task_definition.api[each.key].arn
-  desired_count                      = 1
+  desired_count                      = local.api_minimum[each.key]
   launch_type                        = "FARGATE"
   platform_version                   = "1.4.0"
-  deployment_minimum_healthy_percent = 0
+  deployment_minimum_healthy_percent = local.api_minimum[each.key] > 1 ? 50 : 0
   deployment_maximum_percent         = 100
   health_check_grace_period_seconds  = 180
   deployment_circuit_breaker {
@@ -162,7 +153,7 @@ resource "aws_ecs_service" "api" {
     rollback = true
   }
   network_configuration {
-    subnets          = [aws_subnet.private[0].id]
+    subnets          = local.workload_subnets
     security_groups  = [aws_security_group.workloads.id]
     assign_public_ip = false
   }
@@ -171,12 +162,13 @@ resource "aws_ecs_service" "api" {
     container_name   = "api"
     container_port   = 8000
   }
-  depends_on = [aws_lb_listener_rule.api, aws_route.private_egress]
+  depends_on = [aws_lb_listener_rule.api, aws_route.private_egress, aws_route53_record.internal_origin]
+  lifecycle { ignore_changes = [desired_count] }
 }
 resource "aws_appautoscaling_target" "api" {
   for_each           = var.enable_workloads ? local.services : toset([])
-  min_capacity       = 1
-  max_capacity       = contains(["fulfilment", "consultation"], each.key) ? 1 : var.max_tasks
+  min_capacity       = local.api_minimum[each.key]
+  max_capacity       = local.api_maximum[each.key]
   resource_id        = "service/${aws_ecs_cluster.demo.name}/${aws_ecs_service.api[each.key].name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
@@ -229,7 +221,7 @@ resource "aws_ecs_service" "signalling" {
   deployment_minimum_healthy_percent = 0
   deployment_maximum_percent         = 100
   network_configuration {
-    subnets          = [aws_subnet.private[0].id]
+    subnets          = local.workload_subnets
     security_groups  = [aws_security_group.workloads.id]
     assign_public_ip = false
   }
@@ -238,5 +230,5 @@ resource "aws_ecs_service" "signalling" {
     container_name   = "signalling"
     container_port   = 9000
   }
-  depends_on = [aws_lb_listener_rule.signalling, aws_route.private_egress]
+  depends_on = [aws_lb_listener_rule.signalling, aws_route.private_egress, aws_route53_record.internal_origin]
 }

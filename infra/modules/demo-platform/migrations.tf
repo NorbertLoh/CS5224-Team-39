@@ -54,7 +54,7 @@ resource "aws_ecs_task_definition" "migration" {
   container_definitions = jsonencode([{
     name             = "migration", image = var.images[each.key], essential = true,
     entryPoint       = ["python", "-m", "alembic"], command = ["upgrade", "head"],
-    environment      = [{ name = "SERVICE_ENVIRONMENT", value = "demo" }],
+    environment      = [{ name = "SERVICE_ENVIRONMENT", value = local.environment }],
     secrets          = [{ name = "SERVICE_DATABASE_URL", valueFrom = "${aws_secretsmanager_secret.config[each.key].arn}:database_url::" }],
     logConfiguration = local.logs[each.key]
   }])

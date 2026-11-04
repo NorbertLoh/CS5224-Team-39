@@ -1,9 +1,9 @@
 name: RF27 AWS runtime configuration
 on:
   push:
-    paths: ['infra/modules/**', 'infra/examples/sg-demo/**', '.github/workflows/rf27-terraform-checks.yml']
+    paths: ['infra/modules/**', 'infra/examples/sg-demo/**', 'infra/examples/sg-managed/**', '.github/workflows/rf27-terraform-checks.yml']
   pull_request:
-    paths: ['infra/modules/**', 'infra/examples/sg-demo/**', '.github/workflows/rf27-terraform-checks.yml']
+    paths: ['infra/modules/**', 'infra/examples/sg-demo/**', 'infra/examples/sg-managed/**', '.github/workflows/rf27-terraform-checks.yml']
 permissions:
   contents: read
 jobs:
@@ -27,18 +27,22 @@ jobs:
         working-directory: infra/modules/${{ matrix.module }}
   example:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example: [sg-demo, sg-managed]
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '1.11.4'
       - run: terraform fmt -check
-        working-directory: infra/examples/sg-demo
+        working-directory: infra/examples/${{ matrix.example }}
       - run: terraform init -backend=false -input=false -lockfile=readonly
-        working-directory: infra/examples/sg-demo
+        working-directory: infra/examples/${{ matrix.example }}
       - run: terraform validate
-        working-directory: infra/examples/sg-demo
+        working-directory: infra/examples/${{ matrix.example }}
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - run: python -m py_compile infra/modules/demo-platform/bootstrap_database.py infra/modules/demo-platform/config_files.py
+      - run: python -m py_compile infra/modules/demo-platform/bootstrap_database.py infra/modules/demo-platform/config_files.py infra/modules/demo-platform/turn_agent.py
+      - run: python -m unittest discover -s infra/modules/demo-platform/tests -p test_turn_agent.py

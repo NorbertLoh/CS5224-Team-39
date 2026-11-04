@@ -34,7 +34,7 @@ module "demo" {
   max_tasks        = 1
   allow_scale_out  = false
   cpu_architecture = "ARM64"
-  redis_mode       = "sidecar"
+  redis_mode       = "managed"
   egress_mode      = "instance"
   enable_turn      = true
 }

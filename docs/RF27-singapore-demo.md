@@ -1,7 +1,17 @@
 # RF27: Singapore demo deployment, cost and scalability
 
+This guide describes the compact `sg-demo` layout. The user-requested
+[managed service profile](../infra/examples/sg-managed/README.md) selects NAT
+Gateway, separate TURN/private API ingress/worker groups and stronger data controls
+with demo capacities of one and configurable future scaling/failover mechanisms.
+Its resource count and costs differ.
+
 Issue #316 / merged PR #317. Requested 1 November 2026. These files configure AWS;
 they have not been applied and do not prove the AWS patient journey works.
+
+4 November refinement: the user selected managed ElastiCache as the AWS default.
+Follow-up PR #325 reuses issue #316; the original implementation remains merged,
+while this refinement is In progress until merge. Local Compose stays unchanged.
 
 ## What is configured
 
@@ -25,8 +35,8 @@ service secrets are generated into Terraform state.
 | PDFs/email | Three on-demand Lambda functions; reserved concurrency **one each** | No paid warm capacity; bounded work |
 | SQS for those Lambdas | FIFO, batch one, one producer group | Serial processing without the SQS maximum-concurrency minimum of two |
 | Database | One `db.t4g.micro`, PostgreSQL 17, encrypted 20-GiB gp3, one-day backup retention | Small Graviton instance; no Multi-AZ standby, replicas or storage auto-growth |
-| Redis | 64-MiB localhost scheduling sidecar by default | Holds are a best-effort mirror; PostgreSQL remains authoritative |
-| Managed Redis alternative | One TLS `cache.t4g.micro`, no replica/failover | Available via `redis_mode=managed`, with extra hourly cost |
+| Redis | One private TLS ElastiCache `cache.t4g.micro`, encrypted at rest, no replica/failover | Shared endpoint independent of ECS task replacement; PostgreSQL remains authoritative for holds |
+| Sidecar alternative | Explicit `redis_mode=sidecar`, 64-MiB localhost Redis | Optional single-task cost saving; not selected by the AWS example |
 | Outbound access and TURN | One `t4g.nano` ARM utility instance, encrypted 8-GiB disk, one EIP | NAT and coturn share one small host; standard CPU credits avoid EC2 surplus-credit charges |
 | Managed egress alternative | One NAT gateway | Less host maintenance, but extra hourly/per-GB cost; never one per AZ |
 | Ingress | One shared ALB for HTTP integration and signalling; API Gateway HTTP API | Avoid two ALBs; API services still verify tokens/tenant roles |
@@ -90,8 +100,9 @@ This is a planning calculation, not a bill or a free-tier eligibility claim.
 | PostgreSQL 20-GiB gp3 | $0.138/GiB-month | $2.76 |
 | One ALB, before LCUs | $0.0252/hour | $18.40 |
 | Shared `t4g.nano` utility host | $0.0053/hour | $3.87 |
+| ElastiCache Redis `cache.t4g.micro` | $0.024/hour | $17.52 |
 | Public IPv4, assumed minimum three | Two ALB addresses + utility EIP, $0.005/address-hour | $10.95 |
-| **Subtotal above** | Excludes the items below | **$140.03** |
+| **Subtotal above** | Excludes the items below | **$157.55** |
 
 Sources: [AWS Fargate pricing](https://aws.amazon.com/fargate/pricing/),
 [Singapore ECS list](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECS/current/ap-southeast-1/index.json),
@@ -104,14 +115,15 @@ Allow extra for the utility disk, 12 Secrets Manager secrets including the RDS
 master secret, S3/ECR storage, logs/alarms, ALB LCUs, API Gateway, Lambda/SQS/events,
 SES, DNS and traffic. Extra ALB addresses, cross-AZ traffic, TURN internet egress
 and RDS surplus CPU credits can increase the bill. A rough low-traffic planning
-allowance is **$150-175/month if left running continuously**, not a guaranteed cap.
-The optional managed Redis node adds about $17.52/month at $0.024/hour; the sidecar
-avoids that baseline. Managed NAT is a separate charge, excluded from this default.
+allowance is **$170-195/month if left running continuously**, not a guaranteed cap.
+This includes the default managed Redis node's $17.52/month using the original
+1 November rate snapshot. Explicit sidecar mode avoids that cache-node baseline.
+Managed NAT is a separate charge, excluded from this default.
 
 **A short demo followed by teardown is the main saving.** The listed baseline is
-about $0.192/hour, around $1.54 for eight hours before the excluded costs. Merely
+about $0.216/hour, around $1.73 for eight hours before the excluded costs. Merely
 setting `enable_workloads=false` removes ECS services/Lambdas but keeps RDS, ALB,
-utility/EIP and storage billing. Stopping a database/instance is not full teardown.
+utility/EIP, ElastiCache and storage billing. Stopping a database/instance is not full teardown.
 Do not buy Reserved Instances or Savings Plans for a temporary assignment.
 
 The default $100 budget is an account-wide warning threshold, deliberately below
@@ -133,7 +145,9 @@ its small storage cost separate from workload teardown.
    init and an actual account-specific plan for review. No apply has been performed
    by this task. A future foundation apply immediately starts billable infrastructure.
 3. Publish normal service images (including notification migration image),
-   signalling and Redis to the emitted ECR repositories for **linux/arm64**. Build
+   signalling to the emitted ECR repositories for **linux/arm64**. The default
+   managed-cache mode needs no Redis image; publish one only for explicit sidecar
+   mode. Build
    the two RF26 Lambda images for **linux/amd64**. Pin their digests in `images`.
    Do not pass a Lambda image where a regular service migration image is required.
 4. Populate the emitted service Secrets Manager containers using AWS CLI/SDK from
@@ -197,18 +211,29 @@ rewritten at CloudFront to the tenant API's active-clinic logo check; the privat
 logo bucket is never opened directly to anonymous reads. No credential/patient
 payload is added to API access logs.
 
-Redis sidecar traffic stays on task loopback. Managed Redis uses TLS and VPC
-security-group isolation. RDS is private/encrypted and only workload security groups
+The default ElastiCache uses a private subnet, TLS, encryption at rest and VPC
+security-group isolation. Scheduling and its workers receive the same `rediss://`
+endpoint automatically; do not override it with a loopback URL in public environment
+settings. Verify connectivity/TLS from the deployed scheduling task before the
+booking journey. Explicit sidecar traffic stays on task loopback. RDS is
+private/encrypted and only workload security groups
 can reach it. Secrets Manager secret versions are populated outside Terraform.
 The RDS master is AWS-managed; only the one-off bootstrap task can retrieve all DB
 configuration secrets. No instance SSH ingress exists. The utility uses IMDSv2.
 
 ## Verification, demonstration and teardown
 
+4 November ElastiCache-default refinement: demo module and sg-demo example
+validation, formatting and all seven mocked Terraform tests passed. The two
+fixture-only applies resolve computed endpoint/network/container values; all AWS
+resources use `mock_provider`, with no account access or live deployment. Local
+Redis/Compose, local environment files and application code were not changed.
+
 Automated checks cover Singapore restriction, single-AZ DB, tiny NAT/TURN host,
-no managed-cache/NAT baseline, FIFO single group, concurrency one, eight capped
-API services, one signalling task, independent migrations, optional managed single
-nodes and rejection of unapproved scale-out. These use mocked providers; they do
+one private encrypted managed-cache node and no managed NAT baseline, FIFO single
+group, concurrency one, eight capped API services, one signalling task, independent
+migrations, explicit sidecar compatibility, optional managed NAT and rejection of
+unapproved scale-out. These use mocked providers; they do
 not prove AWS account quotas, ARM image compatibility, t4g availability, kernel
 NAT setup, provider callbacks, sender verification or cross-network video.
 

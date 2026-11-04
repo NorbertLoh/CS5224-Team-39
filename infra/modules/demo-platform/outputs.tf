@@ -1,6 +1,9 @@
 output "frontend_url" { value = "https://${module.edge.domain_name}" }
 output "distribution_id" { value = module.edge.distribution_id }
 output "cluster_name" { value = aws_ecs_cluster.demo.name }
+output "deployment_profile" { value = var.deployment_profile }
+output "private_api_dns" { value = try(aws_lb.private_api[0].dns_name, null) }
+output "worker_service_names" { value = { for name, service in aws_ecs_service.worker : name => service.name } }
 output "repositories" { value = { for k, r in aws_ecr_repository.app : k => r.repository_url } }
 output "config_secret_arns" { value = { for k, s in aws_secretsmanager_secret.config : k => s.arn } }
 output "database_host" { value = aws_db_instance.demo.address }
@@ -9,7 +12,7 @@ output "redis_url" {
   value = var.redis_mode == "sidecar" ? "redis://127.0.0.1:6379/0" : "rediss://${aws_elasticache_replication_group.demo[0].primary_endpoint_address}:6379/0"
 }
 output "task_network_configuration" {
-  value = { awsvpcConfiguration = { subnets = [aws_subnet.private[0].id], securityGroups = [aws_security_group.workloads.id], assignPublicIp = "DISABLED" } }
+  value = { awsvpcConfiguration = { subnets = local.workload_subnets, securityGroups = [aws_security_group.workloads.id], assignPublicIp = "DISABLED" } }
 }
 output "bootstrap_task" { value = try(aws_ecs_task_definition.bootstrap[0].arn, null) }
 output "migration_tasks" { value = { for k, t in aws_ecs_task_definition.migration : k => t.arn } }
@@ -30,5 +33,6 @@ output "frontend_environment" {
 }
 output "stripe_webhook_url" { value = "https://${module.edge.domain_name}/api/v1/billing/webhooks/stripe" }
 output "turn_urls" {
-  value = var.enable_turn ? ["turn:${aws_eip.utility[0].public_ip}:3478?transport=udp", "turn:${aws_eip.utility[0].public_ip}:3478?transport=tcp"] : []
+  value = local.turn_urls
 }
+output "turn_autoscaling_group" { value = try(aws_autoscaling_group.turn[0].name, null) }
