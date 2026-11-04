@@ -1,4 +1,5 @@
 import { accessToken } from '@/auth/access-token'
+import { readSession } from '@/auth/session'
 import type { Appointment } from '@/features/scheduling/api'
 import { joinEarlyMinutes } from '@/features/video/domain/joinWindow'
 import type {
@@ -57,6 +58,16 @@ export function consultationError(error: unknown) {
   return 'Could not connect to the consultation. Check your connection and try again.'
 }
 
+export function roomAccessDenied(error: unknown) {
+  return (
+    error instanceof ApiError &&
+    ([401, 403, 404, 422].includes(error.status) ||
+      ['admission_denied', 'session_context_conflict'].includes(
+        error.code ?? '',
+      ))
+  )
+}
+
 // Same-origin HTTPS keeps admission credentials out of unrelated hosts and logs.
 export function bookedRoomConnection(
   appointmentId: string,
@@ -77,6 +88,7 @@ export function bookedRoomConnection(
       secure: true,
     },
     async acquire(signal) {
+      if (!readSession()) throw new RoomAccessError('Sign in to continue.')
       const response = await apiFetch('/consultation/admissions', {
         method: 'POST',
         accessToken: await accessToken(),
@@ -84,20 +96,31 @@ export function bookedRoomConnection(
         body: JSON.stringify({ appointment_id: appointmentId }),
         signal: AbortSignal.any([signal, AbortSignal.timeout(10000)]),
       }).catch((error: unknown) => {
-        throw new RoomAccessError(consultationError(error))
+        if (roomAccessDenied(error))
+          throw new RoomAccessError(consultationError(error))
+        throw error
       })
       const grant = await response.json()
       if (
         grant.appointment_id !== appointmentId ||
         grant.subject_id !== subjectId
       )
-        throw new Error('Invalid admission context')
+        throw new RoomAccessError('Invalid admission context')
+      const path: unknown = grant.signalling_path ?? '/peerjs'
+      if (
+        typeof path !== 'string' ||
+        !/^\/peerjs(?:\/nodes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?$/.test(
+          path,
+        )
+      )
+        throw new RoomAccessError('Invalid signalling assignment')
       const admission: CallAdmission = {
         peerId: grant.peer_id,
         token: grant.token,
         expiresAt: Date.parse(grant.expires_at),
         iceServers: grant.ice_servers,
         relayOnly: grant.relay_only,
+        signallingPath: path,
       }
       if (!Array.isArray(admission.iceServers))
         throw new Error('Invalid media configuration')
@@ -105,18 +128,21 @@ export function bookedRoomConnection(
       return admission
     },
     async counterpart(admission, signal) {
-      const response = await fetch(`${url.origin}/peerjs/counterpart`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          peer_id: admission.peerId,
-          token: admission.token,
-        }),
-        credentials: 'omit',
-        cache: 'no-store',
-        redirect: 'error',
-        signal: AbortSignal.any([signal, AbortSignal.timeout(10000)]),
-      })
+      const response = await fetch(
+        `${url.origin}${admission.signallingPath ?? '/peerjs'}/counterpart`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            peer_id: admission.peerId,
+            token: admission.token,
+          }),
+          credentials: 'omit',
+          cache: 'no-store',
+          redirect: 'error',
+          signal: AbortSignal.any([signal, AbortSignal.timeout(10000)]),
+        },
+      )
       if (!response.ok) throw new ApiError(response.status)
       const result = await response.json()
       if (

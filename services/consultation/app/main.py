@@ -10,6 +10,7 @@ from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.api.sessions import router
+from app.api.signalling import router as signalling_router
 from app.database import create_database_engine
 from app.integrations.upstream import AdmissionSources
 from app.settings import Settings
@@ -60,6 +61,7 @@ def create_app(settings: Settings | None = None):
 
     install_error_handlers(app)
     app.include_router(router)
+    app.include_router(signalling_router)
 
     @app.get("/health/live")
     def live():
@@ -89,7 +91,7 @@ def create_app(settings: Settings | None = None):
                         connection.scalar(
                             text("SELECT version_num FROM consultation.alembic_version")
                         )
-                        == "0003"
+                        == "0004"
                     )
             except SQLAlchemyError:
                 available = False

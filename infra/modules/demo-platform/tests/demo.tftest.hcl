@@ -203,6 +203,10 @@ run "managed_single_replica_layout" {
     error_message = "Eight APIs, five separate worker groups and signalling must remain one replica, including replacements."
   }
   assert {
+    condition     = local.public_env["consultation"].SERVICE_SIGNALLING_MATCHMAKER == "true" && aws_appautoscaling_target.signalling[0].min_capacity == 1 && aws_appautoscaling_target.signalling[0].max_capacity == 1 && aws_vpc_security_group_ingress_rule.signalling_peer[0].referenced_security_group_id == aws_security_group.signalling_nodes[0].id
+    error_message = "The managed demo must use the database matchmaker and private node routing with signalling capacity capped at one."
+  }
+  assert {
     condition     = alltrue([for task in aws_ecs_task_definition.api : length(jsondecode(task.container_definitions)) == 1]) && length(jsondecode(aws_ecs_task_definition.worker["scheduling"].container_definitions)) == 4 && alltrue([for task in aws_ecs_task_definition.worker : alltrue([for container in jsondecode(task.container_definitions) : container.name != "api" && container.name != "redis"])])
     error_message = "APIs must run separately from existing worker loops, with no Redis sidecar."
   }
@@ -250,8 +254,8 @@ run "future_managed_scale_out" {
     allow_scale_out          = true
   }
   assert {
-    condition     = alltrue([for target in aws_appautoscaling_target.api : target.min_capacity == 2 && target.max_capacity == 2]) && aws_appautoscaling_target.worker["scheduling"].max_capacity == 2 && aws_appautoscaling_target.worker["fulfilment"].max_capacity == 1 && aws_ecs_service.signalling[0].desired_count == 1
-    error_message = "Configurable APIs/workers may scale while stateful PeerJS and provider-account polling retain explicit singleton limits."
+    condition     = alltrue([for target in aws_appautoscaling_target.api : target.min_capacity == 2 && target.max_capacity == 2]) && aws_appautoscaling_target.worker["scheduling"].max_capacity == 2 && aws_appautoscaling_target.worker["fulfilment"].max_capacity == 1 && aws_ecs_service.signalling[0].deployment_minimum_healthy_percent == 50 && aws_appautoscaling_target.signalling[0].min_capacity == 2 && aws_appautoscaling_target.signalling[0].max_capacity == 2
+    error_message = "APIs, eligible workers and matchmaker-enabled signalling scale to two while provider-account polling stays at one."
   }
   assert {
     condition     = aws_db_instance.demo.multi_az && aws_elasticache_replication_group.demo[0].num_cache_clusters == 2 && aws_elasticache_replication_group.demo[0].automatic_failover_enabled && aws_elasticache_replication_group.demo[0].multi_az_enabled && length(aws_nat_gateway.demo) == 2 && length(aws_route.private_extra_egress) == 1

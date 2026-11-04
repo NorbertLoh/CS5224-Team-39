@@ -174,6 +174,31 @@ function cognito(
   })
 }
 
+function accessClaims(accessToken: string) {
+  const payload = accessToken
+    .split('.')[1]
+    .replace(/-/g, '+')
+    .replace(/_/g, '/')
+  const bytes = Uint8Array.from(atob(payload), (character) =>
+    character.charCodeAt(0),
+  )
+  return JSON.parse(new TextDecoder().decode(bytes))
+}
+
+// Cache partition only. The API still authenticates the token on every request.
+export function accessTokenPrincipal(token: string) {
+  try {
+    const { iss, client_id, sub } = accessClaims(token)
+    if (
+      [iss, client_id, sub].every((value) => typeof value === 'string' && value)
+    )
+      return JSON.stringify([iss, client_id, sub])
+  } catch {
+    /* Malformed token: the caller uses its token-specific cache key. */
+  }
+  return null
+}
+
 function validateSession(
   config: AuthConfig,
   accessToken: unknown,
@@ -191,14 +216,7 @@ function validateSession(
     throw new Error('Invalid sign-in response. Please sign in again.')
   }
   // Browser checks catch configuration mistakes; the API verifies the signature.
-  const payload = accessToken
-    .split('.')[1]
-    .replace(/-/g, '+')
-    .replace(/_/g, '/')
-  const bytes = Uint8Array.from(atob(payload), (character) =>
-    character.charCodeAt(0),
-  )
-  const claims = JSON.parse(new TextDecoder().decode(bytes))
+  const claims = accessClaims(accessToken)
   if (
     claims.iss !== config.issuer ||
     claims.client_id !== config.clientId ||

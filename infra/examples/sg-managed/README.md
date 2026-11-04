@@ -23,7 +23,7 @@ profiles to the same resource prefix or use this as an in-place profile migratio
 | Database | Private encrypted RDS PostgreSQL 17, db.t4g.micro, 20-GiB gp3 | Demo primary only; database_multi_az enables standby/failover |
 | Cache | Private encrypted TLS ElastiCache Redis cache.t4g.micro | Demo one node; redis_node_count >= 2 enables replicas, Multi-AZ and automatic promotion |
 | Internet egress | Managed public NAT Gateway and its Elastic IP | Demo one; nat_gateway_count=2 creates a gateway and local route in each AZ |
-| Video signalling | Separate public HTTPS ALB → private ECS PeerServer | One signalling task; admission checks remain mandatory |
+| Video signalling | Public HTTPS ALB, private ECS PeerServer and PostgreSQL room assignments | Demo min/max one; scales with min_tasks/max_tasks |
 | Media relay | Coturn Launch Template/Auto Scaling Group, readiness hook, protocol health agent, CPU scaling and stable EIP pool | Demo min/desired/max one; configurable fleet and hot redundancy across AZs |
 | Files and logos | Separate private versioned S3 buckets, authorised document downloads | Nonempty buckets are not force-deleted |
 | Events and email | EventBridge, SQS and consumer DLQs, SES | Existing event/idempotency semantics and provider quotas |
@@ -49,7 +49,7 @@ so replacement does not require an extra replica beyond the configured count.
 `capacity.tf` and `terraform.tfvars.example` hold demo values; the architecture
 does not prohibit increasing them. `allow_scale_out=true` explicitly permits
 larger values. The **non-default** `scale-two.tfvars.example` overlay raises API
-min/max, eligible worker min/max, TURN fleet and Lambda reservations to two, enables
+and signalling min/max, eligible worker min/max, TURN fleet and Lambda reservations to two, enables
 the RDS standby, adds a Redis replica and enables two AZ-local NAT gateways:
 
 ```powershell
@@ -69,27 +69,15 @@ also an initial seed owned by its ASG thereafter; min/max changes enforce bounds
 Raise minimum to two for sustained hot capacity. Disabling workloads sets TURN
 min/max to zero, intentionally stopping the fleet; stop/drain traffic first.
 
-Two explicit application constraints remain: PeerJS stores peer-routing state
-inside one server, so adding replicas without room-aware routing is unsafe;
-fulfilment's grouped tracking loop currently requires one poller per provider
-account. Those remain singletons even in the future overlay and need separate
-application/provider coordination work. ECS still replaces unhealthy singleton
-tasks. Lambda FIFO consumers retain one producer message group: increasing reserved
-concurrency alone does not make that group parallel; partitioning requires an
-ordering/idempotency design. No false multi-replica claim is made for these paths.
+Fulfilment's grouped tracking loop stays at one poller per provider account.
+Lambda FIFO consumers retain one producer message group. Parallelism within
+those workloads requires separate ordering and coordination changes.
 
-PeerJS's next application design can use either (a) an atomic, expiring
-consultation-to-node lease in Redis/PostgreSQL with both participants routed to
-that node, or (b) shared peer ownership plus cross-node Redis Pub/Sub delivery.
-Sockets remain local in both cases. Per-browser ALB stickiness is insufficient to
-co-locate two participants. Redis alone does not implement either adapter: the
-current authenticated transport's local discovery and destination checks must be
-updated, preserving tenant/session authorization and duplicate/revoked lease
-handling. Pub/Sub is ephemeral, so reconnect/retry is required after loss; a
-durable SQS work queue is not a drop-in live WebSocket router. This is documented
-follow-up design, not implemented signalling scale-out. See
-[PeerServer's store](https://github.com/peers/peerjs-server/blob/master/src/models/realm.ts)
-and [Redis delivery semantics](https://redis.io/docs/latest/develop/pubsub/).
+RF29 uses PostgreSQL to assign both participants to one live PeerServer. The
+managed profile enables private node forwarding and ECS task protection. Apply
+consultation migration `0004` and publish matching consultation, signalling and
+frontend builds before enabling or scaling the workload. See
+[RF29 deployment and recovery](../../../docs/RF29-signalling-matchmaker.md).
 
 ## TURN replacement and future relay redundancy
 

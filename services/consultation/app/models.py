@@ -4,10 +4,12 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
     Index,
+    Integer,
     MetaData,
     SmallInteger,
     Text,
@@ -118,3 +120,31 @@ class Admission(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    node_id: Mapped[UUID | None] = mapped_column(Uuid)
+    assignment_version: Mapped[int | None] = mapped_column(Integer)
+
+
+class SignallingNode(Base):
+    __tablename__ = "signalling_nodes"
+
+    node_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    token_digest: Mapped[str] = mapped_column(Text)
+    internal_url: Mapped[str] = mapped_column(Text)
+    lease_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    draining: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class RoomAssignment(Base):
+    __tablename__ = "room_assignments"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["session_id"], ["consultation.sessions.session_id"], ondelete="CASCADE"
+        ),
+        ForeignKeyConstraint(["node_id"], ["consultation.signalling_nodes.node_id"]),
+        CheckConstraint("version > 0", name="ck_room_assignment_version"),
+        Index("ix_room_assignment_node", "node_id"),
+    )
+
+    session_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    node_id: Mapped[UUID] = mapped_column(Uuid)
+    version: Mapped[int] = mapped_column(Integer)

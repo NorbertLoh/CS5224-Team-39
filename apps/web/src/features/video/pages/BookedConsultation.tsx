@@ -7,6 +7,7 @@ import { useSchedulingIdentity } from '@/features/scheduling/useSchedulingIdenti
 import {
   bookedRoomConnection,
   consultationError,
+  roomAccessDenied,
   roomEligibility,
 } from '@/features/video/api/admission'
 import { CompletionHandoff } from '@/features/video/components/CompletionHandoff'
@@ -19,9 +20,9 @@ import { useMemo } from 'react'
 export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
   const id =
     new URLSearchParams(window.location.search).get('appointment_id') ?? ''
-  const identity = useSchedulingIdentity()
+  const identity = useSchedulingIdentity(true)
   const appointment = useQuery({
-    queryKey: ['consultation', 'appointment', identity.token, id],
+    queryKey: ['consultation', 'appointment', identity.cacheKey, id],
     queryFn: ({ signal }) => appointmentDetail(id, signal),
     enabled: Boolean(id && identity.data && identity.token),
     refetchInterval: 5000,
@@ -49,7 +50,12 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
         </a>
       </main>
     )
-  if (identity.isError || appointment.isError)
+  if (
+    (identity.isError &&
+      (!identity.data || roomAccessDenied(identity.error))) ||
+    (appointment.isError &&
+      (!appointment.data || roomAccessDenied(appointment.error)))
+  )
     return (
       <ErrorState
         message={consultationError(identity.error ?? appointment.error)}
@@ -108,7 +114,7 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
     )
   return (
     <VideoRoom
-      key={`${id}:${subject}:${identity.token}`}
+      key={`${id}:${subject}:${identity.cacheKey}`}
       role={role}
       connection={setup.connection}
       appointmentId={id}
