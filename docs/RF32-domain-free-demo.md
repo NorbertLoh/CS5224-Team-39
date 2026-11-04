@@ -58,6 +58,12 @@ one synthetic clinic. It preserves existing accounts and application records.
 The AWS demo uses the same logins as the local demo. The Terraform
 `platform.demo_login_secret` output locates the login roster in Secrets Manager.
 
+For Stripe sandbox checkout, look up the seeded clinic's `tenant_id` from
+`GET /api/v1/tenant/clinics/by-slug/aws-demo-clinic`. Add that ID to the billing
+secret's `stripe_destinations` JSON map with the verified Stripe sandbox Connect
+destination. Preserve the other settings and start fresh billing API and worker
+tasks so they load the new secret version.
+
 To rerun the seed independently, save the demo root's `terraform output -json`
 to an ignored local file and run
 `node dev/release/seed-demo.mjs <demo-output.json>` from the repository root.
