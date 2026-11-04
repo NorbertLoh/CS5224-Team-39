@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## Prescription issuance on consultation end (RF35)
+
+- [ ] RF35: Remove the standalone Issue prescription action from the doctor
+  prescription editor; End consultation issues the valid saved draft. Preserve
+  autosave, validation, completion error/retry handling and issued-content locks.
+  Dependencies: RF12, U11 and R04 merged. Effort S. NorbertLoh; In progress;
+  issue #341. Completion: standalone action/copy removed, completion behavior
+  verified and frontend lint/typecheck/build pass.
+
 ## Clinic registration pickup details (RF34)
 
 - [x] RF34: Require all Clinic Settings pickup fields during clinic registration:
