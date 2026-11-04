@@ -1,5 +1,7 @@
 import type { DoctorApplication } from '@/features/doctor-onboarding/api'
 import type { Order } from '@/features/fulfilment/api'
+import { awaitingPrescriptionPayment } from '@/features/fulfilment/domain/patientMedicines'
+import type { Prescription } from '@/features/records/types'
 import type { Appointment } from '@/features/scheduling/api'
 
 export type NavigationAttention = {
@@ -64,6 +66,41 @@ export function appointmentPaymentAttention(
         label: 'Payment due',
         count,
         description: `${count} appointment booking${count === 1 ? '' : 's'} awaiting payment. Open Appointments to review.`,
+      }
+    : undefined
+}
+
+export function prescriptionPaymentAttention(
+  prescriptions: Prescription[],
+  orders: Order[],
+  subject: string,
+) {
+  const ownOrders = new Map(
+    orders.filter((order) => order.patient_id === subject).map((order) => [
+      order.prescription_id,
+      order,
+    ]),
+  )
+  const count = prescriptions.filter((prescription) => {
+    if (
+      prescription.patient_id !== subject ||
+      prescription.status !== 'issued' ||
+      prescription.items.length === 0
+    ) return false
+    const order = ownOrders.get(prescription.prescription_id)
+    return awaitingPrescriptionPayment(
+      order?.tenant_id === prescription.tenant_id &&
+        order.appointment_id === prescription.appointment_id
+        ? order
+        : undefined,
+    )
+  }).length
+  return count > 0
+    ? {
+        tone: 'danger' as const,
+        label: 'Awaiting payment',
+        count,
+        description: 'Prescriptions with medicines awaiting payment.',
       }
     : undefined
 }

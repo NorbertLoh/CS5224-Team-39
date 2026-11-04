@@ -74,6 +74,8 @@ meaning does not depend on color.
 - Patient Appointments: Payment due counts only this patient's live held or
   pending-payment bookings with a future hold deadline and appointment end.
   Refunded/refund-required, cancelled and expired bookings are excluded.
+- Patient Prescriptions: Red count for issued medicine prescriptions awaiting
+  payment, including those without an order.
 - Patient Orders & delivery: Needs attention for unpaid orders, exceptions or
   refund review; In progress for pending payment confirmation, paid/preparing,
   submitting or dispatched orders. Completed/refunded and ordinary cancelled

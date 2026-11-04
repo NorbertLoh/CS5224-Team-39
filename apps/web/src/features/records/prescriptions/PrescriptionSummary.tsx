@@ -1,5 +1,8 @@
 ﻿import type { Order } from '@/features/fulfilment/api'
-import { medicineProgress } from '@/features/fulfilment/domain/patientMedicines'
+import {
+  awaitingPrescriptionPayment,
+  medicineProgress,
+} from '@/features/fulfilment/domain/patientMedicines'
 import { PatientAccordionItem } from '@/features/patient/components/PatientAccordionItem'
 import type { Prescription } from '@/features/records/types'
 import { appointmentDetail } from '@/features/scheduling/api'
@@ -26,24 +29,33 @@ export function PrescriptionSummary({
   unavailable: boolean
 }) {
   const issued = prescription.status === 'issued'
+  const hasMedicines = prescription.items.length > 0
+  const awaitingPayment =
+    issued &&
+    hasMedicines &&
+    !checking &&
+    !unavailable &&
+    awaitingPrescriptionPayment(order)
   const label = !issued
     ? prescription.status
-    : checking
-      ? 'Checking payment'
-      : unavailable
-        ? 'Payment status unavailable'
-        : !order
-          ? 'Awaiting payment'
-          : order.payment_status === 'succeeded'
-            ? `Paid · ${medicineProgress(order)}`
-            : medicineProgress(order)
+    : !hasMedicines
+      ? 'No medicines'
+      : checking
+        ? 'Checking payment'
+        : unavailable
+          ? 'Payment status unavailable'
+          : !order
+            ? 'Awaiting payment'
+            : order.payment_status === 'succeeded'
+              ? `Paid · ${medicineProgress(order)}`
+              : medicineProgress(order)
   const colour = !issued
     ? prescription.status === 'voided'
       ? 'bg-red-50 text-red-700 ring-red-200'
       : 'bg-slate-100 text-slate-700 ring-slate-200'
-    : checking
+    : checking || !hasMedicines
       ? 'bg-slate-100 text-slate-700 ring-slate-200'
-      : unavailable ||
+      : awaitingPayment || unavailable ||
           (order &&
             (['cancelled', 'exception'].includes(order.status) ||
               ['refund_required', 'refunded'].includes(order.payment_status)))
