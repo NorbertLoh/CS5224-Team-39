@@ -1,5 +1,7 @@
 # RF28 workspace tabs, totals, search and filters
 
+Merged in PR #321 (5f1d734) on 4 November 2026; issue #320 is closed.
+
 The user extended RF28 on 4 November 2026 to apply the application-review pattern
 to clinic reviews, payments and appointments. The implementation stays in issue
 #320 / draft PR #321 with the existing claim and shared-file ownership.

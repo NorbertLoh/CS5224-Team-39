@@ -1,32 +1,44 @@
 # TeleLink Health: shared implementation backlog
 
-## Doctor verification (3 November 2026)
+## Doctor verification, workspace lists and navigation (RF28)
 
-RF28 tab styling refinement (4 November 2026): user requests underline-only active indicators across tab bars. Remove rounded focus/highlight boxes and filled active section tabs; share bottom-border styling across data tabs and doctor/patient/clinic section navigation, retaining a bottom-edge keyboard-focus cue. Existing issue #320 remains assigned NorbertLoh/In progress; draft PR #321. No behavior/API changes; verify frontend checks and Tailscale rollout.
+- [x] RF28: Persist doctor applications, private licence documents and platform
+  review with approval, rejection, revocation and resubmission history. Clinic
+  assignment may precede approval; clinical access requires approved verification
+  and active membership, preserving independent roles and revoked memberships.
+  Dependencies: RF13, A06, A09-A11 and RF11 merged. Effort: L. Assignee: NorbertLoh;
+  complete; issue #320 closed; merged PR #321 (`5f1d734`) on 4 November 2026.
 
-RF28 tab-line correction: remove the additional dark-green inset focus shadow. Keyboard focus uses the same teal bottom border as the active state, leaving a single stroke. Included in issue #320/draft PR #321.
+The user-authorized scope also includes searchable workspace lists with full tab
+counters and inclusive Singapore-date filters for doctor/clinic reviews, payments
+and appointments. Authorization and filter scope bind both totals and pagination;
+appointment lists explicitly select the workspace role for mixed-role accounts.
 
-RF28 doctor navigation refinement (4 November 2026): replace stacked role/verification links on doctor pages with one workspace switcher and one doctor bar (Appointments, Availability, Verification). Centralize clinic selection and preserve authorized clinic context; unverified accounts retain registration-only navigation. Remove the duplicate availability clinic picker; preserve consultation and access behavior. Issue #320 remains assigned NorbertLoh/In progress, draft PR #321. Effort S. Completion: focused navigation/role/context verification, frontend checks and Tailscale rollout; user handles browser acceptance.
+One route-aware workspace dropdown includes Patient alongside other granted
+roles, hides for patient-only accounts and keeps registration on the clinics page.
+Each workspace uses one section bar with one active underline and authorized
+clinic context. Coloured numeric badges identify action/review work or waiting
+and delivery progress; tooltips and accessible text retain status descriptions.
+Application forms, review cards and navigation badges are focused components.
 
-RF28 doctor navigation verification: frontend lint/typecheck/probe typecheck/build and seven session checks passed. Focused route/render checks covered scoped links, verification context, revoked-clinic exclusion, default availability clinic, registration-only navigation, consultation active state and workspace switcher markup. Web refreshed with the Tailscale overlay; no backend/configuration/migration changes. Browser acceptance remains with the user.
+All 19 final PR checks passed on `e483add`: service persistence/security checks,
+Ruff, frontend lint/typecheck/build, probe typecheck, navigation role/status/render
+checks and seven session checks. Earlier isolated suites passed: identity 199,
+tenant 136, billing 319 plus 38 subtests, scheduling 267 (2 skips), and shared
+library/architecture 121 (12 environment skips). Authenticated Tailscale checks
+verified search/count/date behavior and denied unauthorized totals. The updated
+web app is healthy on the existing Tailscale setup; browser acceptance stays with
+the user as requested.
 
-RF28 original-navbar correction: remove the separate Doctor verification link from the role bar on non-doctor pages when Doctor is already available. Keep Join as a doctor for accounts without doctor access. Focused rendered checks verified one doctor entry and retained non-doctor/revoked registration access; frontend lint/typecheck/build passed. Included in issue #320/draft PR #321.
+Identity migrations 0004-0006 are required; the local identity database was backed
+up before applying them. Existing/seeded doctors need manual approval. No data
+reset, provider payment/courier transaction, external licence validation or AWS
+rollout was performed. Patient navbar counts use paginated existing APIs and
+refresh every 30 seconds/on focus; server aggregates can reduce cost at scale.
 
-RF28 user-authorized extension (4 November 2026): add clinic review and payment purpose/status tabs with full counts, appointment Upcoming/Past totals, and server-side search/date filters across these screens and doctor applications (appointment status also filterable). Lists and counters share authorization/filter scope and pagination resets on change; signed cursors bind active filters. Existing merged service APIs are available and RF28's doctor application changes are on this task branch. Keep issue #320 assigned NorbertLoh/In progress and coordinate all changes in draft PR #321. Effort L. Completion: backend privacy/filter/count/cursor checks, frontend lint/typecheck/build and Tailscale rollout without data reset; user handles browser acceptance.
-
-RF28 workspace verification: identity 199, tenant 136, billing 319 + 38 subtests, scheduling 267 (2 skipped), shared/architecture 121 (12 skipped) passed on isolated PostgreSQL/Redis with required CI sentinel fixtures. Frontend lint/typecheck/probe typecheck/build, seven session checks and SGT date encoding passed. No new migration/configuration. Setup, search/date semantics, count scopes and limits: `docs/RF28-workspace-filters.md`. Issue remains In progress until merge and completion acceptance.
-
-RF28 workspace rollout: identity, tenant, billing, scheduling and web refreshed with Tailscale preserved. Real authenticated shared-HTTPS checks passed for searches, full counts, commission filtering, patient/clinic-admin appointment totals and denied patient admin totals; unverified doctor access stayed denied. No business data reset/mutation or provider transaction. Browser acceptance remains with the user.
-
-- [ ] RF28: Add authenticated Join as a doctor application with professional/licence details and private supporting documents, pending/rejected/approved status and rejected-application resubmission. Add platform-admin review with approve/reject reason and audit history. Allow clinic doctor assignment before approval, display Pending verification, and enforce approved verification plus active clinic membership across identity, directory and clinical access; preserve independent clinic-admin/patient rights and revoked memberships. Dependencies: RF13, A06, A09-A11 and RF11 merged. Effort: L. Completion: real persisted application/review flow, private document access, denied pre-approval/direct API access, approved/revoked/mixed-role cases and frontend checks documented. Assignee: NorbertLoh; status: In progress; issue #320. Existing seeded doctors need an explicit migration compatibility policy; no automatic licence verification.
-
-RF28 implementation is in draft PR #321. Verification: 174 identity tests on disposable PostgreSQL, Ruff/format, architecture guard, frontend lint/typecheck/build, probe typecheck and seven session checks passed. Identity/web images built; local identity backed up, migration 0004 applied, API readiness and both new frontend routes verified. Existing/seeded doctor assignments require manual application approval; no automatic verification or membership reactivation. Browser acceptance is deferred to the user at their request. Setup and limits: `docs/RF28-doctor-verification.md`. Issue stays In progress until merge and completion acceptance.
-
-RF28 filename refinement: store doctor-name-based licence filenames in identity and use them for downloads, including Unicode names; backfill existing and preserve historical evidence names. Migration 0005 required. All 180 identity tests and frontend lint/typecheck/build pass. Upload picker also has a visible teal button and focus styling, as requested during manual review.
-
-RF28 revocation refinement: platform admins can revoke approved doctor applications with a required reason, disabling doctor eligibility until resubmission and reapproval. Preserve memberships, independent roles and review history; show Revoked status, reason and resubmit form. Migration 0006 allows revoked status with downgrade protection. All 188 identity tests and frontend lint/typecheck/build pass. Remains in issue #320 and draft PR #321; no live approvals are changed during deployment.
-
-RF28 application status tabs: replace the dropdown with keyboard-accessible tabs and database totals for Pending review, Approved, Rejected and Resubmission required, plus an overall count. Counts include all pages and refresh after actions; expose only to platform admins. All 195 identity tests and frontend lint/typecheck/build pass. No new migration/configuration. Remains in issue #320/draft PR #321, with browser acceptance delegated to the user.
+Setup and limits: [doctor verification](docs/RF28-doctor-verification.md),
+[workspace filters](docs/RF28-workspace-filters.md),
+[navigation](apps/web/src/navigation/README.md).
 
 ## Serverless workers and edge controls (31 October 2026)
 
@@ -507,22 +519,3 @@ RF11 confirmation-card refinement: hide Check payment status and Appointments fo
 RF11 early-clinical-start refinement supersedes the earlier video-only timing note: user explicitly requested local early clinical start. Values above 10 in existing test-window flags now permit clinical start/completion in consultation, scheduling and UI; default 10 retains scheduled clinical start. Consultation migration 0003 records a bounded per-session allowance, preserves actual start history, refuses destructive downgrade while early-start history exists, and readiness requires 0003. Added opening-time guidance and clock updates. Validation: 121 isolated consultation checks, 51 scheduling checks (two unrelated Redis skips), 55 admission checks rerun after readiness update, Ruff/format and frontend lint/typecheck/build passed. Backed up/migrated local consultation, enabled scheduling flag at 180, restarted affected APIs, verified full stack and enabled button. No clinical action was performed on the user appointment. Setup: docs/local-test-slots.md.
 
 RF02/RF11/RF12 merge completion, 26 October 2026: merged RF11 #277 (597e6cb), RF12 #281 (721b15e) and RF02 #263 (21464a8) on the user's instruction after passing final PR checks. Issues #276, #280 and #244 closed. Integration preserves RF11's local early-start flags alongside RF12's late in-progress rejoin and prescription completion. Resolved navigation/lifecycle conflicts and combined backlog entries. Fixed CI by clearing only explicitly disposable fixture rows before guarded tenant/clinical migration roundtrips, leaving production downgrade protections unchanged; Compose helper formatting matches CI. Final local restricted-role suites passed: tenant 131, clinical records 165, consultation 133 and document 105, with cross-service sentinels preserved. Frontend lint/typecheck/build passed. AWS and unrelated deferred verification gates remain open.
-
-
-RF28 all-workspace navigation refinement (4 November 2026): use one route-aware workspace switcher throughout; direct link for single-role accounts and granted-role dropdown for multi-role accounts. Use consistent patient/doctor/clinic/platform section bars, combine clinic management into one bar with a named clinic selector, and carry shared-clinic URL context only with destination-role access. Preserve doctor application-only access and platform management exceptions. Issue #320 remains NorbertLoh/In progress in draft PR #321; existing dependencies/routes complete, effort M. Verify focused mixed-role/render checks, frontend checks and Tailscale web rollout; browser acceptance by user. No backend/configuration changes.
-
-RF28 all-workspace verification: frontend lint/typecheck/probe typecheck and Docker production build passed; committed navigation probe covers all-role selection, single-workspace links, application-only access, one section bar, shared-clinic context, revoked memberships, platform exceptions, consultation and signed-out/denied rendering. Seven existing auth session checks passed. Web recreated healthy with Tailscale overlay and all changed navbar sources verified over shared HTTPS. Browser acceptance remains with user; issue stays In progress.
-
-RF28 workspace-switcher correction: user requests the previous workspace dropdown. Restore dropdown for single-role accounts, full workspace names, Doctor registration and Browse clinics inside the menu. Retain the new role-aware selection and improved section navbars. Covered by existing issue #320/draft PR #321; frontend-only.
-
-RF28 registration entry correction: keep clinic/doctor registration on the clinics homepage and remove Doctor registration from the workspace dropdown. Dropdown retains granted workspaces and Browse clinics. Existing #320/PR #321, frontend-only; registration routes and doctor application navigation unchanged.
-
-RF28 patient navigation correction: hide the workspace dropdown when Patient is the only available role, retaining patient section navigation and clinics-page registration. Multi-role accounts retain the dropdown. Existing #320/PR #321; focused navigation probe and web checks/rollout required.
-
-RF28 navbar attention extension: user requests red highlights for doctor verification action, patient payments/orders/delivery and platform pending applications. Reuse existing authorized APIs: unfiltered platform aggregates and full-page patient lists with ownership checks; red action-needed vs amber waiting/progress. Retain one active underline and hidden patient-only switcher. Existing issue #320 remains assigned NorbertLoh/In progress in draft PR #321; frontend-only, effort M, dependencies existing APIs available. Completion: status/role/pagination/render checks, frontend checks and Tailscale web refresh.
-
-RF28 attention verification: expanded navigation probe passed for verification states, patient-only own/live payments, own active/action-needed vs terminal orders, full pagination and repeated-cursor protection, unfiltered platform counts and accessible rendered badges. Frontend lint/typecheck/probe typecheck, seven session checks and Docker production build passed. Web recreated healthy with Tailscale preserved; attention sources verified via shared HTTPS. No backend/configuration/migration changes; browser acceptance remains with user.
-
-RF28 compact navbar badges: user requests numbers and colour instead of long status words. Render numeric badges for all navigation attention states, retain status context in accessible text/tooltips and use 1 for the single doctor application. Existing #320/PR #321; count/status/query behavior unchanged.
-
-RF28 merge cleanup: extract DoctorApplicationForm, DoctorApplicationReviewCard and NavigationBadge into focused components; remove unused doctor-route helper. Run Prettier across supported PR frontend/probe/docs files and execute the existing navigation probe in CI. Frontend lint/typecheck/probe typecheck, navigation status/render checks and seven session checks pass. Merge only after final-head CI is green; keep issue In progress until merge.
