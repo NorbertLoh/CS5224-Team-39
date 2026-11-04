@@ -1,10 +1,6 @@
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
-import {
-  issuePrescription,
-  recordsError,
-  savePrescription,
-} from '@/features/records/api'
+import { recordsError, savePrescription } from '@/features/records/api'
 import {
   prescriptionItems,
   validItems,
@@ -55,10 +51,6 @@ export function PrescriptionEditor({
     prescriptionItems(prescription?.items ?? []),
   )
   const locked = Boolean(saved && saved.status !== 'draft')
-  const accept = (result: Prescription) => {
-    setSaved(result)
-    setItems(prescriptionItems(result.items))
-  }
   const save = useMutation({
     mutationFn: (submitted: PrescriptionInput[]) =>
       savePrescription(
@@ -87,36 +79,20 @@ export function PrescriptionEditor({
     retry: false,
     gcTime: 0,
   })
-  const issue = useMutation({
-    mutationFn: () => issuePrescription(saved!.prescription_id),
-    onSuccess: accept,
-    onError: onFailure,
-    retry: false,
-    gcTime: 0,
-  })
-  const busy = save.isPending || issue.isPending
+  const busy = save.isPending
   const dirty = draftKey(items) !== draftKey(saved?.items ?? [])
   const valid = validItems(items)
   useRecordFormState(dirty, busy, onStateChange)
-  const writable = editable && !locked && !issue.isPending
+  const writable = editable && !locked
   const queueSave = useCallback(
     () => save.mutate(prescriptionItems(items)),
     [save.mutate, items],
   )
   useDraftAutosave(
-    writable &&
-      !save.isPending &&
-      valid &&
-      dirty &&
-      !save.isError &&
-      !issue.isError,
+    writable && !save.isPending && valid && dirty && !save.isError,
     JSON.stringify(items),
     queueSave,
   )
-  const changeItems = (next: PrescriptionInput[]) => {
-    setItems(next)
-    issue.reset()
-  }
   return (
     <form
       className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
@@ -135,8 +111,8 @@ export function PrescriptionEditor({
       </div>
       <p className="text-sm text-slate-600">
         Complete each medication to autosave the draft. End consultation issues
-        the saved prescription automatically, or you can issue it below. The
-        clinic admin prices each medication before checkout.
+        the saved prescription automatically. The clinic admin prices each
+        medication before checkout.
       </p>
       {locked || !editable ? (
         <>
@@ -156,7 +132,7 @@ export function PrescriptionEditor({
               type="button"
               disabled={items.length >= 100}
               onClick={() =>
-                changeItems([
+                setItems([
                   ...items,
                   {
                     medication_id: '',
@@ -180,30 +156,17 @@ export function PrescriptionEditor({
                 item={item}
                 index={index}
                 onChange={(change) =>
-                  changeItems(
+                  setItems(
                     items.map((current, position) =>
                       position === index ? { ...current, ...change } : current,
                     ),
                   )
                 }
                 onRemove={() =>
-                  changeItems(items.filter((_, position) => position !== index))
+                  setItems(items.filter((_, position) => position !== index))
                 }
               />
             ))}
-            <div className="flex flex-wrap gap-3">
-              <Button
-                className="h-10 px-4"
-                type="button"
-                disabled={!saved || dirty || !valid || busy}
-                onClick={() => {
-                  if (writable && !busy && saved && !dirty && valid)
-                    issue.mutate()
-                }}
-              >
-                {issue.isPending ? 'Issuing...' : 'Issue prescription'}
-              </Button>
-            </div>
           </fieldset>
           <p role="status" className="text-xs text-slate-600">
             {save.isError
@@ -220,11 +183,8 @@ export function PrescriptionEditor({
           </p>
         </>
       )}
-      {issue.isSuccess && (
-        <p role="status">Prescription issued. Its content is now locked.</p>
-      )}
-      {(save.isError || issue.isError) && (
-        <ErrorState message={recordsError(save.error ?? issue.error)} />
+      {save.isError && (
+        <ErrorState message={recordsError(save.error)} />
       )}
     </form>
   )

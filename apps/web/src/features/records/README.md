@@ -51,7 +51,9 @@ or delivery sent. Labelled synthetic visit/note/catalogue examples remain local.
 
 Medication names remain unrestricted text. End consultation waits for valid
 autosaved drafts, issues the saved prescription and completes the consultation
-and MC decision. The fields are disabled while completion is pending. The
+and MC decision. The prescription editor has no standalone issuance action;
+the doctor issues the saved draft through **End consultation**. The fields are
+disabled while completion is pending. The
 completed view shows prescription details and offers a completion retry if an
 existing draft or MC decision still needs finalising. Once a prescription is issued,
 the clinic admin enters each medication's price within its Medicine & delivery
@@ -84,7 +86,8 @@ visit covered confirmed/start visibility, start -> in-progress transition, botto
 End after Documents, disabled End for unsaved text and re-enabled End after saving.
 The visit was not ended. Frontend lint, TypeScript and production build passed.
 
-Visit documents is a native keyboard-accessible disclosure, closed by default in
+Past documents uses the same icon and heading styling as Previous visit notes,
+without a heading subline. It is a native keyboard-accessible disclosure, closed by default in
 the doctor records workspace. Expand it for the existing document status, refresh
 and PDF download actions. End consultation remains below it. Verified default
 collapse, Enter expansion/collapse and refresh availability on the live local
