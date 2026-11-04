@@ -87,8 +87,9 @@ End after Documents, disabled End for unsaved text and re-enabled End after savi
 The visit was not ended. Frontend lint, TypeScript and production build passed.
 
 Past documents uses the same icon and heading styling as Previous visit notes,
-without a heading subline. It is a native keyboard-accessible disclosure, closed by default in
-the doctor records workspace. Expand it for the existing document status, refresh
-and PDF download actions. End consultation remains below it. Verified default
-collapse, Enter expansion/collapse and refresh availability on the live local
-consultation; lint, TypeScript and production build passed. No API changes.
+without a subtitle, refresh button or empty message. The card body is blank when
+there are no documents. Available documents appear in collapsed, dated rows like
+previous notes; expand a row for status and PDF download actions. The list refreshes
+automatically every ten seconds and on window focus. End consultation remains
+below it. The same card is used in patient Past appointment details. Standalone
+Documents pages retain their existing controls. No API changes.

@@ -1,5 +1,28 @@
 # TeleLink Health: shared implementation backlog
 
+## Patient upcoming appointment documents (RF37)
+
+- [ ] RF37: Hide Documents in patient Upcoming appointment details, retaining
+  Past details and doctor document behavior. Pass the selected period to details
+  and avoid mounting/querying documents for patient Upcoming. Dependencies RF10
+  and S07 merged. Effort S. NorbertLoh; In progress; issue #345, draft PR #346.
+  Completion: visibility rules and frontend lint/typecheck/build pass. Stacked
+  above RF36.
+  Frontend lint/typecheck/build passed. Web rebuilt and healthy on Tailscale.
+  Demo-patient browser check confirmed Upcoming details omit Documents and Past
+  completed details retain the prescription download. No appointment data changed.
+  No migration or configuration changes.
+  User refinement: add a small gap below the appointment count and above selected
+  appointment details in both Upcoming and Past, scoped to appointment components.
+  Further clarification: Past documents has a blank body when empty and expandable
+  dated document rows like Previous visit notes when populated. Remove its subtitle,
+  manual refresh control and empty placeholder in patient Past details and doctor
+  records. Preserve standalone document pages and authorized downloads; refresh
+  embedded document status automatically.
+  User refinement: simplify the completed consultation screen to documents,
+  removing the read-only medical certificate card and duplicate prescription
+  content. Retain retry recovery when completion handoff is unfinished.
+
 ## Anytime consultation access (RF36)
 
 - [ ] RF36: Allow assigned doctors to start paid confirmed consultations at any

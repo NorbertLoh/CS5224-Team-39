@@ -4,6 +4,7 @@ import { AppointmentDetails } from '@/features/appointments/AppointmentDetails'
 import { AppointmentJoinButton } from '@/features/appointments/AppointmentJoinButton'
 import { AppointmentPaymentAction } from '@/features/appointments/AppointmentPaymentAction'
 import type { AppointmentRole } from '@/features/appointments/types'
+import type { AppointmentPeriod } from '@/features/scheduling/api'
 import { DocumentList } from '@/features/documents/DocumentList'
 import {
   appointmentDetail,
@@ -19,12 +20,14 @@ export function LiveAppointmentDetails({
   token,
   subjectId,
   role,
+  period,
   onClose,
 }: {
   id: string
   token?: string
   subjectId: string
   role: AppointmentRole
+  period: AppointmentPeriod
   onClose: () => void
 }) {
   const cache = useQueryClient()
@@ -61,7 +64,7 @@ export function LiveAppointmentDetails({
       (role === 'patient' && appointment.patient_id === subjectId)) &&
     canCancel(appointment)
   return (
-    <div className="space-y-4">
+    <div className="mt-4 space-y-4">
       <AppointmentDetails appointment={appointment} onClose={onClose} />
       {role === 'patient' && appointment.patient_id === subjectId && (
         <AppointmentPaymentAction appointment={appointment} />
@@ -107,10 +110,13 @@ export function LiveAppointmentDetails({
           subjectId={subjectId}
         />
       )}
-      {((role === 'patient' && appointment.patient_id === subjectId) ||
+      {((role === 'patient' &&
+        period === 'past' &&
+        appointment.patient_id === subjectId) ||
         (role === 'doctor' && appointment.doctor_id === subjectId)) && (
         <DocumentList
           key={appointment.appointment_id}
+          variant="past"
           role={role as 'patient' | 'doctor'}
           appointmentId={appointment.appointment_id}
           tenantId={appointment.tenant_id}
