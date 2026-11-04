@@ -18,6 +18,8 @@ class Settings(ServiceSettings):
     signalling_secret: SecretStr | None = None
     upstream_timeout_seconds: float = Field(default=3, ge=0.1, le=30)
     admission_ttl_seconds: int = Field(default=60, ge=1, le=300)
+    active_lease_seconds: int = Field(default=60, ge=30, le=300)
+    call_max_seconds: int = Field(default=43200, ge=300, le=43200)
     turn_urls: list[str] = Field(default_factory=list)
     turn_secret: SecretStr | None = None
     relay_only: bool = False

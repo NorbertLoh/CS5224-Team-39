@@ -5,7 +5,7 @@ from telelink_common.errors import ErrorEnvelope
 
 from app.api.dependencies import DB, Identity, Signalling
 from app.integrations import ice
-from app.schemas import AdmissionPublic, AdmissionRequest, LeasePublic, LeaseRequest
+from app.schemas import AdmissionPublic, AdmissionRequest, LeasePublic, LeaseRequest, RenewalRequest
 from app.services import admissions
 from app.services.session_actions import act
 
@@ -52,6 +52,20 @@ def issue(body: AdmissionRequest, request: Request, identity: Identity, session:
     )
     session.commit()
     return {**result, **ice.configuration(state.settings, result)}
+
+
+@router.post("/admissions/renew", response_model=LeasePublic)
+def renew(body: RenewalRequest, request: Request, identity: Identity, session: DB):
+    result = admissions.renew(
+        session,
+        request.app.state.sources,
+        body.token,
+        body.peer_id,
+        identity,
+        request.state.request_id,
+    )
+    session.commit()
+    return result
 
 
 @router.post("/internal/admissions/consume", response_model=LeasePublic, tags=["internal"])

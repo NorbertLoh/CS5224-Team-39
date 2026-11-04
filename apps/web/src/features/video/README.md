@@ -35,10 +35,13 @@ fails if no TURN server exists. There is no public STUN/TURN credential default.
 Remote video includes audio, a local muted preview and a playback button if browser
 autoplay is blocked. Camera and microphone controls enable/disable outgoing tracks.
 
-Leave, Escape, route unmount, device loss, connection failure, signalling loss and
-lease expiry close the PeerJS/media connections and stop local/remote tracks.
-There is no automatic reconnect with consumed credentials. Rejoin acquires a new
-stream, peer ID, admission and TURN configuration. Cancellation prevents late
+Leave, Escape, route unmount and device loss close the PeerJS/media connections
+and stop local/remote tracks. RF30 renews the active lease through the authenticated
+admission API while keeping a healthy peer and media connection. Renewal denial
+stops the call. Transient failures retry within the existing lease deadline.
+RF29 recovers connection loss or expiry by obtaining fresh admission and rebuilding
+the call with the existing local tracks. Manual rejoin requests a new stream.
+Cancellation prevents late
 permission/admission/library responses from reopening a departed call. Admission
 and peer startup, plus media negotiation, each have bounded 15-second waits.
 

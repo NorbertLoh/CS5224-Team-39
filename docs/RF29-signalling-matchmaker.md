@@ -22,14 +22,18 @@ The browser requests a fresh grant, rebuilds its PeerJS connection and reuses it
 local media tracks. Transient failures retry with jittered delays up to 30 seconds
 between attempts and a 12-hour recovery limit. A browser can suspend a background
 tab, so recovery runs when it can execute again. Access denial, leaving, completion
-or closing the room stops recovery. The existing short admission and TURN lifetime
-still applies. On admission expiry the browser reconnects with fresh credentials,
-which can briefly interrupt media.
+or closing the room stops recovery. RF30 adds authenticated renewal of active
+leases while keeping the same peer and media connection. Join credentials remain
+single-use. Renewal requires current eligibility and the same room owner.
+The active deadline defaults to 60 seconds and the fixed call/TURN deadline to
+12 hours. Expiry without renewal uses fresh-admission recovery. See the
+[admission contract](../services/consultation/ADMISSION.md) for relay lifetime and
+configuration details.
 
 ## Deployment
 
 1. Run consultation's `alembic upgrade head` once using the schema owner. Migration
-   `0004` adds the registry, assignments and grant bindings. Deploy the matching
+   `0004` adds room assignments and `0005` adds active lease renewal. Deploy the matching
    consultation, signalling and frontend builds together. Earlier frontend builds
    use the singleton path and cannot connect to a matchmaker-enabled room.
 2. The managed Singapore profile enables matching on both services, scopes node

@@ -509,8 +509,13 @@ version. An expired owner lease lets the next admission select a replacement and
 rejects credentials for the old assignment. Browsers retry with fresh credentials
 and rebuild the call. Active sockets use ECS task protection during planned scale-in.
 The demo has one task, so recovery waits for replacement. Local Compose defaults
-to the singleton route. Both modes require consultation migration `0004` with the
-current build. [RF29 deployment and recovery](RF29-signalling-matchmaker.md)
+to the singleton route. Both modes require consultation migration `0005` with the
+current build. RF30 keeps a healthy connection open by renewing its active lease
+with the participant's current sign-in and eligibility checks. Join tokens remain
+single-use. Active leases default to 60 seconds and the per-admission call/TURN
+deadline defaults to 12 hours. Expiry, revoked eligibility and failed owners
+trigger disconnection or recovery.
+[RF29 deployment and recovery](RF29-signalling-matchmaker.md)
 
 PeerJS is the signalling client/server layer. **WebRTC carries media**. STUN helps
 discover usable network candidates; TURN relays media when a direct connection

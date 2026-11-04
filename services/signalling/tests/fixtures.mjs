@@ -3,7 +3,7 @@ import http from 'node:http';
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 
 export const SECRET = 'v03-test-only-signalling-secret-at-least-32-bytes';
-export function fixtures({ ttlMs = 15000 } = {}) {
+export function fixtures({ ttlMs = 15000, turnUrl = process.env.RF30_TEST_TURN_URL } = {}) {
   const state = { unavailable: false, revoked: false, releases: 0, checks: 0, consumes: 0 };
   const grants = new Map();
   const nodes = new Map();
@@ -17,6 +17,12 @@ export function fixtures({ ttlMs = 15000 } = {}) {
     const token = randomBytes(32).toString('base64url');
     const grant = { ...appointments.get(appointment), peer_id: randomUUID(),
       subject_id: subjects.get(subject), expires_at: new Date(Date.now() + ttlMs).toISOString(), ...assignment };
+    if (turnUrl) {
+      const username = `${Math.floor(Date.now() / 1000) + 3600}:${grant.peer_id}`;
+      grant.ice_servers = [{ urls: turnUrl, username,
+        credential: createHmac('sha1', 'rf30-test-only-relay-secret-at-least-32-bytes').update(username).digest('base64') }];
+      grant.relay_only = true;
+    }
     grants.set(token, { grant, consumed: false, released: false });
     return { ...grant, token };
   };
@@ -37,6 +43,15 @@ export function fixtures({ ttlMs = 15000 } = {}) {
         if ([...grants.values()].some((row) => row.grant.subject_id === subjects.get(subject)
           && row.consumed && !row.released && Date.now() < Date.parse(row.grant.expires_at))) return send(409);
         return send(201, issue(subject, appointment));
+      }
+      if (request.url === '/admissions/renew') {
+        const subject = request.headers.authorization?.replace('Bearer fixture-', '');
+        const row = grants.get(body.token);
+        if (!subjects.has(subject) || !row || row.grant.subject_id !== subjects.get(subject)
+          || row.grant.peer_id !== body.peer_id || !row.consumed || row.released
+          || state.revoked || Date.now() >= Date.parse(row.grant.expires_at)) return send(403);
+        row.grant.expires_at = new Date(Date.now() + ttlMs).toISOString();
+        return send(200, row.grant);
       }
       const token = request.headers.authorization?.replace('Bearer ', '') || '';
       const [header, payload, signature] = token.split('.');

@@ -62,8 +62,10 @@ export class Admissions {
 
   async check(grant) {
     const current = await this.call('check', grant.token, grant.peerId);
-    if (['subject', 'appointmentId', 'tenantId', 'sessionId', 'expiresAt', 'nodeId', 'assignmentVersion']
+    if (['subject', 'appointmentId', 'tenantId', 'sessionId', 'nodeId', 'assignmentVersion']
       .some((key) => current[key] !== grant[key])) throw new Error('Admission changed');
+    // Checks observe browser-authorized renewal. They never extend the DB lease.
+    grant.expiresAt = Math.max(grant.expiresAt, current.expiresAt);
   }
 
   async release(grant) {

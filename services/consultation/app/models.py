@@ -109,6 +109,18 @@ class Admission(Base):
             "released_at IS NULL OR (consumed_at IS NOT NULL AND released_at >= consumed_at)",
             name="ck_admissions_released",
         ),
+        CheckConstraint(
+            "call_expires_at IS NULL OR (isfinite(call_expires_at) "
+            "AND call_expires_at >= expires_at "
+            "AND call_expires_at <= issued_at + interval '12 hours')",
+            name="ck_admissions_call_expiry",
+        ),
+        CheckConstraint(
+            "active_expires_at IS NULL OR (consumed_at IS NOT NULL "
+            "AND isfinite(active_expires_at) AND active_expires_at > consumed_at "
+            "AND call_expires_at IS NOT NULL AND active_expires_at <= call_expires_at)",
+            name="ck_admissions_active_expiry",
+        ),
     )
 
     session_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
@@ -122,6 +134,8 @@ class Admission(Base):
     released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     node_id: Mapped[UUID | None] = mapped_column(Uuid)
     assignment_version: Mapped[int | None] = mapped_column(Integer)
+    active_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    call_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class SignallingNode(Base):
