@@ -51,7 +51,9 @@ or delivery sent. Labelled synthetic visit/note/catalogue examples remain local.
 
 Medication names remain unrestricted text. End consultation waits for valid
 autosaved drafts, issues the saved prescription and completes the consultation
-and MC decision. The fields are disabled while completion is pending. The
+and MC decision. The prescription editor has no standalone issuance action;
+the doctor issues the saved draft through **End consultation**. The fields are
+disabled while completion is pending. The
 completed view shows prescription details and offers a completion retry if an
 existing draft or MC decision still needs finalising. Once a prescription is issued,
 the clinic admin enters each medication's price within its Medicine & delivery

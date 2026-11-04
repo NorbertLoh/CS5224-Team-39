@@ -8,6 +8,13 @@
   Dependencies: RF12, U11 and R04 merged. Effort S. NorbertLoh; In progress;
   issue #341. Completion: standalone action/copy removed, completion behavior
   verified and frontend lint/typecheck/build pass.
+  Draft PR #342 removes the editor's issuance mutation/button and misleading copy;
+  draft autosave and the existing End consultation completion API remain in place.
+  Frontend lint/typecheck/build passed. Web rebuilt and healthy; Tailscale served
+  the updated editor without Issue prescription and retained End consultation.
+  Existing completion issuance/failure/retry code and regression cases reviewed;
+  no real prescription was issued or consultation ended during verification.
+  No new configuration or migration.
 
 ## Clinic registration pickup details (RF34)
 
