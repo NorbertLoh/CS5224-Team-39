@@ -6,6 +6,7 @@ All credentials are read from Secrets Manager at runtime.
 
 import json
 import os
+from contextlib import closing
 from urllib.parse import unquote, urlsplit
 
 import boto3
@@ -14,9 +15,13 @@ from psycopg import sql
 
 
 def main():
-    with boto3.client("secretsmanager", region_name="ap-southeast-1") as client:
+    with closing(
+        boto3.client("secretsmanager", region_name="ap-southeast-1")
+    ) as client:
         master = json.loads(
-            client.get_secret_value(SecretId=os.environ["DB_MASTER_SECRET_ARN"])["SecretString"]
+            client.get_secret_value(SecretId=os.environ["DB_MASTER_SECRET_ARN"])[
+                "SecretString"
+            ]
         )
         configs = {
             owner: json.loads(client.get_secret_value(SecretId=arn)["SecretString"])
@@ -41,11 +46,15 @@ def main():
                 or unquote(url.username or "") != owner
                 or not url.password
             ):
-                raise ValueError("Service database configuration does not match its owner")
+                raise ValueError(
+                    "Service database configuration does not match its owner"
+                )
             if not connection.execute(
                 "SELECT 1 FROM pg_roles WHERE rolname=%s", (owner,)
             ).fetchone():
-                connection.execute(sql.SQL("CREATE ROLE {} LOGIN").format(sql.Identifier(owner)))
+                connection.execute(
+                    sql.SQL("CREATE ROLE {} LOGIN").format(sql.Identifier(owner))
+                )
             connection.execute(
                 sql.SQL("ALTER ROLE {} PASSWORD {}").format(
                     sql.Identifier(owner), sql.Literal(unquote(url.password))
@@ -57,7 +66,9 @@ def main():
                 )
             )
             connection.execute(
-                sql.SQL("GRANT CONNECT ON DATABASE telelink TO {}").format(sql.Identifier(owner))
+                sql.SQL("GRANT CONNECT ON DATABASE telelink TO {}").format(
+                    sql.Identifier(owner)
+                )
             )
     print("Service roles and schemas configured; run each owning migration task next.")
 
@@ -65,5 +76,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as error:
+    # Database/SDK errors can contain fetched credentials: expose the type only.
+    except Exception as error:  # noqa: BLE001
         raise SystemExit(f"Database bootstrap failed: {type(error).__name__}") from None

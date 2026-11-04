@@ -3,7 +3,7 @@
 import json
 import logging
 import os
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 
 from sqlalchemy.pool import NullPool
 
@@ -26,7 +26,7 @@ def load_settings(settings_type):
     if secret_arn:
         import boto3
 
-        with boto3.client("secretsmanager") as client:
+        with closing(boto3.client("secretsmanager")) as client:
             values = json.loads(client.get_secret_value(SecretId=secret_arn)["SecretString"])
         if not isinstance(values, dict):
             raise ValueError("Service configuration secret must be a JSON object")

@@ -38,3 +38,8 @@ Actual apply/health outcomes and remaining acceptance gates are recorded in the
 PR. Operator account settings, secrets, plans/state and release metadata remain
 in ignored local files. W01 bootstrap state is backed up privately in the shared
 versioned state bucket; its root still uses local state as documented by W01.
+
+The first real bootstrap exposed that boto3 clients support `close()` but not a
+direct context manager. Bootstrap and Lambda secret loading use `contextlib.closing`;
+a real botocore client with a stubbed response covers the regression offline.
+Rebuild images containing the shared package before enabling Lambda functions.
