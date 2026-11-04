@@ -84,6 +84,7 @@ export function BookedConsultation({ role }: { role: 'patient' | 'doctor' }) {
           role={role}
           appointmentId={id}
           tenantId={appointment.data.tenant_id}
+          autoRefresh={role === 'doctor'}
         />
         <a className="underline" href={`/${role}`}>
           Back to appointments

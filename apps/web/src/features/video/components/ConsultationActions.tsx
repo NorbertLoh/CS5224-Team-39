@@ -69,7 +69,7 @@ export function ConsultationActions({
       {mutation.isSuccess && (
         <p role="status">
           {mutation.variables === 'complete'
-            ? 'Prescription, consultation completion and MC decision confirmed. Refresh Documents for PDF status.'
+            ? 'Prescription, consultation completion and MC decision confirmed. PDFs will appear in Documents as they are prepared.'
             : 'Consultation started.'}
         </p>
       )}
