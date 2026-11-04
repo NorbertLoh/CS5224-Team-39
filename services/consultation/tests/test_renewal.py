@@ -2,9 +2,12 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
+from alembic import command
+from alembic.config import Config
 from sqlalchemy.orm import Session
 
 from app.models import Admission
@@ -105,7 +108,7 @@ def test_renewal_respects_call_limit_and_scheduled_end(api):
     for _ in range(9):
         api.state["clock"] += timedelta(seconds=30)
         assert renew(api, grant).status_code == 200
-    deadline = datetime.fromisoformat(grant["call_expires_at"])
+    deadline = datetime.fromisoformat(grant["call_expires_at"].replace("Z", "+00:00"))
     observed = datetime.fromisoformat(
         internal(api, "check", grant).json()["expires_at"].replace("Z", "+00:00")
     )
@@ -130,6 +133,44 @@ def test_renewal_cannot_cross_scheduled_end(api):
     assert renew(api, grant).json()["expires_at"] == grant["expires_at"]
     api.state["clock"] += timedelta(seconds=10)
     assert renew(api, grant).status_code == 403
+
+
+def test_started_consultation_keeps_renewing_after_scheduled_end(api):
+    response = api.client.post(
+        f"/appointments/{api.appointment_id}/start", headers=api.headers(api.doctor)
+    )
+    assert response.status_code == 200
+    api.state["clock"] = datetime.fromisoformat(api.state["appointment"]["ends_at"]) - timedelta(
+        seconds=10
+    )
+    grant = issue(api).json()
+    assert internal(api, "consume", grant).status_code == 200
+    api.state["clock"] += timedelta(seconds=30)
+    response = renew(api, grant)
+    assert response.status_code == 200
+    assert internal(api, "check", grant).status_code == 200
+    assert internal(api, "consume", grant).status_code == 403
+
+
+def test_migration_preserves_legacy_deadlines_and_rollback_revokes_extended_grants(api):
+    grant = issue(api).json()
+    assert internal(api, "consume", grant).status_code == 200
+    config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    command.downgrade(config, "0004")
+    command.upgrade(config, "head")
+    with Session(api.database) as db:
+        lease = db.get(Admission, (UUID(grant["session_id"]), api.patient))
+        assert lease.active_expires_at == lease.call_expires_at == lease.expires_at
+    api.state["clock"] += timedelta(seconds=30)
+    assert renew(api, grant).json()["expires_at"] == grant["expires_at"]
+    assert internal(api, "release", grant).status_code == 204
+    extended = issue(api).json()
+    assert internal(api, "consume", extended).status_code == 200
+    api.state["clock"] += timedelta(seconds=30)
+    assert renew(api, extended).status_code == 200
+    command.downgrade(config, "0004")
+    command.upgrade(config, "head")
+    assert internal(api, "check", extended).status_code == 403
 
 
 def test_expired_owner_cannot_renew_even_before_active_deadline(api):
