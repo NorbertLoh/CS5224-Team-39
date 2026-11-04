@@ -13,9 +13,11 @@ const visitDate = new Intl.DateTimeFormat('en-SG', {
 export function PastDocumentRow({
   document,
   token,
+  historyFor,
 }: {
   document: DocumentMetadata
   token: string
+  historyFor?: string
 }) {
   const [open, setOpen] = useState(false)
   return (
@@ -40,7 +42,7 @@ export function PastDocumentRow({
       </summary>
       {open && (
         <div className="rounded-b-xl border-t border-slate-200 bg-white px-4">
-          <DocumentRow document={document} token={token} />
+          <DocumentRow document={document} token={token} historyFor={historyFor} />
         </div>
       )}
     </details>

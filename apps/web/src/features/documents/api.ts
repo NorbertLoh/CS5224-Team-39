@@ -18,10 +18,12 @@ export async function listDocuments(
   appointmentId?: string,
   cursor?: string | null,
   signal?: AbortSignal,
+  historyFor?: string,
 ): Promise<CursorPage<DocumentMetadata>> {
   const params = new URLSearchParams({ limit: '25' })
   if (appointmentId) params.set('appointment_id', appointmentId)
   if (cursor) params.set('cursor', cursor)
+  if (historyFor) params.set('history_for', historyFor)
   const page: CursorPage<DocumentMetadata> = await (
     await request(`${base}?${params}`, signal)
   ).json()
@@ -57,9 +59,13 @@ export function validateDownload(
 export async function documentDownloadUrl(
   documentId: string,
   signal?: AbortSignal,
+  historyFor?: string,
 ) {
+  const query = historyFor
+    ? `?${new URLSearchParams({ history_for: historyFor })}`
+    : ''
   const result = await (
-    await request(`${base}/${encodeURIComponent(documentId)}/download`, signal)
+    await request(`${base}/${encodeURIComponent(documentId)}/download${query}`, signal)
   ).json()
   return validateDownload(result)
 }

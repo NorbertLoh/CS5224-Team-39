@@ -1,5 +1,15 @@
 # TeleLink Health: shared implementation backlog
 
+## Previous visit PDFs in doctor Consult (RF46)
+
+- [ ] RF46: Show notes and expandable PDFs from earlier completed visits for
+  the same patient and clinic in the doctor records workspace. Require an active
+  clinic doctor assigned to the current visit and keep earlier visits read-only.
+  Make both history cards independently expandable and collapsed by default. Keep older visits
+  reachable and preserve the current visit's document list on
+  consultation completion. Dependencies RF12, RF37, RF41 and P03 merged.
+  Effort M. Issue #363 assigned to NorbertLoh and in progress.
+
 ## Clinic medicine workspaces (RF39)
 
 - [x] RF39: Split clinic Medicine Pricing and Medicine Delivery, with red

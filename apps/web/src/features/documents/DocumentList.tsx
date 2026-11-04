@@ -2,10 +2,12 @@ import { ErrorState } from '@/components/ErrorState'
 import { LoadingState } from '@/components/LoadingState'
 import { documentsError, listDocuments } from '@/features/documents/api'
 import { PastDocumentRow } from '@/features/documents/PastDocumentRow'
-import { FileText } from 'lucide-react'
+import { previousVisitDocuments } from '@/features/documents/previousVisitDocuments'
+import { ChevronDown, FileText } from 'lucide-react'
 import { DocumentRow } from '@/features/documents/DocumentRow'
 import { VisitDocumentList } from '@/features/documents/VisitDocumentList'
 import { useSchedulingIdentity } from '@/features/scheduling/useSchedulingIdentity'
+import type { Appointment } from '@/features/scheduling/api'
 import { hasRole } from '@/navigation/access'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useId } from 'react'
@@ -14,6 +16,7 @@ type Props = {
   role: 'patient' | 'doctor'
   appointmentId?: string
   tenantId?: string
+  previousVisitsFor?: Appointment
   headingLevel?: 1 | 2
   variant?: 'default' | 'past'
   autoRefresh?: boolean
@@ -38,7 +41,7 @@ export function DocumentList(props: Props) {
   const scope = JSON.stringify(identity.data)
   return (
     <DocumentResults
-      key={`${identity.token}:${scope}:${props.appointmentId ?? ''}:${props.tenantId ?? ''}`}
+      key={`${identity.token}:${scope}:${props.appointmentId ?? props.previousVisitsFor?.appointment_id ?? ''}:${props.tenantId ?? ''}`}
       {...props}
       token={identity.token}
       scope={scope}
@@ -50,6 +53,7 @@ export function DocumentResults({
   role,
   appointmentId,
   tenantId,
+  previousVisitsFor,
   token,
   scope,
   headingLevel = 2,
@@ -57,6 +61,9 @@ export function DocumentResults({
   autoRefresh = false,
 }: Props & { token: string; scope: string }) {
   const headingId = useId()
+  const collapsible = variant === 'past' && !!previousVisitsFor
+  const Container = collapsible ? 'details' : 'section'
+  const PastHeader = collapsible ? 'summary' : 'div'
   const groupByVisit = role === 'patient' && !appointmentId
   const standalone = groupByVisit && headingLevel === 1
   const Heading = headingLevel === 1 ? 'h1' : 'h2'
@@ -67,10 +74,15 @@ export function DocumentResults({
       scope,
       appointmentId ?? null,
       tenantId ?? null,
+      previousVisitsFor?.appointment_id ?? null,
+      previousVisitsFor?.patient_id ?? null,
+      previousVisitsFor?.starts_at ?? null,
     ],
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) =>
-      listDocuments(appointmentId, pageParam, signal),
+      previousVisitsFor
+        ? previousVisitDocuments(previousVisitsFor, pageParam, signal)
+        : listDocuments(appointmentId, pageParam, signal),
     getNextPageParam: (page) => page.next_cursor ?? undefined,
     retry: false,
     gcTime: 0,
@@ -85,25 +97,36 @@ export function DocumentResults({
       (tenantId && item.tenant_id !== tenantId),
   )
   return (
-    <section
+    <Container
       aria-labelledby={headingId}
       className={
-        variant === 'past'
-          ? 'space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
-          : standalone
-            ? 'space-y-6'
-            : 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
+        collapsible
+          ? 'group/history rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm open:space-y-3'
+          : variant === 'past'
+            ? 'space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
+            : standalone
+              ? 'space-y-6'
+              : 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
       }
     >
       {variant === 'past' ? (
-        <div className="flex items-center gap-3">
+        <PastHeader
+          className={`flex items-center gap-3 ${collapsible ? 'cursor-pointer list-none rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden' : ''}`}
+        >
           <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
             <FileText aria-hidden="true" size={18} />
           </span>
           <h3 id={headingId} className="font-semibold">
             Past documents
           </h3>
-        </div>
+          {collapsible && (
+            <ChevronDown
+              aria-hidden="true"
+              size={20}
+              className="ml-auto shrink-0 text-slate-500 transition-transform group-open/history:rotate-180"
+            />
+          )}
+        </PastHeader>
       ) : (
         <div
           className={`flex flex-wrap justify-between gap-3 ${standalone ? 'items-start' : 'items-center'}`}
@@ -144,7 +167,11 @@ export function DocumentResults({
       ) : query.isError ? (
         <ErrorState
           message={documentsError(query.error)}
-          onRetry={() => void query.refetch()}
+          onRetry={() =>
+            void (query.isFetchNextPageError
+              ? query.fetchNextPage()
+              : query.refetch())
+          }
         />
       ) : (
         <>
@@ -163,6 +190,7 @@ export function DocumentResults({
                     key={item.document_id}
                     document={item}
                     token={token}
+                    historyFor={previousVisitsFor?.appointment_id}
                   />
                 ))}
               </div>
@@ -186,11 +214,13 @@ export function DocumentResults({
             >
               {query.isFetchingNextPage
                 ? 'Loading more...'
-                : 'Load more documents'}
+                : previousVisitsFor
+                  ? 'Load documents from older visits'
+                  : 'Load more documents'}
             </button>
           )}
         </>
       )}
-    </section>
+    </Container>
   )
 }

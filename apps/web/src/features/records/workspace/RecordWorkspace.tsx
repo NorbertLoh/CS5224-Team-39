@@ -106,17 +106,19 @@ export function RecordWorkspace({
           setRevision((value) => value + 1)
         }}
       />
-      <PreviousVisitNotes
-        key={appointmentId}
-        appointment={context}
-        token={token}
-      />
-      <DocumentList
-        variant="past"
-        role="doctor"
-        appointmentId={appointmentId}
-        tenantId={context.tenant_id}
-      />
+      <div className="space-y-3">
+        <PreviousVisitNotes
+          key={appointmentId}
+          appointment={context}
+          token={token}
+        />
+        <DocumentList
+          variant="past"
+          role="doctor"
+          tenantId={context.tenant_id}
+          previousVisitsFor={context}
+        />
+      </div>
     </div>
   )
 }

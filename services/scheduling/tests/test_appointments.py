@@ -176,6 +176,42 @@ def test_revocation_immediately_removes_staff_access(appointment_api):
     assert client.get(path(stored), headers=user("patient")).status_code == 200
 
 
+def test_history_requires_assigned_doctor_and_matches_clinic_and_patient(appointment_api):
+    api = appointment_api
+    client, user, _, other_clinic, ids, _, memberships, *_ = api
+    now = datetime.now(timezone.utc)
+    anchor = record(api, status="in_progress", start=now)
+    previous = record(
+        api, status="completed", doctor=ids["other_doctor"], start=now - timedelta(days=1)
+    )
+    older = record(api, status="completed", start=now - timedelta(days=2))
+    excluded = [
+        anchor,
+        record(api, status="completed", start=now + timedelta(days=1)),
+        record(api, status="confirmed", start=now - timedelta(days=3)),
+        record(
+            api, status="completed", patient=ids["other_patient"], start=now - timedelta(days=4)
+        ),
+        record(api, status="completed", tenant=other_clinic, start=now - timedelta(days=5)),
+    ]
+    headers = user("doctor")
+    params = {"history_for": str(anchor.appointment_id)}
+    assert client.get(path(previous), headers=headers).status_code == 404
+    assert client.get(path(previous), headers=headers, params=params).status_code == 200
+    page = client.get("/appointments", headers=headers, params=params | {"limit": 1}).json()
+    assert [item["appointment_id"] for item in page["items"]] == [str(previous.appointment_id)]
+    page = client.get(
+        "/appointments", headers=headers, params=params | {"cursor": page["next_cursor"]}
+    ).json()
+    assert [item["appointment_id"] for item in page["items"]] == [str(older.appointment_id)]
+    for appointment in excluded:
+        assert client.get(path(appointment), headers=headers, params=params).status_code == 404
+    for caller in ("patient", "admin", "other_doctor"):
+        assert client.get("/appointments", headers=user(caller), params=params).status_code == 404
+    memberships["doctor"][0]["status"] = "revoked"
+    assert client.get(path(previous), headers=headers, params=params).status_code == 404
+
+
 def test_staff_collection_rejects_unrelated_selected_tenant(appointment_api):
     api = appointment_api
     record(api)

@@ -63,8 +63,18 @@ def upcoming_appointments(current_status):
     )
 
 
-def filtered_appointments(identity, tenant_id, status, filters, view_role=None):
-    predicate = appointment_scope(identity)
+def history_scope(anchor):
+    return and_(
+        Appointment.tenant_id == anchor.tenant_id,
+        Appointment.patient_id == anchor.patient_id,
+        Appointment.appointment_id != anchor.appointment_id,
+        Appointment.status == "completed",
+        Appointment.starts_at < anchor.starts_at,
+    )
+
+
+def filtered_appointments(identity, tenant_id, status, filters, view_role=None, anchor=None):
+    predicate = history_scope(anchor) if anchor is not None else appointment_scope(identity)
     require_collection_tenant(identity, tenant_id)
     current_status = effective_status()
     query = select(Appointment, current_status).where(predicate)
@@ -145,6 +155,17 @@ def visible_appointment(session, appointment_id, identity, *, cancel=False):
     return appointment
 
 
+def history_anchor(session, appointment_id, identity):
+    anchor = visible_appointment(session, appointment_id, identity)
+    if (
+        anchor.doctor_id != identity.subject_id
+        or anchor.status not in {"confirmed", "in_progress", "completed"}
+        or not any(has_tenant_role(m, anchor.tenant_id, "doctor") for m in identity.memberships)
+    ):
+        raise DomainError(404, "not_found", "Resource not found.")
+    return anchor
+
+
 @router.get("/appointments", response_model=AppointmentPage)
 def list_appointments(
     request: Request,
@@ -159,7 +180,12 @@ def list_appointments(
     period: Literal["upcoming", "past"] | None = None,
     q: Annotated[str, Query(max_length=200)] = "",
     view_role: Literal["patient", "doctor", "clinic_admin"] | None = None,
+    history_for: UUID | None = None,
 ):
+    anchor = None
+    if history_for is not None:
+        anchor = history_anchor(session, history_for, identity)
+        period = "past"
     start, end = date_filter(from_at), date_filter(to_at)
     if start is not None and end is not None and start >= end:
         raise DomainError(422, "validation_error", "from must precede to.")
@@ -179,8 +205,12 @@ def list_appointments(
         scope.append({"q": filters.q})
     if view_role is not None:
         scope.append({"view_role": view_role})
+    if anchor is not None:
+        scope.append({"history_for": str(history_for)})
     position = decode_appointment_cursor(settings, scope, cursor) if cursor is not None else None
-    query, current_status = filtered_appointments(identity, tenant_id, status, filters, view_role)
+    query, current_status = filtered_appointments(
+        identity, tenant_id, status, filters, view_role, anchor
+    )
     if period is not None:
         upcoming = upcoming_appointments(current_status)
         query = query.where(upcoming if period == "upcoming" else ~upcoming)
@@ -209,7 +239,19 @@ def list_appointments(
 
 
 @router.get("/appointments/{appointment_id}", response_model=AppointmentPublic)
-def appointment_detail(appointment_id: UUID, identity: Identity, session: DB):
+def appointment_detail(
+    appointment_id: UUID, identity: Identity, session: DB, history_for: UUID | None = None
+):
+    if history_for is not None:
+        anchor = history_anchor(session, history_for, identity)
+        previous = session.scalar(
+            select(Appointment).where(
+                Appointment.appointment_id == appointment_id, history_scope(anchor)
+            )
+        )
+        if previous is None:
+            raise DomainError(404, "not_found", "Resource not found.")
+        return appointment_public(previous)
     appointment = visible_appointment(session, appointment_id, identity)
     now = server_now(session)
     status = (

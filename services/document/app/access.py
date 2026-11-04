@@ -19,7 +19,7 @@ def not_found():
     raise DomainError(404, "not_found", "Resource not found.")
 
 
-def authorize(identity, appointment, row=None):
+def authorize(identity, appointment, row=None, *, history=False):
     own = "patient" in identity.global_roles and identity.subject_id == appointment.patient_id
     membership = next(
         (m for m in identity.memberships if m.tenant_id == appointment.tenant_id), None
@@ -27,7 +27,10 @@ def authorize(identity, appointment, row=None):
     doctor = identity.subject_id == appointment.doctor_id and has_tenant_role(
         membership, appointment.tenant_id, "doctor"
     )
-    if not (own or doctor):
+    # Scheduling checks the history relationship before returning the appointment.
+    if not (
+        own or doctor or (history and has_tenant_role(membership, appointment.tenant_id, "doctor"))
+    ):
         not_found()
     if row is not None:
         fields = ["tenant_id", "appointment_id", "patient_id"]
@@ -50,12 +53,13 @@ class AppointmentClient:
     def close(self):
         self.client.close()
 
-    def appointment(self, appointment_id, token, request_id):
+    def appointment(self, appointment_id, token, request_id, *, history_for=None):
         if not self.base:
             raise DomainError(503, "unavailable", "Scheduling is not configured.")
         try:
             response = self.client.get(
                 f"{self.base}/appointments/{appointment_id}",
+                params={"history_for": str(history_for)} if history_for is not None else None,
                 headers={"Authorization": "Bearer " + token, "X-Request-ID": request_id},
             )
         except httpx.RequestError:
