@@ -103,6 +103,8 @@ def api(database):
         assert request.headers["authorization"] == "Bearer synthetic-token"
         assert request.headers["x-request-id"]
         if request.url.host == "scheduling":
+            if "history_for" in request.url.params:
+                assert request.url.params["history_for"] == state["history_for"]
             data = state["appointment"].model_dump(mode="json")
             # Extra generated appointments in the pagination test share trusted context.
             data["appointment_id"] = request.url.path.rsplit("/", 1)[1]
@@ -155,6 +157,30 @@ def body(medication):
 
 def note_url(appointment):
     return PREFIX + f"/appointments/{appointment.appointment_id}/note"
+
+
+def test_same_clinic_history_reads_audited_note_after_scheduling_authorizes(api):
+    client, state, _, appointment, _, database, _ = api
+    url = note_url(appointment)
+    assert client.put(url, json={"text": "Earlier clinical note"}).status_code == 201
+    state["appointment"] = appointment.model_copy(update={"status": "completed"})
+    state["user"] = "other_doctor"
+    state["history_for"] = str(uuid4())
+    params = {"history_for": state["history_for"]}
+    assert client.get(url).status_code == 404
+    response = client.get(url, params=params)
+    assert response.status_code == 200
+    assert response.json()["text"] == "Earlier clinical note"
+    with Session(database) as session:
+        assert (
+            session.scalar(
+                select(ReadAudit).where(ReadAudit.appointment_id == appointment.appointment_id)
+            )
+            is not None
+        )
+    assert client.put(url, json={"text": "Blocked"}, params=params).status_code == 404
+    state["scheduling_status"] = 404
+    assert client.get(url, params=params).status_code == 404
 
 
 def create(api):

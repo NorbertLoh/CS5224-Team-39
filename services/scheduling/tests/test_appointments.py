@@ -176,6 +176,42 @@ def test_revocation_immediately_removes_staff_access(appointment_api):
     assert client.get(path(stored), headers=user("patient")).status_code == 200
 
 
+def test_history_requires_assigned_doctor_and_matches_clinic_and_patient(appointment_api):
+    api = appointment_api
+    client, user, _, other_clinic, ids, _, memberships, *_ = api
+    now = datetime.now(timezone.utc)
+    anchor = record(api, status="in_progress", start=now)
+    previous = record(
+        api, status="completed", doctor=ids["other_doctor"], start=now - timedelta(days=1)
+    )
+    older = record(api, status="completed", start=now - timedelta(days=2))
+    excluded = [
+        anchor,
+        record(api, status="completed", start=now + timedelta(days=1)),
+        record(api, status="confirmed", start=now - timedelta(days=3)),
+        record(
+            api, status="completed", patient=ids["other_patient"], start=now - timedelta(days=4)
+        ),
+        record(api, status="completed", tenant=other_clinic, start=now - timedelta(days=5)),
+    ]
+    headers = user("doctor")
+    params = {"history_for": str(anchor.appointment_id)}
+    assert client.get(path(previous), headers=headers).status_code == 404
+    assert client.get(path(previous), headers=headers, params=params).status_code == 200
+    page = client.get("/appointments", headers=headers, params=params | {"limit": 1}).json()
+    assert [item["appointment_id"] for item in page["items"]] == [str(previous.appointment_id)]
+    page = client.get(
+        "/appointments", headers=headers, params=params | {"cursor": page["next_cursor"]}
+    ).json()
+    assert [item["appointment_id"] for item in page["items"]] == [str(older.appointment_id)]
+    for appointment in excluded:
+        assert client.get(path(appointment), headers=headers, params=params).status_code == 404
+    for caller in ("patient", "admin", "other_doctor"):
+        assert client.get("/appointments", headers=user(caller), params=params).status_code == 404
+    memberships["doctor"][0]["status"] = "revoked"
+    assert client.get(path(previous), headers=headers, params=params).status_code == 404
+
+
 def test_staff_collection_rejects_unrelated_selected_tenant(appointment_api):
     api = appointment_api
     record(api)
@@ -411,13 +447,14 @@ def test_service_start_complete_and_operator_no_show(appointment_api):
     assert client.post("/internal" + path(past, "/complete"), headers=service()).status_code == 409
 
 
-def test_local_early_start_and_complete_service_routes(appointment_api):
+@pytest.mark.parametrize("days", [-2, 2])
+def test_anytime_start_and_complete_service_routes(appointment_api, days):
     api = appointment_api
-    active = record(api, status="confirmed", start=datetime.now(timezone.utc) + timedelta(hours=2))
+    active = record(
+        api, status="confirmed", start=datetime.now(timezone.utc) + timedelta(days=days)
+    )
     client = api[0]
     route = "/internal" + path(active)
-    assert client.post(route + "/start", headers=service()).status_code == 409
-    client.app.state.settings.test_join_early_minutes = 180
     assert client.post(route + "/start", headers=service()).json()["status"] == "in_progress"
     assert client.post(route + "/complete", headers=service()).json()["status"] == "completed"
 
@@ -460,13 +497,10 @@ def test_service_token_validation(appointment_api, changes):
     )
 
 
-def test_internal_windows_at_exact_boundaries(appointment_api, monkeypatch):
+def test_no_show_boundaries_remain_while_start_is_anytime(appointment_api, monkeypatch):
     api = appointment_api
     stored = record(api, status="confirmed")
     client, route = api[0], "/internal" + path(stored)
-    for now in (stored.starts_at - timedelta(microseconds=1), stored.ends_at):
-        monkeypatch.setattr(appointments, "server_now", lambda _, now=now: now)
-        assert client.post(route + "/start", headers=service()).status_code == 409
     monkeypatch.setattr(
         appointments, "server_now", lambda _: stored.ends_at - timedelta(microseconds=1)
     )

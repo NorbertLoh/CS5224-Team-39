@@ -19,7 +19,6 @@ import { PrescriptionEditor } from '@/features/records/prescriptions/Prescriptio
 import { ReloadRecordsButton } from '@/features/records/workspace/ReloadRecordsButton'
 import { appointmentDetail } from '@/features/scheduling/api'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, FileText } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export function RecordWorkspace({
@@ -107,38 +106,19 @@ export function RecordWorkspace({
           setRevision((value) => value + 1)
         }}
       />
-      <PreviousVisitNotes
-        key={appointmentId}
-        appointment={context}
-        token={token}
-      />
-      <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-5 focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
-          <span className="flex items-center gap-3">
-            <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
-              <FileText aria-hidden="true" size={18} />
-            </span>
-            <span>
-              <span className="block font-semibold">Visit documents</span>
-              <span className="mt-1 block text-xs text-slate-600">
-                View or download PDFs for this visit.
-              </span>
-            </span>
-          </span>
-          <ChevronDown
-            aria-hidden="true"
-            size={20}
-            className="shrink-0 text-slate-500 transition-transform group-open:rotate-180"
-          />
-        </summary>
-        <div className="border-t border-slate-200 [&>section]:m-0 [&>section]:rounded-none [&>section]:border-0">
-          <DocumentList
-            role="doctor"
-            appointmentId={appointmentId}
-            tenantId={context.tenant_id}
-          />
-        </div>
-      </details>
+      <div className="space-y-3">
+        <PreviousVisitNotes
+          key={appointmentId}
+          appointment={context}
+          token={token}
+        />
+        <DocumentList
+          variant="past"
+          role="doctor"
+          tenantId={context.tenant_id}
+          previousVisitsFor={context}
+        />
+      </div>
     </div>
   )
 }

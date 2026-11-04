@@ -84,13 +84,14 @@ class RecordsUpstream:
         except (ValueError, TypeError, ValidationError):
             raise DomainError(502, "upstream_error", "Invalid upstream response.") from None
 
-    def appointment(self, appointment_id, token, request_id):
+    def appointment(self, appointment_id, token, request_id, *, history_for=None):
         row = self.get(
             self.settings.scheduling_url,
             f"/appointments/{appointment_id}",
             token,
             request_id,
             Appointment,
+            {"history_for": str(history_for)} if history_for is not None else None,
         )
         if row.appointment_id != appointment_id:
             raise DomainError(502, "upstream_error", "Invalid upstream response.")

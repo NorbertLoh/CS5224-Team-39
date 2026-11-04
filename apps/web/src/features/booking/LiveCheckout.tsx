@@ -90,12 +90,26 @@ export function LiveCheckout({
         Your time is reserved until the server deadline. Continue to payment to
         open secure checkout or check its latest status.
       </p>
-      <a
-        className="inline-block rounded border px-4 py-3"
-        href={`/patient/checkout?appointment_id=${current.appointment_id}`}
-      >
-        Continue to payment
-      </a>
+      <div className="flex flex-wrap gap-3">
+        <a
+          className="primary-action inline-block rounded px-4 py-3"
+          href={`/patient/checkout?appointment_id=${current.appointment_id}`}
+        >
+          Continue to payment
+        </a>
+        <button
+          type="button"
+          disabled={release.isPending || (active && detail.isError)}
+          onClick={() => (active ? release.mutate() : onBack())}
+          className="rounded border px-4 py-3"
+        >
+          {release.isPending
+            ? 'Releasing hold...'
+            : active
+              ? 'Release booking and change time'
+              : 'Back to available times'}
+        </button>
+      </div>
       {detail.isError && (
         <ErrorState
           message={schedulingError(detail.error)}
@@ -105,18 +119,6 @@ export function LiveCheckout({
       {release.isError && (
         <ErrorState message={schedulingError(release.error)} />
       )}
-      <button
-        type="button"
-        disabled={release.isPending || (active && detail.isError)}
-        onClick={() => (active ? release.mutate() : onBack())}
-        className="rounded border px-4 py-3"
-      >
-        {release.isPending
-          ? 'Releasing hold...'
-          : active
-            ? 'Release booking and change time'
-            : 'Back to available times'}
-      </button>
     </section>
   )
 }

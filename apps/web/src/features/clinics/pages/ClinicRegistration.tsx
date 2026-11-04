@@ -1,3 +1,7 @@
+import {
+  PickupLocationFields,
+  emptyPickupLocation,
+} from '@/features/clinics/components/PickupLocationFields'
 import type { ProfileDraft } from '@/features/clinic-profile/profile'
 import {
   profileUpdate,
@@ -18,6 +22,7 @@ export function ClinicRegistration() {
     logoUrl: '',
     fee: '',
   })
+  const [location, setLocation] = useState(emptyPickupLocation)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -41,7 +46,7 @@ export function ClinicRegistration() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slug, ...profileUpdate(draft) }),
+          body: JSON.stringify({ slug, ...profileUpdate(draft), location }),
         },
         true,
       )
@@ -53,7 +58,9 @@ export function ClinicRegistration() {
       setMessage(
         error instanceof ApiError && error.status === 409
           ? 'This clinic address is already registered. Choose another address, or open your existing clinic from Manage clinic.'
-          : 'Could not register the clinic. Your details are still here. Retry with the same details to resume the application.',
+          : error instanceof ApiError && error.status === 422
+            ? 'Check the pickup contact name, Singapore phone number, address, postal code and coordinates.'
+            : 'Could not register the clinic. Your details are still here. Retry with the same details to resume the application.',
       )
       setBusy(false)
     }
@@ -131,6 +138,11 @@ export function ClinicRegistration() {
               }
             />
           </label>
+          <section className="space-y-4">
+            <h2 className="text-xl font-semibold">Medicine pickup details</h2>
+            <p className="text-sm text-slate-600">Provide the clinic contact and pickup location for medicine deliveries. You can update these later in Clinic Settings.</p>
+            <PickupLocationFields location={location} setLocation={setLocation} />
+          </section>
           <p role="status" aria-live="polite" className="text-sm">
             {message}
           </p>

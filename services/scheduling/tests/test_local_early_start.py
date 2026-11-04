@@ -3,26 +3,21 @@ from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
-from telelink_common.errors import DomainError
 
 from app.services.transitions import consultation_action
 from app.settings import Settings
 
 
-def test_early_start_requires_opt_in_and_supports_completion():
-    now = datetime.now(timezone.utc)
+@pytest.mark.parametrize("offset", [-86400, -1, 0, 1800, 86400])
+def test_start_and_completion_ignore_slot_times(offset):
+    start = datetime.now(timezone.utc)
     booking = SimpleNamespace(
-        status="confirmed",
-        starts_at=now + timedelta(hours=2),
-        ends_at=now + timedelta(hours=2, minutes=30),
+        status="confirmed", starts_at=start, ends_at=start + timedelta(minutes=30)
     )
-    with pytest.raises(DomainError):
-        consultation_action(booking, "start", now)
-    with pytest.raises(DomainError):
-        consultation_action(booking, "start", now - timedelta(hours=2), early_minutes=180)
-    consultation_action(booking, "start", now, early_minutes=180)
+    now = start + timedelta(seconds=offset)
+    consultation_action(booking, "start", now)
     assert booking.status == "in_progress"
-    consultation_action(booking, "complete", now, early_minutes=180)
+    consultation_action(booking, "complete", now)
     assert booking.status == "completed"
 
 

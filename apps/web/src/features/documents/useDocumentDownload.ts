@@ -2,7 +2,7 @@ import { documentDownloadUrl, documentsError } from '@/features/documents/api'
 import type { DocumentMetadata } from '@/features/documents/types'
 import { useEffect, useRef, useState } from 'react'
 
-export function useDocumentDownload(item: DocumentMetadata) {
+export function useDocumentDownload(item: DocumentMetadata, historyFor?: string) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [requested, setRequested] = useState(false)
@@ -17,7 +17,7 @@ export function useDocumentDownload(item: DocumentMetadata) {
     setError(null)
     setRequested(false)
     try {
-      const url = await documentDownloadUrl(item.document_id, pending.signal)
+      const url = await documentDownloadUrl(item.document_id, pending.signal, historyFor)
       if (pending.signal.aborted) return
       const link = window.document.createElement('a')
       link.href = url

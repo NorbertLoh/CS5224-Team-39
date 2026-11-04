@@ -12,9 +12,9 @@ export function OrderMedicationPricing({
   return (
     <section
       className="space-y-4 rounded-xl border bg-white p-5"
-      aria-label="Medication pricing"
+      aria-label="Order price breakdown"
     >
-      <h3 className="font-semibold">1. Medication pricing</h3>
+      <h3 className="font-semibold">Order price breakdown</h3>
       <MedicationCorrectionEditor
         tenantId={order.tenant_id}
         prescriptionId={order.prescription_id}

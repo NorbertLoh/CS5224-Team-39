@@ -127,4 +127,31 @@
   html {
     @apply font-sans;
     }
+
+  :where(button, input[type='button'], input[type='submit'], input[type='reset'], [role='button'], [role='tab'], summary, a[data-slot='button'], a.primary-action) {
+    cursor: pointer;
+
+    &:where(:disabled, [aria-disabled='true'], [data-disabled]) {
+      cursor: not-allowed;
+    }
+
+    @media (hover: hover) {
+      &:hover:not(:disabled, [aria-disabled='true'], [data-disabled], [role='tab']) {
+        --button-hover-tint: color-mix(in srgb, currentColor 8%, transparent);
+        background-image: linear-gradient(var(--button-hover-tint), var(--button-hover-tint));
+      }
+    }
+  }
+}
+
+@layer components {
+  .primary-action {
+    @apply bg-teal-700 font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:opacity-50;
+
+    @media (hover: hover) {
+      &:hover:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+        @apply bg-teal-800;
+      }
+    }
+  }
 }

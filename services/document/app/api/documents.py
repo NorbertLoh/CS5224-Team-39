@@ -18,11 +18,15 @@ router = APIRouter(
 )
 
 
-def context(request, identity, appointment_id, row=None):
+def context(request, identity, appointment_id, row=None, *, history_for=None):
+    options = {"history_for": history_for} if history_for is not None else {}
     appointment = request.app.state.appointments.appointment(
-        appointment_id, request.headers["authorization"].split(" ", 1)[1], request.state.request_id
+        appointment_id,
+        request.headers["authorization"].split(" ", 1)[1],
+        request.state.request_id,
+        **options,
     )
-    authorize(identity, appointment, row)
+    authorize(identity, appointment, row, history=history_for is not None)
     return appointment
 
 
@@ -62,15 +66,24 @@ def list_documents(
     appointment_id: UUID | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     cursor: Annotated[str | None, Query(max_length=4096)] = None,
+    history_for: UUID | None = None,
 ):
     settings = request.app.state.settings
     key(settings)
     scope = scope_for(identity, appointment_id)
+    if history_for is not None:
+        if appointment_id is None:
+            not_found()
+        scope.append({"history_for": str(history_for)})
     position = decode(settings, scope, cursor) if cursor else None
-    query = select(Document).where(document_scope(identity))
+    query = select(Document)
+    if history_for is None:
+        query = query.where(document_scope(identity))
     appointments = {}
     if appointment_id is not None:
-        appointments[appointment_id] = context(request, identity, appointment_id)
+        appointments[appointment_id] = context(
+            request, identity, appointment_id, history_for=history_for
+        )
         query = query.where(Document.appointment_id == appointment_id)
     if position:
         query = query.where(tuple_(Document.created_at, Document.document_id) < tuple_(*position))
@@ -80,7 +93,7 @@ def list_documents(
     for row in rows:
         if row.appointment_id not in appointments:
             appointments[row.appointment_id] = context(request, identity, row.appointment_id)
-        authorize(identity, appointments[row.appointment_id], row)
+        authorize(identity, appointments[row.appointment_id], row, history=history_for is not None)
     result = DocumentPage(
         items=[DocumentPublic.model_validate(row) for row in rows[:limit]],
         next_cursor=encode(settings, scope, rows[limit - 1]) if len(rows) > limit else None,
@@ -93,13 +106,20 @@ def list_documents(
 
 
 @router.get("/{document_id}/download", response_model=DownloadPublic)
-def download_document(document_id: UUID, request: Request, identity: Identity, session: DB):
-    row = session.scalar(
-        select(Document).where(Document.document_id == document_id, document_scope(identity))
-    )
+def download_document(
+    document_id: UUID,
+    request: Request,
+    identity: Identity,
+    session: DB,
+    history_for: UUID | None = None,
+):
+    query = select(Document).where(Document.document_id == document_id)
+    if history_for is None:
+        query = query.where(document_scope(identity))
+    row = session.scalar(query)
     if row is None:
         not_found()
-    context(request, identity, row.appointment_id, row)
+    context(request, identity, row.appointment_id, row, history_for=history_for)
     downloads = request.app.state.downloads
     downloads.prepare(row)
     audit(session, request, identity, "download", row)

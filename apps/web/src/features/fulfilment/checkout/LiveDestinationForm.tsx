@@ -264,7 +264,7 @@ function DestinationForm({
           Otherwise, these details are used only for this order. Later profile
           changes will not change the confirmed order.
         </p>
-        <button className="rounded-lg border px-4 py-2" type="submit">
+        <button className="primary-action rounded-lg px-4 py-2" type="submit">
           {quote.isPending
             ? 'Confirming details and calculating total...'
             : 'Confirm details & calculate total'}

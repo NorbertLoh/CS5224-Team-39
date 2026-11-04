@@ -2,7 +2,6 @@ import {
   appointmentPrescriptions,
   readMedicalCertificate,
 } from '@/features/records/api'
-import { PrescriptionDetails } from '@/features/records/prescriptions/PrescriptionDetails'
 import type { Appointment } from '@/features/scheduling/api'
 import { ConsultationActions } from '@/features/video/components/ConsultationActions'
 import { useQuery } from '@tanstack/react-query'
@@ -32,29 +31,16 @@ export function CompletionHandoff({
   const finished =
     completion.data?.mc?.finalized_at &&
     !prescriptions.some((prescription) => prescription.status === 'draft')
+  if (finished) return null
   return (
     <>
-      {finished ? (
-        <p role="status">
-          Prescription, consultation completion and MC decision confirmed.
-        </p>
-      ) : (
-        <>
-          <p role="alert">
-            {completion.isError
-              ? 'Could not check the saved prescription and MC decision.'
-              : 'The saved prescription or MC decision still needs finalising.'}{' '}
-            Retry completion to finish the saved records.
-          </p>
-          <ConsultationActions appointment={appointment} />
-        </>
-      )}
-      {prescriptions.map((prescription) => (
-        <PrescriptionDetails
-          key={prescription.prescription_id}
-          prescription={prescription}
-        />
-      ))}
+      <p role="alert">
+        {completion.isError
+          ? 'Could not check the saved prescription and MC decision.'
+          : 'The saved prescription or MC decision still needs finalising.'}{' '}
+        Retry completion to finish the saved records.
+      </p>
+      <ConsultationActions appointment={appointment} />
     </>
   )
 }

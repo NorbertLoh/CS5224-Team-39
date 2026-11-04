@@ -127,7 +127,7 @@ export function LiveMedicationCheckout({
       )}
       {canPay(snapshot, now) && (
         <button
-          className="rounded-lg bg-slate-900 px-4 py-3 text-white disabled:opacity-50"
+          className="primary-action rounded-lg px-4 py-3"
           disabled={editing || checkout.isPending}
           onClick={() => checkout.mutate()}
         >

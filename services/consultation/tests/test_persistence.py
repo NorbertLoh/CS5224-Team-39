@@ -95,10 +95,12 @@ def test_roundtrip_idempotency_and_conflicting_context(database):
 
 
 @pytest.mark.parametrize("offset", [-600, -1, 1800, 1801])
-def test_start_rejects_outside_scheduled_interval(database, offset):
+def test_start_accepts_outside_scheduled_interval(database, offset):
     session_id, fields = create(database)
-    with pytest.raises(DomainError):
-        act(database, session_id, fields, "start", START + timedelta(seconds=offset))
+    instant = START + timedelta(seconds=offset)
+    assert act(database, session_id, fields, "start", instant) == ("in_progress", instant, None)
+    with Session(database) as db, db.begin():
+        db.delete(db.get(ConsultationSession, session_id))
 
 
 def test_lifecycle_retries_rejoin_and_terminal_state(database):
@@ -256,14 +258,15 @@ def test_unique_appointment_is_global_and_participants_distinct(database):
         {"status": "in_progress", "started_at": END},
     ],
 )
-def test_database_start_window_cannot_be_bypassed(database, values):
+def test_database_allows_actual_start_outside_slot(database, values):
     session_id, _ = create(database)
-    with pytest.raises(IntegrityError), Session(database) as db, db.begin():
+    with Session(database) as db, db.begin():
         db.execute(
             update(ConsultationSession)
             .where(ConsultationSession.session_id == session_id)
             .values(**values)
         )
+        db.delete(db.get(ConsultationSession, session_id))
 
 
 def test_database_end_cannot_precede_start(database):
@@ -275,6 +278,19 @@ def test_database_end_cannot_precede_start(database):
             .where(ConsultationSession.session_id == session_id)
             .values(status="completed", ended_at=START - timedelta(microseconds=1))
         )
+
+
+def test_anytime_start_blocks_unsafe_downgrade_and_preserves_timestamps(database):
+    session_id, fields = create(database)
+    instant = START - timedelta(days=2)
+    act(database, session_id, fields, "start", instant)
+    config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    with pytest.raises(RuntimeError, match="preserve history"):
+        command.downgrade(config, "0005")
+    with Session(database) as db, db.begin():
+        assert db.get(ConsultationSession, session_id).started_at == instant
+        assert db.scalar(text("SELECT version_num FROM consultation.alembic_version")) == "0006"
+        db.delete(db.get(ConsultationSession, session_id))
 
 
 def test_start_at_last_instant_and_end_after_scheduled_end(database):
