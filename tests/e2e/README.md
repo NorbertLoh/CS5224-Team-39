@@ -1,5 +1,10 @@
 # Cross-service checks
 
+- [Portable deployment browser suite](browser/README.md) (I05 preparation): public
+  URL smoke checks for four roles, synthetic booking/release, headed Stripe test
+  payment handoff, and read-only checks of retained paid/document/delivery evidence.
+  Local results do not establish AWS acceptance or a complete automated journey.
+
 - `replay_q03_billing.py` / `replay_q03_fulfilment.py`: replay retained genuine
   payment events and historical delivery work, with controlled post-commit
   acknowledgment failure through disposable local SQS/DLQ queues. These probes
