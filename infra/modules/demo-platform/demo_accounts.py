@@ -12,6 +12,7 @@ import psycopg
 from reportlab.pdfgen import canvas
 
 ROLES = ("patient", "doctor", "clinic_admin", "platform_admin")
+DEMO_PASSWORD = "LocalDemo123!"
 
 
 def demo_id(key):
@@ -31,7 +32,7 @@ def logins(client, pool):
             "accounts": {
                 role: {
                     "email": f"{role.replace('_', '-')}-{secrets.token_hex(8)}@example.test",
-                    "password": "Da9!" + secrets.token_urlsafe(30),
+                    "password": DEMO_PASSWORD,
                 }
                 for role in ROLES
             },
@@ -41,10 +42,10 @@ def logins(client, pool):
         )
     if data["pool"] != pool:
         raise ValueError("Login secret belongs to a different Cognito pool")
-    return data["accounts"]
+    return data
 
 
-def ensure_user(client, pool, role, login):
+def ensure_user(client, pool, role, login, password_changed):
     name = "Demo " + role.replace("_", " ").title()
     email = login["email"]
     if not email.endswith("@example.test"):
@@ -73,12 +74,12 @@ def ensure_user(client, pool, role, login):
         "true",
     ) or not user["Enabled"]:
         raise ValueError("Refusing to adopt a non-seeded or disabled user")
-    if user["UserStatus"] == "FORCE_CHANGE_PASSWORD":
+    if user["UserStatus"] not in ("CONFIRMED", "FORCE_CHANGE_PASSWORD"):
+        raise ValueError("Unexpected demo account status")
+    if password_changed or user["UserStatus"] == "FORCE_CHANGE_PASSWORD":
         client.admin_set_user_password(
             UserPoolId=pool, Username=email, Password=login["password"], Permanent=True
         )
-    elif user["UserStatus"] != "CONFIRMED":
-        raise ValueError("Unexpected demo account status")
     return attrs["sub"], name
 
 
@@ -98,10 +99,16 @@ def seed():
         identity.execute("SELECT 1 FROM identity.doctor_applications LIMIT 1")
         with connect(read_secret(secrets_client, "TENANT_SECRET")) as tenant:
             tenant.execute("SELECT membership_provisioned FROM tenant.clinics LIMIT 1")
-            accounts = logins(secrets_client, pool)
+            login_data = logins(secrets_client, pool)
+            accounts = login_data["accounts"]
             subjects = {}
+            updated_password = False
             for role in ROLES:
-                sub, name = ensure_user(cognito, pool, role, accounts[role])
+                login = accounts[role]
+                password_changed = login["password"] != DEMO_PASSWORD
+                login["password"] = DEMO_PASSWORD
+                sub, name = ensure_user(cognito, pool, role, login, password_changed)
+                updated_password |= password_changed
                 roles = [role] if role in ("patient", "platform_admin") else []
                 subjects[role] = identity.execute(
                     """INSERT INTO identity.subjects
@@ -113,6 +120,10 @@ def seed():
                 ).fetchone() or identity.execute(
                     "SELECT subject_id FROM identity.subjects WHERE cognito_sub = %s", (sub,)
                 ).fetchone()
+            if updated_password:
+                secrets_client.put_secret_value(
+                    SecretId=os.environ["LOGIN_SECRET"], SecretString=json.dumps(login_data)
+                )
 
             clinic = demo_id("clinic")
             tenant.execute(
