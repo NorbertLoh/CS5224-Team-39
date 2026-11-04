@@ -1,5 +1,13 @@
 # TeleLink Health: shared implementation backlog
 
+## Renewable active video leases (RF30)
+
+- [ ] RF30: Separate single-use join expiry from a renewable active-call lease.
+  Preserve authorization, payment, completion and assigned-node checks on renewal.
+  Keep healthy sockets/media connected and bound TURN credentials to the call
+  deadline. Verify expiry, revocation, concurrency and browser recovery.
+  Dependencies RF29 and V01-V04 merged. Effort L. NorbertLoh, #330 In progress.
+
 ## Architecture reference (27 October 2026)
 
 | Done | ID | Deliverable | Dependencies | Effort | Claim |
