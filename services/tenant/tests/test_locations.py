@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from telelink_common.service_auth import service_token
 
 from app.models import AuditEvent
-from tests.test_api import activate, body
+from tests.test_api import PICKUP_LOCATION, activate, body
 from tests.test_api import api as api
 from tests.test_api import api_database as api_database
 
@@ -29,7 +29,7 @@ def clinic(api):
 def test_save_read_audit_and_tenant_role_boundaries(api):
     tenant = clinic(api)
     path = f"/clinics/{tenant}/location"
-    assert api.client.get(path, headers=api.user()).json()["location"] is None
+    assert api.client.get(path, headers=api.user()).json()["location"] == PICKUP_LOCATION
     for actor in ("other", "doctor", "platform"):
         assert api.client.put(path, json=LOCATION, headers=api.user(actor)).status_code == 404
         assert api.client.get(path, headers=api.user(actor)).status_code == 404
@@ -49,10 +49,11 @@ def test_save_read_audit_and_tenant_role_boundaries(api):
             )
             .order_by(AuditEvent.occurred_at)
         ).all()
-        assert len(events) == 2
+        assert len(events) == 3
         assert events[0].previous_values == {"location": None}
-        assert events[1].previous_values == {"location": LOCATION}
-        assert events[1].new_values == {"location": changed}
+        assert events[1].previous_values == {"location": PICKUP_LOCATION}
+        assert events[2].previous_values == {"location": LOCATION}
+        assert events[2].new_values == {"location": changed}
         assert events[1].actor_subject_id == api.ids["creator"]
     api.memberships["creator"][0]["status"] = "revoked"
     assert api.client.put(path, json=LOCATION, headers=api.user()).status_code == 404
@@ -119,6 +120,6 @@ def test_pickup_contact_normalized_audited_and_preserved_for_older_clients(api):
     assert second.json()["location"]["pickup_contact"] == normalized
     with Session(api.engine) as db:
         events = db.scalars(select(AuditEvent).where(AuditEvent.tenant_id == UUID(tenant))).all()
-        assert len(events) == 1
-        assert events[0].new_values["location"]["pickup_contact"] == normalized
+        assert len(events) == 2
+        assert any(event.new_values["location"]["pickup_contact"] == normalized for event in events)
     assert api.client.get(path, headers=api.user("other")).status_code == 404

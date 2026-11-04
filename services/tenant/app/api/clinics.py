@@ -13,7 +13,7 @@ from app.api.dependencies import DB, Identity
 from app.api.dependencies import ClinicAdmin as Admin
 from app.auth import require_booking_service, require_identity_service
 from app.integrations.identity import provision_creator
-from app.models import Clinic
+from app.models import AuditEvent, Clinic, ClinicLocation
 from app.pagination import cursor_key, decode_cursor, encode_cursor
 from app.schemas import (
     ClinicAdmin,
@@ -44,6 +44,25 @@ def create_clinic(
         clinic = Clinic(slug=body.slug, creator_subject_id=identity.subject_id, **fields)
         session.add(clinic)
         try:
+            session.flush()
+            location = body.location.model_dump(mode="json")
+            session.add(
+                ClinicLocation(
+                    tenant_id=clinic.tenant_id,
+                    location=location,
+                    updated_by=identity.subject_id,
+                )
+            )
+            session.add(
+                AuditEvent(
+                    tenant_id=clinic.tenant_id,
+                    actor_subject_id=identity.subject_id,
+                    action="clinic.location_changed",
+                    previous_values={"location": None},
+                    new_values={"location": location},
+                    reason=None,
+                )
+            )
             # Durable reservation before the HTTP call; a lost response is safe to retry.
             session.commit()
         except IntegrityError as error:
@@ -59,6 +78,11 @@ def create_clinic(
     ):
         raise DomainError(409, "slug_taken", "Clinic slug is already taken.")
     if not clinic.membership_provisioned:
+        saved_location = session.get(ClinicLocation, clinic.tenant_id)
+        if saved_location is not None and saved_location.location != body.location.model_dump(
+            mode="json"
+        ):
+            raise DomainError(409, "slug_taken", "Clinic slug is already taken.")
         provision_creator(
             request.app.state.identity_client.client,
             request.app.state.settings,
