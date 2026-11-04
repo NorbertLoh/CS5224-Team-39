@@ -3,11 +3,12 @@ import { LoadingState } from '@/components/LoadingState'
 import { Button } from '@/components/ui/button'
 import type { Prescription, Prices } from '@/features/fulfilment/api/pricing'
 import { pricePath, request } from '@/features/fulfilment/api/pricing'
+import { prescriptionPrices } from '@/features/fulfilment/pricing/clinicMedicineQueries'
 import { MedicationCorrectionEditor } from '@/features/fulfilment/pricing/MedicationCorrectionEditor'
 import { decimal, minorUnits } from '@/features/fulfilment/pricing/money'
 import { appointmentDetail } from '@/features/scheduling/api'
 import { ApiError } from '@/lib/api'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
@@ -20,24 +21,13 @@ export function PrescriptionPriceCard({
   tenantId: string
   token: string
 }) {
-  const query = useQuery({
-    queryKey: [
-      'prescription-prices',
-      token,
-      tenantId,
-      prescription.prescription_id,
-    ],
-    queryFn: async ({ signal }) =>
-      (
-        await request(pricePath(tenantId, prescription.prescription_id), {
-          signal,
-        })
-      ).json() as Promise<Prices>,
-    retry: false,
-    gcTime: 0,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  })
+  const priceQuery = prescriptionPrices(
+    tenantId,
+    token,
+    prescription.prescription_id,
+  )
+  const query = useQuery(priceQuery)
+  const cache = useQueryClient()
   const appointment = useQuery({
     queryKey: ['pricing-patient', token, prescription.appointment_id],
     queryFn: ({ signal }) =>
@@ -81,12 +71,13 @@ export function PrescriptionPriceCard({
           tenantId={tenantId}
           prescriptionId={prescription.prescription_id}
           token={token}
+          disabled={query.data?.locked !== false}
         />
         <section
           className="space-y-4 rounded-xl border p-4"
           aria-label="Medication pricing"
         >
-          <h3 className="font-semibold">1. Medication pricing</h3>
+          <h3 className="font-semibold">Medication pricing</h3>
           {query.isPending ? (
             <LoadingState message="Loading prescription prices..." />
           ) : query.isError ? (
@@ -99,20 +90,12 @@ export function PrescriptionPriceCard({
               prescription={prescription}
               tenantId={tenantId}
               initial={query.data}
+              onSaved={async (prices) => {
+                await cache.cancelQueries({ queryKey: priceQuery.queryKey })
+                cache.setQueryData(priceQuery.queryKey, prices)
+              }}
             />
           )}
-        </section>
-        <section
-          className="space-y-3 rounded-xl border p-4"
-          aria-label="Medicine preparation"
-        >
-          <h3 className="font-semibold">2. Medicine preparation</h3>
-          <p className="text-sm text-slate-600">
-            {query.data?.locked
-              ? 'This prescription already has an order. Load more orders to open its preparation controls.'
-              : 'Save the medication prices first. Preparation becomes available here once the patient opens a medicine order.'}
-          </p>
-          <Button disabled>Mark medicine ready</Button>
         </section>
       </div>
     </details>
@@ -122,17 +105,18 @@ export function PrescriptionPriceCard({
 function PriceEditor({
   prescription,
   tenantId,
-  initial,
+  initial: saved,
+  onSaved,
 }: {
   prescription: Prescription
   tenantId: string
   initial: Prices
+  onSaved: (prices: Prices) => Promise<void>
 }) {
-  const [saved, setSaved] = useState(initial)
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       prescription.items.map((line) => {
-        const price = initial.items.find(
+        const price = saved.items.find(
           (item) => item.prescription_item_id === line.prescription_item_id,
         )?.unit_price.amount_minor
         return [
@@ -173,7 +157,7 @@ function PriceEditor({
           }),
         })
       ).json() as Promise<Prices>,
-    onSuccess: setSaved,
+    onSuccess: onSaved,
     retry: false,
     gcTime: 0,
   })

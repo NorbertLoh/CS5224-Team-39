@@ -1,5 +1,6 @@
 import type { Identity } from '@/auth/identity'
 import { useClinicNames } from '@/features/clinics/hooks/useClinicNames'
+import { useClinicMedicineAttention } from '@/features/fulfilment/pricing/clinicMedicineQueries'
 import type { Route } from '@/navigation/access'
 import { clinicIds } from '@/navigation/access'
 import { WorkspaceNavigation } from '@/navigation/WorkspaceNavigation'
@@ -10,7 +11,8 @@ const sections = [
   { kind: 'staff', label: 'Staff' },
   { kind: 'appointments', label: 'Appointments' },
   { kind: 'payments', label: 'Payments' },
-  { kind: 'orders', label: 'Medicine & delivery' },
+  { kind: 'medicine-pricing', label: 'Medicine Pricing' },
+  { kind: 'orders', label: 'Medicine Delivery' },
   { kind: 'settings', label: 'Settings' },
 ]
 
@@ -24,6 +26,7 @@ export function ClinicAdminNavigation({
   const tenantId = 'tenantId' in route ? route.tenantId : undefined
   const clinics = clinicIds(identity, 'clinic_admin')
   const hasMembership = Boolean(tenantId && clinics.includes(tenantId))
+  const attention = useClinicMedicineAttention(hasMembership ? tenantId ?? '' : '')
   // Platform administrators can view selected management pages without membership.
   const visibleClinics = tenantId && !hasMembership ? [tenantId] : clinics
   const clinicName = useClinicNames(visibleClinics, true)
@@ -35,12 +38,18 @@ export function ClinicAdminNavigation({
         .filter(
           (page) =>
             hasMembership ||
-            !['appointments', 'orders', 'settings'].includes(page.kind),
+            !['appointments', 'medicine-pricing', 'orders', 'settings'].includes(page.kind),
         )
         .map((page) => ({
           href: `/clinic-admin/clinics/${tenantId}/${page.kind}`,
           label: page.label,
           active: active === page.kind,
+          attention:
+            page.kind === 'medicine-pricing'
+              ? attention.pricing
+              : page.kind === 'orders'
+                ? attention.delivery
+                : undefined,
         }))
     : [
         {

@@ -6,7 +6,7 @@ import {
 } from '@/features/fulfilment/api'
 import { ownsOrder } from '@/features/fulfilment/domain/orders'
 import type { OrderContext } from '@/features/fulfilment/domain/model'
-import { ClinicMedicineCards } from '@/features/fulfilment/orders/ClinicMedicineCards'
+import { ClinicDeliveryOrders } from '@/features/fulfilment/orders/ClinicDeliveryOrders'
 import { CreateMedicationOrder } from '@/features/fulfilment/orders/CreateMedicationOrder'
 import { OrderDetailsPanel } from '@/features/fulfilment/orders/OrderDetailsPanel'
 import { PatientOrderAccordion } from '@/features/fulfilment/orders/PatientOrderAccordion'
@@ -28,7 +28,7 @@ export function OrderWorkspace({
   const prescriptionId = params.get('prescription_id')
   const [selectedId, setSelectedId] = useState<string | null>(() =>
     !patient
-      ? null
+      ? supplied
       : (supplied ??
         (patient && !prescriptionId
           ? sessionStorage.getItem(
@@ -140,7 +140,7 @@ export function OrderWorkspace({
             <h1 id="orders-page-heading" className="text-3xl font-semibold">
               {patient
                 ? 'Medication orders and delivery'
-                : 'Medicine and delivery'}
+                : 'Medicine Delivery'}
             </h1>
             {patient ? (
               <p className="mt-1 max-w-2xl text-sm text-slate-600">
@@ -150,8 +150,7 @@ export function OrderWorkspace({
               </p>
             ) : (
               <p className="mt-1 text-sm text-slate-600">
-                Price the medicines, then mark preparation ready within each
-                card.
+                Prepare medicine orders and track their delivery.
               </p>
             )}
           </div>
@@ -204,9 +203,7 @@ export function OrderWorkspace({
             {selectedId &&
               !combinedRows.some((order) => order.order_id === selectedId) &&
               orderDetails}
-            <ClinicMedicineCards
-              tenantId={context.role === 'clinic_admin' ? context.tenantId : ''}
-              token={token}
+            <ClinicDeliveryOrders
               orders={combinedRows}
               selectedId={selectedId}
               onSelect={setSelectedId}
