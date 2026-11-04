@@ -98,14 +98,15 @@ export function DocumentResults({
   )
   return (
     <Container
-      open={collapsible ? true : undefined}
       aria-labelledby={headingId}
       className={
-        variant === 'past'
-          ? 'group/history space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
-          : standalone
-            ? 'space-y-6'
-            : 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
+        collapsible
+          ? 'group/history rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm open:space-y-3'
+          : variant === 'past'
+            ? 'space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
+            : standalone
+              ? 'space-y-6'
+              : 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
       }
     >
       {variant === 'past' ? (

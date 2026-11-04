@@ -89,7 +89,7 @@ The visit was not ended. Frontend lint, TypeScript and production build passed.
 
 Past documents uses the same icon and heading styling as Previous visit notes,
 and shows PDFs from earlier completed visits for the same patient and clinic.
-In the doctor workspace, both history cards start expanded and can be collapsed
+In the doctor workspace, both history cards start collapsed and can be expanded
 independently from their headings. Individual rows also expand independently.
 The completed consultation screen shows PDFs for that visit.
 The card has no subtitle, refresh button or empty message. Its body is blank when

@@ -32,10 +32,7 @@ export function PreviousVisitNotes({
   })
   const visits = history.data?.pages.flatMap((page) => page.items) ?? []
   return (
-    <details
-      open
-      className="group/history space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-    >
+    <details className="group/history rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm open:space-y-3">
       <summary className="flex cursor-pointer list-none items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
         <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
           <History aria-hidden="true" size={18} />
