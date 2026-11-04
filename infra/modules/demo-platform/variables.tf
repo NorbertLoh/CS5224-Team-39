@@ -66,9 +66,9 @@ variable "enable_turn" {
   default     = true
 }
 variable "redis_mode" {
-  description = "A localhost Redis sidecar costs no extra task and only mirrors durable holds. managed provisions one TLS ElastiCache node."
+  description = "managed provisions one shared TLS ElastiCache node. sidecar is an explicit single-task cost-saving alternative; PostgreSQL owns durable holds."
   type        = string
-  default     = "sidecar"
+  default     = "managed"
   validation {
     condition     = contains(["sidecar", "managed"], var.redis_mode)
     error_message = "Choose sidecar or managed."
