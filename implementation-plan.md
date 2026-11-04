@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## Clinic registration pickup details (RF34)
+
+- [ ] RF34: Require all Clinic Settings pickup fields during clinic registration:
+  contact name, Singapore phone, address, postal code and Singapore coordinates.
+  Share fields/validation, save audited settings with the clinic reservation and
+  preserve safe retries and later Settings edits. Dependencies: A08/A11 and RF12
+  merged. Effort M. NorbertLoh; In progress; issue #339. Completion: required-field,
+  validation, persistence/retry checks and frontend lint/typecheck/build pass.
+
 ## Production release preparation (RF31)
 
 - [ ] RF31: Prepare all AMD64 API/worker/migration and signalling images, AMD64
