@@ -32,16 +32,21 @@ export function PreviousVisitNotes({
   })
   const visits = history.data?.pages.flatMap((page) => page.items) ?? []
   return (
-    <section
-      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-      aria-label="Previous visit notes"
+    <details
+      open
+      className="group/history space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
     >
-      <div className="flex items-center gap-3">
+      <summary className="flex cursor-pointer list-none items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
         <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
           <History aria-hidden="true" size={18} />
         </span>
         <h3 className="font-semibold">Previous visit notes</h3>
-      </div>
+        <ChevronDown
+          aria-hidden="true"
+          size={20}
+          className="ml-auto shrink-0 text-slate-500 transition-transform group-open/history:rotate-180"
+        />
+      </summary>
       <p className="text-sm text-slate-600">
         Earlier completed visits for this patient at this clinic,
         newest first. Open a visit to read its saved note.
@@ -86,7 +91,7 @@ export function PreviousVisitNotes({
           )}
         </>
       )}
-    </section>
+    </details>
   )
 }
 

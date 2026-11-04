@@ -3,7 +3,7 @@ import { LoadingState } from '@/components/LoadingState'
 import { documentsError, listDocuments } from '@/features/documents/api'
 import { PastDocumentRow } from '@/features/documents/PastDocumentRow'
 import { previousVisitDocuments } from '@/features/documents/previousVisitDocuments'
-import { FileText } from 'lucide-react'
+import { ChevronDown, FileText } from 'lucide-react'
 import { DocumentRow } from '@/features/documents/DocumentRow'
 import { VisitDocumentList } from '@/features/documents/VisitDocumentList'
 import { useSchedulingIdentity } from '@/features/scheduling/useSchedulingIdentity'
@@ -41,7 +41,7 @@ export function DocumentList(props: Props) {
   const scope = JSON.stringify(identity.data)
   return (
     <DocumentResults
-      key={`${identity.token}:${scope}:${props.appointmentId ?? ''}:${props.tenantId ?? ''}`}
+      key={`${identity.token}:${scope}:${props.appointmentId ?? props.previousVisitsFor?.appointment_id ?? ''}:${props.tenantId ?? ''}`}
       {...props}
       token={identity.token}
       scope={scope}
@@ -61,6 +61,9 @@ export function DocumentResults({
   autoRefresh = false,
 }: Props & { token: string; scope: string }) {
   const headingId = useId()
+  const collapsible = variant === 'past' && !!previousVisitsFor
+  const Container = collapsible ? 'details' : 'section'
+  const PastHeader = collapsible ? 'summary' : 'div'
   const groupByVisit = role === 'patient' && !appointmentId
   const standalone = groupByVisit && headingLevel === 1
   const Heading = headingLevel === 1 ? 'h1' : 'h2'
@@ -94,25 +97,35 @@ export function DocumentResults({
       (tenantId && item.tenant_id !== tenantId),
   )
   return (
-    <section
+    <Container
+      open={collapsible ? true : undefined}
       aria-labelledby={headingId}
       className={
         variant === 'past'
-          ? 'space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
+          ? 'group/history space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
           : standalone
             ? 'space-y-6'
             : 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
       }
     >
       {variant === 'past' ? (
-        <div className="flex items-center gap-3">
+        <PastHeader
+          className={`flex items-center gap-3 ${collapsible ? 'cursor-pointer list-none rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden' : ''}`}
+        >
           <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
             <FileText aria-hidden="true" size={18} />
           </span>
           <h3 id={headingId} className="font-semibold">
             Past documents
           </h3>
-        </div>
+          {collapsible && (
+            <ChevronDown
+              aria-hidden="true"
+              size={20}
+              className="ml-auto shrink-0 text-slate-500 transition-transform group-open/history:rotate-180"
+            />
+          )}
+        </PastHeader>
       ) : (
         <div
           className={`flex flex-wrap justify-between gap-3 ${standalone ? 'items-start' : 'items-center'}`}
@@ -207,6 +220,6 @@ export function DocumentResults({
           )}
         </>
       )}
-    </section>
+    </Container>
   )
 }
