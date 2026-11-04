@@ -46,6 +46,12 @@
   Completed-page MC removal and retained documents/recovery verified from the
   running Tailscale-served application source; no clinical records were changed.
 
+## Doctor Upcoming documents (RF40)
+
+- [ ] RF40: Hide Past documents in doctor Upcoming appointment details and retain
+  it in Past details. Dependency RF37 merged. Effort S. NorbertLoh; In progress;
+  issue #351. Verify both doctor appointment periods and frontend checks.
+
 ## Anytime consultation access (RF36)
 
 - [x] RF36: Allow assigned doctors to start paid confirmed consultations at any

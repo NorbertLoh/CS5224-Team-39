@@ -14,8 +14,8 @@ See [setup, boundaries and verification](../../../../../docs/scheduling-frontend
 and `AppointmentCell` display each booking once with its full date/time range.
 `LiveAppointmentDetails` fetches detail
 and handles eligible cancellations; `AppointmentDetails` renders server metadata.
-Patient Upcoming details omit the Documents section and its document query.
-Patient Past details retain documents; visibility follows the selected tab.
+Patient and doctor Upcoming details omit the Past documents card and its query.
+Their Past details retain the card.
 The Past documents card has an empty body when no documents exist. Available
 documents use expandable dated rows matching Previous visit notes, with no
 subtitle, manual refresh button or empty placeholder.

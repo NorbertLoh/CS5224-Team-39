@@ -110,18 +110,17 @@ export function LiveAppointmentDetails({
           subjectId={subjectId}
         />
       )}
-      {((role === 'patient' &&
-        period === 'past' &&
-        appointment.patient_id === subjectId) ||
-        (role === 'doctor' && appointment.doctor_id === subjectId)) && (
-        <DocumentList
-          key={appointment.appointment_id}
-          variant="past"
-          role={role as 'patient' | 'doctor'}
-          appointmentId={appointment.appointment_id}
-          tenantId={appointment.tenant_id}
-        />
-      )}
+      {period === 'past' &&
+        ((role === 'patient' && appointment.patient_id === subjectId) ||
+          (role === 'doctor' && appointment.doctor_id === subjectId)) && (
+          <DocumentList
+            key={appointment.appointment_id}
+            variant="past"
+            role={role}
+            appointmentId={appointment.appointment_id}
+            tenantId={appointment.tenant_id}
+          />
+        )}
     </div>
   )
 }
