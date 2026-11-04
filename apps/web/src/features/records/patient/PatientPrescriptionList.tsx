@@ -54,7 +54,11 @@ export function PatientPrescriptionList({
   })
   return (
     <section
-      className="mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6"
+      className={
+        headingLevel === 1
+          ? 'space-y-6'
+          : 'mt-6 space-y-4 rounded-xl border bg-white p-5 sm:p-6'
+      }
       aria-labelledby="prescription-heading"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
