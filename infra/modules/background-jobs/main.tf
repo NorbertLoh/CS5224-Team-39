@@ -60,6 +60,14 @@ resource "aws_iam_role_policy" "worker" {
       }
       ] : [], each.key == "notification-dispatch" ? [{
         Effect = "Allow", Action = ["ses:SendEmail", "ses:SendRawEmail"], Resource = var.ses_identity_arn
+        }] : [], each.key == "notification-dispatch" && length(var.ses_recipient_identity_arns) > 0 ? [{
+        # SES also authorizes verified recipient identities in this sandbox account.
+        Effect   = "Allow"
+        Action   = ["ses:SendEmail", "ses:SendRawEmail"]
+        Resource = sort(tolist(var.ses_recipient_identity_arns))
+        Condition = {
+          StringEquals = { "ses:FromAddress" = split("identity/", var.ses_identity_arn)[1] }
+        }
         }] : [], length(each.value.kms_key_arns) > 0 ? [{
         Effect = "Allow", Action = ["kms:Decrypt"], Resource = each.value.kms_key_arns
     }] : [])

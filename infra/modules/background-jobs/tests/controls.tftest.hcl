@@ -96,3 +96,43 @@ run "reject_missing_redrive" {
   }
   expect_failures = [aws_lambda_event_source_mapping.consumer["document"]]
 }
+
+run "demo_recipient_sender_restriction" {
+  command = apply
+  variables {
+    ses_identity_arn            = "arn:aws:ses:ap-southeast-1:123456789012:identity/sender@example.test"
+    ses_recipient_identity_arns = ["arn:aws:ses:ap-southeast-1:123456789012:identity/patient@example.test"]
+  }
+  assert {
+    condition = anytrue([for statement in jsondecode(aws_iam_role_policy.worker["notification-dispatch"].policy).Statement :
+      try(statement.Resource == ["arn:aws:ses:ap-southeast-1:123456789012:identity/patient@example.test"] &&
+        statement.Condition.StringEquals["ses:FromAddress"] == "sender@example.test" &&
+      toset(statement.Action) == toset(["ses:SendEmail", "ses:SendRawEmail"]), false)
+    ])
+    error_message = "Recipient identity permissions must allow both email APIs only with the configured sender."
+  }
+  assert {
+    condition = alltrue([for name in ["document", "notification-intake"] :
+      !strcontains(aws_iam_role_policy.worker[name].policy, "ses:Send")
+    ])
+    error_message = "Only notification dispatch may send email."
+  }
+}
+
+run "reject_recipient_wildcards" {
+  command = plan
+  variables {
+    ses_identity_arn            = "arn:aws:ses:ap-southeast-1:123456789012:identity/sender@example.test"
+    ses_recipient_identity_arns = ["arn:aws:ses:ap-southeast-1:123456789012:identity/*"]
+  }
+  expect_failures = [var.ses_recipient_identity_arns]
+}
+
+run "reject_foreign_recipient_identity" {
+  command = plan
+  variables {
+    ses_identity_arn            = "arn:aws:ses:ap-southeast-1:123456789012:identity/sender@example.test"
+    ses_recipient_identity_arns = ["arn:aws:ses:us-east-1:999999999999:identity/patient@example.test"]
+  }
+  expect_failures = [var.ses_recipient_identity_arns]
+}

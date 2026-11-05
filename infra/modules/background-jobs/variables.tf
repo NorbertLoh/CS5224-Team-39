@@ -71,6 +71,21 @@ variable "ses_identity_arn" {
   description = "Verified SES sender identity ARN in the worker region."
   type        = string
 }
+variable "ses_recipient_identity_arns" {
+  description = "Explicit verified demo recipient identities. Additional sends remain restricted to the sender mailbox identity."
+  type        = set(string)
+  default     = []
+  validation {
+    condition = length(var.ses_recipient_identity_arns) == 0 || (
+      can(regex("identity/[^/@]+@[^/]+$", var.ses_identity_arn)) &&
+      alltrue([for arn in var.ses_recipient_identity_arns :
+        startswith(arn, "${split("identity/", var.ses_identity_arn)[0]}identity/") &&
+        can(regex("^arn:[^:]+:ses:[^:]+:[0-9]{12}:identity/[^*?/]+$", arn))
+      ])
+    )
+    error_message = "Use explicit recipient identities in the sender's account/region, without wildcards, and a mailbox sender identity."
+  }
+}
 variable "alarm_action_arns" {
   description = "Existing SNS topic ARNs with confirmed subscriptions. Empty disables notifications, not alarms."
   type        = list(string)

@@ -1,6 +1,8 @@
 # Copy to terraform.tfvars (gitignored) and fill in real values.
 aws_account_id = "123456789012"
 ses_sender     = "operator@example.org"
+# Verify each recipient in SES before adding its exact regional identity ARN.
+ses_recipient_identity_arns = ["arn:aws:ses:ap-southeast-1:123456789012:identity/patient@example.org"]
 budget_email   = "operator@example.org"
 # Foundation first, followed by real ECR digests, service secrets and migrations.
 images           = {}

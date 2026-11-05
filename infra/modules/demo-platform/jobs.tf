@@ -1,14 +1,15 @@
 module "jobs" {
-  count               = var.enable_workloads ? 1 : 0
-  source              = "../background-jobs"
-  name_prefix         = var.name_prefix
-  environment         = local.environment
-  log_retention_days  = local.log_retention
-  subnet_ids          = local.workload_subnets
-  security_group_ids  = [aws_security_group.workloads.id]
-  document_bucket_arn = aws_s3_bucket.storage["documents"].arn
-  ses_identity_arn    = aws_ses_email_identity.sender.arn
-  alarm_action_arns   = [aws_sns_topic.operations.arn]
+  count                       = var.enable_workloads ? 1 : 0
+  source                      = "../background-jobs"
+  name_prefix                 = var.name_prefix
+  environment                 = local.environment
+  log_retention_days          = local.log_retention
+  subnet_ids                  = local.workload_subnets
+  security_group_ids          = [aws_security_group.workloads.id]
+  document_bucket_arn         = aws_s3_bucket.storage["documents"].arn
+  ses_identity_arn            = aws_ses_email_identity.sender.arn
+  ses_recipient_identity_arns = var.ses_recipient_identity_arns
+  alarm_action_arns           = [aws_sns_topic.operations.arn]
   workers = {
     document = {
       image_uri   = var.images["document-lambda"], config_secret_arn = aws_secretsmanager_secret.config["document"].arn,

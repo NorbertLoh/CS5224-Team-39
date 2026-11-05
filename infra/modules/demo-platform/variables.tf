@@ -71,6 +71,11 @@ variable "ses_sender" {
   description = "Owned sender mailbox; AWS verification email must be confirmed outside Terraform."
   type        = string
 }
+variable "ses_recipient_identity_arns" {
+  description = "Verified demo recipient identity ARNs explicitly permitted for notification sends."
+  type        = set(string)
+  default     = []
+}
 variable "budget_email" { type = string }
 variable "monthly_budget_usd" {
   type    = number
