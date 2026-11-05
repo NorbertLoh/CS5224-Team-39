@@ -33,6 +33,47 @@ def body(amount=250):
     }
 
 
+def test_patient_pricing_status_progression_is_read_only(api):
+    client, state, _ = api
+    named_context(state)
+    status = f"/prescriptions/{RX}/pricing-status"
+    response = client.get(status)
+    assert response.status_code == 200 and response.json()["ready"] is False
+    assert response.headers["Cache-Control"] == "no-store"
+    state.identity = identity(roles=(), clinic_role="clinic_admin")
+    assert client.get(status).status_code == 403
+    assert (
+        client.put(f"/clinics/{TENANT}/prescriptions/{RX}/prices", json=body(0)).status_code == 200
+    )
+    state.identity = identity()
+    assert client.get(status).json()["ready"] is True
+    with state.sessions() as db:
+        assert db.scalar(select(Order)) is None
+    state.source.context = state.source.context.model_copy(update={"patient_id": uuid4()})
+    assert client.get(status).status_code == 404
+
+
+def test_patient_pricing_checks_all_items_and_issued_state(api):
+    client, state, _ = api
+    named_context(state)
+    state.identity = identity(roles=(), clinic_role="clinic_admin")
+    assert (
+        client.put(f"/clinics/{TENANT}/prescriptions/{RX}/prices", json=body()).status_code == 200
+    )
+    state.identity = identity()
+    status = f"/prescriptions/{RX}/pricing-status"
+    original = state.source.context
+    state.source.context = original.model_copy(
+        update={
+            "items": original.items
+            + [original.items[0].model_copy(update={"prescription_item_id": uuid4()})]
+        }
+    )
+    assert client.get(status).json()["ready"] is False
+    state.source.context = original.model_copy(update={"status": "voided"})
+    assert client.get(status).json()["ready"] is False
+
+
 def test_readiness_event_deduplicates_saves_and_revalidates_pricing(api):
     from pydantic import SecretStr
     from telelink_common.service_auth import service_token

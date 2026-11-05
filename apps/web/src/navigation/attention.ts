@@ -74,6 +74,7 @@ export function prescriptionPaymentAttention(
   prescriptions: Prescription[],
   orders: Order[],
   subject: string,
+  priced: ReadonlySet<string> = new Set(),
 ) {
   const ownOrders = new Map(
     orders.filter((order) => order.patient_id === subject).map((order) => [
@@ -93,6 +94,7 @@ export function prescriptionPaymentAttention(
         order.appointment_id === prescription.appointment_id
         ? order
         : undefined,
+      priced.has(prescription.prescription_id),
     )
   }).length
   return count > 0

@@ -5,6 +5,7 @@ import { listPrescriptions, recordsError } from '@/features/records/api'
 import { PatientMedicationCard } from '@/features/records/patient/PatientMedicationCard'
 import { PatientPrescriptionDetail } from '@/features/records/patient/PatientPrescriptionDetail'
 import { PrescriptionSummary } from '@/features/records/prescriptions/PrescriptionSummary'
+import { usePatientPricing } from '@/features/fulfilment/pricing/usePatientPricing'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 
@@ -52,6 +53,7 @@ export function PatientPrescriptionList({
     gcTime: 0,
     refetchInterval: 15000,
   })
+  const pricing = usePatientPricing(prescriptions, orders.data ?? [], token, subjectId)
   return (
     <section
       className={
@@ -116,8 +118,9 @@ export function PatientPrescriptionList({
                       order.tenant_id === prescription.tenant_id &&
                       order.appointment_id === prescription.appointment_id,
                   )}
-                  checking={orders.isPending}
-                  unavailable={orders.isError}
+                  priced={pricing.get(prescription.prescription_id)?.data === true}
+                  checking={orders.isPending || pricing.get(prescription.prescription_id)?.isPending === true}
+                  unavailable={orders.isError || pricing.get(prescription.prescription_id)?.isError === true}
                   token={token}
                   selected={selected === prescription.prescription_id}
                   onToggle={() =>
@@ -137,8 +140,9 @@ export function PatientPrescriptionList({
                         order.tenant_id === prescription.tenant_id &&
                         order.appointment_id === prescription.appointment_id,
                     )}
-                    checking={orders.isPending}
-                    unavailable={orders.isError}
+                    priced={pricing.get(prescription.prescription_id)?.data === true}
+                    checking={orders.isPending || pricing.get(prescription.prescription_id)?.isPending === true}
+                    unavailable={orders.isError || pricing.get(prescription.prescription_id)?.isError === true}
                   >
                     {selected === prescription.prescription_id && (
                       <PatientPrescriptionDetail
