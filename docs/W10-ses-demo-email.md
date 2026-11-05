@@ -2,9 +2,9 @@
 
 Issue #386 / PR #387. The user confirmed the deployed email flow works on
 6 November 2026 after selecting the verified Gmail identity as the demo sender.
-All application notification templates share that configured sender. W10 remains
-In progress until the PR is merged; do not treat this demo configuration as
-proof of domain-authenticated production sending.
+All application notification templates share that configured sender. PR #387
+merged on 6 November 2026 (ce2031f); issue #386 is closed and W10 is complete.
+This demo configuration does not establish domain-authenticated production sending.
 
 ## Terraform configuration
 
