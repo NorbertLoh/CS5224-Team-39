@@ -31,9 +31,9 @@ Current clinical drafts and autosave state are independent of history.
 ## Setup and verification
 
 Deploy clinical-records before web. No migration, new dependency or environment
-setting is required. RF54 is stacked on PR #380 to retain the doctor profile
-feature already running locally; its feature diff is PR #382. Issue #381 remains
-In progress until merge and completion criteria are met.
+setting is required. RF54 was stacked on PR #380 to retain the doctor profile
+feature already running locally. PR #382 merged into main after #380 on
+5 November 2026 (`b46aecf`); issue #381 is closed.
 
 - **176 clinical-records PostgreSQL tests passed** on a fresh disposable schema
   with the restricted service role; Ruff checks and formatting passed. History

@@ -2,13 +2,13 @@
 
 ## Doctor documents grouped by consultation (RF55)
 
-- [ ] RF55: Group Past documents in doctor Consult by consultation with visit
+- [x] RF55: Group Past documents in doctor Consult by consultation with visit
   date/time, doctor, PDF count/types and expandable document actions. Merge loaded
   pages, preserve history access/download scoping, existing refresh/pagination,
   and patient/current-visit views. Dependencies RF46 merged; stacked on RF54 to
-  preserve the local feature base. Effort S. Issue #383 assigned NorbertLoh,
-  In progress. Verify grouping/order/deduplication, history parameters and live UI.
-  Draft PR #384 implements consultation groups from trusted visit metadata and
+  preserve the local feature base. Effort S. Issue #383 closed after PR #384
+  merged on 5 November 2026 (`3ed820e`). Grouping/order/deduplication, history
+  parameters and live UI verified. PR #384 implements consultation groups from trusted visit metadata and
   preserves individual PDF actions/history scope. Frontend lint/typecheck/build,
   probe typecheck, grouping/history/download probe and existing history/navigation/
   auth/video probes passed. Web rebuilt and deployed healthy on Tailscale; live
@@ -17,15 +17,15 @@
 
 ## Previous visit prescriptions (RF54)
 
-- [ ] RF54: Add read-only prescriptions to each expanded previous visit note in
+- [x] RF54: Add read-only prescriptions to each expanded previous visit note in
   the doctor consultation workspace. Show medication names, quantities,
   instructions and issued/voided status. Anchor access and pagination to the
   current visit using existing scheduling history checks; audit reads and preserve
   current drafts and ordinary prescription access. Independent loading/error/empty
   states. Dependencies RF12/RF46 and prescription APIs merged. Effort M.
-  Issue #381 assigned NorbertLoh, In progress. Verify cross-doctor history,
-  rejected scopes, pagination, frontend checks and consultation rendering.
-  Draft PR #382: 176 clinical-records PostgreSQL tests and Ruff checks/format
+  Issue #381 closed after PR #382 merged on 5 November 2026 (`b46aecf`).
+  Cross-doctor history, rejected scopes, pagination, frontend checks and
+  consultation rendering verified. PR #382: 176 clinical-records PostgreSQL tests and Ruff checks/format
   passed, along with frontend lint/typecheck/build, the new history probe and
   existing navigation/auth/video probes. Clinical-records/web deployed healthy
   to Tailscale. Real read-only API/browser checks verified issued medications,
@@ -34,21 +34,30 @@
 
 ## Doctor profile photos (RF53)
 
-- [ ] RF53: Add a doctor Profile page for uploading, replacing and removing a
+- [x] RF53: Add a doctor Profile page for uploading, replacing and removing a
   public portrait used in clinic storefront doctor lists. Validate PNG/JPEG bytes
   and dimensions, enforce own-doctor writes and approved active public readback,
   and preserve private verification documents. Dependencies A11/U01/RF28 merged.
-  Effort M. Issue #379 assigned NorbertLoh, In progress. Verify authorization,
+  Effort M. Issue #379 closed after PR #380 merged on 5 November 2026 (`e94655a`). Verified authorization,
   invalid/oversized uploads, persistence, directory propagation and frontend
   lint/typecheck/build. Requires identity migration 0007 and coordinated
   identity/tenant/web release; no new environment settings.
-  Implemented in draft PR #380. Identity 215 and tenant 152 PostgreSQL tests,
+  Implemented in merged PR #380. Identity 215 and tenant 152 PostgreSQL tests,
   both Ruff checks/format, frontend lint/typecheck/build and existing probes pass.
   Fixture-backed Chromium verifies upload/replacement/reload, storefront display,
   removal/fallback and mobile layout. Tailscale demo backed up/migrated to 0007,
   tenant/identity/web rebuilt and healthy; real doctor sign-in/Profile verified.
   Existing stopped Floci/Redis dependencies started. AWS rollout pending. Setup and limits:
   [doctor profile photos](docs/RF53-doctor-profile-photos.md).
+
+RF53-RF55 merge verification: clean Node 24 installs and complete frontend
+workflow commands passed for each exact PR head. Restricted-role PostgreSQL
+suites passed: identity 215, tenant 152 and clinical records 176. Backend workflow
+passed template 37/shared 123/architecture 1 tests (14 optional DB/SDK skips);
+Python 3.12 seed Ruff and all 13 safeguard tests passed. Shared unchanged source
+trees were checked once; every resulting merge tree matched its tested head.
+Local check evidence is recorded on PRs #380/#382/#384 under local/pr-workflows.
+Hosted jobs could not start because the owner's GitHub account is billing-locked.
 
 ## Patient pricing and payment stages (RF52)
 
