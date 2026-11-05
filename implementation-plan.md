@@ -11,8 +11,12 @@
   PR #374 implements the flow; all seven affected AMD64 images are built at
   95bc718. Verified Notification 112, Document 112, Fulfilment 379, Scheduling 273,
   Billing 322 checks; shared events 124 and mocked Terraform 17 checks pass.
-  AWS rollout is blocked by expired telelink credentials; user is refreshing
-  them. Notification migration and live sending verification remain pending.
+  AWS rollout completed after credentials were refreshed: pre-migration RDS
+  snapshot available, Notification migration 0003 exited 0, all 14 ECS services
+  stable, all three Lambdas active and lifecycle routes enabled. SES accepted a
+  synthetic receipt PDF at its simulator; a user-requested demo recipient is
+  verified. SES remains in sandbox; no historical patient emails were replayed.
+  PR #374 remains open and issue #373 In progress until merge.
 
 ## AWS API concurrency (RF50)
 
