@@ -6,7 +6,11 @@
   all eight business APIs, audit other concurrency controls, and deploy through
   the demo Terraform without increasing allocated capacity. Verify Terraform
   checks, unchanged task/CPU/memory limits and stable AWS services. Dependencies
-  RF27/RF32/RF48 merged. Effort S. NorbertLoh. Issue #371 In progress.
+  RF27/RF32/RF48 merged. Effort S. NorbertLoh. Issue #371 In progress; PR #372.
+  Terraform fmt/validate and 14 mocked tests passed. AWS rollout stable for all
+  eight APIs at 64; 12 simultaneous patient/clinic order reads returned 200.
+  Allocated capacity is unchanged. GitHub Actions cannot start because the
+  account is locked due to a billing issue. Keep open until PR merge.
 
 ## Website icon (RF49)
 
