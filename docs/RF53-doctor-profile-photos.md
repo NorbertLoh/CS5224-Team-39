@@ -78,4 +78,4 @@ Existing stopped Floci/Redis dependencies were started with their volumes intact
 Actual doctor sign-in and the Profile upload controls were verified at
 `https://desktop-kdu3bpc.taila23b83.ts.net/doctor/profile`.
 No portrait was changed during this live check. AWS rollout remains pending.
-Issue #379 remains In progress while draft PR #380 is unmerged.
+PR #380 merged on 5 November 2026 (`e94655a`); issue #379 is closed.

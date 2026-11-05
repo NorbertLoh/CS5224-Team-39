@@ -25,6 +25,7 @@ probe, prior history/navigation/auth probes and four video recovery checks passe
 The Tailscale web image was rebuilt and restarted healthy; live read-only browser
 checks verified grouped consultation summaries and expanded prescription/receipt
 actions. No clinical records or appointment/call states were changed.
+PR #384 merged into main on 5 November 2026 (`3ed820e`); issue #383 is closed.
 
 Lists include pagination, refresh, loading, empty and error states. Pending and
 failed PDFs have no download action. Each ready-PDF click obtains a new signed
