@@ -71,5 +71,11 @@ the endpoints use the existing identity service prefix.
   These browser fixtures verify UI behavior; they do not establish deployed
   integration. The real PostgreSQL API tests above verify persistence separately.
 
-The running local demo and AWS deployment have not been migrated or released
-for this feature. Issue #379 remains In progress while draft PR #380 is unmerged.
+The local Tailscale demo was updated on 5 November 2026 at the user's request.
+Identity was backed up to `.local/backups/RF53-identity-before-0007.dump`, migrated
+from 0006 to 0007, and tenant/identity/web images rebuilt and restarted healthy.
+Existing stopped Floci/Redis dependencies were started with their volumes intact.
+Actual doctor sign-in and the Profile upload controls were verified at
+`https://desktop-kdu3bpc.taila23b83.ts.net/doctor/profile`.
+No portrait was changed during this live check. AWS rollout remains pending.
+Issue #379 remains In progress while draft PR #380 is unmerged.

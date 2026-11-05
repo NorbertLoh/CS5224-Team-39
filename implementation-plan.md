@@ -13,7 +13,9 @@
   Implemented in draft PR #380. Identity 215 and tenant 152 PostgreSQL tests,
   both Ruff checks/format, frontend lint/typecheck/build and existing probes pass.
   Fixture-backed Chromium verifies upload/replacement/reload, storefront display,
-  removal/fallback and mobile layout. Demo/AWS rollout pending. Setup and limits:
+  removal/fallback and mobile layout. Tailscale demo backed up/migrated to 0007,
+  tenant/identity/web rebuilt and healthy; real doctor sign-in/Profile verified.
+  Existing stopped Floci/Redis dependencies started. AWS rollout pending. Setup and limits:
   [doctor profile photos](docs/RF53-doctor-profile-photos.md).
 
 ## Patient pricing and payment stages (RF52)
