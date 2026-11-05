@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## Doctor documents grouped by consultation (RF55)
+
+- [ ] RF55: Group Past documents in doctor Consult by consultation with visit
+  date/time, doctor, PDF count/types and expandable document actions. Merge loaded
+  pages, preserve history access/download scoping, existing refresh/pagination,
+  and patient/current-visit views. Dependencies RF46 merged; stacked on RF54 to
+  preserve the local feature base. Effort S. Issue #383 assigned NorbertLoh,
+  In progress. Verify grouping/order/deduplication, history parameters and live UI.
+
 ## Previous visit prescriptions (RF54)
 
 - [ ] RF54: Add read-only prescriptions to each expanded previous visit note in
