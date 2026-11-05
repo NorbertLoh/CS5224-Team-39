@@ -45,9 +45,22 @@ Before the fix SES returned `AccessDenied` on the verified recipient identity;
 after the fix SES accepted the user's one authorized plain-text test and returned
 a message ID. The temporary function was deleted. This proves provider acceptance
 through the actual role; inbox receipt awaits the user's confirmation. No receipt
-attachment test or historical notification replay is claimed.
+attachment test or historical notification replay was performed at that stage.
 
 Operator evidence remains ignored under `.local/email-role-diagnostic/`,
 `.local/email-diagnostic-result.json`, `.local/w10-plan.json` and
 `.local/w10-apply.log`. Issue #386 remains In progress pending review/merge and
 completion criteria. PR #387 tracks this change.
+
+After the user separately authorized resending the latest consultation receipt,
+a recovery task verified its ready receipt PDF, consultation payment and matching
+patient/tenant ownership. It changed exactly one definitively rejected job back
+to pending, preserving the previous attempt count and all other jobs. The normal
+scheduled dispatcher accepted the receipt attachment through SES at 00:36:33
+Singapore time on 6 November 2026. Its job is now `sent`, attempts 2, no error,
+and has a nonempty provider message ID. The other five recent failed jobs remain
+unchanged. Inbox delivery remains unconfirmed; the user had not seen the earlier
+plain-text test. Virtual Deliverability Manager is not enabled, so SES message
+insights cannot establish downstream Gmail delivery. No delivery feature was
+enabled and no further emails were sent. Recovery evidence is kept in ignored
+`.local/receipt-retry-*.json` and `.local/email-diagnostic-result.json` files.
