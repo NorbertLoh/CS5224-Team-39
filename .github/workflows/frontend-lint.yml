@@ -43,5 +43,6 @@ jobs:
       - run: npm run typecheck:probes
       - run: node --check ../../dev/run_frontend_probe.mjs
       - run: node ../../dev/run_frontend_probe.mjs check_navigation_frontend.mts
+      - run: node ../../dev/run_frontend_probe.mjs previous_visit_prescriptions.mts
       - run: node ../../dev/check_auth_session.mjs
       - run: node --experimental-transform-types --test probes/video-recovery.test.mts

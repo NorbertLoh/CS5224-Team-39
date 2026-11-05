@@ -10,6 +10,12 @@
   states. Dependencies RF12/RF46 and prescription APIs merged. Effort M.
   Issue #381 assigned NorbertLoh, In progress. Verify cross-doctor history,
   rejected scopes, pagination, frontend checks and consultation rendering.
+  Draft PR #382: 176 clinical-records PostgreSQL tests and Ruff checks/format
+  passed, along with frontend lint/typecheck/build, the new history probe and
+  existing navigation/auth/video probes. Clinical-records/web deployed healthy
+  to Tailscale. Real read-only API/browser checks verified issued medications,
+  empty history and missing-note independence. No migrations/settings changes.
+  Setup: [past visit prescriptions](docs/RF54-past-visit-prescriptions.md).
 
 ## Doctor profile photos (RF53)
 

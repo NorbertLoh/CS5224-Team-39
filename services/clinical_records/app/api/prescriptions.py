@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query, Request
 from sqlalchemy import select, text, tuple_
 from telelink_common.errors import DomainError, ErrorEnvelope
 
-from app.access import prescription_scope
+from app.access import authorize, clinic_doctor, prescription_scope
 from app.api.dependencies import DB, Identity, context, token
 from app.integrations.upstream import not_found
 from app.models import Prescription
@@ -129,15 +129,40 @@ def list_prescriptions(
     identity: Identity,
     session: DB,
     appointment_id: UUID | None = None,
+    history_for: UUID | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     cursor: Annotated[str | None, Query(max_length=4096)] = None,
 ):
     settings = request.app.state.settings
     key(settings)
     scope = scope_for(identity, appointment_id)
+    history_appointment = None
+    if history_for is not None:
+        if appointment_id is None:
+            raise DomainError(422, "validation_error", "Select a previous appointment.")
+        history_appointment = request.app.state.upstream.appointment(
+            appointment_id, token(request), request.state.request_id, history_for=history_for
+        )
+        if history_appointment.status != "completed" or not clinic_doctor(
+            identity, history_appointment
+        ):
+            not_found()
+        authorize(identity, history_appointment, history=True)
+        scope.append({"history_for": str(history_for)})
     position = decode(settings, scope, cursor) if cursor else None
-    query = select(Prescription).where(prescription_scope(identity))
-    if appointment_id is not None:
+    query = select(Prescription)
+    if history_appointment is not None:
+        query = query.where(
+            Prescription.appointment_id == history_appointment.appointment_id,
+            Prescription.tenant_id == history_appointment.tenant_id,
+            Prescription.patient_id == history_appointment.patient_id,
+            Prescription.doctor_id == history_appointment.doctor_id,
+            Prescription.status.in_(["issued", "voided"]),
+            Prescription.issued_at.is_not(None),
+        )
+    else:
+        query = query.where(prescription_scope(identity))
+    if appointment_id is not None and history_appointment is None:
         context(request, identity, appointment_id)
         query = query.where(Prescription.appointment_id == appointment_id)
     if position:
@@ -151,7 +176,10 @@ def list_prescriptions(
     ).all()
     # Revalidate current appointment ownership before revealing any record or cursor.
     for row in rows:
-        context(request, identity, row.appointment_id, record=row)
+        if history_appointment is not None:
+            authorize(identity, history_appointment, record=row, history=True)
+        else:
+            context(request, identity, row.appointment_id, record=row)
     result = PrescriptionPage(
         items=[prescription_public(session, row) for row in rows[:limit]],
         next_cursor=encode(settings, scope, rows[limit - 1]) if len(rows) > limit else None,
