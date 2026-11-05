@@ -64,3 +64,24 @@ plain-text test. Virtual Deliverability Manager is not enabled, so SES message
 insights cannot establish downstream Gmail delivery. No delivery feature was
 enabled and no further emails were sent. Recovery evidence is kept in ignored
 `.local/receipt-retry-*.json` and `.local/email-diagnostic-result.json` files.
+
+## Delivery investigation after acceptance
+
+The user reported that neither the plain-text test nor the retried receipt was
+visible. Live checks found the recipient absent from the SES suppression list.
+The sender identity is individually verified, but DKIM signing is disabled
+(`NOT_STARTED`) and no custom MAIL FROM domain is configured. DNS for
+`_dmarc.u.nus.edu` publishes `v=DMARC1;p=reject`. Consequently this SES sender
+configuration has neither aligned DKIM nor aligned SPF for the NUS From domain.
+This is a confirmed authentication configuration defect and a strong explanation
+for downstream rejection; Gmail's actual SMTP result has not been obtained.
+
+The account has no SES domain identities and no Route 53 hosted zones. Remediation
+requires DNS access to a sender domain controlled by the team (or a separately
+authorized authenticated mail provider). Do not switch to another consumer or
+university mailbox and assume email verification supplies domain authentication.
+The user has been asked for a controllable domain and the rejection text from
+the NUS sender inbox, where SES bounce forwarding is enabled. No further messages
+were sent. W10 remains In progress; domain access and inbox evidence are blockers.
+
+Reference: https://docs.aws.amazon.com/ses/latest/dg/send-email-authentication-dmarc.html
