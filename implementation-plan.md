@@ -1,5 +1,13 @@
 # TeleLink Health: shared implementation backlog
 
+## AWS API concurrency (RF50)
+
+- [ ] RF50: Raise the shared ECS API concurrency limit from 8 to 64 across
+  all eight business APIs, audit other concurrency controls, and deploy through
+  the demo Terraform without increasing allocated capacity. Verify Terraform
+  checks, unchanged task/CPU/memory limits and stable AWS services. Dependencies
+  RF27/RF32/RF48 merged. Effort S. NorbertLoh. Issue #371 In progress.
+
 ## Website icon (RF49)
 
 - [x] RF49: Generate a teal TeleLink Health icon, save the asset in the
