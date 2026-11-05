@@ -2,6 +2,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { LoadingState } from '@/components/LoadingState'
 import { nameOrId } from '@/features/appointments/display'
 import { previousVisits, readNote, recordsError } from '@/features/records/api'
+import { PreviousVisitPrescriptions } from '@/features/records/notes/PreviousVisitPrescriptions'
 import type { Appointment } from '@/features/scheduling/api'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { ChevronDown, History } from 'lucide-react'
@@ -45,8 +46,8 @@ export function PreviousVisitNotes({
         />
       </summary>
       <p className="text-sm text-slate-600">
-        Earlier completed visits for this patient at this clinic,
-        newest first. Open a visit to read its saved note.
+        Earlier completed visits for this patient at this clinic, newest first.
+        Open a visit to read its saved note and prescriptions.
       </p>
       {history.isPending ? (
         <LoadingState message="Loading previous visits..." />
@@ -96,10 +97,20 @@ function VisitNote({
   visit,
   token,
   historyFor,
-}: { visit: Appointment; token: string; historyFor: string }) {
+}: {
+  visit: Appointment
+  token: string
+  historyFor: string
+}) {
   const [open, setOpen] = useState(false)
   const note = useQuery({
-    queryKey: ['records', 'previous-note', token, visit.appointment_id, historyFor],
+    queryKey: [
+      'records',
+      'previous-note',
+      token,
+      visit.appointment_id,
+      historyFor,
+    ],
     queryFn: async ({ signal }) => {
       const saved = await readNote(visit.appointment_id, signal, historyFor)
       if (
@@ -140,6 +151,9 @@ function VisitNote({
       </summary>
       {open && (
         <div className="rounded-b-xl border-t border-slate-200 bg-white p-4">
+          <h4 className="mb-2 font-semibold text-slate-900">
+            Consultation note
+          </h4>
           {note.isPending ? (
             <LoadingState message="Loading saved note..." />
           ) : note.isError ? (
@@ -156,6 +170,11 @@ function VisitNote({
               No saved note for this visit.
             </p>
           )}
+          <PreviousVisitPrescriptions
+            visit={visit}
+            token={token}
+            historyFor={historyFor}
+          />
         </div>
       )}
     </details>

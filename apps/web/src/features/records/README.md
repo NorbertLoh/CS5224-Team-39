@@ -31,10 +31,15 @@ preserves the draft and restores focus to Reload. Each form still saves separate
 
 Previous visit notes lists earlier completed visits for the same patient and
 clinic, newest first with older-page loading. Expand a visit with
-mouse or keyboard to fetch its saved note through the existing audited API.
+mouse or keyboard to fetch its saved note and issued prescriptions through
+audited APIs. Prescription history shows medication names, quantities and
+instructions. Previously issued, voided prescriptions are clearly labelled;
+unissued drafts remain hidden. Notes and prescriptions have independent
+loading, empty and retry states.
 The doctor assigned to the current visit can read history from other doctors
 at that clinic. History does not reset current edits.
 Missing notes and failed requests have explicit empty/retry states.
+See [past visit prescriptions](../../../../../docs/RF54-past-visit-prescriptions.md).
 
 ## Setup and verification
 

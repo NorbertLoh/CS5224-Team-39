@@ -8,6 +8,7 @@
     "../apps/web/src/vite-env.d.ts",
     "check_records_frontend.mts",
     "check_scheduling_frontend.mts",
-    "../apps/web/probes/check_navigation_frontend.mts"
+    "../apps/web/probes/check_navigation_frontend.mts",
+    "../apps/web/probes/previous_visit_prescriptions.mts"
   ]
 }

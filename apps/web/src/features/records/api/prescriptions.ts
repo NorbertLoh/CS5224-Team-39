@@ -11,9 +11,11 @@ export async function listPrescriptions(
   appointmentId?: string,
   cursor?: string | null,
   signal?: AbortSignal,
+  historyFor?: string,
 ): Promise<CursorPage<Prescription>> {
   const params = new URLSearchParams({ limit: '25' })
   if (appointmentId) params.set('appointment_id', appointmentId)
+  if (historyFor) params.set('history_for', historyFor)
   if (cursor) params.set('cursor', cursor)
   return (await request(`${base}/prescriptions?${params}`, { signal })).json()
 }
@@ -30,12 +32,18 @@ export async function readPrescription(
 export async function appointmentPrescriptions(
   appointmentId: string,
   signal?: AbortSignal,
+  historyFor?: string,
 ): Promise<Prescription[]> {
   const items: Prescription[] = []
   const seen = new Set<string>()
   let cursor: string | null = null
   for (let pageNumber = 0; pageNumber < 100; pageNumber++) {
-    const page = await listPrescriptions(appointmentId, cursor, signal)
+    const page = await listPrescriptions(
+      appointmentId,
+      cursor,
+      signal,
+      historyFor,
+    )
     if (page.items.some((item) => item.appointment_id !== appointmentId))
       throw new Error('Invalid prescription context')
     items.push(...page.items)

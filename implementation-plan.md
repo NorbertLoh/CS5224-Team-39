@@ -1,5 +1,22 @@
 # TeleLink Health: shared implementation backlog
 
+## Previous visit prescriptions (RF54)
+
+- [ ] RF54: Add read-only prescriptions to each expanded previous visit note in
+  the doctor consultation workspace. Show medication names, quantities,
+  instructions and issued/voided status. Anchor access and pagination to the
+  current visit using existing scheduling history checks; audit reads and preserve
+  current drafts and ordinary prescription access. Independent loading/error/empty
+  states. Dependencies RF12/RF46 and prescription APIs merged. Effort M.
+  Issue #381 assigned NorbertLoh, In progress. Verify cross-doctor history,
+  rejected scopes, pagination, frontend checks and consultation rendering.
+  Draft PR #382: 176 clinical-records PostgreSQL tests and Ruff checks/format
+  passed, along with frontend lint/typecheck/build, the new history probe and
+  existing navigation/auth/video probes. Clinical-records/web deployed healthy
+  to Tailscale. Real read-only API/browser checks verified issued medications,
+  empty history and missing-note independence. No migrations/settings changes.
+  Setup: [past visit prescriptions](docs/RF54-past-visit-prescriptions.md).
+
 ## Doctor profile photos (RF53)
 
 - [ ] RF53: Add a doctor Profile page for uploading, replacing and removing a
