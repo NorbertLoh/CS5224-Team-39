@@ -16,7 +16,10 @@ export async function previousVisitDocuments(
       let next: string | null = null
       do {
         const page = await listDocuments(
-          visit.appointment_id, next, signal, appointment.appointment_id,
+          visit.appointment_id,
+          next,
+          signal,
+          appointment.appointment_id,
         )
         if (page.items.some((item) => item.tenant_id !== visit.tenant_id))
           throw new Error('Invalid previous visit document context')
@@ -29,5 +32,9 @@ export async function previousVisitDocuments(
       return items
     }),
   )
-  return { items: documents.flat(), next_cursor: visits.next_cursor }
+  return {
+    items: documents.flat(),
+    visits: visits.items,
+    next_cursor: visits.next_cursor,
+  }
 }

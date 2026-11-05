@@ -8,6 +8,12 @@
   and patient/current-visit views. Dependencies RF46 merged; stacked on RF54 to
   preserve the local feature base. Effort S. Issue #383 assigned NorbertLoh,
   In progress. Verify grouping/order/deduplication, history parameters and live UI.
+  Draft PR #384 implements consultation groups from trusted visit metadata and
+  preserves individual PDF actions/history scope. Frontend lint/typecheck/build,
+  probe typecheck, grouping/history/download probe and existing history/navigation/
+  auth/video probes passed. Web rebuilt and deployed healthy on Tailscale; live
+  read-only browser checks confirmed summaries and grouped prescription/receipt
+  actions. No migration, API or configuration changes; AWS rollout pending.
 
 ## Previous visit prescriptions (RF54)
 

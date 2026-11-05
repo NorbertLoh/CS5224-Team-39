@@ -9,6 +9,7 @@ const probes = new Set([
   'check_scheduling_frontend.mts',
   'check_navigation_frontend.mts',
   'previous_visit_prescriptions.mts',
+  'past_document_groups.mts',
 ])
 const probe = process.argv[2]
 if (!probes.has(probe)) {
@@ -37,6 +38,7 @@ if (!probes.has(probe)) {
         [
           'check_navigation_frontend.mts',
           'previous_visit_prescriptions.mts',
+          'past_document_groups.mts',
         ].includes(probe)
           ? 'apps/web/probes'
           : 'dev',
