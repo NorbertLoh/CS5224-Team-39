@@ -622,7 +622,7 @@ Service-specific outbox/inbox migrations belong to the service using the helpers
 | [ ] | W07 | Provision Redis and configure service-only access. | W02 | M |
 | [ ] | W08 | Provision private document bucket and synthetic Secrets Manager entries. | W01, F11 | M |
 | [ ] | W09 | Provision AWS event rules/queues/DLQs; verify one real delivery. | W01, F12 | M |
-| [ ] | W10 | Verify SES demo sender/recipients and one email. NorbertLoh; In progress, #386 / PR #387. Scoped recipient IAM fix and user-selected Gmail sender deployed; user confirmed email works on 6 November 2026. Merge pending. | W01, N01 | S |
+| [x] | W10 | Verify SES demo sender/recipients and one email. Completed by NorbertLoh; #386 closed after PR #387 merged on 6 November 2026 (ce2031f). Scoped recipient IAM fix and selected Gmail sender deployed; user confirmed delivery. All 23 mocked Terraform tests, eight root/module validations, three routing and ten TURN checks passed locally; hosted CI blocked by GitHub billing. Setup: docs/W10-ses-demo-email.md. | W01, N01 | S |
 | [ ] | W11 | Deploy signalling ALB/ECS and TURN; verify HTTPS/WSS cross-network video using the shared RF01 / #155 evidence task. | W03, V03, X01 | L |
 | [ ] | W12 | Create reusable service deployment command and immutable image tagging. | W03, W06 | M |
 | [ ] | W13 | Deploy identity and tenant services; verify AWS login and clinic APIs. | W05, W12, A11 | M |
