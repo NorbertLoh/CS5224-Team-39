@@ -33,8 +33,8 @@ trusted committed charge snapshot. Payment purposes have separate event types.
 
 | DetailType                          | Source                      | Required `data` fields                                                                       | Consumers    |
 | ----------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------- | ------------ |
-| `consultation_payment_succeeded.v1` | `telelink.billing`          | `payment_id`, `appointment_id`, `amount`                                                     | scheduling   |
-| `medication_payment_succeeded.v1`   | `telelink.billing`          | `payment_id`, `order_id`, `amount`                                                           | fulfilment   |
+| `consultation_payment_succeeded.v1` | `telelink.billing`          | `payment_id`, `appointment_id`, `amount`                                                     | scheduling, document |
+| `medication_payment_succeeded.v1`   | `telelink.billing`          | `payment_id`, `order_id`, `amount`                                                           | fulfilment, document |
 | `appointment_confirmed.v1`          | `telelink.scheduling`       | `appointment_id`                                                                             | notification |
 | `appointment_cancelled.v1` | `telelink.scheduling` | `appointment_id` | notification |
 | `prescription_priced.v1` | `telelink.fulfilment` | `prescription_id`, `patient_id` | notification |

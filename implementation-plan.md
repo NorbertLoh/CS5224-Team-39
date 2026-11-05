@@ -8,6 +8,11 @@
   durable deduplication and uncertain-send holds; verify isolated services and
   the demo deployment without replaying historical email. Dependencies
   RF33/RF48/N02/U17 merged; preserve RF50. Effort L. NorbertLoh. Issue #373 In progress.
+  PR #374 implements the flow; all seven affected AMD64 images are built at
+  95bc718. Verified Notification 112, Document 112, Fulfilment 379, Scheduling 273,
+  Billing 322 checks; shared events 124 and mocked Terraform 17 checks pass.
+  AWS rollout is blocked by expired telelink credentials; user is refreshing
+  them. Notification migration and live sending verification remain pending.
 
 ## AWS API concurrency (RF50)
 
