@@ -1,5 +1,13 @@
 # TeleLink Health: shared implementation backlog
 
+## Patient pricing and payment stages (RF52)
+
+- [ ] RF52: Show Awaiting pricing for patient medicine prescriptions until all
+  prices are available, then Awaiting payment. Count only priced prescriptions
+  in payment attention; preserve pending, paid and terminal states. Dependencies
+  RF39/RF42/RF44 merged. Effort S. NorbertLoh. Issue #376 In progress.
+  Verify authorized read-only pricing status and frontend lint/typecheck/build.
+
 ## Patient lifecycle emails (RF51)
 
 - [x] RF51: Send verified consultation/medication receipts as PDF attachments,
