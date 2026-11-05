@@ -36,9 +36,12 @@ trusted committed charge snapshot. Payment purposes have separate event types.
 | `consultation_payment_succeeded.v1` | `telelink.billing`          | `payment_id`, `appointment_id`, `amount`                                                     | scheduling   |
 | `medication_payment_succeeded.v1`   | `telelink.billing`          | `payment_id`, `order_id`, `amount`                                                           | fulfilment   |
 | `appointment_confirmed.v1`          | `telelink.scheduling`       | `appointment_id`                                                                             | notification |
+| `appointment_cancelled.v1` | `telelink.scheduling` | `appointment_id` | notification |
+| `prescription_priced.v1` | `telelink.fulfilment` | `prescription_id`, `patient_id` | notification |
+| `payment_refunded.v1` | `telelink.billing` | `payment_id`, `refund_id` | notification |
 | `prescription_issued.v1`            | `telelink.clinical-records` | `prescription_id`, `appointment_id`                                                          | document     |
 | `medical_certificate_issued.v1`     | `telelink.clinical-records` | `medical_certificate_id`, `appointment_id`, `patient_id`, `doctor_id`                        | document     |
-| `document_ready.v1`                 | `telelink.document`         | `document_id`, `appointment_id`, exactly one of `prescription_id` / `medical_certificate_id` | notification |
+| `document_ready.v1`                 | `telelink.document`         | `document_id`, `appointment_id`, exactly one of `prescription_id` / `medical_certificate_id` / `payment_id` | notification |
 | `delivery_status_changed.v1`        | `telelink.fulfilment`       | `delivery_id`, `order_id`, `status`                                                          | notification |
 
 Delivery `status` is the fulfilment service's normalized, nonempty status string;

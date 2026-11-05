@@ -3,9 +3,12 @@
 from datetime import timedelta
 
 from sqlalchemy import func, select, update
+from telelink_common.events.envelope import WorkflowEvent
 
 from app.integrations.email import EmailSendError
+from app.integrations.recipients import NotificationDeferred
 from app.models import NotificationJob
+from app.services.lifecycle_email import prepare_email
 from app.services.templates import render_email
 
 
@@ -20,7 +23,7 @@ def recover_stale(sessions, settings):
         return result.rowcount
 
 
-def dispatch_one(sessions, sender, settings):
+def dispatch_one(sessions, sender, settings, directory=None):
     with sessions.begin() as session:
         job = session.scalar(
             select(NotificationJob)
@@ -36,7 +39,42 @@ def dispatch_one(sessions, sender, settings):
         if job is None:
             return False
         # Render before committing a claim; invalid configuration cannot create an uncertain send.
-        message = render_email(job.template, settings.app_url)
+        if job.source_event is not None and directory is not None:
+            try:
+                event = WorkflowEvent.model_validate(job.source_event)
+                current = directory.resolve(event)
+                if current is None:
+                    job.status, job.ready_at, job.error_code = "skipped", None, None
+                    return True
+                if current.subject_id != job.recipient_id:
+                    raise ValueError("Recipient changed")
+                if (
+                    event.detail_type == "document_ready.v1" and not event.data.payment_id
+                ) or event.detail_type == "prescription_priced.v1":
+                    appointment_id = getattr(current.context, "appointment_id", None)
+                    if not directory.clinical_ready(event, current.subject_id, appointment_id):
+                        job.status, job.ready_at, job.error_code = "skipped", None, None
+                        return True
+                message = prepare_email(event, current, directory, settings.app_url)
+                job.recipient_email = current.email
+            except NotificationDeferred:
+                job.ready_at = session.scalar(select(func.now())) + timedelta(
+                    seconds=settings.retry_seconds
+                )
+                return True
+            except Exception:
+                # Nothing has reached SES: bounded preparation retries remain safe.
+                job.prepare_attempts += 1
+                job.error_code = "source_unavailable"
+                if job.prepare_attempts >= 10:
+                    job.status, job.ready_at = "failed", None
+                else:
+                    job.ready_at = session.scalar(select(func.now())) + timedelta(
+                        seconds=settings.retry_seconds
+                    )
+                return True
+        else:
+            message = render_email(job.template, settings.app_url)
         job.status, job.ready_at, job.error_code = "sending", None, None
         job.attempts += 1
         job.send_started_at = session.scalar(select(func.now()))

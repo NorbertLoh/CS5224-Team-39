@@ -1,9 +1,13 @@
 """S04 transitions; all callers lock slot before appointment and use server time."""
 
+from uuid import NAMESPACE_URL, uuid5
+
 from sqlalchemy import select
 from telelink_common.errors import DomainError
+from telelink_common.events import new_event
+from telelink_common.outbox import add_event
 
-from app.models import Appointment, AvailabilitySlot
+from app.models import Appointment, AvailabilitySlot, event_outbox
 
 
 def invalid_transition():
@@ -54,6 +58,20 @@ def cancel_appointment(appointment, now, reason, actor_id, *, session):
     appointment.cancellation_reason = reason
     appointment.cancelled_by_subject_id = actor_id
     appointment.cancelled_at = now
+    add_event(
+        session,
+        event_outbox,
+        new_event(
+            "appointment_cancelled.v1",
+            tenant_id=appointment.tenant_id,
+            correlation_id=appointment.appointment_id,
+            occurred_at=now,
+            event_id=uuid5(
+                NAMESPACE_URL, f"telelink:appointment-cancelled:{appointment.appointment_id}"
+            ),
+            data={"appointment_id": appointment.appointment_id},
+        ),
+    )
     return True
 
 

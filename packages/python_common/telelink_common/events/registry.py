@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from telelink_common.events.payloads import (
+    AppointmentCancelled,
     AppointmentConfirmed,
     ConsultationPaymentSucceeded,
     DeliveryStatusChanged,
@@ -10,7 +11,9 @@ from telelink_common.events.payloads import (
     EventData,
     MedicalCertificateIssued,
     MedicationPaymentSucceeded,
+    PaymentRefunded,
     PrescriptionIssued,
+    PrescriptionPriced,
 )
 
 CONSUMERS = frozenset({"scheduling", "fulfilment", "document", "notification"})
@@ -27,6 +30,21 @@ class EventType:
 EVENT_TYPES = {
     spec.detail_type: spec
     for spec in (
+        EventType(
+            "appointment_cancelled.v1",
+            "telelink.scheduling",
+            AppointmentCancelled,
+            frozenset({"notification"}),
+        ),
+        EventType(
+            "prescription_priced.v1",
+            "telelink.fulfilment",
+            PrescriptionPriced,
+            frozenset({"notification"}),
+        ),
+        EventType(
+            "payment_refunded.v1", "telelink.billing", PaymentRefunded, frozenset({"notification"})
+        ),
         EventType(
             "consultation_payment_succeeded.v1",
             "telelink.billing",

@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import sessionmaker
 from telelink_common.aws import create_client
 from telelink_common.events import new_event
+from telelink_common.events.envelope import WorkflowEvent
 from telelink_common.inbox import consume_batch
 from telelink_common.logging import configure_logging
 
@@ -20,7 +21,7 @@ from app.integrations.recipients import RecipientDirectory
 from app.models import NotificationJob, event_inbox
 from app.services.dispatch import dispatch_one
 from app.services.intake import QueueNotification
-from app.services.templates import render_email
+from app.services.lifecycle_email import prepare_email
 from app.settings import Settings
 
 
@@ -178,9 +179,9 @@ def main():
         for email in {row.recipient_email for row in jobs}:
             sender.client.verify_email_identity(EmailAddress=email)
         for _ in jobs:
-            assert dispatch_one(sessions, sender, settings)
+            assert dispatch_one(sessions, sender, settings, directory)
         # New session factory simulates sender restart; no accepted job can be sent twice.
-        assert not dispatch_one(sessionmaker(engine), sender, settings)
+        assert not dispatch_one(sessionmaker(engine), sender, settings, directory)
         from urllib.request import urlopen
 
         with urlopen(settings.aws_endpoint_url + "/_aws/ses", timeout=10) as response:
@@ -196,7 +197,10 @@ def main():
                 item = next(
                     message for message in captured if message["Id"] == row.provider_message_id
                 )
-                expected = render_email(row.template, settings.app_url)
+                event = WorkflowEvent.model_validate(row.source_event)
+                expected = prepare_email(
+                    event, directory.resolve(event), directory, settings.app_url
+                )
                 assert item["Destination"]["ToAddresses"] == [row.recipient_email]
                 assert item["Subject"] == expected.subject
                 assert item["Body"]["text_part"] == expected.text

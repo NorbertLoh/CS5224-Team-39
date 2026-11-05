@@ -115,7 +115,9 @@ def test_cancelled_late_success_never_reopens_and_is_deduplicated(api):
     process(api, appointment)
     assert rows(api[-1], appointment)[:2] == ("cancelled", "refund_required")
     assert audit(api, appointment.payment_id).reason == "appointment_cancelled"
-    assert not rows(api[-1], appointment)[3]
+    assert [row["detail_type"] for row in rows(api[-1], appointment)[3]] == [
+        "appointment_cancelled.v1"
+    ]
 
 
 def test_earlier_success_can_replace_unconfirmed_attempt_but_extra_charge_cannot(api):
@@ -306,7 +308,10 @@ def test_cancel_after_late_recovery_preserves_audit_and_queues_refund(api):
     assert current.reason == "appointment_cancelled" and current.delivered_at is None
     process(api, appointment)
     assert rows(api[-1], appointment)[:2] == ("cancelled", "refund_required")
-    assert len(rows(api[-1], appointment)[3]) == 1
+    assert sorted(row["detail_type"] for row in rows(api[-1], appointment)[3]) == [
+        "appointment_cancelled.v1",
+        "appointment_confirmed.v1",
+    ]
 
 
 def test_remote_success_local_commit_failure_replays_idempotently(api):

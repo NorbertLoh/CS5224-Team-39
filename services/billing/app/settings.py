@@ -19,6 +19,7 @@ class Settings(ServiceSettings):
     document_secret: SecretStr | None = None
     identity_url: str | None = None
     identity_secret: SecretStr | None = None
+    notification_secret: SecretStr | None = None
     stripe_secret_key: SecretStr | None = None
     stripe_webhook_secret: SecretStr | None = None
     stripe_destinations: dict[UUID, str] = {}
@@ -82,6 +83,7 @@ class Settings(ServiceSettings):
                 self.consultation_secret,
                 self.document_secret,
                 self.identity_secret,
+                self.notification_secret,
             )
             if s
         ]

@@ -15,6 +15,7 @@ from sqlalchemy import (
     func,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from telelink_common.inbox import inbox_table
 
@@ -39,11 +40,13 @@ class NotificationJob(Base):
             name="ck_jobs_template",
         ),
         CheckConstraint(
-            "status IN ('pending', 'sending', 'sent', 'failed', 'uncertain')", name="ck_jobs_status"
+            "status IN ('pending', 'sending', 'sent', 'failed', 'uncertain', 'skipped')",
+            name="ck_jobs_status",
         ),
         CheckConstraint("attempts >= 0", name="ck_jobs_attempts"),
         CheckConstraint(
-            "error_code IS NULL OR error_code IN ('ses_unconfirmed', 'ses_rejected')",
+            "error_code IS NULL OR error_code IN "
+            "('ses_unconfirmed', 'ses_rejected', 'source_unavailable')",
             name="ck_jobs_error_code",
         ),
         CheckConstraint(
@@ -56,7 +59,7 @@ class NotificationJob(Base):
             "(status = 'sent' AND provider_message_id IS NOT NULL "
             "AND btrim(provider_message_id) <> '' AND sent_at IS NOT NULL "
             "AND attempts > 0 AND error_code IS NULL) "
-            "OR (status IN ('pending', 'sending', 'failed', 'uncertain') "
+            "OR (status IN ('pending', 'sending', 'failed', 'uncertain', 'skipped') "
             "AND provider_message_id IS NULL "
             "AND sent_at IS NULL)",
             name="ck_jobs_sent",
@@ -74,6 +77,8 @@ class NotificationJob(Base):
     recipient_id: Mapped[UUID] = mapped_column(Uuid)
     recipient_email: Mapped[str] = mapped_column(Text)
     template: Mapped[str] = mapped_column(Text)
+    source_event: Mapped[dict | None] = mapped_column(JSONB)
+    prepare_attempts: Mapped[int] = mapped_column(Integer, server_default="0")
     status: Mapped[str] = mapped_column(Text, server_default=text("'pending'"))
     attempts: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     provider_message_id: Mapped[str | None] = mapped_column(Text)

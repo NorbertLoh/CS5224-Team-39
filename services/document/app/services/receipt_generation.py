@@ -5,11 +5,13 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 
 import httpx
 from pydantic import AwareDatetime, BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
+from telelink_common.events import new_event
 from telelink_common.events.payloads import Money
+from telelink_common.outbox import add_event
 from telelink_common.service_auth import service_token
 
-from app.models import Document
+from app.models import Document, event_outbox
 from app.rendering.template_data import Receipt, ReceiptItem
 from app.rendering.templates import render_receipt
 
@@ -138,3 +140,20 @@ class GenerateReceipt:
             session.add(row)
         row.status, row.storage_bucket, row.storage_key = "ready", self.store.bucket, key
         row.size_bytes, row.sha256 = stored.size_bytes, stored.sha256
+        session.flush()
+        add_event(
+            session,
+            event_outbox,
+            new_event(
+                "document_ready.v1",
+                tenant_id=row.tenant_id,
+                correlation_id=event.correlation_id,
+                occurred_at=session.scalar(select(func.clock_timestamp())),
+                event_id=uuid5(NAMESPACE_URL, f"telelink:document_ready.v1:{document_id}"),
+                data={
+                    "document_id": document_id,
+                    "payment_id": payment_id,
+                    "appointment_id": row.appointment_id,
+                },
+            ),
+        )

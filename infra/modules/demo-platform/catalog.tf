@@ -28,7 +28,7 @@ locals {
     scheduling       = ["database_url", "cursor_secret", "billing_secret", "consultation_secret", "notification_secret", "scheduling_secret", "operator_secret"]
     consultation     = ["database_url", "records_secret", "identity_secret", "scheduling_secret", "billing_secret", "signalling_secret", "turn_secret"]
     clinical_records = ["database_url", "cursor_secret", "fulfilment_secret", "document_secret", "consultation_secret", "identity_document_secret", "tenant_document_secret"]
-    billing          = ["database_url", "cursor_secret", "scheduling_secret", "tenant_secret", "fulfilment_secret", "consultation_secret", "stripe_secret_key", "stripe_webhook_secret", "identity_secret", "document_secret"]
+    billing          = ["database_url", "cursor_secret", "scheduling_secret", "tenant_secret", "fulfilment_secret", "consultation_secret", "stripe_secret_key", "stripe_webhook_secret", "identity_secret", "document_secret", "notification_secret"]
     document         = ["database_url", "cursor_secret", "records_secret", "notification_secret", "billing_secret"]
   }
   fulfilment_secret_keys = ["database_url", "cursor_secret", "records_secret", "tenant_secret", "profile_secret", "billing_secret", "notification_secret", "lalamove_api_key", "lalamove_api_secret", "delivery_locations_json"]

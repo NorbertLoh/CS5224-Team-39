@@ -37,6 +37,9 @@ def context_api():
         status="ready",
         prescription_id=uuid4(),
         medical_certificate_id=None,
+        clinic_name="Synthetic Clinic",
+        starts_at="2026-11-05T01:00:00Z",
+        ends_at="2026-11-05T01:30:00Z",
         private_body="must not leak",
     )
     order = SimpleNamespace(
