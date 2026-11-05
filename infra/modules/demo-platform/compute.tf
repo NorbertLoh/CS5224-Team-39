@@ -128,7 +128,7 @@ resource "aws_ecs_task_definition" "api" {
       environment      = [for k, v in local.public_env[each.key] : { name = k, value = v }]
       secrets          = local.ecs_secrets[each.key]
       logConfiguration = local.logs[each.key]
-      command          = concat(each.key == "fulfilment" ? ["python", "-c", file("${path.module}/config_files.py")] : [], ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--limit-concurrency", "8"])
+      command          = concat(each.key == "fulfilment" ? ["python", "-c", file("${path.module}/config_files.py")] : [], ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--limit-concurrency", "64"])
       stopTimeout      = 30
     }
     ], local.managed ? [] : local.worker_containers[each.key], each.key == "scheduling" && var.redis_mode == "sidecar" ? [{
