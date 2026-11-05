@@ -9,6 +9,23 @@ Patient/doctor appointment
 details and the doctor's records workspace show PDFs for the selected appointment.
 These views use the real P03 API, with no document fixtures in production code.
 
+In doctor Consult, **Past documents** groups earlier PDFs by consultation.
+Each collapsed visit shows its actual consultation date/time (SGT), doctor,
+document count and PDF types. Expand it to see that consultation's documents
+together with their statuses, references and download actions. Groups merge and
+deduplicate as older pages load and sort by visit time, including PDFs generated
+after the original consultation. The existing scheduling history response supplies
+visit labels; no extra appointment lookups or wider access are needed.
+History anchors remain attached to document list and download requests.
+The empty state still allows older-page loading when more visits are available.
+
+RF55 requires only a web rebuild; no migration, API or configuration changes.
+Frontend lint/typecheck/build, probe typecheck, grouping/history-pagination/download
+probe, prior history/navigation/auth probes and four video recovery checks passed.
+The Tailscale web image was rebuilt and restarted healthy; live read-only browser
+checks verified grouped consultation summaries and expanded prescription/receipt
+actions. No clinical records or appointment/call states were changed.
+
 Lists include pagination, refresh, loading, empty and error states. Pending and
 failed PDFs have no download action. Each ready-PDF click obtains a new signed
 URL and opens it as an attachment in the same tab, avoiding an asynchronous popup.

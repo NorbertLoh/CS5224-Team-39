@@ -2,6 +2,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { LoadingState } from '@/components/LoadingState'
 import { documentsError, listDocuments } from '@/features/documents/api'
 import { PastDocumentRow } from '@/features/documents/PastDocumentRow'
+import { pastDocumentGroups } from '@/features/documents/pastDocumentGroups'
 import { previousVisitDocuments } from '@/features/documents/previousVisitDocuments'
 import { ChevronDown, FileText } from 'lucide-react'
 import { DocumentRow } from '@/features/documents/DocumentRow'
@@ -79,10 +80,13 @@ export function DocumentResults({
       previousVisitsFor?.starts_at ?? null,
     ],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam, signal }) =>
+    queryFn: async ({ pageParam, signal }) =>
       previousVisitsFor
         ? previousVisitDocuments(previousVisitsFor, pageParam, signal)
-        : listDocuments(appointmentId, pageParam, signal),
+        : {
+            ...(await listDocuments(appointmentId, pageParam, signal)),
+            visits: [] as Appointment[],
+          },
     getNextPageParam: (page) => page.next_cursor ?? undefined,
     retry: false,
     gcTime: 0,
@@ -91,10 +95,18 @@ export function DocumentResults({
     refetchInterval: autoRefresh ? 5000 : variant === 'past' ? 10000 : false,
   })
   const items = query.data?.pages.flatMap((page) => page.items) ?? []
+  const visits = query.data?.pages.flatMap((page) => page.visits ?? []) ?? []
+  const pastGroups = pastDocumentGroups(items, visits)
   const invalid = items.some(
     (item) =>
       (appointmentId && item.appointment_id !== appointmentId) ||
-      (tenantId && item.tenant_id !== tenantId),
+      (tenantId && item.tenant_id !== tenantId) ||
+      (previousVisitsFor &&
+        !visits.some(
+          (visit) =>
+            visit.appointment_id === item.appointment_id &&
+            visit.tenant_id === item.tenant_id,
+        )),
   )
   return (
     <Container
@@ -160,6 +172,11 @@ export function DocumentResults({
           </button>
         </div>
       )}
+      {collapsible && (
+        <p className="text-sm text-slate-600">
+          PDFs grouped by consultation. Open a visit to view its documents.
+        </p>
+      )}
       {query.isPending ? (
         <LoadingState message="Loading documents..." />
       ) : invalid ? (
@@ -175,20 +192,23 @@ export function DocumentResults({
         />
       ) : (
         <>
-          {!items.length && variant !== 'past' && (
+          {!items.length && (
             <p role="status" className="text-sm text-slate-600">
-              {autoRefresh
-                ? 'No documents available yet. New PDFs will appear here as they are prepared.'
-                : 'No documents available yet. Refresh after your document has been prepared.'}
+              {previousVisitsFor
+                ? 'No documents from previous consultations.'
+                : autoRefresh
+                  ? 'No documents available yet. New PDFs will appear here as they are prepared.'
+                  : 'No documents available yet. Refresh after your document has been prepared.'}
             </p>
           )}
           {items.length > 0 &&
-            (variant === 'past' ? (
+            (variant === 'past' && previousVisitsFor ? (
               <div className="space-y-4">
-                {items.map((item) => (
+                {pastGroups.map(({ visit, documents }) => (
                   <PastDocumentRow
-                    key={item.document_id}
-                    document={item}
+                    key={`${visit.tenant_id}:${visit.appointment_id}`}
+                    visit={visit}
+                    documents={documents}
                     token={token}
                     historyFor={previousVisitsFor?.appointment_id}
                   />
