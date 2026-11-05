@@ -8,6 +8,7 @@ import { clinicCounts } from '@/features/platform-clinics/api'
 import { listAppointments } from '@/features/scheduling/api'
 import { request } from '@/features/fulfilment/api/client'
 import type { Order } from '@/features/fulfilment/api'
+import { usePatientPricing } from '@/features/fulfilment/pricing/usePatientPricing'
 import { listPrescriptions } from '@/features/records/api'
 import type { CursorPage } from '@/lib/api-types'
 import { emptyFilters } from '@/lib/list-filters'
@@ -117,13 +118,15 @@ export function usePatientAttention(identity: Identity) {
     ),
     ...refresh,
   })
+  const pricing = usePatientPricing(prescriptions.data ?? [], orders.data ?? [], token, subject)
+  const priced = new Set([...pricing].filter(([, query]) => query.data === true).map(([id]) => id))
   return {
     appointments: appointments.isSuccess
       ? appointmentPaymentAttention(appointments.data, subject)
       : undefined,
     orders: orders.isSuccess ? orderAttention(orders.data, subject) : undefined,
     prescriptions: prescriptions.isSuccess && orders.isSuccess
-      ? prescriptionPaymentAttention(prescriptions.data, orders.data, subject)
+      ? prescriptionPaymentAttention(prescriptions.data, orders.data, subject, priced)
       : undefined,
   }
 }

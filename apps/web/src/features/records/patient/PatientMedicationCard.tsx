@@ -9,12 +9,14 @@ export function PatientMedicationCard({
   order,
   checking,
   unavailable,
+  priced = false,
   children,
 }: {
   prescription: Prescription
   order?: Order
   checking: boolean
   unavailable: boolean
+  priced?: boolean
   children: ReactNode
 }) {
   if (prescription.status !== 'issued' || prescription.items.length === 0)
@@ -27,6 +29,10 @@ export function PatientMedicationCard({
       ) : unavailable ? (
         <p role="alert">
           Could not check your medication order. Refresh to try again.
+        </p>
+      ) : !order && !priced ? (
+        <p className="text-sm text-slate-600">
+          The clinic is pricing your medicines. Payment will be available once pricing is complete.
         </p>
       ) : (
         <>

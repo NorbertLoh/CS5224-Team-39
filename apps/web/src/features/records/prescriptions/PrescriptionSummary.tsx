@@ -19,6 +19,7 @@ export function PrescriptionSummary({
   order,
   checking,
   unavailable,
+  priced = false,
 }: {
   prescription: Prescription
   token: string
@@ -28,6 +29,7 @@ export function PrescriptionSummary({
   order?: Order
   checking: boolean
   unavailable: boolean
+  priced?: boolean
 }) {
   const issued = prescription.status === 'issued'
   const hasMedicines = prescription.items.length > 0
@@ -36,17 +38,17 @@ export function PrescriptionSummary({
     hasMedicines &&
     !checking &&
     !unavailable &&
-    awaitingPrescriptionPayment(order)
+    awaitingPrescriptionPayment(order, priced)
   const label = !issued
     ? prescription.status
     : !hasMedicines
       ? 'No medicines'
       : checking
-        ? 'Checking payment'
+        ? 'Checking medicine status'
         : unavailable
-          ? 'Payment status unavailable'
+          ? 'Medicine status unavailable'
           : !order
-            ? 'Awaiting payment'
+            ? priced ? 'Awaiting payment' : 'Awaiting pricing'
             : order.payment_status === 'succeeded'
               ? `Paid · ${medicineProgress(order)}`
               : medicineProgress(order)

@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from uuid import NAMESPACE_URL, UUID, uuid5
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from pydantic import Field, model_validator
 from sqlalchemy import delete, select
 from telelink_common.errors import DomainError
@@ -11,12 +11,80 @@ from telelink_common.events import new_event
 from telelink_common.outbox import add_event
 
 from app.access import require_clinic
-from app.api.dependencies import DB, Identity
-from app.models import MAX_MONEY, Order, PrescriptionPrice, event_outbox
+from app.api.dependencies import DB, Identity, Patient
+from app.models import (
+    MAX_MONEY,
+    CatalogueItem,
+    Order,
+    PrescriptionCorrectionHold,
+    PrescriptionPrice,
+    event_outbox,
+)
 from app.schemas import Money, StrictModel
 from app.services.pricing import saved_prices
 
 router = APIRouter(tags=["prescription-pricing"])
+
+
+class PatientPricingStatus(StrictModel):
+    prescription_id: UUID
+    ready: bool
+
+
+@router.get("/prescriptions/{prescription_id}/pricing-status", response_model=PatientPricingStatus)
+def patient_pricing_status(
+    prescription_id: UUID, request: Request, response: Response, identity: Patient, session: DB
+):
+    source = request.app.state.dispensing.get(
+        prescription_id, identity.subject_id, request.state.request_id
+    )
+    if source.prescription_id != prescription_id or source.patient_id != identity.subject_id:
+        raise DomainError(404, "not_found", "Resource not found.")
+    prices = {
+        row.prescription_item_id: row
+        for row in saved_prices(session, source.tenant_id, prescription_id)
+    }
+    per_prescription = source.pricing_mode == "prescription" or bool(prices)
+    catalogue = (
+        {}
+        if per_prescription
+        else {
+            row.medication_id: row
+            for row in session.scalars(
+                select(CatalogueItem).where(
+                    CatalogueItem.tenant_id == source.tenant_id,
+                    CatalogueItem.medication_id.in_([item.medication_id for item in source.items]),
+                )
+            )
+        }
+    )
+    ready = source.status == "issued" and bool(source.items)
+    subtotal = 0
+    for item in source.items:
+        price = (
+            prices.get(item.prescription_item_id)
+            if per_prescription
+            else catalogue.get(item.medication_id)
+        )
+        if (
+            price is None
+            or price.unit_price_minor is None
+            or (
+                per_prescription
+                and (price.medication_id != item.medication_id or price.quantity != item.quantity)
+            )
+            or (not per_prescription and not price.active)
+        ):
+            ready = False
+        else:
+            subtotal += price.unit_price_minor * item.quantity
+    ready = (
+        ready
+        and subtotal <= MAX_MONEY
+        and not session.get(PrescriptionCorrectionHold, prescription_id)
+    )
+    response.headers["Cache-Control"] = "no-store"
+    return {"prescription_id": prescription_id, "ready": bool(ready)}
 
 
 class PriceLine(StrictModel):

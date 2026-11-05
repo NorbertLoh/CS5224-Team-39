@@ -95,6 +95,7 @@ Provider references and address payloads never appear in C05 events/general logs
 | POST `/clinics/{tenant_id}/catalogue` | display_name; existing item 200 or new unpriced item 201 | Active owning-clinic doctor/admin; name-only input; stable reference on case-insensitive replay |
 | PUT `/clinics/{tenant_id}/catalogue/{medication_id}` | display_name, unit_label, unit_price, active; item, 201/200 | Active owning-clinic admin; server validates SGD/nonnegative amount |
 | POST `/orders` | prescription_id; order, 201 new / 200 existing | Own patient; one order per issued prescription, including retries |
+| GET `/prescriptions/{prescription_id}/pricing-status` | `{ prescription_id, ready }`; no-store | Own patient, checked against the clinical dispensing projection; read-only, creates no order. Ready requires issued medicines, complete matching prices and no correction hold; legacy catalogue pricing remains supported. |
 | GET `/orders/{order_id}` | Order, 200 | Own patient or active owning-clinic admin; platform operational view, no clinical data |
 | GET `/orders` | Optional tenant_id/status; C01 pagination ordered created_at, order_id descending (newest first); explicit `sort=oldest` remains supported | Same scoped policy |
 | POST `/orders/{order_id}/quotes` | destination structured address; quote, 201 | Own patient; unpaid, no active pending payment; server obtains provider fee and refreshes catalogue snapshot |
