@@ -85,3 +85,30 @@ the NUS sender inbox, where SES bounce forwarding is enabled. No further message
 were sent. W10 remains In progress; domain access and inbox evidence are blockers.
 
 Reference: https://docs.aws.amazon.com/ses/latest/dg/send-email-authentication-dmarc.html
+
+## User-selected Gmail demo sender
+
+The school-recipient bounce subsequently confirmed `550 5.7.509`: the NUS From
+domain failed DMARC with a reject policy. A separate user-authorized direct SES
+test used an already-verified Gmail sender. The user then explicitly requested
+that all demo application notifications use that Gmail address. This is a demo
+sender selection, not a claim of domain-authenticated sending or inbox delivery.
+
+Changed only ignored operator `ses_sender` and the explicit verified recipient
+identity list in the existing `infra/envs/demo` checkout. Adopted the existing
+verified Gmail identity into `module.platform.aws_ses_email_identity.sender`
+using a state backup, detach and import, rather than deleting the school identity
+or requesting sender verification again. The school identity remains intact;
+only the selected Gmail identity is now tracked at the sender resource address.
+
+The reviewed plan contained four in-place updates: notification intake and
+dispatch sender environments, the dispatch SES inline policy, and the existing
+CloudFront normalization. No additions, deletions, image rebuilds, database,
+queue replay or capacity changes. Terraform apply succeeded. Both notification
+Lambdas are Active/Successful with the selected sender; recipient grants restrict
+the From address to that sender. All existing notification templates share this
+configuration. Runtime verification uses an empty intake batch and does not send
+messages. Operator configuration/evidence remains ignored under
+`.local/gmail-sender-*`; retain the selected `ses_sender` and recipient list on
+subsequent demo applies. The Gmail/school test recipient identities remain subject
+to SES sandbox verification.
