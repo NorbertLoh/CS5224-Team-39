@@ -6,6 +6,9 @@ TEMPLATES = {
     "appointment_confirmed.v1": "booking_confirmed",
     "document_ready.v1": "document_ready",
     "delivery_status_changed.v1": "delivery_updated",
+    "appointment_cancelled.v1": "booking_confirmed",
+    "prescription_priced.v1": "document_ready",
+    "payment_refunded.v1": "document_ready",
 }
 
 
@@ -27,5 +30,6 @@ class QueueNotification:
                 recipient_id=recipient.subject_id,
                 recipient_email=recipient.email,
                 template=template,
+                source_event=event.model_dump(mode="json"),
             )
         )

@@ -26,14 +26,17 @@ def intake(event, context):
 
 def dispatch(event, context):
     settings = load_settings(Settings)
-    with database_sessions(settings, create_database_engine) as sessions:
+    with ExitStack() as stack:
+        sessions = stack.enter_context(database_sessions(settings, create_database_engine))
+        directory = RecipientDirectory(settings)
+        stack.callback(directory.close)
         sender = SESEmailSender(settings)
         try:
             recover_stale(sessions, settings)
             sent = 0
             # A schedule drains jobs even when no new SQS events arrive.
             while sent < 20 and context.get_remaining_time_in_millis() >= 15_000:
-                if not dispatch_one(sessions, sender, settings):
+                if not dispatch_one(sessions, sender, settings, directory):
                     break
                 sent += 1
             return {"dispatched": sent}

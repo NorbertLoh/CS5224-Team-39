@@ -143,6 +143,7 @@ def configure():
         ("scheduling", "SCHEDULING"),
         ("document", "DOCUMENT"),
         ("fulfilment", "FULFILMENT"),
+        ("billing", "BILLING"),
     ]:
         pair(
             "notification",
@@ -193,6 +194,7 @@ def configure():
     for name in ["clinical_records", "billing", "notification"]:
         configs[name]["SERVICE_FULFILMENT_URL"] = "http://fulfilment:8000"
     configs["notification"].update(
+        SERVICE_BILLING_URL="http://billing:8000",
         SERVICE_DOCUMENT_URL="http://document:8000",
         SERVICE_EMAIL_SENDER="notifications@telelink.test",
         SERVICE_APP_URL="https://localhost:8443",

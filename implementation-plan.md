@@ -1,5 +1,23 @@
 # TeleLink Health: shared implementation backlog
 
+## Patient lifecycle emails (RF51)
+
+- [ ] RF51: Send verified consultation/medication receipts as PDF attachments,
+  secure issued-MC/prescription links, medicine-payment links after pricing,
+  and supported cancellation/refund/delivery updates. Preserve recipient checks,
+  durable deduplication and uncertain-send holds; verify isolated services and
+  the demo deployment without replaying historical email. Dependencies
+  RF33/RF48/N02/U17 merged; preserve RF50. Effort L. NorbertLoh. Issue #373 In progress.
+  PR #374 implements the flow; all seven affected AMD64 images are built at
+  95bc718. Verified Notification 112, Document 112, Fulfilment 379, Scheduling 273,
+  Billing 322 checks; shared events 124 and mocked Terraform 17 checks pass.
+  AWS rollout completed after credentials were refreshed: pre-migration RDS
+  snapshot available, Notification migration 0003 exited 0, all 14 ECS services
+  stable, all three Lambdas active and lifecycle routes enabled. SES accepted a
+  synthetic receipt PDF at its simulator; a user-requested demo recipient is
+  verified. SES remains in sandbox; no historical patient emails were replayed.
+  PR #374 remains open and issue #373 In progress until merge.
+
 ## AWS API concurrency (RF50)
 
 - [ ] RF50: Raise the shared ECS API concurrency limit from 8 to 64 across

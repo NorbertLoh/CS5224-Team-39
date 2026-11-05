@@ -1,13 +1,16 @@
 from datetime import datetime, timedelta, timezone
+from uuid import NAMESPACE_URL, uuid5
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from telelink_common.errors import DomainError
+from telelink_common.events import new_event
+from telelink_common.outbox import add_event
 from telelink_common.outbox.publisher import retry_delay
 
 from app.integrations.stripe import ProviderRejected, ProviderUncertain
 from app.integrations.stripe_refunds import reconcile_refund
-from app.models import Payment, RefundAttempt
+from app.models import Payment, RefundAttempt, event_outbox
 from app.services.reconciliation import ReceiptRejected
 
 
@@ -55,6 +58,18 @@ def process_refunds(engine, provider, sources, *, limit=20, now=None):
                         attempt.last_error = None
                         payment.status = "refunded"
                         payment.resolution = "none"
+                        add_event(
+                            session,
+                            event_outbox,
+                            new_event(
+                                "payment_refunded.v1",
+                                tenant_id=payment.tenant_id,
+                                correlation_id=payment.payment_id,
+                                occurred_at=now,
+                                event_id=uuid5(NAMESPACE_URL, f"telelink:refund-paid:{refund_id}"),
+                                data={"payment_id": payment.payment_id, "refund_id": refund_id},
+                            ),
+                        )
                     else:
                         attempt.last_error = None
                 # Commit provider success before scheduling independently reads billing.

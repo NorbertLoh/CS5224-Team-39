@@ -23,6 +23,8 @@ class Settings(ServiceSettings):
     scheduling_url: str | None = None
     document_url: str | None = None
     fulfilment_url: str | None = None
+    billing_url: str | None = None
+    billing_secret: SecretStr | None = None
     identity_secret: SecretStr | None = None
     scheduling_secret: SecretStr | None = None
     document_secret: SecretStr | None = None
@@ -57,12 +59,12 @@ class Settings(ServiceSettings):
     def worker_configuration(self):
         keys = [
             getattr(self, name + "_secret")
-            for name in ("identity", "scheduling", "document", "fulfilment")
+            for name in ("identity", "scheduling", "document", "fulfilment", "billing")
         ]
         values = [key.get_secret_value() for key in keys if key is not None]
         if any(len(value.encode()) < 32 for value in values) or len(values) != len(set(values)):
             raise ValueError("Upstream service keys require distinct 32+ byte values")
-        for name in ("scheduling_url", "document_url", "fulfilment_url"):
+        for name in ("scheduling_url", "document_url", "fulfilment_url", "billing_url"):
             value = getattr(self, name)
             if value is None:
                 continue

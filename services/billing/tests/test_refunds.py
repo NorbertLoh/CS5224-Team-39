@@ -14,7 +14,7 @@ from telelink_common.errors import DomainError
 
 from app.integrations.stripe import ProviderRejected, ProviderUncertain, StripeCheckout
 from app.integrations.upstream import CheckoutSources
-from app.models import CheckoutAttempt, Payment, RefundAttempt
+from app.models import CheckoutAttempt, Payment, RefundAttempt, event_outbox
 from app.services.refunds import process_refunds
 from app.settings import Settings
 from tests.test_queries import api as api
@@ -150,6 +150,10 @@ def test_full_refund_replay_audit_and_committed_sync(flow):
     history = client.get(f"/payments/{flow[1]}/refunds", headers=headers()).json()
     assert history[0]["status"] == "succeeded"
     with Session(flow[0][-1].state.database_engine) as session:
+        events = session.execute(
+            select(event_outbox).where(event_outbox.c.detail_type == "payment_refunded.v1")
+        ).all()
+        assert len(events) == 1
         assert session.scalar(select(RefundAttempt)).synced_at is not None
         session.scalar(select(RefundAttempt)).reason = "Rewritten audit"
         with pytest.raises(IntegrityError):

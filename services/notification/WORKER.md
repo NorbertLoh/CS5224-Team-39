@@ -1,5 +1,9 @@
 # Notification event worker (N02)
 
+RF51 extends these original N02 procedures. Read the current
+[patient email runbook](../../docs/patient-emails.md) for migration 0003,
+the additional Billing credential, receipt attachments and lifecycle preparation.
+
 Run the worker separately from the owner-service APIs. It consumes the existing
 C05 notification queue, resolves the patient through the resource owner, gets the
 current email from identity, and commits the inbox row plus a pending job in one

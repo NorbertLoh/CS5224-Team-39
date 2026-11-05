@@ -59,7 +59,7 @@ resource "aws_iam_role_policy" "worker" {
         Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject"], Resource = "${var.document_bucket_arn}/*"
       }
       ] : [], each.key == "notification-dispatch" ? [{
-        Effect = "Allow", Action = ["ses:SendEmail"], Resource = var.ses_identity_arn
+        Effect = "Allow", Action = ["ses:SendEmail", "ses:SendRawEmail"], Resource = var.ses_identity_arn
         }] : [], length(each.value.kms_key_arns) > 0 ? [{
         Effect = "Allow", Action = ["kms:Decrypt"], Resource = each.value.kms_key_arns
     }] : [])

@@ -37,6 +37,8 @@ def context_api():
         status="ready",
         prescription_id=uuid4(),
         medical_certificate_id=None,
+        payment_id=None,
+        kind="prescription_pdf",
         private_body="must not leak",
     )
     order = SimpleNamespace(
@@ -106,3 +108,22 @@ def test_tenant_or_patient_guard(context_api):
     else:
         path = f"/internal/documents/{resource}/notification-context?tenant_id={uuid4()}"
     assert client.get(path, headers=headers).status_code == 404
+
+
+def test_only_matching_patient_receipt_can_be_attached(context_api):
+    client, row, tenant, patient, resource = context_api
+    row.kind = "receipt_pdf"
+    client.app.state.downloads = SimpleNamespace(
+        prepare=lambda _: None, content=lambda _: b"%PDF-synthetic"
+    )
+    path = f"/internal/documents/{resource}/notification-receipt?tenant_id={tenant}"
+    headers = {
+        "Authorization": "Bearer "
+        + service_token(SecretStr(KEY), "notification", "telelink-document-notification")
+    }
+    assert client.get(path + f"&patient_id={patient}").status_code == 401
+    assert client.get(path + f"&patient_id={uuid4()}", headers=headers).status_code == 404
+    result = client.get(path + f"&patient_id={patient}", headers=headers)
+    assert result.content == b"%PDF-synthetic" and result.headers["cache-control"] == "no-store"
+    row.kind = "medical_certificate_pdf"
+    assert client.get(path + f"&patient_id={patient}", headers=headers).status_code == 404

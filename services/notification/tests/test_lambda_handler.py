@@ -15,6 +15,9 @@ def setup_dispatch(monkeypatch, remaining=120_000):
     monkeypatch.setattr(lambda_handler, "database_sessions", sessions)
     sender = SimpleNamespace(client=SimpleNamespace(close=lambda: calls.append("closed")))
     monkeypatch.setattr(lambda_handler, "SESEmailSender", lambda _: sender)
+    monkeypatch.setattr(
+        lambda_handler, "RecipientDirectory", lambda _: SimpleNamespace(close=lambda: None)
+    )
     monkeypatch.setattr(lambda_handler, "recover_stale", lambda *args: calls.append("recovered"))
     context = SimpleNamespace(get_remaining_time_in_millis=lambda: remaining)
     return calls, context

@@ -21,6 +21,8 @@ class EmailMessage:
     subject: str
     text: str
     html: str
+    attachment: bytes | None = None
+    attachment_name: str | None = None
 
 
 def validate_app_url(value: str) -> str:

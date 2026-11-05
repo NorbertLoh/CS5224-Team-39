@@ -26,5 +26,9 @@ def notification_context(resource_id: UUID, tenant_id: UUID, session: DB, respon
         "resource_id": row.appointment_id,
         "tenant_id": row.tenant_id,
         "patient_id": row.patient_id,
-        "eligible": row.status in {"confirmed", "in_progress", "completed", "no_show"},
+        "status": row.status,
+        "clinic_name": row.clinic_name,
+        "starts_at": row.starts_at,
+        "ends_at": row.ends_at,
+        "eligible": row.status in {"confirmed", "in_progress", "completed", "no_show", "cancelled"},
     }

@@ -42,6 +42,20 @@ class AppointmentConfirmed(EventData):
     appointment_id: UUID
 
 
+class AppointmentCancelled(EventData):
+    appointment_id: UUID
+
+
+class PrescriptionPriced(EventData):
+    prescription_id: UUID
+    patient_id: UUID
+
+
+class PaymentRefunded(EventData):
+    payment_id: UUID
+    refund_id: UUID
+
+
 class PrescriptionIssued(EventData):
     prescription_id: UUID
     appointment_id: UUID
@@ -58,6 +72,7 @@ class DocumentReady(EventData):
     document_id: UUID
     prescription_id: UUID | None = None
     medical_certificate_id: UUID | None = None
+    payment_id: UUID | None = None
     appointment_id: UUID
 
     @model_serializer(mode="wrap")
@@ -67,7 +82,13 @@ class DocumentReady(EventData):
 
     @model_validator(mode="after")
     def one_source(self):
-        if (self.prescription_id is None) == (self.medical_certificate_id is None):
+        if (
+            sum(
+                value is not None
+                for value in (self.prescription_id, self.medical_certificate_id, self.payment_id)
+            )
+            != 1
+        ):
             raise ValueError("Document-ready requires exactly one source")
         return self
 

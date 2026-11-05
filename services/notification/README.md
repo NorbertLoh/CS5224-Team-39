@@ -1,5 +1,9 @@
 # Notification foundation (N01)
 
+RF51 extends this foundation with verified receipt PDF attachments, signed-in
+clinical-document/payment links and cancellation/refund notices. Current behavior,
+configuration, migration and recovery: [Patient lifecycle emails](../../docs/patient-emails.md).
+
 This service owns notification jobs, three version-one email templates and the
 SES implementation. N02 adds the separately run event
 worker, authoritative recipient resolution and durable send states; see

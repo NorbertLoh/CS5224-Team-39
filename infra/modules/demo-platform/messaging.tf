@@ -13,9 +13,10 @@ locals {
       { source = ["telelink.billing"], "detail-type" = ["consultation_payment_succeeded.v1", "medication_payment_succeeded.v1"] }
     ] }
     notification = { "$or" = [
-      { source = ["telelink.scheduling"], "detail-type" = ["appointment_confirmed.v1"] },
+      { source = ["telelink.scheduling"], "detail-type" = ["appointment_confirmed.v1", "appointment_cancelled.v1"] },
       { source = ["telelink.document"], "detail-type" = ["document_ready.v1"] },
-      { source = ["telelink.fulfilment"], "detail-type" = ["delivery_status_changed.v1"] }
+      { source = ["telelink.fulfilment"], "detail-type" = ["delivery_status_changed.v1", "prescription_priced.v1"] },
+      { source = ["telelink.billing"], "detail-type" = ["payment_refunded.v1"] }
     ] }
   }
 }

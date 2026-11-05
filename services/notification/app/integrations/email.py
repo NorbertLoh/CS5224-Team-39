@@ -1,5 +1,8 @@
 """SES acceptance is not a delivery receipt. No raw provider errors are exposed."""
 
+from email.message import EmailMessage as MIMEMessage
+from email.policy import SMTP
+
 import boto3
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
@@ -38,18 +41,46 @@ class SESEmailSender:
         validate_email(recipient)
         if not message.subject.strip() or any(c in message.subject for c in "\r\n"):
             raise ValueError("Invalid email subject")
-        try:
-            result = self.client.send_email(
-                Source=self.source,
-                Destination={"ToAddresses": [recipient]},
-                Message={
-                    "Subject": {"Data": message.subject, "Charset": "UTF-8"},
-                    "Body": {
-                        "Text": {"Data": message.text, "Charset": "UTF-8"},
-                        "Html": {"Data": message.html, "Charset": "UTF-8"},
-                    },
-                },
+        raw = None
+        if message.attachment is not None:
+            import re
+
+            if (
+                not message.attachment.startswith(b"%PDF-")
+                or len(message.attachment) > 5_000_000
+                or not re.fullmatch(r"receipt-[a-f0-9-]{36}\.pdf", message.attachment_name or "")
+            ):
+                raise ValueError("Invalid receipt attachment")
+            mime = MIMEMessage(policy=SMTP)
+            mime["From"], mime["To"], mime["Subject"] = self.source, recipient, message.subject
+            mime.set_content(message.text)
+            mime.add_alternative(message.html, subtype="html")
+            mime.add_attachment(
+                message.attachment,
+                maintype="application",
+                subtype="pdf",
+                filename=message.attachment_name,
             )
+            raw = mime.as_bytes()
+            if len(raw) > 9_000_000:
+                raise ValueError("Email exceeds supported size")
+        try:
+            if raw is not None:
+                result = self.client.send_raw_email(
+                    Source=self.source, Destinations=[recipient], RawMessage={"Data": raw}
+                )
+            else:
+                result = self.client.send_email(
+                    Source=self.source,
+                    Destination={"ToAddresses": [recipient]},
+                    Message={
+                        "Subject": {"Data": message.subject, "Charset": "UTF-8"},
+                        "Body": {
+                            "Text": {"Data": message.text, "Charset": "UTF-8"},
+                            "Html": {"Data": message.html, "Charset": "UTF-8"},
+                        },
+                    },
+                )
         except ClientError as error:
             code = error.response.get("Error", {}).get("Code")
             retryable = code in {"Throttling", "ThrottlingException", "TooManyRequestsException"}

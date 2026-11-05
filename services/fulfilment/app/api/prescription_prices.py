@@ -1,16 +1,18 @@
 """Clinic-entered prices belong to one issued prescription, never a shared catalogue."""
 
 from datetime import datetime, timezone
-from uuid import UUID
+from uuid import NAMESPACE_URL, UUID, uuid5
 
 from fastapi import APIRouter, Request
 from pydantic import Field, model_validator
 from sqlalchemy import delete, select
 from telelink_common.errors import DomainError
+from telelink_common.events import new_event
+from telelink_common.outbox import add_event
 
 from app.access import require_clinic
 from app.api.dependencies import DB, Identity
-from app.models import MAX_MONEY, Order, PrescriptionPrice
+from app.models import MAX_MONEY, Order, PrescriptionPrice, event_outbox
 from app.schemas import Money, StrictModel
 from app.services.pricing import saved_prices
 
@@ -136,5 +138,22 @@ def put_prices(
     )
     session.flush()
     result = price_result(session, tenant_id, prescription_id)
+    # One readiness email per issued prescription, including repeat saves/price edits.
+    event_id = uuid5(NAMESPACE_URL, f"telelink:prescription-priced:{prescription_id}")
+    if not session.scalar(
+        select(event_outbox.c.event_id).where(event_outbox.c.event_id == event_id)
+    ):
+        add_event(
+            session,
+            event_outbox,
+            new_event(
+                "prescription_priced.v1",
+                tenant_id=tenant_id,
+                correlation_id=prescription_id,
+                occurred_at=now,
+                event_id=event_id,
+                data={"prescription_id": prescription_id, "patient_id": body.patient_id},
+            ),
+        )
     session.commit()
     return result

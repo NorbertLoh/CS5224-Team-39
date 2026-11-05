@@ -11,6 +11,7 @@ from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
 from app.api.checkout import router
+from app.api.notification_context import router as notification_router
 from app.api.queries import router as query_router
 from app.api.receipts import router as receipt_router
 from app.api.refunds import router as refund_router
@@ -77,6 +78,7 @@ def create_app(settings: Settings | None = None):
     app.include_router(router)
     app.include_router(query_router)
     app.include_router(receipt_router)
+    app.include_router(notification_router)
     app.include_router(refund_router)
     app.include_router(webhook_router)
 

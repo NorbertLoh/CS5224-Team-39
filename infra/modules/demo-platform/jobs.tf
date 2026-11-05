@@ -52,6 +52,7 @@ locals {
     SERVICE_SCHEDULING_URL = local.service_urls["scheduling"]
     SERVICE_DOCUMENT_URL   = local.service_urls["document"]
     SERVICE_FULFILMENT_URL = local.service_urls["fulfilment"]
+    SERVICE_BILLING_URL    = local.service_urls["billing"]
     SERVICE_EMAIL_SENDER   = var.ses_sender
     SERVICE_APP_URL        = "https://${module.edge.domain_name}"
   }, lookup(var.service_environment, "notification", {}))

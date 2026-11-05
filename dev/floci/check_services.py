@@ -168,7 +168,8 @@ def check_messages():
             "consultation_payment_succeeded.v1", "medication_payment_succeeded.v1",
         },
         "notification": {
-            "appointment_confirmed.v1", "document_ready.v1", "delivery_status_changed.v1"
+            "appointment_confirmed.v1", "document_ready.v1", "delivery_status_changed.v1",
+            "appointment_cancelled.v1", "prescription_priced.v1", "payment_refunded.v1",
         },
     }
     for name, expected in routes.items():

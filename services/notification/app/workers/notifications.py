@@ -57,7 +57,7 @@ def main():
             )
             sent = 0
             for _ in range(10):
-                if not dispatch_one(sessions, sender, settings):
+                if not dispatch_one(sessions, sender, settings, directory):
                     break
                 sent += 1
             if args.once:

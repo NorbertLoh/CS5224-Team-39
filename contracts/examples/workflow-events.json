@@ -47,5 +47,26 @@
     "DetailType": "medical_certificate_issued.v1",
     "Time": "2026-10-12T03:00:00.000Z",
     "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000107\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T03:00:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"medical_certificate_id\":\"00000000-0000-4000-8000-000000000017\",\"appointment_id\":\"00000000-0000-4000-8000-000000000010\",\"patient_id\":\"00000000-0000-4000-8000-000000000004\",\"doctor_id\":\"00000000-0000-4000-8000-000000000005\"}}"
+  },
+  {
+    "EventBusName": "telelink-local",
+    "Source": "telelink.scheduling",
+    "DetailType": "appointment_cancelled.v1",
+    "Time": "2026-10-12T03:00:00.000Z",
+    "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000108\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T03:00:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"appointment_id\":\"00000000-0000-4000-8000-000000000010\"}}"
+  },
+  {
+    "EventBusName": "telelink-local",
+    "Source": "telelink.fulfilment",
+    "DetailType": "prescription_priced.v1",
+    "Time": "2026-10-12T03:00:00.000Z",
+    "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000109\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T03:00:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"prescription_id\":\"00000000-0000-4000-8000-000000000013\",\"patient_id\":\"00000000-0000-4000-8000-000000000004\"}}"
+  },
+  {
+    "EventBusName": "telelink-local",
+    "Source": "telelink.billing",
+    "DetailType": "payment_refunded.v1",
+    "Time": "2026-10-12T03:00:00.000Z",
+    "Detail": "{\"event_id\":\"00000000-0000-4000-8000-000000000110\",\"schema_version\":1,\"occurred_at\":\"2026-10-12T03:00:00.000Z\",\"tenant_id\":\"00000000-0000-4000-8000-000000000002\",\"correlation_id\":\"00000000-0000-4000-8000-000000000001\",\"data\":{\"payment_id\":\"00000000-0000-4000-8000-000000000011\",\"refund_id\":\"00000000-0000-4000-8000-000000000018\"}}"
   }
 ]

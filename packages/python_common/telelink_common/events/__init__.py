@@ -7,6 +7,7 @@ inbox deduplication are M03. Errors never echo payload values.
 from telelink_common.events.envelope import WorkflowEvent, format_timestamp, new_event
 from telelink_common.events.errors import EventValidationError
 from telelink_common.events.payloads import (
+    AppointmentCancelled,
     AppointmentConfirmed,
     ConsultationPaymentSucceeded,
     DeliveryStatusChanged,
@@ -15,7 +16,9 @@ from telelink_common.events.payloads import (
     MedicalCertificateIssued,
     MedicationPaymentSucceeded,
     Money,
+    PaymentRefunded,
     PrescriptionIssued,
+    PrescriptionPriced,
 )
 from telelink_common.events.registry import CONSUMERS, EVENT_TYPES, EventType
 from telelink_common.events.transport import (
@@ -28,6 +31,9 @@ __all__ = [
     "CONSUMERS",
     "EVENT_TYPES",
     "AppointmentConfirmed",
+    "AppointmentCancelled",
+    "PrescriptionPriced",
+    "PaymentRefunded",
     "ConsultationPaymentSucceeded",
     "DeliveryStatusChanged",
     "DocumentReady",

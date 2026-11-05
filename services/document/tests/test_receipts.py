@@ -42,7 +42,13 @@ def test_paid_receipt_reuses_private_pdf_and_rejects_wrong_snapshot(medication):
         "delivery_fee_minor": 700 if medication else 0,
     }
     storage = MemoryS3()
-    session = SimpleNamespace(execute=lambda *args: None, scalar=lambda _: None, add=lambda _: None)
+    writes = []
+    session = SimpleNamespace(
+        execute=lambda statement, *args: writes.append(statement),
+        scalar=lambda statement: paid_at if "clock_timestamp" in str(statement) else None,
+        add=lambda _: None,
+        flush=lambda: None,
+    )
     settings = SimpleNamespace(
         billing_url="https://billing.test",
         billing_secret=SecretStr("test-" + "x" * 40),
@@ -57,6 +63,7 @@ def test_paid_receipt_reuses_private_pdf_and_rejects_wrong_snapshot(medication):
         with pytest.raises(RuntimeError, match="Receipt PDF processing failed"):
             generate(session, event)
     assert storage.puts == 1
+    assert sum("event_outbox" in str(statement) for statement in writes) == 2
     item = next(iter(storage.objects.values()))
     content = PdfReader(BytesIO(item["Body"])).pages[0].extract_text()
     assert "SGD 35.00" in content

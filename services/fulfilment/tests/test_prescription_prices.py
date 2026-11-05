@@ -3,7 +3,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from app.models import Order, PrescriptionPrice
+from app.models import Order, PrescriptionPrice, event_outbox
 from tests.test_api import ITEM, OTHER_TENANT, PATIENT, RX, TENANT, create, identity
 from tests.test_api import api as api
 
@@ -31,6 +31,46 @@ def body(amount=250):
             }
         ],
     }
+
+
+def test_readiness_event_deduplicates_saves_and_revalidates_pricing(api):
+    from pydantic import SecretStr
+    from telelink_common.service_auth import service_token
+
+    client, state, app = api
+    named_context(state)
+    state.identity = identity(roles=(), clinic_role="clinic_admin")
+    path = f"/clinics/{TENANT}/prescriptions/{RX}/prices"
+    assert client.put(path, json=body()).status_code == 200
+    assert client.put(path, json=body(300)).status_code == 200
+    with state.sessions() as db:
+        assert (
+            len(
+                db.execute(
+                    select(event_outbox).where(
+                        event_outbox.c.detail_type == "prescription_priced.v1"
+                    )
+                ).all()
+            )
+            == 1
+        )
+    key = SecretStr("notification-" + "x" * 40)
+    app.state.settings.notification_secret = key
+    headers = {
+        "Authorization": "Bearer "
+        + service_token(key, "notification", "telelink-fulfilment-notification")
+    }
+    context = (
+        f"/internal/prescriptions/{RX}/notification-context?tenant_id={TENANT}&patient_id={PATIENT}"
+    )
+    assert client.get(context).status_code == 401
+    assert client.get(context, headers=headers).json()["eligible"] is True
+    assert (
+        client.get(context.replace(str(TENANT), str(OTHER_TENANT)), headers=headers).status_code
+        == 404
+    )
+    state.source.context = state.source.context.model_copy(update={"status": "voided"})
+    assert client.get(context, headers=headers).json()["eligible"] is False
 
 
 def test_individual_prices_gate_orders_and_do_not_reuse_rates(api):

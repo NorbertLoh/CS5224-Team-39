@@ -41,7 +41,7 @@ def test_new_event_normalizes_time_and_preserves_ids():
     "changes",
     [
         {"occurred_at": datetime(2026, 10, 12, 3)},
-        {"detail_type": "appointment_cancelled.v1"},
+        {"detail_type": "unsupported_event.v1"},
         {"data": PrescriptionIssued(prescription_id=TENANT, appointment_id=APPOINTMENT)},
     ],
 )
