@@ -10,6 +10,7 @@ import {
   Clock3,
   ShieldCheck,
   Stethoscope,
+  UserRound,
 } from 'lucide-react'
 
 export function DoctorNavigation({
@@ -40,6 +41,12 @@ export function DoctorNavigation({
             label: 'Availability',
             section: 'availability',
             icon: Clock3,
+          },
+          {
+            href: '/doctor/profile',
+            label: 'Profile',
+            section: 'profile',
+            icon: UserRound,
           },
         ]
       : []),
@@ -74,6 +81,7 @@ export function DoctorNavigation({
       )}
       {state.canPractise &&
         state.section !== 'consultation' &&
+        state.section !== 'profile' &&
         state.section !== 'verification' && (
           <label className="flex min-w-0 max-w-full items-center gap-2 text-xs font-medium text-slate-500">
             <Building2 size={16} aria-hidden="true" />

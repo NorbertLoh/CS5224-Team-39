@@ -1,5 +1,9 @@
 # Web frontend
 
+Doctors can manage their public portrait in **Doctor workspace → Profile**
+(`/doctor/profile`). The saved photo appears in clinic storefront doctor lists.
+See [RF53 setup and verification](../../docs/RF53-doctor-profile-photos.md).
+
 Account creation is available from **Create an account** on `/sign-in`, with email
 verification and automatic patient provisioning on first sign-in. See
 [RF13 setup and verification](../../docs/RF13-account-signup.md), including local

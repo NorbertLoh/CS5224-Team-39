@@ -9,13 +9,15 @@ export function doctorNavigationState(
 ) {
   const clinics = clinicIds(identity, 'doctor')
   const section =
-    route.kind === 'doctor-application'
-      ? 'verification'
-      : route.kind === 'doctor-availability'
-        ? 'availability'
-        : route.kind === 'consultation'
-          ? 'consultation'
-          : 'appointments'
+    route.kind === 'doctor-profile'
+      ? 'profile'
+      : route.kind === 'doctor-application'
+        ? 'verification'
+        : route.kind === 'doctor-availability'
+          ? 'availability'
+          : route.kind === 'consultation'
+            ? 'consultation'
+            : 'appointments'
   const requested =
     'tenantId' in route
       ? route.tenantId

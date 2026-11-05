@@ -15,10 +15,17 @@ export type Route =
   | { kind: 'prescriptions' | 'documents'; role: 'patient' }
   | { kind: 'role'; role: Role; tenantId?: string }
   | { kind: 'doctor-availability'; role: 'doctor'; tenantId?: string }
+  | { kind: 'doctor-profile'; role: 'doctor' }
   | { kind: 'clinic-appointments'; role: 'clinic_admin'; tenantId?: string }
   | { kind: 'consultation'; role: 'patient' | 'doctor' }
   | {
-      kind: 'profile' | 'staff' | 'payments' | 'medicine-pricing' | 'orders' | 'settings'
+      kind:
+        | 'profile'
+        | 'staff'
+        | 'payments'
+        | 'medicine-pricing'
+        | 'orders'
+        | 'settings'
       role: 'clinic_admin'
       tenantId: string
     }
@@ -65,7 +72,11 @@ export function hasRole(identity: Identity, role: Role) {
 export function canAccess(identity: Identity, route: Route) {
   if (!('role' in route)) return true
   // Orders and clinic-scoped schedules require active owning-clinic administration.
-  if (route.kind === 'orders' || route.kind === 'medicine-pricing' || route.kind === 'settings')
+  if (
+    route.kind === 'orders' ||
+    route.kind === 'medicine-pricing' ||
+    route.kind === 'settings'
+  )
     return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
   if (route.kind === 'clinic-appointments' && route.tenantId)
     return clinicIds(identity, 'clinic_admin').includes(route.tenantId)
@@ -111,6 +122,8 @@ export function parseRoute(path: string): Route {
   if (normalized === '/patient/medication-orders')
     return { kind: 'medication-orders', role: 'patient' }
   if (normalized === '/doctor') return { kind: 'role', role: 'doctor' }
+  if (normalized === '/doctor/profile')
+    return { kind: 'doctor-profile', role: 'doctor' }
   if (normalized === '/doctor/availability')
     return { kind: 'doctor-availability', role: 'doctor' }
   if (normalized === '/patient/consultation')
@@ -150,7 +163,12 @@ export function parseRoute(path: string): Route {
       }
     return {
       kind: clinic[2] as
-        'profile' | 'staff' | 'payments' | 'medicine-pricing' | 'orders' | 'settings',
+        | 'profile'
+        | 'staff'
+        | 'payments'
+        | 'medicine-pricing'
+        | 'orders'
+        | 'settings',
       role: 'clinic_admin',
       tenantId: clinic[1].toLowerCase(),
     }

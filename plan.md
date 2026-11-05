@@ -1,5 +1,11 @@
 # TeleLink Health implementation plan
 
+RF53 doctor profile photos: identity owns sanitized public portraits separately
+from private licence evidence. The tenant doctor directory forwards nullable
+photo IDs; storefronts read portraits through identity's public,
+eligibility-checked route. Doctors manage their own photo at `/doctor/profile`.
+See [doctor profile photos](docs/RF53-doctor-profile-photos.md).
+
 Status: architecture plan, originally 12 October 2026; current implementation
 summary updated 26 October 2026. The React frontend, independent business APIs,
 workers and local Compose application are implemented. Local integration evidence,

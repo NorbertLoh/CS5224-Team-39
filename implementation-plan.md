@@ -1,5 +1,23 @@
 # TeleLink Health: shared implementation backlog
 
+## Doctor profile photos (RF53)
+
+- [ ] RF53: Add a doctor Profile page for uploading, replacing and removing a
+  public portrait used in clinic storefront doctor lists. Validate PNG/JPEG bytes
+  and dimensions, enforce own-doctor writes and approved active public readback,
+  and preserve private verification documents. Dependencies A11/U01/RF28 merged.
+  Effort M. Issue #379 assigned NorbertLoh, In progress. Verify authorization,
+  invalid/oversized uploads, persistence, directory propagation and frontend
+  lint/typecheck/build. Requires identity migration 0007 and coordinated
+  identity/tenant/web release; no new environment settings.
+  Implemented in draft PR #380. Identity 215 and tenant 152 PostgreSQL tests,
+  both Ruff checks/format, frontend lint/typecheck/build and existing probes pass.
+  Fixture-backed Chromium verifies upload/replacement/reload, storefront display,
+  removal/fallback and mobile layout. Tailscale demo backed up/migrated to 0007,
+  tenant/identity/web rebuilt and healthy; real doctor sign-in/Profile verified.
+  Existing stopped Floci/Redis dependencies started. AWS rollout pending. Setup and limits:
+  [doctor profile photos](docs/RF53-doctor-profile-photos.md).
+
 ## Patient pricing and payment stages (RF52)
 
 - [x] RF52: Show Awaiting pricing for patient medicine prescriptions until all

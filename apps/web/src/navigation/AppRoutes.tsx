@@ -17,6 +17,7 @@ import { PatientProfilePage, PatientRecordsPage } from '@/features/patient'
 import { ClinicPayments } from '@/features/payments/ClinicPayments'
 import { PlatformClinics } from '@/features/platform-clinics/PlatformClinics'
 import { DoctorApplicationPage } from '@/features/doctor-onboarding/DoctorApplicationPage'
+import { DoctorProfilePage } from '@/features/doctor-profile/DoctorProfilePage'
 import { DoctorApplicationsReview } from '@/features/doctor-onboarding/DoctorApplicationsReview'
 import { StaffManagement } from '@/features/staff/StaffManagement'
 import { ClinicStorefront } from '@/features/storefront/ClinicStorefront'
@@ -35,6 +36,8 @@ export function AppRoutes({
   switch (route.kind) {
     case 'doctor-application':
       return <DoctorApplicationPage />
+    case 'doctor-profile':
+      return <DoctorProfilePage />
     case 'doctor-applications-review':
       return <DoctorApplicationsReview />
     case 'clinic-registration':
@@ -69,12 +72,14 @@ export function AppRoutes({
         />
       )
     case 'medicine-pricing':
-      return session && (
-        <ClinicMedicinePricing
-          key={route.tenantId}
-          tenantId={route.tenantId}
-          token={session.accessToken}
-        />
+      return (
+        session && (
+          <ClinicMedicinePricing
+            key={route.tenantId}
+            tenantId={route.tenantId}
+            token={session.accessToken}
+          />
+        )
       )
     case 'consultation':
       return <BookedConsultation role={route.role} />

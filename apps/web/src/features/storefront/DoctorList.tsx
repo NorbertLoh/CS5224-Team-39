@@ -1,5 +1,5 @@
 import type { Doctor } from '@/features/clinics/api'
-import { Stethoscope } from 'lucide-react'
+import { DoctorPhoto } from '@/features/doctor-profile/DoctorPhoto'
 
 export function DoctorList({ doctors }: { doctors: Doctor[] }) {
   return (
@@ -32,12 +32,10 @@ export function DoctorList({ doctors }: { doctors: Doctor[] }) {
               key={doctor.doctor_id}
               className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6"
             >
-              <span
-                className="flex size-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[var(--clinic-color)]"
-                aria-hidden="true"
-              >
-                <Stethoscope className="size-5" />
-              </span>
+              <DoctorPhoto
+                doctorId={doctor.doctor_id}
+                photoId={doctor.photo_id}
+              />
               <div>
                 <h3 className="font-semibold">{doctor.display_name}</h3>
                 <p className="mt-1 text-sm text-slate-500">Clinic doctor</p>

@@ -17,6 +17,7 @@ import {
   verificationAttention,
 } from '../src/navigation/attention'
 import { navigationItems } from '../src/navigation/useNavigationAttention'
+import { DoctorList } from '../src/features/storefront/DoctorList'
 
 const a = '00000000-0000-4000-8000-000000000001'
 const b = '00000000-0000-4000-8000-000000000002'
@@ -166,6 +167,26 @@ assert(!registration.includes('Switch workspace'))
 assert(registration.includes('Application status'))
 assert(!registration.includes('>Availability<'))
 assert(!registration.includes('>Appointments<'))
+assert.deepEqual(parseRoute('/doctor/profile'), {
+  kind: 'doctor-profile',
+  role: 'doctor',
+})
+assert(canAccess(all, parseRoute('/doctor/profile')))
+assert(!canAccess(patient, parseRoute('/doctor/profile')))
+const doctorProfile = render('/doctor/profile')
+assert(doctorProfile.includes('href="/doctor/profile" aria-current="page"'))
+assert(!doctorProfile.includes('aria-label="Doctor clinic"'))
+const doctorList = renderToStaticMarkup(
+  createElement(DoctorList, {
+    doctors: [
+      { doctor_id: a, display_name: 'Portrait doctor', photo_id: b },
+      { doctor_id: b, display_name: 'Doctor without photo' },
+    ],
+  }),
+)
+assert(doctorList.includes(`/identity/doctors/${a}/photos/${b}`))
+assert.equal((doctorList.match(/<img /g) ?? []).length, 1)
+assert(doctorList.includes('Doctor without photo'))
 for (const role of ['patient', 'doctor'] as const satisfies readonly Role[]) {
   const room = render(`/${role}/consultation`)
   assert(!room.includes('aria-current="page"'))

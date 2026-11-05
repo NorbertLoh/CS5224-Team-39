@@ -1002,7 +1002,7 @@ def test_doctor_directory_service_scope_pagination_and_revocation(api):
         str(api.ids["doctor"]),
         str(api.ids["target"]),
     }
-    assert all(set(item) == {"doctor_id", "display_name"} for item in summaries)
+    assert all(set(item) == {"doctor_id", "display_name", "photo_id"} for item in summaries)
     assert (
         api.client.get(
             f"/internal/clinics/{TENANT_B}/doctors",
@@ -1025,5 +1025,5 @@ def test_doctor_directory_service_scope_pagination_and_revocation(api):
         )
         membership.status = "revoked"
     assert api.client.get(endpoint, headers=credential).json()["items"] == [
-        {"doctor_id": str(api.ids["target"]), "display_name": "target"}
+        {"doctor_id": str(api.ids["target"]), "display_name": "target", "photo_id": None}
     ]
