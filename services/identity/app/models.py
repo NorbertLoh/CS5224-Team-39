@@ -111,6 +111,20 @@ class Membership(Base):
     )
 
 
+class DoctorPhoto(Base):
+    """One sanitized public portrait per doctor, separate from licence evidence."""
+
+    __tablename__ = "doctor_photos"
+    __table_args__ = (
+        CheckConstraint("octet_length(content) BETWEEN 1 AND 2097152", name="ck_doctor_photo_size"),
+    )
+    subject_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("identity.subjects.subject_id", ondelete="CASCADE"), primary_key=True
+    )
+    photo_id: Mapped[UUID] = mapped_column(Uuid, default=uuid4)
+    content: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
+
+
 class DoctorDocument(Base):
     """Private evidence, served through authenticated endpoints only."""
 

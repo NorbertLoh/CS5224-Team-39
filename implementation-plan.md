@@ -10,6 +10,11 @@
   invalid/oversized uploads, persistence, directory propagation and frontend
   lint/typecheck/build. Requires identity migration 0007 and coordinated
   identity/tenant/web release; no new environment settings.
+  Implemented in draft PR #380. Identity 215 and tenant 152 PostgreSQL tests,
+  both Ruff checks/format, frontend lint/typecheck/build and existing probes pass.
+  Fixture-backed Chromium verifies upload/replacement/reload, storefront display,
+  removal/fallback and mobile layout. Demo/AWS rollout pending. Setup and limits:
+  [doctor profile photos](docs/RF53-doctor-profile-photos.md).
 
 ## Patient pricing and payment stages (RF52)
 

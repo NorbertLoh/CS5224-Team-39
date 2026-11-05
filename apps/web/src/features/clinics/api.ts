@@ -9,7 +9,11 @@ export type Clinic = ClinicProfile & {
   status: 'pending_review' | 'active' | 'rejected' | 'suspended'
 }
 
-export type Doctor = { doctor_id: string; display_name: string }
+export type Doctor = {
+  doctor_id: string
+  display_name: string
+  photo_id?: string | null
+}
 
 export async function clinicRequest(
   path: string,

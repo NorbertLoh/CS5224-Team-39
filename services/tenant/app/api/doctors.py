@@ -20,6 +20,7 @@ class DoctorSummary(BaseModel):
     model_config = ConfigDict(extra="forbid")
     doctor_id: UUID
     display_name: str = Field(min_length=1)
+    photo_id: UUID | None = None
 
 
 class DoctorPage(BaseModel):

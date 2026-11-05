@@ -889,7 +889,11 @@ def test_public_doctors_enforces_clinic_state_and_forwards_scoped_request(api):
             audience="telelink-identity-doctors",
         )
         assert claims["sub"] == "tenant" and claims["exp"] - claims["iat"] == 60
-        item = {"doctor_id": str(api.ids["doctor"]), "display_name": "Doctor"}
+        item = {
+            "doctor_id": str(api.ids["doctor"]),
+            "display_name": "Doctor",
+            "photo_id": str(api.ids["doctor"]),
+        }
         if state["extra"]:
             item["cognito_sub"] = "private"
         return httpx.Response(state["status"], json={"items": [item], "next_cursor": "next"})
@@ -900,7 +904,11 @@ def test_public_doctors_enforces_clinic_state_and_forwards_scoped_request(api):
     )
     response = api.client.get(endpoint, params={"limit": 1})
     assert response.status_code == 200 and response.json()["items"] == [
-        {"doctor_id": str(api.ids["doctor"]), "display_name": "Doctor"}
+        {
+            "doctor_id": str(api.ids["doctor"]),
+            "display_name": "Doctor",
+            "photo_id": str(api.ids["doctor"]),
+        }
     ]
     state["extra"] = True
     assert api.client.get(endpoint, params={"limit": 1}).status_code == 503

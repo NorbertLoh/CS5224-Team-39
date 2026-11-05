@@ -12,7 +12,7 @@ from telelink_common.pagination import sign_cursor, verify_cursor
 
 from app.api.dependencies import DB
 from app.api.provisioning import bearer, verify_tenant_service
-from app.models import Membership, Subject
+from app.models import DoctorPhoto, Membership, Subject
 from app.pagination import cursor_error, cursor_key
 from app.services.doctor_verification import approved_doctor
 
@@ -22,6 +22,7 @@ router = APIRouter(tags=["internal"])
 class DoctorSummary(BaseModel):
     doctor_id: UUID
     display_name: str
+    photo_id: UUID | None = None
 
 
 class DoctorPage(BaseModel):
@@ -76,8 +77,9 @@ def doctors(
     settings = request.app.state.settings
     cursor_key(settings)
     query = (
-        select(Membership, Subject)
-        .join(Subject)
+        select(Membership, Subject, DoctorPhoto.photo_id)
+        .join(Subject, Membership.subject_id == Subject.subject_id)
+        .outerjoin(DoctorPhoto, DoctorPhoto.subject_id == Subject.subject_id)
         .where(
             Membership.tenant_id == tenant_id,
             Membership.status == "active",
@@ -98,8 +100,10 @@ def doctors(
     )
     return DoctorPage(
         items=[
-            DoctorSummary(doctor_id=subject.subject_id, display_name=subject.display_name)
-            for membership, subject in rows[:limit]
+            DoctorSummary(
+                doctor_id=subject.subject_id, display_name=subject.display_name, photo_id=photo_id
+            )
+            for membership, subject, photo_id in rows[:limit]
         ],
         next_cursor=next_cursor,
     )
