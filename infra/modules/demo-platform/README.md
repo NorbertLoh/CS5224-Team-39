@@ -25,3 +25,11 @@ W01 PR #233 owns the actual environment/backend skeleton; those files are untouc
 `enable_workloads=false` is the safe configuration phase, not a no-cost mode.
 Publishing `images` registers bootstrap/migration tasks without starting services.
 Enable workloads only after the one-off database setup and migrations succeed.
+
+All eight business API containers use Uvicorn `--limit-concurrency 64` (RF50).
+This ceiling counts open connections as well as active request tasks. The former
+limit of eight rejected normal patient/clinic polling with HTTP 503 responses.
+This changes no task count, CPU/memory allocation or autoscaling maximum, so
+allocated Fargate baseline capacity is unchanged. Actual request, network and
+logging usage can still affect charges. Lambda/FIFO worker concurrency remains
+separate and defaults to one; signalling uses its existing Node.js runtime.
