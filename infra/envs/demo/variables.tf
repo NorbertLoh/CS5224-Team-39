@@ -18,6 +18,11 @@ variable "ses_sender" {
   description = "Real operator-owned email address, to be verified in SES before sending."
   type        = string
 }
+variable "ses_recipient_identity_arns" {
+  description = "Already-verified SES demo recipient identity ARNs; confirm verification before enabling."
+  type        = set(string)
+  default     = []
+}
 variable "budget_email" {
   description = "Operator email receiving the demo budget/SNS alerts."
   type        = string
