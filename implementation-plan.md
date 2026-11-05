@@ -2,12 +2,12 @@
 
 ## Patient lifecycle emails (RF51)
 
-- [ ] RF51: Send verified consultation/medication receipts as PDF attachments,
+- [x] RF51: Send verified consultation/medication receipts as PDF attachments,
   secure issued-MC/prescription links, medicine-payment links after pricing,
   and supported cancellation/refund/delivery updates. Preserve recipient checks,
   durable deduplication and uncertain-send holds; verify isolated services and
   the demo deployment without replaying historical email. Dependencies
-  RF33/RF48/N02/U17 merged; preserve RF50. Effort L. NorbertLoh. Issue #373 In progress.
+  RF33/RF48/N02/U17 merged; preserve RF50. Effort L. NorbertLoh. Issue #373 closed; PR #374 merged.
   PR #374 implements the flow; all seven affected AMD64 images are built at
   95bc718. Verified Notification 112, Document 112, Fulfilment 379, Scheduling 273,
   Billing 322 checks; shared events 124 and mocked Terraform 17 checks pass.
@@ -16,19 +16,19 @@
   stable, all three Lambdas active and lifecycle routes enabled. SES accepted a
   synthetic receipt PDF at its simulator; a user-requested demo recipient is
   verified. SES remains in sandbox; no historical patient emails were replayed.
-  PR #374 remains open and issue #373 In progress until merge.
+  PR #374 merged after local workflow checks passed (2026-11-05).
 
 ## AWS API concurrency (RF50)
 
-- [ ] RF50: Raise the shared ECS API concurrency limit from 8 to 64 across
+- [x] RF50: Raise the shared ECS API concurrency limit from 8 to 64 across
   all eight business APIs, audit other concurrency controls, and deploy through
   the demo Terraform without increasing allocated capacity. Verify Terraform
   checks, unchanged task/CPU/memory limits and stable AWS services. Dependencies
-  RF27/RF32/RF48 merged. Effort S. NorbertLoh. Issue #371 In progress; PR #372.
+  RF27/RF32/RF48 merged. Effort S. NorbertLoh. Issue #371 closed; PR #372 merged.
   Terraform fmt/validate and 14 mocked tests passed. AWS rollout stable for all
   eight APIs at 64; 12 simultaneous patient/clinic order reads returned 200.
   Allocated capacity is unchanged. GitHub Actions cannot start because the
-  account is locked due to a billing issue. Keep open until PR merge.
+  account is locked due to a billing issue. Local workflow checks passed before merge.
 
 ## Website icon (RF49)
 
