@@ -1,5 +1,14 @@
 # TeleLink Health: shared implementation backlog
 
+## Patient lifecycle emails (RF51)
+
+- [ ] RF51: Send verified consultation/medication receipts as PDF attachments,
+  secure issued-MC/prescription links, medicine-payment links after pricing,
+  and supported cancellation/refund/delivery updates. Preserve recipient checks,
+  durable deduplication and uncertain-send holds; verify isolated services and
+  the demo deployment without replaying historical email. Dependencies
+  RF33/RF48/N02/U17 merged; preserve RF50. Effort L. NorbertLoh. Issue #373 In progress.
+
 ## AWS API concurrency (RF50)
 
 - [ ] RF50: Raise the shared ECS API concurrency limit from 8 to 64 across
