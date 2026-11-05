@@ -1,114 +1,90 @@
-# W10 SES demo recipient permissions
+# W10 SES demo email
 
-Issue #386. The deployed dispatch-role test returned `AccessDenied` for
-`ses:SendEmail` on a verified recipient identity. Both sender and recipient
-verification succeeded. Existing failed jobs have no provider acceptance ID.
+Issue #386 / PR #387. The user confirmed the deployed email flow works on
+6 November 2026 after selecting the verified Gmail identity as the demo sender.
+All application notification templates share that configured sender. W10 remains
+In progress until the PR is merged; do not treat this demo configuration as
+proof of domain-authenticated production sending.
 
-Add explicit verified recipient identity ARNs to the background-jobs module,
-pass the optional list through demo-platform and the existing demo root, and
-restrict the additional permission to the configured sender's From address.
-Keep the default recipient list empty. Do not create competing state or replay
-failed/uncertain jobs as part of the policy deployment.
+## Terraform configuration
 
-Validate Terraform and the recipient/sender authorization boundary, inspect the
-account-specific demo plan, apply the scoped IAM update, and complete the
-user-authorized single plain-text delivery test. Provider acceptance is distinct
-from inbox delivery. SES remains in sandbox mode.
+Use the existing operator checkout `.local/aws-current`, root `infra/envs/demo`
+and shared `demo/terraform.tfstate` backend. Preserve its ignored
+`terraform.tfvars`, `images.tfvars.json` and backend configuration. The current
+operator `ses_sender` is `lohnorbert@gmail.com`; it is deliberately not a shared
+module default. New deployments must select and verify their own sender.
 
-Set `ses_recipient_identity_arns` in the ignored demo operator tfvars to the exact
-regional identity ARN of each already-verified test recipient. The default is an
-empty set; adding an ARN does not create or verify a mailbox. The background-jobs
-module rejects wildcard and foreign-account/region identities. Its additional
-recipient grant permits `SendEmail` and `SendRawEmail` only when `ses:FromAddress`
-matches the configured sender mailbox identity. Sender permissions are preserved.
+Set `ses_recipient_identity_arns` to the exact regional identity ARNs of the
+verified demo recipients. The current operator list includes the user's Gmail
+and approved school test mailbox. SES remains in sandbox mode: adding an ARN
+does not verify a recipient or remove the provider's verification requirement.
+The default list is empty; wildcard and foreign-account/region identities are
+rejected. Only notification dispatch receives the additional `SendEmail` and
+`SendRawEmail` permissions, constrained by `ses:FromAddress` to the configured
+sender mailbox. Existing sender permissions are preserved.
 
-Apply through the existing `infra/envs/demo` backend with the deployed image pins.
-No image rebuild, migration, queue replay, failed-job reset or production-access
-request is required. Failed jobs with no retry time remain failed after this IAM
-change; resend individual known-rejected notifications only when explicitly
-requested. Never reset `uncertain` jobs without checking provider acceptance.
+The already-verified Gmail identity was imported into
+`module.platform.aws_ses_email_identity.sender` after backing up state and
+removing the prior sender from that resource address. The school identity was
+not deleted. Do not recreate or reverify the imported identity, or apply old
+operator sender settings without reviewing the identity and IAM plan.
 
-## Verification on 6 November 2026 (Singapore)
+The sender rollout changed two notification Lambda environments, the dispatch
+SES policy and the pre-existing CloudFront optional-field normalization only
+(0 additions, 4 in-place updates, 0 destruction). Images, capacity, database
+schemas and event routes were unchanged. Both Lambdas are Active/Successful;
+the effective sender and secret-override checks passed. The final plan has no
+SES/application changes, only the existing CloudFront normalization.
 
-Six background-jobs mocked Terraform tests passed, including positive recipient
-permission, sender restriction, wildcard rejection and foreign identity rejection.
-The module and demo root validate; formatting and diff checks pass.
+## Delivery evidence and limitations
 
-The reviewed demo plan changed the notification-dispatch inline policy and the
-existing CloudFront optional-field normalization only (0 add, 2 update, 0 destroy).
-Terraform apply succeeded without image, task-count, database or capacity changes.
-IAM simulation allows both SES send APIs for the approved recipient with the
-configured sender and returns `implicitDeny` when that recipient is used as From.
+The original school sender produced the explicit remote rejection
+`550 5.7.509`: the NUS From domain failed DMARC with a reject policy. SES mailbox
+verification alone did not provide aligned domain authentication. A separate
+direct SES Gmail-sender test was authorized before the user selected that sender
+for the app. The user subsequently confirmed the deployed email flow works.
+Gmail sender selection is a demo workaround; it does not give the team DNS
+control over gmail.com or establish aligned sender-domain authentication.
 
-A temporary isolated Lambda used the deployed dispatch role and its VPC settings.
-Before the fix SES returned `AccessDenied` on the verified recipient identity;
-after the fix SES accepted the user's one authorized plain-text test and returned
-a message ID. The temporary function was deleted. This proves provider acceptance
-through the actual role; inbox receipt awaits the user's confirmation. No receipt
-attachment test or historical notification replay was performed at that stage.
+Before correcting sender configuration, the dispatch role also returned
+`AccessDenied` for a verified recipient identity. Its original sender-only
+policy omitted that runtime resource. The scoped recipient grant fixes that
+permission failure. Sender-only IAM simulation had not detected it; subsequent
+checks included the recipient resource and From-address condition.
 
-Operator evidence remains ignored under `.local/email-role-diagnostic/`,
-`.local/email-diagnostic-result.json`, `.local/w10-plan.json` and
-`.local/w10-apply.log`. Issue #386 remains In progress pending review/merge and
-completion criteria. PR #387 tracks this change.
+SES acceptance and inbox delivery are separate outcomes. Notification status
+`sent` records SES acceptance and a provider message ID. On separate explicit
+user authorization, exactly the latest definitively rejected consultation
+receipt was requeued after checking its ready PDF, payment and patient/tenant
+ownership. Scheduled dispatch accepted its attachment at 00:36:33 SGT on
+6 November, with attempts 2 and no error. Other failed jobs were unchanged.
+No messages were sent or replayed during the later sender configuration rollout.
+Never reset `uncertain` jobs without resolving possible duplicate delivery.
 
-After the user separately authorized resending the latest consultation receipt,
-a recovery task verified its ready receipt PDF, consultation payment and matching
-patient/tenant ownership. It changed exactly one definitively rejected job back
-to pending, preserving the previous attempt count and all other jobs. The normal
-scheduled dispatcher accepted the receipt attachment through SES at 00:36:33
-Singapore time on 6 November 2026. Its job is now `sent`, attempts 2, no error,
-and has a nonempty provider message ID. The other five recent failed jobs remain
-unchanged. Inbox delivery remains unconfirmed; the user had not seen the earlier
-plain-text test. Virtual Deliverability Manager is not enabled, so SES message
-insights cannot establish downstream Gmail delivery. No delivery feature was
-enabled and no further emails were sent. Recovery evidence is kept in ignored
-`.local/receipt-retry-*.json` and `.local/email-diagnostic-result.json` files.
+SES bounce forwarding remains enabled to the sending mailbox. Virtual
+Deliverability Manager is not enabled; message insights were unavailable and
+no paid delivery feature was enabled. For authenticated production sending,
+use a domain controlled by the team and configure DKIM/MAIL FROM alignment.
+See [AWS DMARC guidance](https://docs.aws.amazon.com/ses/latest/dg/send-email-authentication-dmarc.html).
 
-## Delivery investigation after acceptance
+## Verification and operator evidence
 
-The user reported that neither the plain-text test nor the retried receipt was
-visible. Live checks found the recipient absent from the SES suppression list.
-The sender identity is individually verified, but DKIM signing is disabled
-(`NOT_STARTED`) and no custom MAIL FROM domain is configured. DNS for
-`_dmarc.u.nus.edu` publishes `v=DMARC1;p=reject`. Consequently this SES sender
-configuration has neither aligned DKIM nor aligned SPF for the NUS From domain.
-This is a confirmed authentication configuration defect and a strong explanation
-for downstream rejection; Gmail's actual SMTP result has not been obtained.
+Focused background-jobs tests cover recipient permissions, sender restriction,
+non-dispatch role isolation, wildcard rejection and foreign-identity rejection.
+Deployed verification checked both Lambda configurations, absence of conflicting
+secret sender overrides, scoped IAM permissions, and an empty intake invocation
+that sends no email. IAM simulation permits both SES APIs from the selected
+sender to the verified school recipient.
 
-The account has no SES domain identities and no Route 53 hosted zones. Remediation
-requires DNS access to a sender domain controlled by the team (or a separately
-authorized authenticated mail provider). Do not switch to another consumer or
-university mailbox and assume email verification supplies domain authentication.
-The user has been asked for a controllable domain and the rejection text from
-the NUS sender inbox, where SES bounce forwarding is enabled. No further messages
-were sent. W10 remains In progress; domain access and inbox evidence are blockers.
+Account-specific plans, image pins, state backups and email/message identifiers
+remain ignored under `.local/`. Relevant evidence includes `gmail-sender-*`,
+`w10-*`, `email-role-diagnostic/`, `receipt-retry-*` and
+`email-diagnostic-result.json`. Never commit operator secrets, state or plans.
 
-Reference: https://docs.aws.amazon.com/ses/latest/dg/send-email-authentication-dmarc.html
-
-## User-selected Gmail demo sender
-
-The school-recipient bounce subsequently confirmed `550 5.7.509`: the NUS From
-domain failed DMARC with a reject policy. A separate user-authorized direct SES
-test used an already-verified Gmail sender. The user then explicitly requested
-that all demo application notifications use that Gmail address. This is a demo
-sender selection, not a claim of domain-authenticated sending or inbox delivery.
-
-Changed only ignored operator `ses_sender` and the explicit verified recipient
-identity list in the existing `infra/envs/demo` checkout. Adopted the existing
-verified Gmail identity into `module.platform.aws_ses_email_identity.sender`
-using a state backup, detach and import, rather than deleting the school identity
-or requesting sender verification again. The school identity remains intact;
-only the selected Gmail identity is now tracked at the sender resource address.
-
-The reviewed plan contained four in-place updates: notification intake and
-dispatch sender environments, the dispatch SES inline policy, and the existing
-CloudFront normalization. No additions, deletions, image rebuilds, database,
-queue replay or capacity changes. Terraform apply succeeded. Both notification
-Lambdas are Active/Successful with the selected sender; recipient grants restrict
-the From address to that sender. All existing notification templates share this
-configuration. Runtime verification uses an empty intake batch and does not send
-messages. Operator configuration/evidence remains ignored under
-`.local/gmail-sender-*`; retain the selected `ses_sender` and recipient list on
-subsequent demo applies. The Gmail/school test recipient identities remain subject
-to SES sandbox verification.
+Final pre-merge verification on 6 November 2026: all eight Terraform roots/modules
+validate, recursive formatting and diff checks pass, all 23 mocked Terraform
+runs pass (background-jobs 6, demo-platform 14, public-edge 3), all three edge
+routing tests pass and all ten TURN helper tests pass. GitHub Actions jobs were
+not started because the GitHub account is locked for billing; their red statuses
+are not test execution failures. The user confirmed that the deployed email
+flow works and authorized merging the related changes.
