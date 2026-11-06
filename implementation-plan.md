@@ -790,6 +790,14 @@ Staff/Payments cleanup passed frontend lint and typecheck/production build.
 
 ## Completion checklist
 
+- [ ] RF07 accounts-only follow-up: provide a local Compose seed for the five
+requested login accounts, without clinics or sample business data. Two patients,
+doctor, clinic admin and platform admin; doctor/admin memberships deferred until
+a clinic is created. Issue #267 reopened, assigned NorbertLoh, In progress.
+Dependencies: existing RF07/F17 and migrated schemas complete. Effort: S.
+Completion: local-only read-only preflight, explicit idempotent apply, five real
+logins/global-role checks and documented Compose invocation. Preserve full demo seed.
+
 - [x] RF07: Save the clean local demo seed under `dev/` with a documented reset
 command, mandatory backup, local-target guards, relative paths and configurable
 app origin. Keep credentials, manifests, PDFs and backups ignored. Issue #267;
