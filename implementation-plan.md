@@ -1,5 +1,15 @@
 # TeleLink Health: shared implementation backlog
 
+## Documentation refresh (RF56)
+
+- [ ] RF56: Refresh root/infrastructure READMEs, explain demo versus
+  production-oriented Terraform and Redis booking holds, add a database/schema
+  guide, and remove obsolete Markdown after consolidating useful content and
+  checking references. Dependencies RF25/RF27/RF32 merged; current service
+  migrations available. Effort M. NorbertLoh; issue #389 In progress.
+  Acceptance: source-checked instructions, removal inventory and local link
+  verification; documentation only, no deployment or database changes.
+
 ## Doctor documents grouped by consultation (RF55)
 
 - [x] RF55: Group Past documents in doctor Consult by consultation with visit
