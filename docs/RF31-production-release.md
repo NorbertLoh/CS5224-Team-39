@@ -1,4 +1,8 @@
-# RF31 production release preparation
+# Release images and frontend artifacts (RF31)
+
+These tools now support the [active domain-free demo](../infra/envs/demo/README.md).
+The original preparation evidence below predates deployment. Production acceptance
+remains separate; see the [production target](production-architecture.md).
 
 Issue #332. Preparation only: no AWS upload, Terraform plan/apply, DNS setup or
 provider transactions. RF26/RF27 already supply service images and infrastructure.
@@ -101,10 +105,11 @@ Each frontend configuration gets its own directory keyed by a configuration hash
 
 Route53/domain setup is intentionally skipped for this preparation. The frontend
 can use the generated CloudFront hostname and Cognito's generated OAuth hostname.
-The current managed Terraform still requires owned signalling/internal API names
-and Route53-backed certificate validation. Therefore it cannot yet be deployed
-without those inputs. A fully domain-free signalling/internal TLS design is a
-separate architecture change, not covered or claimed by these build artifacts.
+The named `sg-managed` example requires owned signalling/internal API names and
+Route53 certificate validation. RF32 subsequently added domain-free mode to
+`infra/envs/demo`, using private CloudFront VPC origins and the generated hostname.
+Follow that root's [instructions](../infra/envs/demo/README.md); internal HTTP hops
+do not provide end-to-end application TLS.
 
 ## Verification
 

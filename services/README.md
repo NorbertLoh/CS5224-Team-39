@@ -15,4 +15,7 @@
 
 Use [template/](template/README.md) for the FastAPI foundation and its optional [SQLAlchemy/Alembic example](template/docs/database.md). F05 adds container builds. Keep app code, tests and migrations inside the corresponding service. Each service supplies its own Dockerfile, health checks and deployment inputs. HTTP and worker commands may share an image while remaining independently scalable.
 
-The business-service directories are placeholders. Only the generic template is currently runnable.
+The business services are implemented and run together through the
+[Compose stack](../docs/compose-stack.md) or the [AWS demo](../infra/envs/demo/README.md).
+See [database and schemas](../docs/database/README.md) for table ownership,
+cross-service references, migration commands and Redis booking-hold behavior.

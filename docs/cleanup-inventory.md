@@ -1,5 +1,32 @@
 # Cleanup inventory and decisions
 
+## RF56 documentation cleanup (6 November 2026)
+
+Checked tracked Markdown and inbound references from source, scripts, CI and
+other guides. A missing inbound link alone was not treated as proof of obsolescence.
+No runtime code, migration, sample artifact or provider tool was removed.
+
+| Removed Markdown | Reason | Retained content / replacement |
+| --- | --- | --- |
+| Former `docs/aws-deployment.md` | Nine-line skeleton still claimed no AWS resources existed | [Infrastructure README](../infra/README.md) and [active demo root](../infra/envs/demo/README.md); inbound links repaired |
+| Former `infra/modules/README.md` | Placeholder promised modules that now exist | [Infrastructure module/root table](../infra/README.md#choose-the-correct-root) and individual module READMEs |
+| Former `tests/load/README.md` | Empty-directory reservation, no load harness or methodology | Load evaluation remains deferred in `plan.md`; no performance claims added |
+| Former `docs/RF05-refinements.md` | Unlinked task narrative with superseded date dropdown, join-window and navigation descriptions | Current [scheduling](scheduling-frontend.md), [architecture](architecture-guide.md) and [document](document-frontend.md) guides; unique maintenance/check evidence consolidated into [cleanup verification](cleanup-verification.md#rf05-historical-evidence-consolidated-by-rf56) |
+| Former `docs/RF09-newest-first-history.md` | Unlinked history-order note belongs with shared pagination architecture | Complete behavior and historical evidence retained in [history ordering](architecture-guide.md#history-ordering-and-rf09-evidence) |
+| Former `docs/RF27-aws-runtime-config.md` | Duplicated infrastructure entry point with stale predeployment claims | Worker/image/monitoring/cutover instructions moved to [background jobs](../infra/modules/background-jobs/README.md); cache/input semantics moved to [public edge](../infra/modules/public-edge/README.md) |
+
+Kept `AGENTS.md`, architecture/backlog/cleanup plans, contracts, service/feature
+READMEs, active setup/replay/provider tools and unique historical acceptance
+reports. In particular, open cleanup UI gates (#293/#296), cross-network video
+evidence, spike instructions and PDF/sign-in sample references remain useful.
+The earlier inventory below records its own baseline; RF56 supersedes its choice
+to keep RF09 as a standalone file while retaining that note's complete content.
+
+New navigation: [demo architecture](demo-architecture.md),
+[production target](production-architecture.md) and [database/schemas](database/README.md).
+
+## Earlier cleanup baseline
+
 RF16 / issue #292. Inspection baseline: `a059bb4` on 26 October 2026.
 Scope: [cleanup plan](../cleanup-plan.md); [execution checklist](../cleanup-implementation.md).
 This is an inspected candidate list, not a claim that subsequent phases are complete.

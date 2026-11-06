@@ -1,11 +1,12 @@
 # TeleLink Health
 
-CS5224 Team 39's multi-tenant teleconsultation prototype. Stack: React + TypeScript + Vite, independent FastAPI business services, PeerJS signalling and Floci for local AWS APIs. AWS hosting remains planned.
+CS5224 Team 39's multi-tenant teleconsultation prototype: React/TypeScript, independent FastAPI services, PostgreSQL, Redis and PeerJS/WebRTC. Docker Compose uses Floci for local AWS APIs; the AWS demo uses managed AWS services in Singapore.
 
 ## Current status
 
 This repository contains a [React frontend](apps/web/README.md), independent business
-APIs and workers, and a [full local Compose stack](docs/compose-stack.md). See the
+APIs and workers, a [full local Compose stack](docs/compose-stack.md), and a
+[Terraform-managed AWS demo](docs/demo-architecture.md). See the
 [implementation backlog](implementation-plan.md) for completed local integrations
 and remaining journey/AWS work. The [FastAPI template](services/template/README.md)
 can also run independently.
@@ -21,7 +22,6 @@ can also run independently.
 | `infra/` | AWS infrastructure code and environment configuration |
 | `dev/` | Compose support, Floci configuration/bootstrap and synthetic seed tools |
 | `tests/e2e/` | Focused cross-service workflow checks |
-| `tests/load/` | Reserved for deferred load evaluation |
 | `docs/` | Setup guides, architecture decisions and runbooks |
 
 Each business service owns its database schema and Alembic migrations. Do not write another service's tables. Frontend and backend work can be claimed separately using agreed contracts.
@@ -32,6 +32,11 @@ Each business service owns its database schema and Alembic migrations. Do not wr
 | --- | --- |
 | Understand the system from overview to implementation | [Technical architecture guide](docs/architecture-guide.md) |
 | Run the complete local app | [Compose setup](docs/compose-stack.md) |
+| Understand the AWS demo and its limits | [Demo architecture](docs/demo-architecture.md), [demo Terraform](infra/envs/demo/README.md) |
+| Understand the intended production deployment | [Production architecture](docs/production-architecture.md), [managed Terraform example](infra/examples/sg-managed/README.md) |
+| Configure, release or tear down AWS resources | [Infrastructure README](infra/README.md) |
+| Understand database ownership, tables and migrations | [Database and schemas](docs/database/README.md) |
+| Understand Redis holds and double-booking protection | [Booking hold internals](services/scheduling/docs/holds.md) |
 | Sign-in and session behavior | [Authentication](docs/authentication.md) |
 | Frontend setup and checks | [Web README](apps/web/README.md) |
 | Booking and Upcoming/Past appointments | [Scheduling frontend](docs/scheduling-frontend.md) |
@@ -52,11 +57,11 @@ Existing host-stack users can preserve their database with `setup -UseExistingDa
 1. Read [AGENTS.md](AGENTS.md) for the issue-first claim workflow.
 2. Find a ready task in [implementation-plan.md](implementation-plan.md); create/reuse its GitHub issue and claim it before coding.
 3. Read [plan.md](plan.md) for architecture, scope and the four-week schedule.
-4. Run the [full local Compose stack](docs/compose-stack.md), or the [service template](services/template/README.md) for isolated foundation work. For cloud work, see [AWS setup](docs/aws-deployment.md).
+4. Run the [full local Compose stack](docs/compose-stack.md), or the [service template](services/template/README.md) for isolated foundation work. For cloud work, see [AWS setup](infra/README.md).
 
 Commit dependency lockfiles, migrations and sanitized configuration examples. Keep credentials, local environment overrides, generated output, Terraform state and runtime data out of Git. Use synthetic records only.
 
-F01 is skipped by team decision. W01 chose Terraform with a shared team AWS account in `ap-southeast-1` (see [infra/README.md](infra/README.md)). The exact demo date and AWS budget amount still need to be confirmed.
+F01 is skipped by team decision. W01 chose Terraform with a shared team AWS account in `ap-southeast-1`. RF32 and later releases record AWS demo deployment; this does not establish production readiness or completion of the remaining journey/video acceptance gates. The configured AWS Budget sends alerts; it does not cap spending.
 
 ## Local sign-in accounts
 

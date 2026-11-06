@@ -1,5 +1,11 @@
 # Managed AWS scaling/failover with demo capacity limits (RF27)
 
+See the [production architecture](../../../docs/production-architecture.md) for
+the target diagram and remaining production gates. This named-domain reference
+is distinct from the [active domain-free demo](../../envs/demo/README.md) and its
+[architecture](../../../docs/demo-architecture.md). There is no `envs/prod` root;
+`managed` does not mean production-sized or accepted.
+
 This is the production-oriented **service layout**, with scaling/replacement and
 HA settings built in and demo capacities defaulted to one. It uses the reusable
 platform module's `managed` profile.

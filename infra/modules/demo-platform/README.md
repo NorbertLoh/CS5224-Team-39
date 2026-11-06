@@ -1,4 +1,10 @@
-# Singapore demo platform
+# Reusable AWS platform
+
+The active [demo root](../../envs/demo/README.md) uses this module's `managed`
+profile in domain-free AMD64 mode. Read the [demo architecture](../../../docs/demo-architecture.md)
+and [production target](../../../docs/production-architecture.md) for separate
+diagrams, traffic flows and limits. The defaults below describe the compact
+reference, not the active team deployment.
 
 For production-oriented AWS services/scaling with demo capacity defaulted to one, use
 [`sg-managed`](../../examples/sg-managed/README.md). Its `managed` deployment profile
@@ -20,7 +26,9 @@ and requires the digest-pinned `redis` image. Local Compose is unchanged.
 Setup, verified pricing assumptions, scaling limits and teardown:
 [Singapore demo guide](../../../docs/RF27-singapore-demo.md).
 Example inputs: [sg-demo](../../examples/sg-demo/terraform.tfvars.example).
-W01 PR #233 owns the actual environment/backend skeleton; those files are untouched.
+The environment root owns state/operator inputs; do not create a competing root
+for the same resources. See [database operations](../../../docs/database/README.md)
+for schema ownership, bootstrap and explicit migration tasks.
 
 `enable_workloads=false` is the safe configuration phase, not a no-cost mode.
 Publishing `images` registers bootstrap/migration tasks without starting services.
