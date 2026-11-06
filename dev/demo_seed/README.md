@@ -1,5 +1,95 @@
 # Repeatable local demo seed (RF07)
 
+## Requested accounts and applications (local Compose)
+
+For a fresh dataset, `accounts.py` provisions only these five logins:
+
+| Requested role | Email |
+| --- | --- |
+| Patient | `patient@example.test` |
+| Patient | `lohnorbert@gmail.com` |
+| Doctor | `doctor@example.test` |
+| Clinic admin | `clinic@example.test` |
+| Platform admin | `platform@example.test` |
+
+Doctor and clinic-admin roles require clinic memberships. The clinic admin owns
+the Meridian Health Partners application below; Dr. Tan has its doctor membership.
+It creates no appointments or sample clinical records.
+Both patients receive the address `3 Temasek Boulevard, Singapore`, postal code
+`038983`, country `SG`. Their shared phone is read from `LOCAL_SEED_PATIENT_PHONE`
+in the environment or the ignored `.local/compose/accounts.env` file. Configure
+that value before `--apply` or `--verify`; it must be a Singapore phone number.
+The environment takes precedence. Phone values are kept outside source control.
+Patients receive the `patient` global role and the platform admin receives
+`platform_admin`. Existing unrelated data and memberships are preserved.
+
+The seed submits one clinic application through the real tenant registration API:
+Meridian Health Partners (`meridian-health-partners`), consultation fee SGD 30.00,
+description "Your trusted family clinic since 1990." Pickup is Norbert at
+1 Raffles Place, Singapore, postal code `048616`, country SG, latitude `1.2844`,
+longitude `103.8511`. The pickup phone uses the same ignored shared phone setting
+as the patients. The default branding colour is `#156B63`, with no logo.
+`clinic@example.test` receives its clinic-admin membership from normal registration.
+The application remains **pending review**, with no automatic approval.
+Replaying the same registration reuses the same clinic and membership. Existing
+review decisions are preserved; verification reports if it is no longer pending.
+
+`doctor@example.test` is named **Dr. Tan** and has a pending doctor application:
+licence `DEMO-TAN-0001`, fictional licensing authority "Telelink Demo Medical
+Registry (fictional)", specialty "General Practice (Demo)". The seed renders a
+one-page PDF labelled **DEMO ONLY - NOT VALID FOR PRACTICE**, uploads it through
+the real evidence API, and submits the application without approving it. The PDF
+uses fictional sample issue/expiry dates (1 January 2026 to 31 December 2030).
+Generated evidence is kept ignored at `.local/compose/output/pdf/dr-tan-demo-licence.pdf`.
+Reruns reuse the existing matching pending application and evidence; verification
+checks the downloaded PDF bytes. Existing different/reviewed applications are
+reported rather than overwritten. The seed assigns `doctor@example.test` to Meridian
+as an active doctor staff membership through the clinic-admin API. Approval is
+separate: while the doctor application is pending, effective doctor access is
+withheld by the existing verification gate. The staff list shows the assignment
+and verification status. No review decision is changed by membership seeding.
+
+Use the configured, migrated Compose stack with identity running. The setup image
+must already exist from `dev/compose.ps1 setup`. From the repository root:
+
+```powershell
+# Read-only preflight; does not create accounts or change passwords.
+$composeArgs = @('compose', '--env-file', '.local/compose/compose.env', '-f', 'compose.yaml', '-f', 'compose.app.yaml', '--profile', 'setup')
+docker @composeArgs run --rm --no-deps -T --entrypoint python setup /workspace/dev/demo_seed/accounts.py
+
+# Explicitly provision accounts, set the local password and verify five logins.
+$env:LOCAL_SEED_PASSWORD = 'LocalDemo123!'
+docker @composeArgs run --rm --no-deps -T -e LOCAL_SEED_PASSWORD --entrypoint python setup /workspace/dev/demo_seed/accounts.py --apply
+
+# Read existing accounts and verify logins without provisioning or resetting passwords.
+docker @composeArgs run --rm --no-deps -T -e LOCAL_SEED_PASSWORD --entrypoint python setup /workspace/dev/demo_seed/accounts.py --verify
+Remove-Item Env:LOCAL_SEED_PASSWORD
+```
+
+To add or verify just Dr. Tan after changing or reviewing the clinic, append
+`--doctor-only` to the `--apply` or `--verify` command. This leaves the clinic and
+patient profiles untouched and does not require the shared phone setting.
+
+Append `--membership-only` to `--apply` or `--verify` to assign/check only Dr. Tan's
+Meridian doctor membership after editing or reviewing the clinic/application.
+This mode authenticates as the clinic admin, locates Meridian by slug, and uses
+the staff-by-email API; replay reuses its membership. It does not change account
+passwords, clinic details, patient profiles or application review status.
+
+Rerunning `--apply` reuses Cognito users/subjects, updates only the five listed
+subjects' names/global roles, resets their passwords to the supplied local
+password, upserts the two requested patient contact/address profiles, and submits
+the clinic application idempotently through the tenant API.
+Verification checks those profiles through the real identity API.
+It suppresses Cognito delivery and uses dummy credentials against Floci;
+it sends no real email. The command rejects non-local identity configuration.
+If a run stops partway, correct the reported problem and rerun `--apply`.
+Login verification uses local Cognito and the real identity API; it creates normal
+authentication sessions but no sample business records. The five emails and local
+password are for this development environment only.
+
+## Full synthetic dataset (Windows host launcher)
+
 This command saves the clean demo dataset as source code. It supports the Windows
 **host launcher** in `dev/local_stack.ps1`, with its existing PostgreSQL 17,
 Floci and Redis containers. It does not support running Compose API replicas.
