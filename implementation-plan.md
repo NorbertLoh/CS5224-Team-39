@@ -790,42 +790,23 @@ Staff/Payments cleanup passed frontend lint and typecheck/production build.
 
 ## Completion checklist
 
-- [ ] RF07 accounts-only follow-up: provide a local Compose seed for the five
-requested login accounts, without clinics or sample business data. Two patients,
-doctor, clinic admin and platform admin; doctor/admin memberships deferred until
-a clinic is created. Issue #267 reopened, assigned NorbertLoh, In progress.
-Dependencies: existing RF07/F17 and migrated schemas complete. Effort: S.
-Completion: local-only read-only preflight, explicit idempotent apply, five real
-logins/global-role checks and documented Compose invocation. Preserve full demo seed.
-Implemented in draft PR #391; Ruff and all 15 seed safeguard tests passed.
-Local preflight was read-only; two apply runs verified all five logins/global
-roles and preserved subject IDs. Tailscale verified all five logins; database
-contains five subjects and zero memberships, clinics or appointments. Issue stays
-In progress until merge. No real email or provider transactions were performed.
-User-requested profile extension: both patients now have the shared address
-3 Temasek Boulevard, Singapore, postal code 038983, SG. Shared phone stays in
-ignored local seed configuration. Upsert and API verification added; Ruff and
-18 safeguards passed, both profiles verified through Tailscale. Totals: five
-accounts, two patient profiles, zero clinics/appointments. PR #391 remains draft.
-User-requested clinic extension: Meridian Health Partners application now seeds
-through the real tenant registration API under clinic@example.test, pending review,
-SGD 30 consultation, requested Raffles Place pickup address/contact/coordinates.
-Creator membership is provisioned normally; no approval or doctor assignment.
-Ruff/18 safeguards passed; two applies retained one clinic ID and membership;
-Tailscale owner details/pickup and platform pending queue verified. Zero appointments.
-User-requested doctor extension: doctor@example.test is Dr. Tan, with a pending
-application, fictional demo licence/authority/specialty and a generated PDF marked
-DEMO ONLY / NOT VALID FOR PRACTICE. Real upload/submission APIs used; no approval
-or clinic assignment. Scoped --doctor-only supports applying after clinic edits.
-Ruff/18 safeguards passed; repeat retained one application/evidence file;
-Tailscale applicant/platform queue and PDF downloads verified. One-page PDF text
-and rendered layout checked. Runtime evidence stays ignored; PR #391 remains draft.
-User-requested assignment extension: Dr. Tan is assigned to Meridian through the
-clinic-admin staff-by-email API, with both application review states unchanged.
-Full seed includes assignment; --membership-only applies/verifies it without
-replaying edited clinic/application data. Ruff/18 safeguards passed; replay kept
-one membership, Tailscale staff list shows doctor/pending verification, and doctor
-/me still withholds effective doctor access until approval. PR #391 remains draft.
+- [x] RF07 requested local seed follow-up: five accounts, two patient contact/address
+profiles, Meridian Health Partners clinic application, Dr. Tan doctor application
+with clearly marked fictional sample licence PDF, and Meridian doctor membership.
+Completed in merged PR #391 (066e084), 7 November 2026 SGT; issue #267 closed.
+Assignee NorbertLoh. Dependencies: RF07/F17, migrated schemas, clinic registration,
+doctor application and membership APIs complete. Effort: S with user-requested extensions.
+Default preflight is read-only; explicit apply is repeatable. Scoped --doctor-only
+and --membership-only support later additions without replaying edited clinic data.
+Phone configuration, PDFs and runtime evidence stay ignored. The full synthetic
+seed is preserved. Reviews remain explicit; assignment does not bypass verification.
+Verification: full seed Ruff and 18 safeguards passed; five logins, patient profiles,
+clinic/doctor pending review queues and evidence downloads verified through Tailscale.
+Reruns retained subject, clinic, evidence and membership IDs; pending doctor access
+remained gated. The sample PDF passed text and visual inspection. No real email or
+provider transactions were performed. GitHub Actions jobs could not start because
+the account was billing-locked; local checks passed and the user explicitly requested
+merge. No branch-protection bypass was used. Setup: dev/demo_seed/README.md.
 
 - [x] RF07: Save the clean local demo seed under `dev/` with a documented reset
 command, mandatory backup, local-target guards, relative paths and configurable
