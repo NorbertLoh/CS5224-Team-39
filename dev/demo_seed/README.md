@@ -1,5 +1,51 @@
 # Repeatable local demo seed (RF07)
 
+## Accounts only (local Compose)
+
+For a fresh dataset, `accounts.py` provisions only these five logins:
+
+| Requested role | Email |
+| --- | --- |
+| Patient | `patient@example.test` |
+| Patient | `lohnorbert@gmail.com` |
+| Doctor | `doctor@example.test` |
+| Clinic admin | `clinic@example.test` |
+| Platform admin | `platform@example.test` |
+
+Doctor and clinic-admin roles require clinic memberships. This command creates
+their login identities with no global roles; assign their memberships when adding
+a clinic. It creates no clinics, patient profiles, appointments or sample records.
+Patients receive the `patient` global role and the platform admin receives
+`platform_admin`. Existing unrelated data and memberships are preserved.
+
+Use the configured, migrated Compose stack with identity running. The setup image
+must already exist from `dev/compose.ps1 setup`. From the repository root:
+
+```powershell
+# Read-only preflight; does not create accounts or change passwords.
+$composeArgs = @('compose', '--env-file', '.local/compose/compose.env', '-f', 'compose.yaml', '-f', 'compose.app.yaml', '--profile', 'setup')
+docker @composeArgs run --rm --no-deps -T --entrypoint python setup /workspace/dev/demo_seed/accounts.py
+
+# Explicitly provision accounts, set the local password and verify five logins.
+$env:LOCAL_SEED_PASSWORD = 'LocalDemo123!'
+docker @composeArgs run --rm --no-deps -T -e LOCAL_SEED_PASSWORD --entrypoint python setup /workspace/dev/demo_seed/accounts.py --apply
+
+# Read existing accounts and verify logins without provisioning or resetting passwords.
+docker @composeArgs run --rm --no-deps -T -e LOCAL_SEED_PASSWORD --entrypoint python setup /workspace/dev/demo_seed/accounts.py --verify
+Remove-Item Env:LOCAL_SEED_PASSWORD
+```
+
+Rerunning `--apply` reuses Cognito users/subjects, updates only the five listed
+subjects' names/global roles and resets their passwords to the supplied local
+password. It suppresses Cognito delivery and uses dummy credentials against Floci;
+it sends no real email. The command rejects non-local identity configuration.
+If a run stops partway, correct the reported problem and rerun `--apply`.
+Login verification uses local Cognito and the real identity API; it creates normal
+authentication sessions but no sample business records. The five emails and local
+password are for this development environment only.
+
+## Full synthetic dataset (Windows host launcher)
+
 This command saves the clean demo dataset as source code. It supports the Windows
 **host launcher** in `dev/local_stack.ps1`, with its existing PostgreSQL 17,
 Floci and Redis containers. It does not support running Compose API replicas.

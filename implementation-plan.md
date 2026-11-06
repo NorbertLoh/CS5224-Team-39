@@ -797,6 +797,11 @@ a clinic is created. Issue #267 reopened, assigned NorbertLoh, In progress.
 Dependencies: existing RF07/F17 and migrated schemas complete. Effort: S.
 Completion: local-only read-only preflight, explicit idempotent apply, five real
 logins/global-role checks and documented Compose invocation. Preserve full demo seed.
+Implemented in draft PR #391; Ruff and all 15 seed safeguard tests passed.
+Local preflight was read-only; two apply runs verified all five logins/global
+roles and preserved subject IDs. Tailscale verified all five logins; database
+contains five subjects and zero memberships, clinics or appointments. Issue stays
+In progress until merge. No real email or provider transactions were performed.
 
 - [x] RF07: Save the clean local demo seed under `dev/` with a documented reset
 command, mandatory backup, local-target guards, relative paths and configurable
