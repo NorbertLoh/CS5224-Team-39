@@ -1,4 +1,4 @@
-"""Read-only preflight or explicit accounts-only seed for the local Compose stack."""
+"""Read-only preflight or explicit accounts/profile/clinic seed for local Compose."""
 
 import argparse
 import os
@@ -10,6 +10,7 @@ from uuid import NAMESPACE_URL, uuid5
 import boto3
 import httpx
 import psycopg
+from clinic_application import clinic_application
 from dotenv import dotenv_values
 
 ACCOUNTS = (
@@ -40,8 +41,8 @@ def patient_phone():
     return value
 
 
-def local_settings():
-    settings = dotenv_values(Path("/state/identity.env"))
+def local_settings(service="identity"):
+    settings = dotenv_values(Path(f"/state/{service}.env"))
     database = urlsplit(
         settings.get("SERVICE_DATABASE_URL", "").replace("postgresql+psycopg:", "postgresql:")
     )
@@ -52,11 +53,11 @@ def local_settings():
         or database.hostname != "postgres"
         or database.port not in (None, 5432)
         or database.path != "/telelink"
-        or database.username != "identity"
+        or database.username != service
         or database.query
         or database.fragment
     ):
-        raise ValueError("Expected the dedicated local Compose identity database and Floci.")
+        raise ValueError(f"Expected the dedicated local Compose {service} database and Floci.")
     return settings, database.geturl()
 
 
@@ -201,10 +202,11 @@ def verify(cognito, client_id, database_url, password, phone):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--apply", action="store_true", help="Provision the five accounts.")
-    parser.add_argument("--verify", action="store_true", help="Verify existing account logins.")
+    parser.add_argument("--apply", action="store_true", help="Seed accounts, profiles and application.")
+    parser.add_argument("--verify", action="store_true", help="Verify logins, profiles and application.")
     args = parser.parse_args()
     settings, database_url = local_settings()
+    local_settings("tenant")
     cognito, pool_id, client_id = context(settings)
     with psycopg.connect(database_url) as database:
         if not database.execute("SELECT version_num FROM identity.alembic_version").fetchall():
@@ -221,8 +223,9 @@ def main():
     if args.apply:
         provision(cognito, pool_id, database_url, password)
         provision_profiles(database_url, phone)
+    clinic_application(cognito, client_id, password, phone, apply=args.apply)
     verify(cognito, client_id, database_url, password, phone)
-    print("Five accounts ready. Doctor/admin clinic memberships are assigned separately.")
+    print("Five accounts and one clinic application ready. Doctor assignment is separate.")
 
 
 if __name__ == "__main__":

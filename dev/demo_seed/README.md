@@ -1,6 +1,6 @@
 # Repeatable local demo seed (RF07)
 
-## Accounts only (local Compose)
+## Requested accounts and clinic application (local Compose)
 
 For a fresh dataset, `accounts.py` provisions only these five logins:
 
@@ -12,9 +12,9 @@ For a fresh dataset, `accounts.py` provisions only these five logins:
 | Clinic admin | `clinic@example.test` |
 | Platform admin | `platform@example.test` |
 
-Doctor and clinic-admin roles require clinic memberships. This command creates
-their login identities with no global roles; assign their memberships when adding
-a clinic. It creates no clinics, appointments or sample clinical records.
+Doctor and clinic-admin roles require clinic memberships. The clinic admin owns
+the Meridian Health Partners application below; doctor assignment remains separate.
+It creates no appointments or sample clinical records.
 Both patients receive the address `3 Temasek Boulevard, Singapore`, postal code
 `038983`, country `SG`. Their shared phone is read from `LOCAL_SEED_PATIENT_PHONE`
 in the environment or the ignored `.local/compose/accounts.env` file. Configure
@@ -22,6 +22,17 @@ that value before `--apply` or `--verify`; it must be a Singapore phone number.
 The environment takes precedence. Phone values are kept outside source control.
 Patients receive the `patient` global role and the platform admin receives
 `platform_admin`. Existing unrelated data and memberships are preserved.
+
+The seed submits one clinic application through the real tenant registration API:
+Meridian Health Partners (`meridian-health-partners`), consultation fee SGD 30.00,
+description "Your trusted family clinic since 1990." Pickup is Norbert at
+1 Raffles Place, Singapore, postal code `048616`, country SG, latitude `1.2844`,
+longitude `103.8511`. The pickup phone uses the same ignored shared phone setting
+as the patients. The default branding colour is `#156B63`, with no logo.
+`clinic@example.test` receives its clinic-admin membership from normal registration.
+The application remains **pending review**, with no approval or doctor assignment.
+Replaying the same registration reuses the same clinic and membership. Existing
+review decisions are preserved; verification reports if it is no longer pending.
 
 Use the configured, migrated Compose stack with identity running. The setup image
 must already exist from `dev/compose.ps1 setup`. From the repository root:
@@ -42,7 +53,8 @@ Remove-Item Env:LOCAL_SEED_PASSWORD
 
 Rerunning `--apply` reuses Cognito users/subjects, updates only the five listed
 subjects' names/global roles, resets their passwords to the supplied local
-password, and upserts the two requested patient contact/address profiles.
+password, upserts the two requested patient contact/address profiles, and submits
+the clinic application idempotently through the tenant API.
 Verification checks those profiles through the real identity API.
 It suppresses Cognito delivery and uses dummy credentials against Floci;
 it sends no real email. The command rejects non-local identity configuration.

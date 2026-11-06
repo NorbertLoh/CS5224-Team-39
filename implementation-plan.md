@@ -807,6 +807,12 @@ User-requested profile extension: both patients now have the shared address
 ignored local seed configuration. Upsert and API verification added; Ruff and
 18 safeguards passed, both profiles verified through Tailscale. Totals: five
 accounts, two patient profiles, zero clinics/appointments. PR #391 remains draft.
+User-requested clinic extension: Meridian Health Partners application now seeds
+through the real tenant registration API under clinic@example.test, pending review,
+SGD 30 consultation, requested Raffles Place pickup address/contact/coordinates.
+Creator membership is provisioned normally; no approval or doctor assignment.
+Ruff/18 safeguards passed; two applies retained one clinic ID and membership;
+Tailscale owner details/pickup and platform pending queue verified. Zero appointments.
 
 - [x] RF07: Save the clean local demo seed under `dev/` with a documented reset
 command, mandatory backup, local-target guards, relative paths and configurable
