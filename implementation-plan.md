@@ -820,6 +820,12 @@ or clinic assignment. Scoped --doctor-only supports applying after clinic edits.
 Ruff/18 safeguards passed; repeat retained one application/evidence file;
 Tailscale applicant/platform queue and PDF downloads verified. One-page PDF text
 and rendered layout checked. Runtime evidence stays ignored; PR #391 remains draft.
+User-requested assignment extension: Dr. Tan is assigned to Meridian through the
+clinic-admin staff-by-email API, with both application review states unchanged.
+Full seed includes assignment; --membership-only applies/verifies it without
+replaying edited clinic/application data. Ruff/18 safeguards passed; replay kept
+one membership, Tailscale staff list shows doctor/pending verification, and doctor
+/me still withholds effective doctor access until approval. PR #391 remains draft.
 
 - [x] RF07: Save the clean local demo seed under `dev/` with a documented reset
 command, mandatory backup, local-target guards, relative paths and configurable

@@ -13,7 +13,7 @@ For a fresh dataset, `accounts.py` provisions only these five logins:
 | Platform admin | `platform@example.test` |
 
 Doctor and clinic-admin roles require clinic memberships. The clinic admin owns
-the Meridian Health Partners application below; doctor assignment remains separate.
+the Meridian Health Partners application below; Dr. Tan has its doctor membership.
 It creates no appointments or sample clinical records.
 Both patients receive the address `3 Temasek Boulevard, Singapore`, postal code
 `038983`, country `SG`. Their shared phone is read from `LOCAL_SEED_PATIENT_PHONE`
@@ -30,7 +30,7 @@ description "Your trusted family clinic since 1990." Pickup is Norbert at
 longitude `103.8511`. The pickup phone uses the same ignored shared phone setting
 as the patients. The default branding colour is `#156B63`, with no logo.
 `clinic@example.test` receives its clinic-admin membership from normal registration.
-The application remains **pending review**, with no approval or doctor assignment.
+The application remains **pending review**, with no automatic approval.
 Replaying the same registration reuses the same clinic and membership. Existing
 review decisions are preserved; verification reports if it is no longer pending.
 
@@ -43,7 +43,11 @@ uses fictional sample issue/expiry dates (1 January 2026 to 31 December 2030).
 Generated evidence is kept ignored at `.local/compose/output/pdf/dr-tan-demo-licence.pdf`.
 Reruns reuse the existing matching pending application and evidence; verification
 checks the downloaded PDF bytes. Existing different/reviewed applications are
-reported rather than overwritten. Doctor approval and clinic assignment are separate.
+reported rather than overwritten. The seed assigns `doctor@example.test` to Meridian
+as an active doctor staff membership through the clinic-admin API. Approval is
+separate: while the doctor application is pending, effective doctor access is
+withheld by the existing verification gate. The staff list shows the assignment
+and verification status. No review decision is changed by membership seeding.
 
 Use the configured, migrated Compose stack with identity running. The setup image
 must already exist from `dev/compose.ps1 setup`. From the repository root:
@@ -65,6 +69,12 @@ Remove-Item Env:LOCAL_SEED_PASSWORD
 To add or verify just Dr. Tan after changing or reviewing the clinic, append
 `--doctor-only` to the `--apply` or `--verify` command. This leaves the clinic and
 patient profiles untouched and does not require the shared phone setting.
+
+Append `--membership-only` to `--apply` or `--verify` to assign/check only Dr. Tan's
+Meridian doctor membership after editing or reviewing the clinic/application.
+This mode authenticates as the clinic admin, locates Meridian by slug, and uses
+the staff-by-email API; replay reuses its membership. It does not change account
+passwords, clinic details, patient profiles or application review status.
 
 Rerunning `--apply` reuses Cognito users/subjects, updates only the five listed
 subjects' names/global roles, resets their passwords to the supplied local

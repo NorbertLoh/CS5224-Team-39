@@ -12,6 +12,7 @@ import httpx
 import psycopg
 from clinic_application import clinic_application
 from doctor_application import doctor_application
+from doctor_membership import doctor_membership
 from dotenv import dotenv_values
 
 ACCOUNTS = (
@@ -214,7 +215,14 @@ def main():
         action="store_true",
         help="Apply/verify only the doctor account/application.",
     )
+    parser.add_argument(
+        "--membership-only",
+        action="store_true",
+        help="Apply/verify only the doctor clinic assignment.",
+    )
     args = parser.parse_args()
+    if args.doctor_only and args.membership_only:
+        parser.error("Choose either --doctor-only or --membership-only.")
     settings, database_url = local_settings()
     local_settings("tenant")
     cognito, pool_id, client_id = context(settings)
@@ -229,6 +237,9 @@ def main():
     password = os.environ.get("LOCAL_SEED_PASSWORD")
     if not password:
         raise ValueError("Set LOCAL_SEED_PASSWORD explicitly for local demo accounts.")
+    if args.membership_only:
+        doctor_membership(cognito, client_id, password, apply=args.apply)
+        return
     if args.doctor_only:
         if args.apply:
             doctor = tuple(account for account in ACCOUNTS if account[0] == "doctor@example.test")
@@ -241,10 +252,11 @@ def main():
         provision_profiles(database_url, phone)
     clinic_application(cognito, client_id, password, phone, apply=args.apply)
     doctor_application(cognito, client_id, password, apply=args.apply)
+    doctor_membership(cognito, client_id, password, apply=args.apply)
     verify(cognito, client_id, database_url, password, phone)
     print(
         "Five accounts, clinic and doctor applications ready. "
-        "Reviews/doctor assignment are separate."
+        "Dr. Tan is assigned to Meridian; application reviews remain separate."
     )
 
 
