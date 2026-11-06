@@ -2,7 +2,9 @@
 
 This guide explains the system from its overall design down to requests,
 transactions, workers and code entry points. It targets engineers working on the
-CS5224 Team 39 prototype. Updated for the merged RF26–RF29 changes.
+CS5224 Team 39 prototype. For separate environment diagrams and technical operations,
+read the [AWS demo](demo-architecture.md), [production target](production-architecture.md)
+and [database/schema guide](database/README.md). Task-specific evidence remains historical.
 
 ## Contents
 
@@ -27,9 +29,10 @@ implementation. Current source takes precedence over old task prose when explain
 behavior. The [backlog](../implementation-plan.md) tracks acceptance and remaining work;
 [plan.md](../plan.md) records scope and architectural intent.
 
-The local application runs through Docker Compose. The AWS Terraform examples
-are implemented and tested with mocked providers. Account-specific setup and live
-AWS acceptance remain separate. The frontend uses the custom route parser
+The local application runs through Docker Compose. The selected AWS root is
+`infra/envs/demo`; RF32 and later releases record deployment. Mocked reference
+tests do not establish production readiness or complete the remaining AWS
+acceptance gates. The frontend uses the custom route parser
 described below, and the FastAPI template provides optional service scaffolding.
 
 ## 1. System overview and design choices
@@ -68,7 +71,7 @@ The stack is React/TypeScript/Vite, TanStack Query, Tailwind/Radix UI components
 FastAPI/Pydantic/SQLAlchemy/Alembic, PostgreSQL, Redis, Node.js PeerServer and
 browser WebRTC. Floci supplies local AWS-compatible APIs. Stripe test mode and
 Lalamove sandbox are external integrations. Docker Compose runs the local system;
-ECS Fargate is the intended business-service deployment target.
+ECS Fargate runs the AWS business-service layout.
 
 ## 2. Runtime architecture
 
@@ -1082,4 +1085,41 @@ contracts, setup and task-specific evidence:
 - [API conventions](../contracts/api-conventions.md), [identity/clinic access](../contracts/identity-clinic-access.md), [booking/payment](../contracts/booking-payment.md), [prescription/order/quote](../contracts/prescription-order-quote.md), [events](../contracts/events.md).
 - [Full-stack setup](compose-stack.md), [authentication](authentication.md), [patient profile](patient-profile.md), [prescription corrections](prescription-corrections.md), [MC workflow](medical-certificates.md).
 - [I01 booking/payment](I01-local-journey.md), [I02 records/PDF](I02-local-journey.md), [I03 delivery](I03-local-journey.md), [I04 notifications](I04-local-journey.md), [V04 local video](V04-booked-video.md).
-- [Q02 booking verification](Q02-booking-verification.md), [Q03 replay verification](Q03-replay-verification.md), [AWS deployment work](aws-deployment.md).
+- [Q02 booking verification](Q02-booking-verification.md), [Q03 replay verification](Q03-replay-verification.md), [AWS deployment work](../infra/README.md).
+
+
+## History ordering and RF09 evidence
+
+Consolidated from the retired RF09 task note. The verification below is historical,
+not rerun by RF56. Current deployment uses rebuilt API/web images; the host Vite
+reload note describes the earlier host setup.
+
+Payments, medicine/delivery orders, prescriptions and documents now load newest
+creation time first, with descending resource ID as a stable tie-breaker. This is
+server-side ordering across every page, so recent records appear immediately.
+The payment history caption reflects the ordering. Patient and clinic-admin order
+workspaces request `sort=newest`; the orders API also defaults to newest first.
+Explicit `sort=oldest` remains supported for clients that need it.
+
+Direction is bound to the pagination cursor. Ascending payment, prescription and
+document cursors issued before this change are rejected; refresh the history to
+start again. Existing explicit newest-order cursors remain valid. Access checks,
+filters, audit behavior and immutable financial snapshots remain unchanged.
+
+Patient document grouping remains newest visit first and prescriptions retain
+their issued-date display ordering. Upcoming appointments and slots remain in
+chronological order; clinic/catalogue lists retain name ordering. Background
+worker queues retain their processing order.
+
+No migration, new configuration or worker restart is needed. Restart billing,
+fulfilment, clinical-records and document APIs after updating the code. Vite loads
+the frontend changes automatically in the host development stack.
+
+Verification: billing payment query tests 28 passed; document API tests 26 passed;
+clinical-records API tests 28 passed; fulfilment API tests 42 passed. These ran
+against isolated service schemas in a disposable PostgreSQL container. Checks
+cover descending page boundaries, timestamp ties, newly inserted payments,
+filters, authorization, audits and cross-direction cursor rejection. Frontend
+lint/typecheck/build and backend Ruff are required before review.
+
+Frontend lint/typecheck/production build and backend Ruff passed. After restarting the four APIs, live Tailscale checks verified descending order across two pages (six rows each) for patient payment, order, prescription and document histories, and clinic-admin payment/order histories. All eight local APIs remain ready. No business data was reset and no provider operations were performed.

@@ -1,4 +1,10 @@
-# Scheduling service (S01-S06)
+# Scheduling service
+
+See [database and schemas](../../docs/database/README.md) for the ownership map
+and migration operations. [Hold internals](docs/holds.md) explain PostgreSQL locks,
+Redis TTLs, compare-and-delete and failures. Task-stage notes below describe the
+service's development; current [billing integration](../../docs/B07-live-billing.md)
+uses payment events and authenticated owner reads.
 
 S01 creates scheduling-owned fixed availability slots and appointments following
 [C02](../../contracts/identity-clinic-access.md) and
@@ -10,8 +16,7 @@ See [availability API](docs/api.md) and [hold setup and verification](docs/holds
 S04 adds appointment list/detail/cancellation, retained cancellation metadata and
 service-only start/complete/no-show actions. See [appointment APIs](docs/appointments.md).
 S05 adds idempotent payment-event confirmation and a transactional confirmation outbox.
-See [payment worker setup and scope](docs/payments.md). Its billing read adapter uses
-fixtures until billing is implemented; checkout remains B02. S06 adds guarded
+See [payment worker setup and scope](docs/payments.md). S06 adds guarded
 late recovery, a durable recovery audit and billing refund-exception retry worker.
 
 ## Schema
@@ -55,7 +60,7 @@ booking flags its payment for manual refund review, without calling a provider.
 S04 internal actions enforce legal states. RF36 allows clinical start/completion
 outside booked times; the no-show time gate remains. S05 consumes on-time bound
 payment successes. S06 recovers available future slots or records refund-required
-exceptions without replacing another reservation. Real billing integration remains B02/B05.
+exceptions without replacing another reservation. A browser redirect never confirms payment.
 
 ## Fresh local setup (PowerShell)
 

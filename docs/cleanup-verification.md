@@ -98,3 +98,107 @@ Their active consumers or unique coverage are documented in the
 [inventory](cleanup-inventory.md). No unused application dependency or broad
 refactor was justified. Retiring unique signalling coverage or changing bundle
 splitting would be separate work; no additional issue/claim was created for it.
+
+
+## RF05 historical evidence (consolidated by RF56)
+
+PR #262 merged on 23 October 2026 at `2f5a438`; issue #261 closed.
+Current appointment/navigation behavior is documented in [scheduling](scheduling-frontend.md),
+[architecture](architecture-guide.md) and [documents](document-frontend.md). Later
+RF09/RF10/RF36 changes supersede the old history/tab/join-window descriptions.
+The following retains the unique local maintenance and verification evidence;
+none of these checks or data changes were repeated by RF56.
+
+### Legacy appointment names
+
+New bookings already save patient, doctor and clinic names in scheduling's
+appointment snapshot. Thirteen older local appointments had null snapshots.
+Public directory lookups could not resolve the suspended synthetic clinics used
+by earlier checks, so frontend directory fallback alone was insufficient.
+
+On 23 October 2026, the missing snapshots on those 13 local appointments were filled
+from their existing identity/tenant profiles. Existing snapshots were preserved.
+The original booking-time labels cannot be reconstructed; these repaired fields
+use current local profile names. A backup of the original nullable fields remains
+in ignored `.local/RF05-appointment-name-backup.json`. All 16 local appointments
+then had patient, doctor and clinic names. This local maintenance operation does
+not add cross-service database access to application code and is not an AWS migration.
+
+Appointment cards and details preserve saved names. Public directory fallback
+supports other legacy records when names are available there; unavailable patient
+names now also use a readable label rather than exposing a UUID.
+
+ESLint, TypeScript/production build and local authenticated browser checks passed.
+The patient API returned all 16 bookings with all three names; doctor and clinic
+admin scopes each returned four fully named bookings. Cards and selected details
+in all three workspaces displayed names, including patient names, with no UUID or
+unavailable-name fallback in the checked fields.
+
+### Recorded checks
+
+Lint and production build passed. Authenticated browser checks verified all 16
+local patient appointments across dates, each date/time label, no patient dropdown,
+one selected card after each of 16 clicks, names and details. Doctor and clinic-admin
+appointment card/detail checks also passed.
+
+Lint/build and real local appointment-view checks passed. Browser UI checks with
+intercepted appointment responses and a controlled clock verified disabled access
+before opening, automatic enabling in the join window, automatic disabling at the
+end, and disabled cancelled/completed/expired/no-show/unpaid states. These UI checks
+did not modify bookings, start calls or establish new admission integration evidence.
+
+Lint/build and browser UI checks passed for active unpaid/pending holds, automatic
+hold expiry, paid/expired/cancelled/completed/no-show bookings and refund states.
+Payment-state UI checks used intercepted appointment responses and a browser clock;
+they did not start checkout, create payments or change persisted booking/payment data.
+
+Lint/build and live three-role checks passed. All 16 current patient bookings were
+correctly in Past, with date/time ordering, names, details and single selection
+preserved. Controlled-clock UI checks additionally covered an empty Upcoming tab,
+a future cancelled booking in Past, loading an upcoming booking from another page,
+selection reset and automatic movement at the end time. Intercepted-response checks
+did not change persisted bookings. The build passes with a bundle-size advisory.
+
+No new dependencies, configuration or migrations. Lint/build and live browser
+checks passed for page links, active navigation, direct reloads and successful
+backend reads (16 appointments, two prescriptions, two orders and three documents).
+Signed-out visits to all four pages redirect to sign-in; a real doctor account
+was denied the new patient records routes. Navigation wraps at a 390-pixel viewport.
+
+Lint/build and live browser checks passed for both lists, real detail loading,
+single expansion, collapse, Enter/Space controls, 390-pixel layouts and clinic-admin
+order selection. A deep-link check omitted the requested real order from the list
+response and confirmed it still opened through its authorised detail endpoint.
+No order, quote, payment or delivery was created during these checks.
+
+Lint/build and live accordion/deep-link/staff checks passed, including collapsed
+references, one medicine list, keyboard controls and mobile screenshots. Additional
+intercepted-response UI checks verified full pricing/address/payment controls for
+an unpaid order, pending-payment guidance and upstream refund-review/refunded
+messages. No quote or payment was requested during verification.
+
+Frontend lint/build and Python Ruff passed. All 42 fulfilment API tests passed in
+a separate disposable database, including newest-first pages, timestamp ties and
+cross-direction cursor rejection; the disposable database was removed afterward.
+The fulfilment API was restarted and live checks verified newest-first pagination
+and accordion order, with an older deep-linked order expanded in its proper place.
+No migration or new configuration is needed.
+
+Lint/build and real local checks passed: three existing PDFs grouped into one
+visit, names/counts, one-open/keyboard collapse, mobile layout and a signed download
+validated as a PDF. Intercepted metadata checks verified same-visit merging across
+cursor pages, separation of distinct visits, and no download controls for pending
+or failed PDFs. No new documents were generated and no service access rules changed.
+
+Lint/build and real local browser checks passed for both patient sign-in paths,
+doctor destination, public directory access, the five links and active states,
+returning from directory to care pages and mobile wrapping. No new dependencies
+or configuration are required.
+
+Build/typecheck and lint passed. Live browser checks verified both stored receipt
+names and their download controls, plus generic fallback on a failed payment lookup.
+
+Frontend lint/typecheck/build and fulfilment Ruff checks pass. The receipt browser
+check also verifies the actual signed PDF download after the hook extraction.
+Final GitHub CI passed for frontend lint/typecheck/build, backend Ruff and the
+full fulfilment PostgreSQL/API suite, including the protected sentinel check.

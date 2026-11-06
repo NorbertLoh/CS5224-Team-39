@@ -1,5 +1,10 @@
 # RF27: Singapore demo deployment, cost and scalability
 
+This is the **compact reference runbook and historical cost evidence**, not the
+active managed deployment. Use the [team root](../infra/envs/demo/README.md) and
+[demo architecture](demo-architecture.md) for current setup. The
+[production target](production-architecture.md) explains the intended larger layout.
+
 This guide describes the compact `sg-demo` layout. The user-requested
 [managed service profile](../infra/examples/sg-managed/README.md) selects NAT
 Gateway, separate TURN/private API ingress/worker groups and stronger data controls
@@ -11,7 +16,7 @@ they have not been applied and do not prove the AWS patient journey works.
 
 4 November refinement: the user selected managed ElastiCache as the AWS default.
 Follow-up PR #325 reuses issue #316; the original implementation remains merged,
-while this refinement is In progress until merge. Local Compose stays unchanged.
+and refinement PR #325 is merged. Local Compose stays unchanged.
 
 ## What is configured
 
