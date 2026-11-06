@@ -813,6 +813,13 @@ SGD 30 consultation, requested Raffles Place pickup address/contact/coordinates.
 Creator membership is provisioned normally; no approval or doctor assignment.
 Ruff/18 safeguards passed; two applies retained one clinic ID and membership;
 Tailscale owner details/pickup and platform pending queue verified. Zero appointments.
+User-requested doctor extension: doctor@example.test is Dr. Tan, with a pending
+application, fictional demo licence/authority/specialty and a generated PDF marked
+DEMO ONLY / NOT VALID FOR PRACTICE. Real upload/submission APIs used; no approval
+or clinic assignment. Scoped --doctor-only supports applying after clinic edits.
+Ruff/18 safeguards passed; repeat retained one application/evidence file;
+Tailscale applicant/platform queue and PDF downloads verified. One-page PDF text
+and rendered layout checked. Runtime evidence stays ignored; PR #391 remains draft.
 
 - [x] RF07: Save the clean local demo seed under `dev/` with a documented reset
 command, mandatory backup, local-target guards, relative paths and configurable

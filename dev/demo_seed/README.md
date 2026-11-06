@@ -1,6 +1,6 @@
 # Repeatable local demo seed (RF07)
 
-## Requested accounts and clinic application (local Compose)
+## Requested accounts and applications (local Compose)
 
 For a fresh dataset, `accounts.py` provisions only these five logins:
 
@@ -34,6 +34,17 @@ The application remains **pending review**, with no approval or doctor assignmen
 Replaying the same registration reuses the same clinic and membership. Existing
 review decisions are preserved; verification reports if it is no longer pending.
 
+`doctor@example.test` is named **Dr. Tan** and has a pending doctor application:
+licence `DEMO-TAN-0001`, fictional licensing authority "Telelink Demo Medical
+Registry (fictional)", specialty "General Practice (Demo)". The seed renders a
+one-page PDF labelled **DEMO ONLY - NOT VALID FOR PRACTICE**, uploads it through
+the real evidence API, and submits the application without approving it. The PDF
+uses fictional sample issue/expiry dates (1 January 2026 to 31 December 2030).
+Generated evidence is kept ignored at `.local/compose/output/pdf/dr-tan-demo-licence.pdf`.
+Reruns reuse the existing matching pending application and evidence; verification
+checks the downloaded PDF bytes. Existing different/reviewed applications are
+reported rather than overwritten. Doctor approval and clinic assignment are separate.
+
 Use the configured, migrated Compose stack with identity running. The setup image
 must already exist from `dev/compose.ps1 setup`. From the repository root:
 
@@ -50,6 +61,10 @@ docker @composeArgs run --rm --no-deps -T -e LOCAL_SEED_PASSWORD --entrypoint py
 docker @composeArgs run --rm --no-deps -T -e LOCAL_SEED_PASSWORD --entrypoint python setup /workspace/dev/demo_seed/accounts.py --verify
 Remove-Item Env:LOCAL_SEED_PASSWORD
 ```
+
+To add or verify just Dr. Tan after changing or reviewing the clinic, append
+`--doctor-only` to the `--apply` or `--verify` command. This leaves the clinic and
+patient profiles untouched and does not require the shared phone setting.
 
 Rerunning `--apply` reuses Cognito users/subjects, updates only the five listed
 subjects' names/global roles, resets their passwords to the supplied local

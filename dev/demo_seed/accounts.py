@@ -11,12 +11,13 @@ import boto3
 import httpx
 import psycopg
 from clinic_application import clinic_application
+from doctor_application import doctor_application
 from dotenv import dotenv_values
 
 ACCOUNTS = (
     ("patient@example.test", "Local Patient", ["patient"]),
     ("lohnorbert@gmail.com", "Norbert", ["patient"]),
-    ("doctor@example.test", "Local Doctor", []),
+    ("doctor@example.test", "Dr. Tan", []),
     ("clinic@example.test", "Local Clinic Admin", []),
     ("platform@example.test", "Local Platform Admin", ["platform_admin"]),
 )
@@ -94,9 +95,9 @@ def context(settings):
     return cognito, pool_id, clients[0]["ClientId"]
 
 
-def provision(cognito, pool_id, database_url, password):
+def provision(cognito, pool_id, database_url, password, accounts=ACCOUNTS):
     with psycopg.connect(database_url) as database:
-        for email, name, roles in ACCOUNTS:
+        for email, name, roles in accounts:
             try:
                 user = cognito.admin_get_user(UserPoolId=pool_id, Username=email)
             except cognito.exceptions.UserNotFoundException:
@@ -202,8 +203,17 @@ def verify(cognito, client_id, database_url, password, phone):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--apply", action="store_true", help="Seed accounts, profiles and application.")
-    parser.add_argument("--verify", action="store_true", help="Verify logins, profiles and application.")
+    parser.add_argument(
+        "--apply", action="store_true", help="Seed accounts, profiles and application."
+    )
+    parser.add_argument(
+        "--verify", action="store_true", help="Verify logins, profiles and application."
+    )
+    parser.add_argument(
+        "--doctor-only",
+        action="store_true",
+        help="Apply/verify only the doctor account/application.",
+    )
     args = parser.parse_args()
     settings, database_url = local_settings()
     local_settings("tenant")
@@ -219,13 +229,23 @@ def main():
     password = os.environ.get("LOCAL_SEED_PASSWORD")
     if not password:
         raise ValueError("Set LOCAL_SEED_PASSWORD explicitly for local demo accounts.")
+    if args.doctor_only:
+        if args.apply:
+            doctor = tuple(account for account in ACCOUNTS if account[0] == "doctor@example.test")
+            provision(cognito, pool_id, database_url, password, accounts=doctor)
+        doctor_application(cognito, client_id, password, apply=args.apply)
+        return
     phone = patient_phone()
     if args.apply:
         provision(cognito, pool_id, database_url, password)
         provision_profiles(database_url, phone)
     clinic_application(cognito, client_id, password, phone, apply=args.apply)
+    doctor_application(cognito, client_id, password, apply=args.apply)
     verify(cognito, client_id, database_url, password, phone)
-    print("Five accounts and one clinic application ready. Doctor assignment is separate.")
+    print(
+        "Five accounts, clinic and doctor applications ready. "
+        "Reviews/doctor assignment are separate."
+    )
 
 
 if __name__ == "__main__":
