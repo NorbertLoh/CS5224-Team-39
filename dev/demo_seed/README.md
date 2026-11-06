@@ -14,7 +14,12 @@ For a fresh dataset, `accounts.py` provisions only these five logins:
 
 Doctor and clinic-admin roles require clinic memberships. This command creates
 their login identities with no global roles; assign their memberships when adding
-a clinic. It creates no clinics, patient profiles, appointments or sample records.
+a clinic. It creates no clinics, appointments or sample clinical records.
+Both patients receive the address `3 Temasek Boulevard, Singapore`, postal code
+`038983`, country `SG`. Their shared phone is read from `LOCAL_SEED_PATIENT_PHONE`
+in the environment or the ignored `.local/compose/accounts.env` file. Configure
+that value before `--apply` or `--verify`; it must be a Singapore phone number.
+The environment takes precedence. Phone values are kept outside source control.
 Patients receive the `patient` global role and the platform admin receives
 `platform_admin`. Existing unrelated data and memberships are preserved.
 
@@ -36,8 +41,10 @@ Remove-Item Env:LOCAL_SEED_PASSWORD
 ```
 
 Rerunning `--apply` reuses Cognito users/subjects, updates only the five listed
-subjects' names/global roles and resets their passwords to the supplied local
-password. It suppresses Cognito delivery and uses dummy credentials against Floci;
+subjects' names/global roles, resets their passwords to the supplied local
+password, and upserts the two requested patient contact/address profiles.
+Verification checks those profiles through the real identity API.
+It suppresses Cognito delivery and uses dummy credentials against Floci;
 it sends no real email. The command rejects non-local identity configuration.
 If a run stops partway, correct the reported problem and rerun `--apply`.
 Login verification uses local Cognito and the real identity API; it creates normal

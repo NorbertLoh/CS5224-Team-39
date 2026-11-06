@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import re
 from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import NAMESPACE_URL, uuid5
@@ -18,6 +19,25 @@ ACCOUNTS = (
     ("clinic@example.test", "Local Clinic Admin", []),
     ("platform@example.test", "Local Platform Admin", ["platform_admin"]),
 )
+PATIENT_ADDRESS = {
+    "address_line": "3 Temasek Boulevard, Singapore",
+    "postal_code": "038983",
+    "country_code": "SG",
+}
+
+
+def patient_phone():
+    local = dotenv_values(Path("/state/accounts.env"))
+    value = os.environ.get("LOCAL_SEED_PATIENT_PHONE") or local.get("LOCAL_SEED_PATIENT_PHONE", "")
+    value = value.translate(str.maketrans("", "", " -()"))
+    if len(value) == 8:
+        value = "+65" + value
+    if not re.fullmatch(r"\+65[689][0-9]{7}", value):
+        raise ValueError(
+            "Set LOCAL_SEED_PATIENT_PHONE to a Singapore phone "
+            "in /state/accounts.env or the environment."
+        )
+    return value
 
 
 def local_settings():
@@ -114,7 +134,30 @@ def provision(cognito, pool_id, database_url, password):
             )
 
 
-def verify(cognito, client_id, database_url, password):
+def provision_profiles(database_url, phone):
+    with psycopg.connect(database_url) as database:
+        for email, _, roles in ACCOUNTS:
+            if "patient" not in roles:
+                continue
+            database.execute(
+                "INSERT INTO identity.patient_profiles "
+                "(subject_id, phone_number, address_line, postal_code, country_code) "
+                "SELECT subject_id, %s, %s, %s, %s FROM identity.subjects WHERE email=%s "
+                "ON CONFLICT (subject_id) DO UPDATE SET "
+                "phone_number=EXCLUDED.phone_number, address_line=EXCLUDED.address_line, "
+                "postal_code=EXCLUDED.postal_code, country_code=EXCLUDED.country_code, "
+                "updated_at=now()",
+                (
+                    phone,
+                    PATIENT_ADDRESS["address_line"],
+                    PATIENT_ADDRESS["postal_code"],
+                    PATIENT_ADDRESS["country_code"],
+                    email,
+                ),
+            )
+
+
+def verify(cognito, client_id, database_url, password, phone):
     with (
         psycopg.connect(database_url) as database,
         httpx.Client(timeout=20, trust_env=False) as http,
@@ -141,6 +184,18 @@ def verify(cognito, client_id, database_url, password):
             me = response.json()
             if str(rows[0][0]) != me["subject_id"] or me["global_roles"] != roles:
                 raise ValueError(f"Identity API role verification failed for {email}.")
+            if "patient" in roles:
+                response = http.get(
+                    "http://identity:8000/me/patient-profile",
+                    headers={
+                        "Authorization": "Bearer " + result["AuthenticationResult"]["AccessToken"]
+                    },
+                )
+                response.raise_for_status()
+                profile = response.json()
+                expected = {**PATIENT_ADDRESS, "phone_number": phone}
+                if any(profile.get(key) != value for key, value in expected.items()):
+                    raise ValueError(f"Patient profile verification failed for {email}.")
             print(f"Verified login and global roles: {email}", flush=True)
 
 
@@ -162,9 +217,11 @@ def main():
     password = os.environ.get("LOCAL_SEED_PASSWORD")
     if not password:
         raise ValueError("Set LOCAL_SEED_PASSWORD explicitly for local demo accounts.")
+    phone = patient_phone()
     if args.apply:
         provision(cognito, pool_id, database_url, password)
-    verify(cognito, client_id, database_url, password)
+        provision_profiles(database_url, phone)
+    verify(cognito, client_id, database_url, password, phone)
     print("Five accounts ready. Doctor/admin clinic memberships are assigned separately.")
 
 

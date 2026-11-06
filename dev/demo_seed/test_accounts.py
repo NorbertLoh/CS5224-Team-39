@@ -3,10 +3,33 @@
 import unittest
 from unittest.mock import patch
 
-from accounts import local_settings
+from accounts import local_settings, patient_phone
 
 
 class LocalSettingsTests(unittest.TestCase):
+    def test_phone_from_ignored_configuration(self):
+        with patch.dict("os.environ", {}, clear=True):
+            with patch(
+                "accounts.dotenv_values", return_value={"LOCAL_SEED_PATIENT_PHONE": "8123 4567"}
+            ):
+                self.assertEqual(patient_phone(), "+6581234567")
+
+    def test_phone_environment_override(self):
+        with patch.dict("os.environ", {"LOCAL_SEED_PATIENT_PHONE": "+65 9123 4567"}):
+            with patch(
+                "accounts.dotenv_values", return_value={"LOCAL_SEED_PATIENT_PHONE": "81234567"}
+            ):
+                self.assertEqual(patient_phone(), "+6591234567")
+
+    def test_missing_or_invalid_phone_rejected(self):
+        for value in ["", "+12025550100", "12345678"]:
+            with self.subTest(value=value), patch.dict("os.environ", {}, clear=True):
+                with patch(
+                    "accounts.dotenv_values", return_value={"LOCAL_SEED_PATIENT_PHONE": value}
+                ):
+                    with self.assertRaises(ValueError):
+                        patient_phone()
+
     def settings(self, **changes):
         return {
             "SERVICE_ENVIRONMENT": "local",

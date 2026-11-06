@@ -802,6 +802,11 @@ Local preflight was read-only; two apply runs verified all five logins/global
 roles and preserved subject IDs. Tailscale verified all five logins; database
 contains five subjects and zero memberships, clinics or appointments. Issue stays
 In progress until merge. No real email or provider transactions were performed.
+User-requested profile extension: both patients now have the shared address
+3 Temasek Boulevard, Singapore, postal code 038983, SG. Shared phone stays in
+ignored local seed configuration. Upsert and API verification added; Ruff and
+18 safeguards passed, both profiles verified through Tailscale. Totals: five
+accounts, two patient profiles, zero clinics/appointments. PR #391 remains draft.
 
 - [x] RF07: Save the clean local demo seed under `dev/` with a documented reset
 command, mandatory backup, local-target guards, relative paths and configurable
