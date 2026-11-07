@@ -30,6 +30,7 @@ export default defineConfig({
     video: 'off',
   },
   projects: [
+    { name: 'reset-progress', testMatch: 'reset-progress.spec.mjs' },
     { name: 'smoke', testMatch: 'smoke.spec.mjs' },
     { name: 'booking', testMatch: 'booking.spec.mjs' },
     { name: 'stripe', testMatch: 'stripe.spec.mjs' },

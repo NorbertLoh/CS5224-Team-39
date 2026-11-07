@@ -1,5 +1,10 @@
 # Full local application with Docker Compose (F17)
 
+Optional `/reset` support: build with `compose.reset.yaml` and use
+`./dev/compose.ps1 up -LocalReset` to enable the local-only worker. It overwrites
+demo data only after platform-admin confirmation and creates no backup. See
+[RF57 local reset setup and recovery](RF57-demo-reset.md#enable-local-reset).
+
 Use Docker Desktop with Linux containers and Compose **2.30 or newer**. No host
 Python, virtualenv, Node or Stripe CLI is required. Run commands from the repository
 root in PowerShell. The original host launcher, `dev/local_stack.ps1`, remains available.

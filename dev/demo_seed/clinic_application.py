@@ -1,28 +1,7 @@
 """Submit and verify the requested local clinic application through the tenant API."""
 
 import httpx
-
-SLUG = "meridian-health-partners"
-
-
-def application(phone):
-    return {
-        "slug": SLUG,
-        "name": "Meridian Health Partners",
-        "branding": {
-            "primary_color": "#156B63",
-            "logo_url": None,
-            "description": "Your trusted family clinic since 1990.",
-        },
-        "consultation_price": {"amount_minor": 3000, "currency": "SGD"},
-        "location": {
-            "address_line": "1 Raffles Place, Singapore",
-            "postal_code": "048616",
-            "country_code": "SG",
-            "coordinates": {"lat": "1.2844", "lng": "103.8511"},
-            "pickup_contact": {"name": "Norbert", "phone": phone},
-        },
-    }
+from requested_seed import SLUG, application
 
 
 def clinic_application(cognito, client_id, password, phone, *, apply):

@@ -24,6 +24,9 @@ class Settings(ServiceSettings):
     scheduling_actions: str = ""
     clinic_fixture_path: Path | None = None
     cors_origins: list[str] = []
+    # Installed only by the explicit AWS demo reset module; absent elsewhere.
+    demo_reset_config: dict | None = None
+    local_reset_state_dir: Path | None = None
 
     @field_validator("tenant_url")
     @classmethod
@@ -47,6 +50,11 @@ class Settings(ServiceSettings):
 
     @model_validator(mode="after")
     def validate_service_configuration(self):
+        if self.local_reset_state_dir is not None:
+            if self.environment not in {"local", "test"}:
+                raise ValueError("local reset is restricted to local/test environments")
+            if self.demo_reset_config is not None:
+                raise ValueError("choose either local or AWS reset configuration")
         secrets = (
             self.cursor_secret,
             self.scheduling_secret,

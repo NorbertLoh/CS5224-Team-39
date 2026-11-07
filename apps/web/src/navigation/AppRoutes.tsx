@@ -25,6 +25,7 @@ import { BookedConsultation } from '@/features/video'
 import type { Route } from '@/navigation/access'
 import { roleLabels } from '@/navigation/access'
 import { WorkspacePage } from '@/navigation/WorkspacePage'
+import { DemoResetPage } from '@/features/demo-reset/DemoResetPage'
 
 export function AppRoutes({
   route,
@@ -34,6 +35,8 @@ export function AppRoutes({
   session: Session | null
 }) {
   switch (route.kind) {
+    case 'demo-reset':
+      return <DemoResetPage />
     case 'doctor-application':
       return <DoctorApplicationPage />
     case 'doctor-profile':

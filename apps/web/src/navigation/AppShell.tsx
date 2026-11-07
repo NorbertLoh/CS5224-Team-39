@@ -42,6 +42,8 @@ export function AppShell({
         sessionStorage.setItem('telelink.after-sign-in', '/register-clinic')
       if (route.kind === 'doctor-application')
         sessionStorage.setItem('telelink.after-sign-in', '/join-as-doctor')
+      if (route.kind === 'demo-reset')
+        sessionStorage.setItem('telelink.after-sign-in', '/reset')
       window.location.replace('/sign-in')
     }
   }, [requiresSignIn, route.kind])
@@ -54,7 +56,7 @@ export function AppShell({
   if ('role' in route) {
     if (identity.isPending)
       content = <LoadingState message="Checking your access..." />
-    else if (identity.isError)
+    else if (identity.isError && !(route.kind === 'demo-reset' && identity.data && canAccess(identity.data, route)))
       content = (
         <ErrorState
           message="Could not verify your access. Check your session and connection."

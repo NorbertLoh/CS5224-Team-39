@@ -1,5 +1,10 @@
 # Team AWS demo root
 
+Optional platform-admin `/reset` support is configured with `enable_demo_reset`.
+It restores the requested five-account seed and two pending applications without
+creating a backup. It is disabled by default; see
+[RF57 setup and recovery](../../../docs/RF57-demo-reset.md) before enabling.
+
 This is the selected team root with shared `demo/terraform.tfstate`. It calls
 `demo-platform` with `deployment_profile="managed"`, `domain_free=true`, AMD64
 containers, NAT Gateway, managed Redis and non-destructive demo-account seeding.
