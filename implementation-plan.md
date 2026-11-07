@@ -37,6 +37,14 @@
   after confirmation. No live reset request was submitted; the separate test
   database container was removed. GitHub's billing lock still blocks CI.
 
+  User-confirmed local reset (8 November 2026) completed and passed read-only
+  five-account/two-pending-application checks. Service logins were restored and
+  the claim released. Fixed the misleading error after an ambiguous POST: the
+  page now checks fresh progress through temporary API downtime and retains the
+  same UUID for retries. Three fully intercepted browser regressions passed;
+  frontend lint/typecheck/build passed and the fix is served on Tailscale. No
+  additional live reset was submitted during diagnosis or regression checks.
+
 ## Documentation refresh (RF56)
 
 - [x] RF56: Refresh root/infrastructure READMEs, explain demo versus

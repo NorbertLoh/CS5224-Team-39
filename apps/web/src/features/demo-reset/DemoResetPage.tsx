@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { ApiError, apiFetch } from '@/lib/api'
 import { WorkspacePage } from '@/navigation/WorkspacePage'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type ResetState = {
   environment?: 'local' | 'demo'
@@ -28,6 +28,7 @@ export function DemoResetPage() {
   const client = useQueryClient()
   const [confirmation, setConfirmation] = useState('')
   const [error, setError] = useState('')
+  const [checkingSince, setCheckingSince] = useState<number | null>(null)
   const requestId = useRef<string | null>(null)
   const query = useQuery({
     queryKey: ['demo-reset'], queryFn: () => resetRequest(),
@@ -40,18 +41,34 @@ export function DemoResetPage() {
     },
     onSuccess: (state) => {
       client.setQueryData(['demo-reset'], state)
+      setCheckingSince(null)
       setError('')
       setConfirmation('')
     },
-    onError: (failure) => {
-      setError(failure instanceof ApiError && failure.status === 409
-        ? 'A reset is already running. Its progress will appear here.'
-        : 'Could not confirm the reset request. Use Retry request to safely check the same request.')
+    onError: () => {
+      // Losing the POST response does not mean the worker rejected its job.
+      setCheckingSince(Date.now())
+      setError('')
       void query.refetch()
     },
   })
   const state = query.data
-  const busy = mutation.isPending || state?.status === 'queued' || state?.status === 'running'
+  useEffect(() => {
+    if (!query.isSuccess) return
+    if (checkingSince !== null) {
+      // A cached result from before the POST cannot confirm this request.
+      if (query.dataUpdatedAt <= checkingSince) return
+      setCheckingSince(null)
+      const requestNotSeen = state?.status === 'ready' ||
+        ((state?.status === 'succeeded' || state?.status === 'failed') && state.request_id !== requestId.current)
+      setError(requestNotSeen
+        ? 'This request has not been confirmed. Retry the same request.'
+        : '')
+    } else if (state?.status === 'succeeded' && (!requestId.current || state.request_id === requestId.current)) {
+      setError('')
+    }
+  }, [checkingSince, query.dataUpdatedAt, query.isSuccess, state?.request_id, state?.status])
+  const busy = mutation.isPending || checkingSince !== null || state?.status === 'queued' || state?.status === 'running'
   const unavailable = query.error instanceof ApiError && query.error.status === 404
   const denied = query.error instanceof ApiError && query.error.status === 403
   const terminal = state?.status === 'succeeded' || state?.status === 'failed'
@@ -70,21 +87,22 @@ export function DemoResetPage() {
         : denied ? <p>Sign in as platform@example.test to reset the demo.</p>
         : <>
           <div aria-live="polite" role="status" className="rounded-lg bg-slate-50 p-4">
-            {state?.status === 'succeeded' ? 'Demo reset complete. Both applications are pending review.'
+            {checkingSince !== null ? 'Checking reset progress. The app may temporarily disconnect during a reset.'
+              : state?.status === 'succeeded' ? 'Demo reset complete. Both applications are pending review.'
               : state?.status === 'failed' ? 'The reset needs attention. See the operator recovery instructions before retrying.'
                 : state?.stage ?? (query.isPending ? 'Checking reset availability…' : 'Ready to reset the demo.')}
             {query.isError && state && <p className="mt-2 text-sm">Waiting for the demo to reconnect. Keep this page open; progress checks continue automatically.</p>}
           </div>
           {query.isError && !state && <ErrorState message="Could not check reset availability." onRetry={() => void query.refetch()} />}
           {error && <ErrorState message={error} />}
-          {state?.status === 'queued' && <Button disabled={mutation.isPending} onClick={() => {
+          {state?.status === 'queued' && checkingSince === null && <Button disabled={mutation.isPending} onClick={() => {
             requestId.current = state.request_id ?? null
             mutation.mutate()
           }}>Retry request</Button>}
           {error && requestId.current && !busy && <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>Retry request</Button>}
           {!busy && state && <form onSubmit={(event) => {
             event.preventDefault()
-            if (confirmation !== 'RESET DEMO') return
+            if (busy || confirmation !== 'RESET DEMO') return
             if (terminal) requestId.current = null
             mutation.mutate()
           }} className="space-y-3">
@@ -92,7 +110,7 @@ export function DemoResetPage() {
             <input id="reset-confirmation" autoComplete="off" value={confirmation}
               onChange={(event) => setConfirmation(event.target.value)}
               className="w-full rounded-md border px-3 py-2" />
-            <Button type="submit" variant="destructive" disabled={confirmation !== 'RESET DEMO' || query.isError}>{local ? 'Reset local data' : 'Reset demo data'}</Button>
+            <Button type="submit" variant="destructive" disabled={mutation.isPending || confirmation !== 'RESET DEMO' || query.isError}>{local ? 'Reset local data' : 'Reset demo data'}</Button>
           </form>}
           {state?.status === 'succeeded' && <a className="block underline" href="/platform-admin/clinics">Review clinic applications</a>}
         </>}

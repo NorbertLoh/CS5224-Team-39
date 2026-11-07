@@ -224,3 +224,21 @@ passed preflight on the configured Compose stack. Tailscale browser checks
 verified sign-in redirection, the local target label, a disabled button before
 confirmation and an enabled button after typing `RESET DEMO`. No Reset button
 was clicked and no live local job was queued during verification.
+
+On 8 November 2026, the user's confirmed local reset completed successfully.
+Read-only verification found five application accounts, one pending clinic,
+one pending doctor application, two patient profiles and two memberships. The
+worker restored service logins and released its claim; no backup was created.
+The page had displayed an ambiguous request error during maintenance. It now
+checks fresh job status after an interrupted POST, keeps confirmation controls
+blocked during that check, and clears an obsolete error when completion is
+confirmed. Three browser regressions cover a lost POST reply through temporary
+503s, a cached previous completion, and retrying an unconfirmed request with the
+same UUID. All reset calls in these tests are intercepted:
+
+```powershell
+$env:E2E_TARGET = 'local'
+$env:E2E_BASE_URL = 'https://your-machine.your-tailnet.ts.net'
+# From tests/e2e/browser:
+node node_modules/playwright/cli.js test --project=reset-progress --reporter=list
+```
