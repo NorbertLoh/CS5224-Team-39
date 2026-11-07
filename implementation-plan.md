@@ -1,5 +1,17 @@
 # TeleLink Health: shared implementation backlog
 
+## AWS demo reset page (RF57)
+
+- [ ] RF57: Add `/reset` for platform administrators to confirm and monitor an
+  AWS demo reset using workload credentials. Restore the five-account RF07 seed,
+  Meridian's pending clinic application and Dr. Tan's pending doctor application
+  with evidence and membership; no appointments or clinical records. Preserve
+  existing seeded login identities, back up data, serialize resets, and document
+  permissions, recovery and verification limits. Dependencies: RF07, existing
+  identity authorization, SPA routing and AWS demo-platform (implemented).
+  Effort L. Issue #393 assigned NorbertLoh, **In progress**. Live data reset is
+  separate from implementing this feature.
+
 ## Documentation refresh (RF56)
 
 - [x] RF56: Refresh root/infrastructure READMEs, explain demo versus
