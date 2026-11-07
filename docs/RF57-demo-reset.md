@@ -141,18 +141,23 @@ Identity may read/write the one private S3 operation-state object, launch only t
 fixed reset task in its own cluster, and pass only its execution/task roles to ECS.
 It has no master DB secret or reset Cognito privileges. The worker has scoped
 access to the reset state, seed/master secrets, the demo pool's user-provisioning
-operations and the ten demo SQS queues. It has no RDS snapshot permissions.
+operations and the ten demo SQS queues. It can read/update only the notification
+dispatch schedule and pass that schedule's exact target role to Scheduler.
+It has no RDS snapshot permissions.
 Both use SDK task-role credentials. One S3 conditional write claims an operation;
 retries reuse the request UUID as ECS's idempotency token. GET only reads status.
 
 The worker validates the AWS account and deployment, obtains an advisory lock,
 and temporarily inherits the service-owned DB roles using the bootstrap's RDS
 administrator. This exceptional maintenance operation crosses service schemas;
-ordinary APIs and workers retain their independent service ownership. It sets
+ordinary APIs and workers retain their independent service ownership. It pauses
+the notification dispatch schedule before database maintenance, preserving its
+configuration and original enabled/disabled state. It sets
 the nine service roles to `NOLOGIN`, terminates their DB connections, waits 150
 seconds for in-flight work to finish, purges the queues and waits for purge
 completion. It then replaces/verifies rows, clears the dedicated TLS Redis cache,
-restores service logins and removes its temporary role memberships.
+restores service logins, removes its temporary role memberships and restores
+the schedule's original state. Ordinary failures also restore the schedule.
 
 The frontend keeps polling through temporary DB/API failures. The operation
 normally takes several minutes plus ECS task startup. Existing application DB
@@ -170,7 +175,8 @@ same queued request for launch retries instead of creating another reset.
 
 Worker errors expose only their type; credentials and phone values are not sent
 to the page. The latest private `reset/state.json` includes request/actor IDs,
-stage, error type and a `roles_quiesced` indicator. Inspect the `demo-reset`
+stage, error type, a `roles_quiesced` indicator, and the dispatch schedule's
+original/paused state. Inspect the `demo-reset`
 container's stream in the existing document CloudWatch log group.
 
 Ordinary exceptions restore service `LOGIN` privileges in `finally`. A hard task
@@ -181,6 +187,10 @@ clinical_records, billing, fulfilment, document and notification. Remove only th
 temporary memberships granted by the reset to that administrator. Confirm no
 reset task is running and inspect the database before marking the private state
 failed. Never clear an active claim merely to bypass the lock.
+
+If a hard failure leaves `dispatch_paused` true, also restore the notification
+dispatch schedule to `dispatch_original_state` after database recovery. Check
+the worker is stopped first; an originally disabled schedule must stay disabled.
 
 There is no reset-created backup to restore. A failed replacement transaction
 retains the preceding database rows; a completed replacement is the new data.
@@ -242,3 +252,25 @@ $env:E2E_BASE_URL = 'https://your-machine.your-tailnet.ts.net'
 # From tests/e2e/browser:
 node node_modules/playwright/cli.js test --project=reset-progress --reporter=list
 ```
+
+AWS deployment verification on 8 November 2026: identity image revision
+`6e418d9` and reset-worker/infrastructure revision `2708d75` were deployed to
+the existing Singapore demo. The frontend was published and its CloudFront
+invalidation completed. The user's authorized overwrite reset succeeded:
+five seeded accounts can sign in, the platform APIs report exactly one pending
+clinic and one pending doctor application, and the public `/reset` page displays
+completion with working confirmation controls. All 14 ECS services returned to
+1/1 with completed deployments and healthy load-balancer targets. Database
+access and the originally enabled dispatch schedule were restored. No backup or
+snapshot was created. PR #394 remains draft and issue #393 remains In progress.
+
+The first live attempt stopped before database replacement because the dispatch
+schedule produced a failure message during database maintenance. It restored
+database access. Revision `2708d75` pauses that exact schedule and restores its
+prior state on success/error; four additional offline regressions cover schedule
+restoration, preservation of configuration and rejection of an unexpected role.
+The successful retry used a new request after the failed worker had finished.
+The focused offline suite now has 34 passing checks plus five database checks
+skipped in that run (the separate PostgreSQL 17 run above passed). All 14
+Terraform mock scenarios passed. Hosted CI remains unverified due to the GitHub
+account billing lock.

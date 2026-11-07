@@ -2,6 +2,16 @@
 
 ## Local and AWS demo reset page (RF57)
 
+  AWS deployment/reset verified 8 November 2026: the authorized overwrite
+  succeeded with five sign-in accounts and exactly two pending applications.
+  All 14 ECS services recovered, load-balancer targets are healthy, and the
+  dispatch schedule was restored. Public `/reset` completion and confirmation
+  controls passed browser verification. No backup created. Worker revision
+  `2708d75` pauses scheduled notifications during maintenance; 34 offline checks
+  and all 14 Terraform scenarios passed. PR #394 stays draft and issue #393
+  stays In progress pending merge. Detailed evidence below is historical;
+  [RF57 demo reset](docs/RF57-demo-reset.md) records the live AWS result.
+
   Local extension requested 8 November 2026: enable the same `/reset` page for the
   configured local Compose stack with an opt-in separate worker and private job
   volume, fixed local targets and the same five-account/two-application seed.
