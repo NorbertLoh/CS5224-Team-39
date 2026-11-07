@@ -104,6 +104,7 @@ resource "aws_ecs_task_definition" "demo_reset" {
     command = ["python", "-c", join("\n", [
       "import pathlib, sys",
       "pathlib.Path('/tmp/requested_seed.py').write_text(${jsonencode(file("${path.module}/../../../dev/demo_seed/requested_seed.py"))}, encoding='utf-8')",
+      "pathlib.Path('/tmp/requested_database.py').write_text(${jsonencode(file("${path.module}/../../../dev/demo_seed/requested_database.py"))}, encoding='utf-8')",
       "sys.path.insert(0, '/tmp')",
       file("${path.module}/reset_demo.py")
     ])],

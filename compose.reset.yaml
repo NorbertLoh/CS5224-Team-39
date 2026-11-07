@@ -1,0 +1,32 @@
+# Opt-in local /reset worker. Include after compose.yaml and compose.app.yaml.
+services:
+  identity:
+    environment:
+      SERVICE_LOCAL_RESET_STATE_DIR: /reset-state
+    volumes:
+      - local_reset_state:/reset-state
+    depends_on:
+      local-reset: {condition: service_started}
+  local-reset:
+    image: telelink-setup:local
+    build:
+      context: ./dev/compose
+      additional_contexts:
+        document: service:document
+    init: true
+    restart: unless-stopped
+    entrypoint: ["python", "/workspace/dev/demo_seed/local_reset_worker.py"]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-telelink-local-only}
+      LOCAL_SEED_PASSWORD: ${LOCAL_SEED_PASSWORD:-LocalDemo123!}
+      AWS_EC2_METADATA_DISABLED: "true"
+    volumes:
+      - .:/workspace:ro
+      - ./.local/compose:/state:ro
+      - local_reset_state:/reset-state
+    depends_on:
+      postgres: {condition: service_healthy}
+      floci: {condition: service_healthy}
+      redis: {condition: service_started}
+volumes:
+  local_reset_state:

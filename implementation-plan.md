@@ -1,9 +1,15 @@
 # TeleLink Health: shared implementation backlog
 
-## AWS demo reset page (RF57)
+## Local and AWS demo reset page (RF57)
 
-- [ ] RF57: Add `/reset` for platform administrators to confirm and monitor an
-  AWS demo reset using workload credentials. Restore the five-account RF07 seed,
+  Local extension requested 8 November 2026: enable the same `/reset` page for the
+  configured local Compose stack with an opt-in separate worker and private job
+  volume, fixed local targets and the same five-account/two-application seed.
+  Preserve confirmation and seeded logins; create no backup. Enable the local
+  controls on Tailscale for user testing without automatically resetting data.
+
+- [ ] RF57: Add `/reset` for platform administrators to confirm and monitor a
+  local Compose reset or an AWS demo reset using workload credentials. Restore the five-account RF07 seed,
   Meridian's pending clinic application and Dr. Tan's pending doctor application
   with evidence and membership; no appointments or clinical records. Preserve
   existing seeded login identities, overwrite without backups, serialize resets, and document
@@ -22,6 +28,14 @@
   PostgreSQL 17 CI check and live AWS behavior remain unverified. No deployment,
   live data reset, new backup or snapshot was performed. Setup and exact scope:
   [RF57 demo reset](docs/RF57-demo-reset.md).
+
+  Local extension verification (8 November 2026): 22 reset API/file-job tests,
+  30 offline seed/runner checks and five real PostgreSQL 17 checks passed, along
+  with Ruff, frontend lint/typecheck/container build and 14 Terraform mock runs.
+  The local worker passed real read-only administrator/Cognito/queue checks.
+  Tailscale `/reset` now identifies the local target and enables its button only
+  after confirmation. No live reset request was submitted; the separate test
+  database container was removed. GitHub's billing lock still blocks CI.
 
 ## Documentation refresh (RF56)
 

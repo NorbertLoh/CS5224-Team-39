@@ -3,15 +3,18 @@
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 from urllib.parse import urlsplit
 from uuid import uuid4
 
+import local_reset_worker
 import psycopg
 from psycopg import sql
 from requested_seed import ACCOUNTS, licence_pdf
+from telelink_common.file_jobs import FileJobs
 from test_aws_reset import reset
 
 URL = os.environ.get("RESET_TEST_DATABASE_URL", "")
@@ -145,8 +148,7 @@ class ResetDatabaseTests(unittest.TestCase):
         finally:
             self.connection.execute("DROP TABLE public.rf57_guard")
 
-    def test_worker_restores_actual_database_roles(self):
-        self.seed()
+    def local_roles_and_users(self):
         for owner in reset.SCHEMAS:
             if not self.connection.execute(
                 "SELECT 1 FROM pg_roles WHERE rolname=%s", (owner,)
@@ -165,6 +167,47 @@ class ResetDatabaseTests(unittest.TestCase):
             "Enabled": True,
             "UserStatus": "CONFIRMED",
         }
+        return client
+
+    def test_local_worker_restores_actual_roles(self):
+        self.seed()
+        client = self.local_roles_and_users()
+        with tempfile.TemporaryDirectory() as directory:
+            jobs = FileJobs(directory)
+            state = {
+                "request_id": str(uuid4()),
+                "actor_id": str(self.users["platform@example.test"]["subject_id"]),
+            }
+            with (
+                patch.object(
+                    local_reset_worker,
+                    "preflight",
+                    return_value=({}, "+6581234567", "TestPassword1!", client, "local-pool"),
+                ),
+                patch.object(
+                    local_reset_worker,
+                    "admin",
+                    side_effect=lambda: psycopg.connect(URL, autocommit=True),
+                ),
+                patch.object(local_reset_worker.boto3, "client", return_value=Mock()),
+                patch.object(local_reset_worker.time, "sleep"),
+                patch.object(local_reset_worker, "clear_queues"),
+                patch.object(local_reset_worker, "clear_cache"),
+            ):
+                local_reset_worker.run(jobs, state)
+            self.assertEqual(jobs.read()["status"], "succeeded")
+            self.assertFalse(jobs.read()["roles_quiesced"])
+        self.assertEqual(
+            self.connection.execute(
+                "SELECT count(*) FROM pg_roles WHERE rolname=ANY(%s) AND rolcanlogin",
+                (list(reset.SCHEMAS),),
+            ).fetchone()[0],
+            9,
+        )
+
+    def test_worker_restores_actual_database_roles(self):
+        self.seed()
+        client = self.local_roles_and_users()
         config = {
             "deployment": "demo",
             "pool": "ap-southeast-1_demo",

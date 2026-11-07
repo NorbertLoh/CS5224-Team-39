@@ -10,6 +10,7 @@ from telelink_common.errors import DomainError
 from app.api.dependencies import DB, User
 from app.services.demo_reset import ResetControl
 from app.services.doctor_verification import platform_reviewer
+from app.services.local_demo_reset import LocalResetControl
 
 router = APIRouter(tags=["demo operations"])
 
@@ -23,12 +24,13 @@ class ResetRequest(BaseModel):
 def control(request, session, principal):
     actor = platform_reviewer(session, principal)
     config = request.app.state.settings.demo_reset_config
-    if not config or config.get("deployment") != "demo":
+    local = request.app.state.settings.local_reset_state_dir
+    if not local and (not config or config.get("deployment") != "demo"):
         raise DomainError(404, "not_found", "Demo reset is not enabled.")
     # The five-account seed must retain the operator who started the reset.
     if actor.email != "platform@example.test":
         raise DomainError(403, "forbidden", "Use the seeded platform administrator.")
-    return ResetControl(config), actor
+    return (LocalResetControl(local) if local else ResetControl(config)), actor
 
 
 @router.get("/demo-reset")

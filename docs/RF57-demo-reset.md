@@ -1,11 +1,63 @@
-# Reset the AWS demo at `/reset`
+# Reset local or AWS demo data at `/reset`
 
 RF57 provides a platform-admin confirmation page at `/reset`. Opening the URL
 does not change anything. Sign in as `platform@example.test`, type `RESET DEMO`
 and submit. The identity API authorizes the request and starts one fixed ECS
-Fargate task using its task role. School operator credentials are not stored in
+Fargate task using its task role when AWS reset is configured. The opt-in local
+worker described below handles local resets. School operator credentials are not stored in
 the browser or application; their expiry does not supply the task's credentials.
 The lab and its workload roles must still be available.
+
+## Enable local reset
+
+For an already configured, migrated Compose stack, build the updated web,
+identity and setup images and include the optional `compose.reset.yaml` overlay:
+
+```powershell
+docker compose --env-file .local/compose/compose.env -f compose.yaml -f compose.app.yaml -f compose.reset.yaml build web identity local-reset
+docker compose --env-file .local/compose/compose.env -f compose.yaml -f compose.app.yaml -f compose.reset.yaml up -d --no-deps --wait local-reset identity web
+```
+
+For the existing Tailscale stack, also retain its
+`-f .local/compose/tailscale.yaml` overlay. The usual launcher supports
+`./dev/compose.ps1 up -LocalReset` after building. Starting these services does not
+create a reset request or change application data. The page shows **Target: local
+demo data** and enables its confirmation form once the local worker is ready.
+Local reset does not need AWS credentials.
+
+The worker reads the nine existing `.local/compose/*.env` files and the private
+phone in `.local/compose/accounts.env`, using the same validated local settings as
+the RF07 account command. It accepts only the dedicated `postgres:5432/telelink`
+database, `telelink-local` Floci pool and `telelink-local-*` queues at local Floci.
+Floci's localhost queue URLs are validated and normalized to the container host.
+The SDK uses fixed dummy credentials. Redis is fixed to the dedicated `redis:6379`
+database 0. No caller can submit a target, command, endpoint or connection string.
+
+Identity receives only the shared operation-state volume. The separate worker
+receives the existing local administrator password and read-only configuration;
+neither container receives a Docker socket. It retains existing confirmed seeded
+passwords/subjects and creates missing users with suppressed delivery. The
+development-only `LOCAL_SEED_PASSWORD` (default `LocalDemo123!`) is used only for
+missing or force-change-password seed users. The worker cannot be selected by
+production/demo/development identity settings; local reset and AWS reset cannot
+both be configured in one identity instance.
+
+After confirmation, the worker pauses the nine service DB roles, drains in-flight
+requests, clears local event queues, replaces the application rows in one
+verified transaction, clears the cache and restores service access. Allow about
+four minutes plus reconnection. Local reset creates no backup. It preserves the
+same migration markers, Cognito infrastructure and existing S3 objects as the
+AWS operation described below. The API requires the seeded platform admin for
+both targets, and GET never starts a reset.
+
+The named `local_reset_state` volume holds the latest job, worker heartbeat and
+exclusive claim directory. Ordinary errors release the claim and restore DB
+logins. A hard process kill can leave the claim and service roles locked. Stop
+the local worker, confirm no reset is active, restore the nine DB roles' `LOGIN`
+using the existing local administrator access, inspect the data and mark the
+state failed before removing a stale claim. Do not remove an active claim to
+force a second reset. The worker deliberately does not replay an interrupted
+running operation automatically.
 
 ## Dataset and reset scope
 
@@ -49,6 +101,8 @@ Cognito pools/clients, service secrets and infrastructure remain in place. The
 operator's seeded account must survive the reset or the worker refuses it.
 
 ## Enable once
+
+This section configures the AWS target; it is separate from local enablement.
 
 1. Build/publish the updated identity image through the existing release flow.
    The document image already supplies boto3, psycopg and ReportLab for the worker;
@@ -161,3 +215,12 @@ histories and executing the worker's role-change/cleanup SQL with AWS calls
 mocked. This is distinct from the project's PostgreSQL 17 target. GitHub Actions
 could not start because GitHub reports an account billing lock; its PostgreSQL
 17 job remains unverified. The local test server was stopped afterward.
+
+Local extension verification on 8 November 2026: the local API/file-job checks
+passed, and five database checks passed against a separate PostgreSQL **17**
+container after all nine migrations, including the local worker's actual
+transaction and role cleanup with external calls mocked. The real local worker
+passed preflight on the configured Compose stack. Tailscale browser checks
+verified sign-in redirection, the local target label, a disabled button before
+confirmation and an enabled button after typing `RESET DEMO`. No Reset button
+was clicked and no live local job was queued during verification.

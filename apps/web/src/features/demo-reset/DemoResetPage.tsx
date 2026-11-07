@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 
 type ResetState = {
+  environment?: 'local' | 'demo'
   status: 'ready' | 'queued' | 'running' | 'succeeded' | 'failed'
   request_id?: string
   stage?: string
@@ -54,9 +55,11 @@ export function DemoResetPage() {
   const unavailable = query.error instanceof ApiError && query.error.status === 404
   const denied = query.error instanceof ApiError && query.error.status === 403
   const terminal = state?.status === 'succeeded' || state?.status === 'failed'
+  const local = state?.environment === 'local'
 
-  return <WorkspacePage title="Reset demo data">
+  return <WorkspacePage title={local ? 'Reset local demo data' : 'Reset demo data'}>
     <section className="mt-6 max-w-2xl space-y-5 rounded-xl border bg-white p-6">
+      {local && <p className="font-medium">Target: local demo data</p>}
       <p>Restore the five seed accounts, Meridian Health Partners’ pending clinic application,
         and Dr. Tan’s pending doctor application with sample licence evidence and clinic assignment.</p>
       <p className="text-sm text-slate-600">This removes demo appointments, payments, prescriptions,
@@ -89,7 +92,7 @@ export function DemoResetPage() {
             <input id="reset-confirmation" autoComplete="off" value={confirmation}
               onChange={(event) => setConfirmation(event.target.value)}
               className="w-full rounded-md border px-3 py-2" />
-            <Button type="submit" variant="destructive" disabled={confirmation !== 'RESET DEMO' || query.isError}>Reset demo data</Button>
+            <Button type="submit" variant="destructive" disabled={confirmation !== 'RESET DEMO' || query.isError}>{local ? 'Reset local data' : 'Reset demo data'}</Button>
           </form>}
           {state?.status === 'succeeded' && <a className="block underline" href="/platform-admin/clinics">Review clinic applications</a>}
         </>}

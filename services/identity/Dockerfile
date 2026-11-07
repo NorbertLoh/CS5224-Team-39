@@ -16,6 +16,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 COPY --from=build /opt/venv /opt/venv
 COPY --from=build /app /app
-RUN useradd --uid 10001 --create-home app
+RUN useradd --uid 10001 --create-home app && mkdir /reset-state && chown app:app /reset-state
 USER app
 CMD ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
