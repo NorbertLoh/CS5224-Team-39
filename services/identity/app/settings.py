@@ -24,6 +24,8 @@ class Settings(ServiceSettings):
     scheduling_actions: str = ""
     clinic_fixture_path: Path | None = None
     cors_origins: list[str] = []
+    # Installed only by the explicit AWS demo reset module; absent elsewhere.
+    demo_reset_config: dict | None = None
 
     @field_validator("tenant_url")
     @classmethod

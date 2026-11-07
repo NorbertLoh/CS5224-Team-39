@@ -64,7 +64,7 @@ resource "aws_ecs_task_definition" "demo_seed" {
 
 # The demo rollout enables workloads only after all owning migrations exit zero.
 resource "terraform_data" "demo_seed" {
-  count            = var.enable_demo_account_seed && var.enable_workloads ? 1 : 0
+  count            = var.enable_demo_account_seed && var.enable_workloads && !var.enable_demo_reset ? 1 : 0
   triggers_replace = aws_ecs_task_definition.demo_seed[0].arn
 
   provisioner "local-exec" {

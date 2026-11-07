@@ -3,6 +3,12 @@ variable "aws_account_id" {
   type        = string
 }
 
+variable "enable_demo_reset" {
+  description = "Enable the platform-admin /reset operation after configuring its seed secret."
+  type        = bool
+  default     = false
+}
+
 variable "aws_region" {
   description = "AWS region for this environment."
   type        = string

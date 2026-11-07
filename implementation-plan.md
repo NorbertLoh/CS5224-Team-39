@@ -6,7 +6,7 @@
   AWS demo reset using workload credentials. Restore the five-account RF07 seed,
   Meridian's pending clinic application and Dr. Tan's pending doctor application
   with evidence and membership; no appointments or clinical records. Preserve
-  existing seeded login identities, back up data, serialize resets, and document
+  existing seeded login identities, overwrite without backups, serialize resets, and document
   permissions, recovery and verification limits. Dependencies: RF07, existing
   identity authorization, SPA routing and AWS demo-platform (implemented).
   Effort L. Issue #393 assigned NorbertLoh, **In progress**. Live data reset is
