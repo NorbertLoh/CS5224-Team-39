@@ -82,7 +82,11 @@ resource "aws_iam_role_policy" "demo_reset" {
       { Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject"], Resource = "${aws_s3_bucket.demo_reset[0].arn}/reset/state.json" },
       { Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = [aws_secretsmanager_secret.demo_reset[0].arn, aws_db_instance.demo.master_user_secret[0].secret_arn] },
       { Effect = "Allow", Action = ["cognito-idp:AdminGetUser", "cognito-idp:AdminCreateUser", "cognito-idp:AdminSetUserPassword"], Resource = aws_cognito_user_pool.users.arn },
-      { Effect = "Allow", Action = ["sqs:PurgeQueue", "sqs:GetQueueAttributes"], Resource = local.reset_queue_arns }
+      { Effect = "Allow", Action = ["sqs:PurgeQueue", "sqs:GetQueueAttributes"], Resource = local.reset_queue_arns },
+      { Effect = "Allow", Action = ["scheduler:GetSchedule", "scheduler:UpdateSchedule"], Resource = "arn:aws:scheduler:ap-southeast-1:${data.aws_caller_identity.current.account_id}:schedule/default/${var.name_prefix}-notification-dispatch" },
+      { Effect    = "Allow", Action = ["iam:PassRole"], Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-notification-schedule",
+        Condition = { StringEquals = { "iam:PassedToService" = "scheduler.amazonaws.com" } }
+      }
     ]
   })
 }
@@ -109,12 +113,14 @@ resource "aws_ecs_task_definition" "demo_reset" {
       file("${path.module}/reset_demo.py")
     ])],
     environment = [{ name = "RESET_CONFIG", value = jsonencode({
-      deployment    = "demo", account = data.aws_caller_identity.current.account_id,
-      bucket        = aws_s3_bucket.demo_reset[0].id, pool = aws_cognito_user_pool.users.id,
-      seed_secret   = aws_secretsmanager_secret.demo_reset[0].arn,
-      master_secret = aws_db_instance.demo.master_user_secret[0].secret_arn,
-      db_host       = aws_db_instance.demo.address,
-      queues        = local.reset_queue_urls, redis_host = aws_elasticache_replication_group.demo[0].primary_endpoint_address
+      deployment             = "demo", account = data.aws_caller_identity.current.account_id,
+      bucket                 = aws_s3_bucket.demo_reset[0].id, pool = aws_cognito_user_pool.users.id,
+      seed_secret            = aws_secretsmanager_secret.demo_reset[0].arn,
+      master_secret          = aws_db_instance.demo.master_user_secret[0].secret_arn,
+      db_host                = aws_db_instance.demo.address,
+      dispatch_schedule      = "${var.name_prefix}-notification-dispatch",
+      dispatch_schedule_role = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-notification-schedule",
+      queues                 = local.reset_queue_urls, redis_host = aws_elasticache_replication_group.demo[0].primary_endpoint_address
     }) }],
     logConfiguration = local.logs["document"]
   }])

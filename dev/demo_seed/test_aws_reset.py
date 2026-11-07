@@ -34,7 +34,11 @@ class Connection:
     def execute(self, query, params=None):
         value = query if isinstance(query, str) else query.as_string()
         self.queries.append(value)
-        row = (True,) if "pg_try_advisory_lock" in value or "rolcanlogin" in value else ("0001",)
+        row = (
+            (True,)
+            if "pg_try_advisory_lock" in value or "rolcanlogin" in value
+            else ("0001",)
+        )
         if "FROM pg_auth_members" in value:
             row = None
         return Mock(fetchone=lambda: row)
@@ -55,6 +59,71 @@ class Connection:
 
 
 class AwsResetTests(unittest.TestCase):
+    def scheduler_job(self, state="ENABLED"):
+        job = self.job()
+        job.config = {
+            **CONFIG,
+            "dispatch_schedule": "demo-dispatch",
+            "dispatch_schedule_role": "role",
+        }
+        scheduler = job.clients["scheduler"] = Mock()
+        scheduler.get_schedule.return_value = {
+            "Name": "demo-dispatch",
+            "State": state,
+            "Target": {"RoleArn": "role", "Arn": "lambda", "Input": "{}"},
+            "ScheduleExpression": "rate(1 minute)",
+            "FlexibleTimeWindow": {"Mode": "OFF"},
+            "Arn": "read-only",
+        }
+        scheduler.meta.service_model.operation_model.return_value.input_shape.members = {
+            key: None
+            for key in (
+                "Name",
+                "State",
+                "Target",
+                "ScheduleExpression",
+                "FlexibleTimeWindow",
+            )
+        }
+        return job, scheduler
+
+    def test_schedule_restored_after_success_and_failure(self):
+        for fail in (False, True):
+            job, scheduler = self.scheduler_job()
+            try:
+                with job.paused_dispatch():
+                    if fail:
+                        raise RuntimeError("seed failed")
+            except RuntimeError:
+                pass
+            calls = scheduler.update_schedule.call_args_list
+            self.assertEqual(
+                [c.kwargs["State"] for c in calls], ["DISABLED", "ENABLED"]
+            )
+            self.assertEqual(calls[0].kwargs["ScheduleExpression"], "rate(1 minute)")
+            self.assertEqual(calls[0].kwargs["Target"]["Input"], "{}")
+            self.assertNotIn("Arn", calls[0].kwargs)
+
+    def test_disabled_schedule_remains_disabled(self):
+        job, scheduler = self.scheduler_job("DISABLED")
+        with job.paused_dispatch():
+            pass
+        scheduler.update_schedule.assert_not_called()
+
+    def test_unexpected_schedule_role_refused(self):
+        job, scheduler = self.scheduler_job()
+        scheduler.get_schedule.return_value["Target"]["RoleArn"] = "other-role"
+        with self.assertRaises(ValueError), job.paused_dispatch():
+            self.fail("Unexpected schedule was accepted")
+        scheduler.update_schedule.assert_not_called()
+
+    def test_interrupted_disable_still_restores_schedule(self):
+        job, scheduler = self.scheduler_job()
+        scheduler.update_schedule.side_effect = [RuntimeError("interrupted"), {}]
+        with self.assertRaises(RuntimeError), job.paused_dispatch():
+            self.fail("Disable did not succeed")
+        self.assertEqual(scheduler.update_schedule.call_args.kwargs["State"], "ENABLED")
+
     def job(self):
         clients = {"sts": Mock()}
         clients["sts"].get_caller_identity.return_value = {"Account": CONFIG["account"]}
@@ -125,7 +194,11 @@ class AwsResetTests(unittest.TestCase):
         ):
             job.run()
         self.assertEqual(
-            sum("WITH ADMIN TRUE, INHERIT FALSE, SET FALSE" in q for q in connection.queries), 9
+            sum(
+                "WITH ADMIN TRUE, INHERIT FALSE, SET FALSE" in q
+                for q in connection.queries
+            ),
+            9,
         )
         self.assertFalse(any(q.startswith("REVOKE") for q in connection.queries))
 
@@ -159,9 +232,14 @@ class AwsResetTests(unittest.TestCase):
             fetchone=lambda: (subjects[params[0]],)
         )
         job = reset.ResetJob(CONFIG, str(uuid4()), {"cognito-idp": cognito})
-        job.read = lambda: ({"actor_id": str(subjects["platform@example.test"])}, "etag")
+        job.read = lambda: (
+            {"actor_id": str(subjects["platform@example.test"])},
+            "etag",
+        )
         users = job.users(connection, SEED["new_account_password"])
-        self.assertEqual({email: user["subject_id"] for email, user in users.items()}, subjects)
+        self.assertEqual(
+            {email: user["subject_id"] for email, user in users.items()}, subjects
+        )
         cognito.admin_create_user.assert_not_called()
         cognito.admin_set_user_password.assert_not_called()
 

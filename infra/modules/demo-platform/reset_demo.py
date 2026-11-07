@@ -7,7 +7,7 @@ import socket
 import ssl
 import sys
 import time
-from contextlib import ExitStack, closing
+from contextlib import ExitStack, closing, contextmanager
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -22,7 +22,9 @@ KEY = "reset/state.json"
 
 
 def validate_config(config, seed):
-    if config.get("deployment") != "demo" or not config["pool"].startswith("ap-southeast-1_"):
+    if config.get("deployment") != "demo" or not config["pool"].startswith(
+        "ap-southeast-1_"
+    ):
         raise ValueError("Only the explicit Singapore demo deployment is supported")
     phone = str(seed.get("patient_phone", "")).translate(str.maketrans("", "", " -()"))
     if len(phone) == 8:
@@ -50,7 +52,10 @@ class ResetJob:
     def update(self, status, stage, **changes):
         state, etag = self.read()
         state.update(
-            status=status, stage=stage, updated_at=datetime.now(timezone.utc).isoformat(), **changes
+            status=status,
+            stage=stage,
+            updated_at=datetime.now(timezone.utc).isoformat(),
+            **changes,
         )
         self.clients["s3"].put_object(
             Bucket=self.config["bucket"],
@@ -62,7 +67,9 @@ class ResetJob:
 
     def secret(self, arn):
         return json.loads(
-            self.clients["secretsmanager"].get_secret_value(SecretId=arn)["SecretString"]
+            self.clients["secretsmanager"].get_secret_value(SecretId=arn)[
+                "SecretString"
+            ]
         )
 
     def users(self, connection, password):
@@ -74,6 +81,50 @@ class ResetJob:
             password,
             state["actor_id"],
         )
+
+    def set_dispatch_state(self, state):
+        client = self.clients["scheduler"]
+        schedule = client.get_schedule(
+            Name=self.config["dispatch_schedule"], GroupName="default"
+        )
+        if schedule["Target"]["RoleArn"] != self.config["dispatch_schedule_role"]:
+            raise ValueError("Unexpected notification schedule target role")
+        if state is not None:
+            # UpdateSchedule replaces omitted fields: preserve all supported settings.
+            fields = client.meta.service_model.operation_model(
+                "UpdateSchedule"
+            ).input_shape.members
+            values = {key: value for key, value in schedule.items() if key in fields}
+            values.update(
+                Name=self.config["dispatch_schedule"], GroupName="default", State=state
+            )
+            client.update_schedule(**values)
+        return schedule["State"]
+
+    @contextmanager
+    def paused_dispatch(self):
+        if not self.config.get("dispatch_schedule"):
+            yield
+            return
+        previous = self.set_dispatch_state(None)
+        if previous not in {"ENABLED", "DISABLED"}:
+            raise ValueError("Unexpected notification schedule state")
+        self.update(
+            "running",
+            "Pausing scheduled notifications",
+            dispatch_original_state=previous,
+            dispatch_paused=previous == "ENABLED",
+        )
+        try:
+            if previous == "ENABLED":
+                self.set_dispatch_state("DISABLED")
+            yield
+        finally:
+            if previous == "ENABLED":
+                self.set_dispatch_state(previous)
+            self.update(
+                "running", "Scheduled notifications restored", dispatch_paused=False
+            )
 
     def clear_queues(self):
         self.update("running", "Clearing old demo messages")
@@ -96,7 +147,9 @@ class ResetJob:
 
     def clear_redis(self):
         # The dedicated managed demo cache uses TLS, no password and only database 0.
-        with socket.create_connection((self.config["redis_host"], 6379), timeout=10) as raw:
+        with socket.create_connection(
+            (self.config["redis_host"], 6379), timeout=10
+        ) as raw:
             with ssl.create_default_context().wrap_socket(
                 raw, server_hostname=self.config["redis_host"]
             ) as stream:
@@ -107,8 +160,13 @@ class ResetJob:
                     raise ValueError("The dedicated demo cache was not cleared")
 
     def run(self):
-        phone, password = validate_config(self.config, self.secret(self.config["seed_secret"]))
-        if self.clients["sts"].get_caller_identity()["Account"] != self.config["account"]:
+        phone, password = validate_config(
+            self.config, self.secret(self.config["seed_secret"])
+        )
+        if (
+            self.clients["sts"].get_caller_identity()["Account"]
+            != self.config["account"]
+        ):
             raise ValueError("Wrong AWS account")
         evidence = licence_pdf()  # Render before taking any application offline.
         master = self.secret(self.config["master_secret"])
@@ -121,91 +179,111 @@ class ResetJob:
             connect_timeout=10,
             autocommit=True,
         ) as connection:
-            if not connection.execute("SELECT pg_try_advisory_lock(57389057)").fetchone()[0]:
+            if not connection.execute(
+                "SELECT pg_try_advisory_lock(57389057)"
+            ).fetchone()[0]:
                 return  # A duplicate worker may not release or fail the active worker's claim.
             state, _ = self.read()
             if state["status"] != "queued":
                 return
             self.update("running", "Checking demo seed accounts")
-            granted = []
-            quiesced = False
-            try:
-                for owner in SCHEMAS:
-                    row = connection.execute(
-                        "SELECT rolcanlogin FROM pg_roles WHERE rolname=%s", (owner,)
-                    ).fetchone()
-                    if row != (True,):
-                        raise ValueError("Expected a ready service database role")
-                    previous = connection.execute(
-                        "SELECT admin_option, inherit_option, set_option FROM pg_auth_members "
-                        "WHERE roleid=(SELECT oid FROM pg_roles WHERE rolname=%s) "
-                        "AND member=(SELECT oid FROM pg_roles WHERE rolname=current_user) "
-                        "AND grantor=(SELECT oid FROM pg_roles WHERE rolname=current_user)",
-                        (owner,),
-                    ).fetchone()
-                    # Bootstrap created these roles; temporary inheritance is revoked below.
-                    connection.execute(
-                        sql.SQL(
-                            "GRANT {} TO CURRENT_USER WITH INHERIT TRUE, "
-                            "SET FALSE GRANTED BY CURRENT_USER"
-                        ).format(sql.Identifier(owner))
-                    )
-                    granted.append((owner, previous))
-                    connection.execute(
-                        sql.SQL("SELECT version_num FROM {}.alembic_version").format(
-                            sql.Identifier(owner)
-                        )
-                    ).fetchone()
-                users = self.users(connection, password)
-                self.update("running", "Pausing demo database access", roles_quiesced=True)
-                with connection.transaction():
+            with self.paused_dispatch():
+                granted = []
+                quiesced = False
+                try:
                     for owner in SCHEMAS:
+                        row = connection.execute(
+                            "SELECT rolcanlogin FROM pg_roles WHERE rolname=%s",
+                            (owner,),
+                        ).fetchone()
+                        if row != (True,):
+                            raise ValueError("Expected a ready service database role")
+                        previous = connection.execute(
+                            "SELECT admin_option, inherit_option, set_option FROM pg_auth_members "
+                            "WHERE roleid=(SELECT oid FROM pg_roles WHERE rolname=%s) "
+                            "AND member=(SELECT oid FROM pg_roles WHERE rolname=current_user) "
+                            "AND grantor=(SELECT oid FROM pg_roles WHERE rolname=current_user)",
+                            (owner,),
+                        ).fetchone()
+                        # Bootstrap created these roles; temporary inheritance is revoked below.
                         connection.execute(
-                            sql.SQL("ALTER ROLE {} NOLOGIN").format(sql.Identifier(owner))
+                            sql.SQL(
+                                "GRANT {} TO CURRENT_USER WITH INHERIT TRUE, "
+                                "SET FALSE GRANTED BY CURRENT_USER"
+                            ).format(sql.Identifier(owner))
                         )
-                quiesced = True
-                connection.execute(
-                    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
-                    "WHERE datname=current_database() AND usename=ANY(%s) "
-                    "AND pid<>pg_backend_pid()",
-                    (list(SCHEMAS),),
-                )
-                # Existing API/Lambda invocations must finish before clearing async state.
-                self.update("running", "Waiting for active demo requests to finish")
-                time.sleep(150)
-                self.clear_queues()
-                self.update("running", "Restoring five accounts and two pending applications")
-                with connection.transaction():
-                    connection.execute("SET LOCAL lock_timeout = '10s'")
-                    seed_database(connection, users, phone, evidence)
-                self.clear_redis()
-            finally:
-                # Even a failed seed transaction is rolled back before reconnecting services.
-                if quiesced:
+                        granted.append((owner, previous))
+                        connection.execute(
+                            sql.SQL(
+                                "SELECT version_num FROM {}.alembic_version"
+                            ).format(sql.Identifier(owner))
+                        ).fetchone()
+                    users = self.users(connection, password)
+                    self.update(
+                        "running", "Pausing demo database access", roles_quiesced=True
+                    )
                     with connection.transaction():
                         for owner in SCHEMAS:
                             connection.execute(
-                                sql.SQL("ALTER ROLE {} LOGIN").format(sql.Identifier(owner))
+                                sql.SQL("ALTER ROLE {} NOLOGIN").format(
+                                    sql.Identifier(owner)
+                                )
                             )
-                for owner, previous in reversed(granted):
-                    if previous is None:
-                        connection.execute(
-                            sql.SQL("REVOKE {} FROM CURRENT_USER GRANTED BY CURRENT_USER").format(
-                                sql.Identifier(owner)
+                    quiesced = True
+                    connection.execute(
+                        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                        "WHERE datname=current_database() AND usename=ANY(%s) "
+                        "AND pid<>pg_backend_pid()",
+                        (list(SCHEMAS),),
+                    )
+                    # Existing API/Lambda invocations must finish before clearing async state.
+                    self.update("running", "Waiting for active demo requests to finish")
+                    time.sleep(150)
+                    self.clear_queues()
+                    self.update(
+                        "running",
+                        "Restoring five accounts and two pending applications",
+                    )
+                    with connection.transaction():
+                        connection.execute("SET LOCAL lock_timeout = '10s'")
+                        seed_database(connection, users, phone, evidence)
+                    self.clear_redis()
+                finally:
+                    # Even a failed seed transaction is rolled back before reconnecting services.
+                    if quiesced:
+                        with connection.transaction():
+                            for owner in SCHEMAS:
+                                connection.execute(
+                                    sql.SQL("ALTER ROLE {} LOGIN").format(
+                                        sql.Identifier(owner)
+                                    )
+                                )
+                    for owner, previous in reversed(granted):
+                        if previous is None:
+                            connection.execute(
+                                sql.SQL(
+                                    "REVOKE {} FROM CURRENT_USER GRANTED BY CURRENT_USER"
+                                ).format(sql.Identifier(owner))
                             )
+                        else:
+                            connection.execute(
+                                sql.SQL(
+                                    "GRANT {} TO CURRENT_USER WITH ADMIN {}, INHERIT {}, SET {} "
+                                    "GRANTED BY CURRENT_USER"
+                                ).format(
+                                    sql.Identifier(owner),
+                                    *(
+                                        sql.SQL("TRUE" if flag else "FALSE")
+                                        for flag in previous
+                                    ),
+                                )
+                            )
+                    if quiesced:
+                        self.update(
+                            "running",
+                            "Reconnecting demo services",
+                            roles_quiesced=False,
                         )
-                    else:
-                        connection.execute(
-                            sql.SQL(
-                                "GRANT {} TO CURRENT_USER WITH ADMIN {}, INHERIT {}, SET {} "
-                                "GRANTED BY CURRENT_USER"
-                            ).format(
-                                sql.Identifier(owner),
-                                *(sql.SQL("TRUE" if flag else "FALSE") for flag in previous),
-                            )
-                        )
-                if quiesced:
-                    self.update("running", "Reconnecting demo services", roles_quiesced=False)
             self.update("succeeded", "Demo seed restored", roles_quiesced=False)
 
 
@@ -227,7 +305,14 @@ def main():
                     )
                 )
             )
-            for name in ("s3", "secretsmanager", "cognito-idp", "sqs", "sts")
+            for name in (
+                "s3",
+                "secretsmanager",
+                "cognito-idp",
+                "sqs",
+                "sts",
+                "scheduler",
+            )
         }
         job = ResetJob(config, request_id, clients)
         try:
