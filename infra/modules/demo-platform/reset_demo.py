@@ -295,7 +295,9 @@ class ResetJob:
                 raw, server_hostname=self.config["redis_host"]
             ) as stream:
                 stream.sendall(b"*1\r\n$7\r\nFLUSHDB\r\n")
-                if stream.recv(128) != b"+OK\r\n":
+                with stream.makefile("rb") as response:
+                    reply = response.readline(128)
+                if reply != b"+OK\r\n":
                     raise ValueError("The dedicated demo cache was not cleared")
 
     def run(self):

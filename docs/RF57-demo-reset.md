@@ -152,3 +152,12 @@ source and an operator-led procedure.
 Local/mocked verification is not deployed AWS evidence. Live task-role permissions,
 RDS role administration, task execution, reconnection and the school lab's
 credential lifecycle require an explicit disposable-demo deployment check.
+
+On 7 November 2026, 14 focused reset API/control tests, 25 offline seed/runner
+checks, all 14 platform Terraform mock scenarios, Terraform validation, Ruff and
+frontend lint/typecheck/build passed. Four database checks also passed against
+a disposable local PostgreSQL **18.6**, applying the actual nine migration
+histories and executing the worker's role-change/cleanup SQL with AWS calls
+mocked. This is distinct from the project's PostgreSQL 17 target. GitHub Actions
+could not start because GitHub reports an account billing lock; its PostgreSQL
+17 job remains unverified. The local test server was stopped afterward.

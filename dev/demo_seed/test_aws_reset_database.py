@@ -5,6 +5,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
 from urllib.parse import urlsplit
 from uuid import uuid4
 
@@ -143,6 +144,66 @@ class ResetDatabaseTests(unittest.TestCase):
             )
         finally:
             self.connection.execute("DROP TABLE public.rf57_guard")
+
+    def test_worker_restores_actual_database_roles(self):
+        self.seed()
+        for owner in reset.SCHEMAS:
+            if not self.connection.execute(
+                "SELECT 1 FROM pg_roles WHERE rolname=%s", (owner,)
+            ).fetchone():
+                self.connection.execute(
+                    sql.SQL("CREATE ROLE {} LOGIN").format(sql.Identifier(owner))
+                )
+        client = Mock()
+        client.get_caller_identity.return_value = {"Account": "123456789012"}
+        client.admin_get_user.side_effect = lambda **kw: {
+            "UserAttributes": [
+                {"Name": "sub", "Value": self.users[kw["Username"]]["sub"]},
+                {"Name": "email", "Value": kw["Username"]},
+                {"Name": "email_verified", "Value": "true"},
+            ],
+            "Enabled": True,
+            "UserStatus": "CONFIRMED",
+        }
+        config = {
+            "deployment": "demo",
+            "pool": "ap-southeast-1_demo",
+            "account": "123456789012",
+            "db_host": "127.0.0.1",
+            "seed_secret": "seed",
+            "master_secret": "master",
+        }
+        job = reset.ResetJob(config, str(uuid4()), {"sts": client, "cognito-idp": client})
+        job.secret = lambda arn: (
+            {"patient_phone": "81234567", "new_account_password": "TestPassword1!"}
+            if arn == "seed"
+            else {"username": "postgres", "password": ""}
+        )
+        job.read = lambda: (
+            {
+                "status": "queued",
+                "actor_id": str(self.users["platform@example.test"]["subject_id"]),
+            },
+            "etag",
+        )
+        job.update = Mock()
+        job.clear_queues, job.clear_redis = Mock(), Mock()
+        connect = psycopg.connect
+        with (
+            patch.object(
+                reset.psycopg, "connect", side_effect=lambda **kw: connect(URL, autocommit=True)
+            ),
+            patch.object(reset.time, "sleep"),
+        ):
+            job.run()
+        self.assertEqual(job.update.call_args.args[0], "succeeded")
+        roles = self.connection.execute(
+            "SELECT rolcanlogin FROM pg_roles WHERE rolname=ANY(%s)", (list(reset.SCHEMAS),)
+        ).fetchall()
+        self.assertEqual(roles, [(True,)] * 9)
+        self.assertEqual(
+            self.connection.execute("SELECT count(*) FROM identity.subjects").fetchone()[0], 5
+        )
 
 
 if __name__ == "__main__":

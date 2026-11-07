@@ -107,6 +107,28 @@ class AwsResetTests(unittest.TestCase):
         self.assertNotEqual(job.update.call_args.args[0], "succeeded")
         job.clear_redis.assert_not_called()
 
+    def test_original_administrator_memberships_are_restored(self):
+        job, connection = self.job(), Connection()
+        execute = connection.execute
+
+        def existing_memberships(query, params=None):
+            result = execute(query, params)
+            if isinstance(query, str) and "FROM pg_auth_members" in query:
+                return Mock(fetchone=lambda: (True, False, False))
+            return result
+
+        connection.execute = existing_memberships
+        with (
+            patch.object(reset.psycopg, "connect", return_value=connection),
+            patch.object(reset.time, "sleep"),
+            patch.object(reset, "seed_database"),
+        ):
+            job.run()
+        self.assertEqual(
+            sum("WITH ADMIN TRUE, INHERIT FALSE, SET FALSE" in q for q in connection.queries), 9
+        )
+        self.assertFalse(any(q.startswith("REVOKE") for q in connection.queries))
+
     def test_queue_failure_prevents_database_replacement(self):
         job, connection = self.job(), Connection()
         job.clear_queues.side_effect = RuntimeError("queue not empty")

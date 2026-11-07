@@ -12,6 +12,17 @@
   Effort L. Issue #393 assigned NorbertLoh, **In progress**. Live data reset is
   separate from implementing this feature.
 
+  RF57 verification (7 November 2026): 14 focused reset API/control tests and 25
+  offline seed/runner checks passed. All nine schemas were migrated in a
+  disposable loopback PostgreSQL 18.6 instance; four real database checks passed
+  for repeatability, transaction rollback, external FK refusal and worker role
+  restoration. Frontend lint/typecheck/build, Ruff, Terraform validation and all
+  14 platform mock scenarios passed. PR #394 remains draft; GitHub Actions jobs
+  cannot start because GitHub reports an account billing lock. The configured
+  PostgreSQL 17 CI check and live AWS behavior remain unverified. No deployment,
+  live data reset, new backup or snapshot was performed. Setup and exact scope:
+  [RF57 demo reset](docs/RF57-demo-reset.md).
+
 ## Documentation refresh (RF56)
 
 - [x] RF56: Refresh root/infrastructure READMEs, explain demo versus
