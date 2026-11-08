@@ -38,6 +38,15 @@ After a demo seed changes a clinic ID, verify its billing destination mapping
 before beginning the payment journey. Automatic synchronization during reset is
 a suggested follow-up, outside this configuration repair.
 
+The current requested seed uses UUIDv5 with namespace URL and the constant
+`telelink:requested-demo:meridian`. Independent calculation reproduces the live
+clinic ID `ab6e2fe2-d436-5f73-b6ee-d9169f395400`. Repeating this same seed therefore
+keeps the clinic ID. Once its mapping is added, subsequent resets using this
+seed should retain that mapping because reset preserves provider configuration.
+A different seed identity or manual secret replacement needs another check.
+Reset still clears appointment/payment records and returns clinic/doctor
+applications to pending approval.
+
 ## Current result
 
 The diagnosis and read-only Stripe account checks passed. The existing key was
@@ -49,6 +58,9 @@ updating live Secrets Manager configuration and restarting billing services
 requires explicit user authorization because of service-disruption and payment
 impact risk. No secret update or service refresh was performed. Issue #395 stays
 In progress and PR #396 stays draft pending approval and live verification.
+The follow-up "ok will future reset break it again" was also rejected as
+insufficiently explicit approval for the exact live mutation; both attempted
+commands were blocked before execution.
 
 A successful real checkout is outside this read-only verification and remains
 an I05 acceptance check.
