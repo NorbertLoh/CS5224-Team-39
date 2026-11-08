@@ -53,14 +53,26 @@ The diagnosis and read-only Stripe account checks passed. The existing key was
 not exposed, and no checkout or payment was submitted. The interrupted booking's
 original hold deadline was 07:12:43 UTC on 8 November 2026.
 
-The runtime repair was blocked before execution by automatic approval review:
-updating live Secrets Manager configuration and restarting billing services
-requires explicit user authorization because of service-disruption and payment
-impact risk. No secret update or service refresh was performed. Issue #395 stays
-In progress and PR #396 stays draft pending approval and live verification.
-The follow-up "ok will future reset break it again" was also rejected as
-insufficiently explicit approval for the exact live mutation; both attempted
-commands were blocked before execution.
+After the user's explicit AWS update approval, added the current clinic's
+mapping to the existing verified sandbox destination. The new Secrets Manager
+version is `f449807c-8bd9-4bff-a1f1-60f3214e8592`. A fresh read verified every
+secret field against the intended payload; both older mappings were preserved.
+Only the billing API and billing worker services were force-refreshed; task
+definitions, images, infrastructure and financial state were unchanged.
+
+Replacement API task `cfce6e2cf4244d02a96f84d7262ad696` and worker task
+`6e18d21b30de437faf4fcc96df52e06f` started after the secret update. All four
+containers are running, and the billing load-balancer target is healthy.
+Authenticated scheduling and billing collection reads both returned HTTP 200.
+The original appointment is expired and the complete billing collection is
+empty (`next_cursor: null`). The old payment reference still has no payment row;
+the configuration repair does not rewrite that expired booking. Use a fresh
+booking through the ordinary patient flow.
+
+Both ECS services reached steady state with a single `COMPLETED` deployment,
+one running task and zero pending tasks. The expiry worker reports zero pending
+reconciliations. Issue #395 stays In progress and PR #396 stays draft until merge
+and its completion criteria are met. Documentation whitespace checks passed.
 
 A successful real checkout is outside this read-only verification and remains
 an I05 acceptance check.
