@@ -38,5 +38,17 @@ After a demo seed changes a clinic ID, verify its billing destination mapping
 before beginning the payment journey. Automatic synchronization during reset is
 a suggested follow-up, outside this configuration repair.
 
-Live deployment verification is pending. A successful real checkout is outside
-this read-only verification and remains an I05 acceptance check.
+## Current result
+
+The diagnosis and read-only Stripe account checks passed. The existing key was
+not exposed, and no checkout or payment was submitted. The interrupted booking's
+original hold deadline was 07:12:43 UTC on 8 November 2026.
+
+The runtime repair was blocked before execution by automatic approval review:
+updating live Secrets Manager configuration and restarting billing services
+requires explicit user authorization because of service-disruption and payment
+impact risk. No secret update or service refresh was performed. Issue #395 stays
+In progress and PR #396 stays draft pending approval and live verification.
+
+A successful real checkout is outside this read-only verification and remains
+an I05 acceptance check.
