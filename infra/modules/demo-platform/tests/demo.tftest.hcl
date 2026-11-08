@@ -44,6 +44,14 @@ run "managed_cache_foundation" {
   # Mock-only apply resolves computed subnet/SG IDs for isolation assertions.
   command = apply
   assert {
+    condition     = aws_apigatewayv2_route.public["GET /api/v1/identity/doctors/{doctor_id}/photos/{photo_id}"].authorization_type == "NONE"
+    error_message = "Public doctor portraits must load without a bearer token."
+  }
+  assert {
+    condition     = aws_apigatewayv2_route.protected["identity"].authorization_type == "JWT" && alltrue([for key in keys(aws_apigatewayv2_route.public) : !startswith(key, "PUT /api/v1/identity/") && !startswith(key, "DELETE /api/v1/identity/") && !strcontains(key, "/doctor-documents")])
+    error_message = "Identity writes and private doctor documents must remain protected."
+  }
+  assert {
     condition     = aws_db_instance.demo.instance_class == "db.t4g.micro" && !aws_db_instance.demo.multi_az && aws_db_instance.demo.allocated_storage == 20
     error_message = "Use one encrypted small RDS instance and bounded storage."
   }

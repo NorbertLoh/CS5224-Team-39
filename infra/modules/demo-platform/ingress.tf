@@ -227,6 +227,7 @@ resource "aws_apigatewayv2_route" "protected" {
 }
 resource "aws_apigatewayv2_route" "public" {
   for_each = toset([
+    "GET /api/v1/identity/doctors/{doctor_id}/photos/{photo_id}",
     "GET /api/v1/tenant/clinics",
     "GET /api/v1/tenant/clinics/by-slug/{slug}",
     "GET /api/v1/tenant/clinics/{tenant_id}/doctors",
