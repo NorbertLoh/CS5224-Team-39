@@ -65,7 +65,9 @@
   Fixture-backed Chromium verifies upload/replacement/reload, storefront display,
   removal/fallback and mobile layout. Tailscale demo backed up/migrated to 0007,
   tenant/identity/web rebuilt and healthy; real doctor sign-in/Profile verified.
-  Existing stopped Floci/Redis dependencies started. AWS rollout pending. Setup and limits:
+  Existing stopped Floci/Redis dependencies started. AWS portrait routing fixed
+  on 8 November 2026: public image GET now returns 200 JPEG. Issue #379 reopened,
+  assigned NorbertLoh and In progress for fix PR #397 until merge. Setup and limits:
   [doctor profile photos](docs/RF53-doctor-profile-photos.md).
 
 RF53-RF55 merge verification: clean Node 24 installs and complete frontend

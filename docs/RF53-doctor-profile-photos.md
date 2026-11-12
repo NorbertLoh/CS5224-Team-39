@@ -49,8 +49,11 @@ remove them before downgrading if rollback is necessary.
 Release tenant first so it accepts `photo_id`, then migrate/release identity and
 release web. The tenant parser also accepts older summaries without photos, and
 the frontend retains the icon for absent photos. Rebuild web with the existing
-local/AWS API settings. No changes to routing infrastructure are required because
-the endpoints use the existing identity service prefix.
+local/AWS API settings. API Gateway must explicitly allow public
+`GET /api/v1/identity/doctors/{doctor_id}/photos/{photo_id}`; the general identity
+proxy requires JWT authentication. Browser image requests do not attach the
+application's bearer token. Uploads, removal and private evidence retain the
+protected identity routes; identity still checks portrait eligibility.
 
 ## Verification
 
@@ -79,3 +82,21 @@ Actual doctor sign-in and the Profile upload controls were verified at
 `https://desktop-kdu3bpc.taila23b83.ts.net/doctor/profile`.
 No portrait was changed during this live check. AWS rollout remains pending.
 PR #380 merged on 5 November 2026 (`e94655a`); issue #379 is closed.
+
+## AWS portrait routing correction (8 November 2026)
+
+RF53 issue #379 was reopened for PR #397. Live investigation confirmed one approved
+doctor with a persisted portrait: authenticated image GET returned 200 JPEG while
+the ordinary public image GET returned 401, leaving the fallback icon after save.
+The earlier demo reset is not the cause of this display failure.
+
+Added the exact public GET route through the existing gateway integration. The
+reviewed targeted Terraform plan created only that route, excluding the existing
+unrelated CloudFront normalization. Applied to the existing Singapore demo with
+its deployment inputs and image pins preserved. The current saved portrait now
+returns 200 `image/jpeg` publicly and with authentication (15,016 bytes). No new
+upload, database change or application rebuild was required.
+
+Terraform regression assertions verify anonymous portrait reads and retained JWT
+protection for identity writes/private evidence. All 14 mocked scenarios passed.
+Issue #379 remains In progress until the fix PR is merged.
