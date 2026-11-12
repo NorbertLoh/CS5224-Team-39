@@ -68,7 +68,28 @@ protected feature requests. Health endpoints remain public.
 
 ## Session and validation behavior
 
-Login uses random state and a 256-bit verifier with S256 PKCE, no client secret.
+`/sign-in` uses Cognito `USER_PASSWORD_AUTH` on the configured public app
+client. **More sign-in options** opens hosted sign-in for flows such as MFA
+and password changes. Enable `ALLOW_USER_PASSWORD_AUTH` alongside
+`ALLOW_REFRESH_TOKEN_AUTH` and retain the hosted OAuth code flow.
+The local bootstrap scripts configure both client flows.
+
+Password sign-in tokens carry `aws.cognito.signin.user.admin` in place of
+`openid`. For APIs requiring `openid`, set
+`SERVICE_AUTH_ALLOW_PASSWORD_TOKENS=true` to accept that alternative scope.
+The setting defaults to false. Other required scopes, signature validation,
+and database-backed role and tenant checks still apply. Local configuration
+generators enable the setting. Add it to existing host environments and
+restart affected services. For AWS deployments, verify the Cognito client and
+API Gateway scope configuration for both sign-in flows. AWS compatibility
+for password sign-in was unverified in RF03.
+
+For additional local preview origins, register them in
+`COGNITO_CORS_ORIGINS` and recreate Floci. Hosted sign-in also needs the
+preview's `/auth/callback` and root logout URLs in the app client allowlists.
+Register additional URLs again after resetting the local bootstrap.
+
+Hosted login uses random state and a 256-bit verifier with S256 PKCE and no client secret.
 The callback consumes one pending transaction within ten minutes, checks state,
 exchanges the code once, then strips the callback query from browser history.
 React StrictMode shares the single callback exchange. Access/refresh tokens live
