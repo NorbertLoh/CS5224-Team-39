@@ -82,3 +82,9 @@ These accounts are for local Floci development only. Backend roles and clinic
 memberships determine access; Cognito groups alone do not grant permissions.
 Use [full-stack Compose](docs/compose-stack.md) to run the implemented role pages
 against the local services.
+
+## AI Declaration
+ChatGPT 6.1 Sol was used for the following
+- Writing and managing GitHub Issues
+- Used for development but implementation plan and idea is by us
+- AI suggested the use of workers which we accepted
