@@ -251,6 +251,8 @@ run "domain_free_running_demo" {
     hosted_zone_id           = ""
     origin_certificate_arn   = null
     enable_workloads         = true
+    enable_demo_account_seed = true
+    enable_demo_reset        = true
     images                   = { for name in keys(run.bounded_running_demo.repositories) : name => "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/${name}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" if name != "redis" }
   }
   assert {
@@ -264,6 +266,18 @@ run "domain_free_running_demo" {
   assert {
     condition     = alltrue([for service, url in local.service_urls : startswith(url, "https://") && endswith(url, "/service/${local.paths[service]}")]) && alltrue([for task in aws_ecs_task_definition.api : task.runtime_platform[0].cpu_architecture == "X86_64"])
     error_message = "Services must keep HTTPS URLs and the selected AMD64 architecture."
+  }
+  assert {
+    condition     = length(aws_ecs_task_definition.demo_reset) == 1 && length(terraform_data.demo_seed) == 0 && jsondecode(local.public_env["identity"].SERVICE_DEMO_RESET_CONFIG).deployment == "demo"
+    error_message = "Explicit demo reset must install its worker and suppress the incompatible old automatic seed."
+  }
+  assert {
+    condition     = alltrue([for statement in jsondecode(aws_iam_role_policy.demo_reset[0].policy).Statement : alltrue([for action in statement.Action : !startswith(action, "rds:")])]) && aws_s3_bucket_public_access_block.demo_reset[0].block_public_policy
+    error_message = "The reset must have no RDS snapshot permissions and its operation state must be private."
+  }
+  assert {
+    condition     = jsondecode(aws_iam_role_policy.request_demo_reset[0].policy).Statement[2].Resource == aws_ecs_task_definition.demo_reset[0].arn
+    error_message = "The identity service may launch only the fixed reset task."
   }
 }
 

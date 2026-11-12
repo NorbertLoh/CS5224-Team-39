@@ -36,4 +36,5 @@ module "platform" {
   service_secret_keys         = var.service_secret_keys
 
   enable_demo_account_seed = true
+  enable_demo_reset        = var.enable_demo_reset
 }

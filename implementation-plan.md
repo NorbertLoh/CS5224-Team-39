@@ -1,5 +1,60 @@
 # TeleLink Health: shared implementation backlog
 
+## Local and AWS demo reset page (RF57)
+
+  AWS deployment/reset verified 8 November 2026: the authorized overwrite
+  succeeded with five sign-in accounts and exactly two pending applications.
+  All 14 ECS services recovered, load-balancer targets are healthy, and the
+  dispatch schedule was restored. Public `/reset` completion and confirmation
+  controls passed browser verification. No backup created. Worker revision
+  `2708d75` pauses scheduled notifications during maintenance; 34 offline checks
+  and all 14 Terraform scenarios passed. PR #394 stays draft and issue #393
+  stays In progress pending merge. Detailed evidence below is historical;
+  [RF57 demo reset](docs/RF57-demo-reset.md) records the live AWS result.
+
+  Local extension requested 8 November 2026: enable the same `/reset` page for the
+  configured local Compose stack with an opt-in separate worker and private job
+  volume, fixed local targets and the same five-account/two-application seed.
+  Preserve confirmation and seeded logins; create no backup. Enable the local
+  controls on Tailscale for user testing without automatically resetting data.
+
+- [ ] RF57: Add `/reset` for platform administrators to confirm and monitor a
+  local Compose reset or an AWS demo reset using workload credentials. Restore the five-account RF07 seed,
+  Meridian's pending clinic application and Dr. Tan's pending doctor application
+  with evidence and membership; no appointments or clinical records. Preserve
+  existing seeded login identities, overwrite without backups, serialize resets, and document
+  permissions, recovery and verification limits. Dependencies: RF07, existing
+  identity authorization, SPA routing and AWS demo-platform (implemented).
+  Effort L. Issue #393 assigned NorbertLoh, **In progress**. Live data reset is
+  separate from implementing this feature.
+
+  RF57 verification (7 November 2026): 14 focused reset API/control tests and 25
+  offline seed/runner checks passed. All nine schemas were migrated in a
+  disposable loopback PostgreSQL 18.6 instance; four real database checks passed
+  for repeatability, transaction rollback, external FK refusal and worker role
+  restoration. Frontend lint/typecheck/build, Ruff, Terraform validation and all
+  14 platform mock scenarios passed. PR #394 remains draft; GitHub Actions jobs
+  cannot start because GitHub reports an account billing lock. The configured
+  PostgreSQL 17 CI check and live AWS behavior remain unverified. No deployment,
+  live data reset, new backup or snapshot was performed. Setup and exact scope:
+  [RF57 demo reset](docs/RF57-demo-reset.md).
+
+  Local extension verification (8 November 2026): 22 reset API/file-job tests,
+  30 offline seed/runner checks and five real PostgreSQL 17 checks passed, along
+  with Ruff, frontend lint/typecheck/container build and 14 Terraform mock runs.
+  The local worker passed real read-only administrator/Cognito/queue checks.
+  Tailscale `/reset` now identifies the local target and enables its button only
+  after confirmation. No live reset request was submitted; the separate test
+  database container was removed. GitHub's billing lock still blocks CI.
+
+  User-confirmed local reset (8 November 2026) completed and passed read-only
+  five-account/two-pending-application checks. Service logins were restored and
+  the claim released. Fixed the misleading error after an ambiguous POST: the
+  page now checks fresh progress through temporary API downtime and retains the
+  same UUID for retries. Three fully intercepted browser regressions passed;
+  frontend lint/typecheck/build passed and the fix is served on Tailscale. No
+  additional live reset was submitted during diagnosis or regression checks.
+
 ## Documentation refresh (RF56)
 
 - [x] RF56: Refresh root/infrastructure READMEs, explain demo versus

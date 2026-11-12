@@ -14,19 +14,7 @@ from clinic_application import clinic_application
 from doctor_application import doctor_application
 from doctor_membership import doctor_membership
 from dotenv import dotenv_values
-
-ACCOUNTS = (
-    ("patient@example.test", "Local Patient", ["patient"]),
-    ("lohnorbert@gmail.com", "Norbert", ["patient"]),
-    ("doctor@example.test", "Dr. Tan", []),
-    ("clinic@example.test", "Local Clinic Admin", []),
-    ("platform@example.test", "Local Platform Admin", ["platform_admin"]),
-)
-PATIENT_ADDRESS = {
-    "address_line": "3 Temasek Boulevard, Singapore",
-    "postal_code": "038983",
-    "country_code": "SG",
-}
+from requested_seed import ACCOUNTS, PATIENT_ADDRESS
 
 
 def patient_phone():

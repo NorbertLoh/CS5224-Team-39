@@ -9,6 +9,7 @@ from telelink_common.auth import TokenVerifier
 from telelink_common.errors import install_error_handlers
 from telelink_common.middleware import RequestLoggingMiddleware
 
+from app.api.demo_reset import router as demo_reset_router
 from app.api.doctor_applications import router as doctor_applications_router
 from app.api.doctor_profiles import router as doctor_profiles_router
 from app.api.doctors import router as doctors_router
@@ -78,6 +79,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(registration_router)
     app.include_router(doctor_applications_router)
     app.include_router(doctor_profiles_router)
+    app.include_router(demo_reset_router)
 
     @app.middleware("http")
     async def private_identity_responses(request, call_next):

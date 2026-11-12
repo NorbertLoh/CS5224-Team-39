@@ -12,7 +12,8 @@ param(
     [string]$Action = 'up',
     [switch]$UseExistingDatabase,
     [switch]$Payments,
-    [switch]$Development
+    [switch]$Development,
+    [switch]$LocalReset
 )
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
@@ -37,6 +38,7 @@ function Set-ComposeArgs {
         $script:ComposeArgs += @('-f', (Join-Path $State 'database.yaml'))
     }
     if ($Development) { $script:ComposeArgs += @('-f', (Join-Path $Root 'compose.dev.yaml')) }
+    if ($LocalReset) { $script:ComposeArgs += @('-f', (Join-Path $Root 'compose.reset.yaml')) }
     if ($Payments) { $script:ComposeArgs += @('--profile', 'payments') }
 }
 

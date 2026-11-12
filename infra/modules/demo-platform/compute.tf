@@ -75,7 +75,15 @@ locals {
       SERVICE_EVENT_BUS_NAME             = aws_cloudwatch_event_bus.domain.name
       SERVICE_OUTBOX_METRICS             = "true"
       SERVICE_CORS_ORIGINS               = jsonencode(["https://${module.edge.domain_name}"])
-      }, s == "scheduling" ? {
+      }, s == "identity" && var.enable_demo_reset && length(var.images) > 0 ? {
+      SERVICE_DEMO_RESET_CONFIG = jsonencode({
+        deployment = "demo", region = "ap-southeast-1",
+        bucket     = aws_s3_bucket.demo_reset[0].id,
+        cluster    = aws_ecs_cluster.demo.name,
+        task       = aws_ecs_task_definition.demo_reset[0].arn,
+        network    = { awsvpcConfiguration = { subnets = local.workload_subnets, securityGroups = [aws_security_group.workloads.id], assignPublicIp = "DISABLED" } }
+      })
+      } : {}, s == "scheduling" ? {
       SERVICE_REDIS_URL          = var.redis_mode == "sidecar" ? "redis://127.0.0.1:6379/0" : "rediss://${aws_elasticache_replication_group.demo[0].primary_endpoint_address}:6379/0"
       SERVICE_PAYMENT_QUEUE_NAME = aws_sqs_queue.consumer["scheduling"].name
       } : {}, s == "fulfilment" ? {
