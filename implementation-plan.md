@@ -1,5 +1,24 @@
 # TeleLink Health: shared implementation backlog
 
+## AWS checkout configuration recovery (RF58)
+
+- [ ] RF58: Repair AWS demo consultation checkout after the seed changed the
+  clinic ID. Preserve billing secrets, verify the existing sandbox destination,
+  add the current clinic mapping, refresh billing API/workers and verify health
+  through read-only checks. Do not create payments or rewrite financial state.
+  Dependencies B02/B07/RF32/RF51 merged; deployed RF57 seed already executed.
+  Effort S. Issue #395 assigned NorbertLoh, **In progress**. See
+  [AWS checkout recovery](docs/RF58-aws-checkout-recovery.md).
+
+  Authorized AWS repair verified 8 November 2026: current clinic mapping added
+  to the existing sandbox destination; every other secret field and both older
+  mappings preserved. Billing API and workers reached steady state with completed
+  deployments; API target healthy and authenticated scheduling/billing reads
+  returned 200. Original booking expired, billing collection empty. No checkout
+  or payment submitted. Current reset seed uses the same deterministic clinic ID
+  and preserves provider configuration. PR #396 remains draft pending merge.
+
+
 ## Documentation refresh (RF56)
 
 - [x] RF56: Refresh root/infrastructure READMEs, explain demo versus
